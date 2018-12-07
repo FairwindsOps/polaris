@@ -45,6 +45,14 @@ subjects:
     name: fairwinds
     namespace: fairwinds
 ---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: fairwinds
+  namespace: fairwinds
+  labels:
+    app: fairwinds
+---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -65,7 +73,7 @@ spec:
       serviceAccountName: fairwinds
       containers:
       - name: fairwinds
-        image: "quay.io/robertjscott/fairwinds:a3"
+        image: "quay.io/robertjscott/fairwinds:a12"
         imagePullPolicy: Always
         resources:
           limits:

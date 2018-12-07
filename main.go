@@ -16,6 +16,7 @@ package main
 
 import (
 	"flag"
+	"github.com/reactiveops/fairwinds/pkg/validator"
 	"os"
 
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
@@ -30,7 +31,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission/builder"
 )
 
-var log = logf.Log.WithName("example-controller")
+// FairwindsName is used for Kubernetes resource naming
+var FairwindsName = "fairwinds"
+var log = logf.Log.WithName(FairwindsName)
 
 func main() {
 	var disableWebhookConfigInstaller bool
@@ -49,13 +52,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	validatingWebhook, err := builder.NewWebhookBuilder().
+	podValidatingWebhook, err := builder.NewWebhookBuilder().
 		Name("validating.k8s.io").
 		Validating().
 		Operations(admissionregistrationv1beta1.Create, admissionregistrationv1beta1.Update).
 		WithManager(mgr).
 		ForType(&corev1.Pod{}).
-		Handlers(&podValidator{}).
+		Handlers(&validator.PodValidator{}).
 		Build()
 	if err != nil {
 		entryLog.Error(err, "unable to setup validating webhook")
@@ -63,22 +66,23 @@ func main() {
 	}
 
 	entryLog.Info("setting up webhook server")
-	as, err := webhook.NewServer("fairwinds", mgr, webhook.ServerOptions{
+	as, err := webhook.NewServer(FairwindsName, mgr, webhook.ServerOptions{
 		Port:                          9876,
 		CertDir:                       "/tmp/cert",
 		DisableWebhookConfigInstaller: &disableWebhookConfigInstaller,
 		BootstrapOptions: &webhook.BootstrapOptions{
+			ValidatingWebhookConfigName: FairwindsName,
 			Secret: &apitypes.NamespacedName{
-				Namespace: "fairwinds",
-				Name:      "fairwinds",
+				Namespace: FairwindsName,
+				Name:      FairwindsName,
 			},
 
 			Service: &webhook.Service{
-				Namespace: "fairwinds",
-				Name:      "fairwinds",
+				Namespace: FairwindsName,
+				Name:      FairwindsName,
 				// Selectors should select the pods that runs this webhook server.
 				Selectors: map[string]string{
-					"app": "fairwinds",
+					"app": FairwindsName,
 				},
 			},
 		},
@@ -89,7 +93,7 @@ func main() {
 	}
 
 	entryLog.Info("registering webhooks to the webhook server")
-	err = as.Register(validatingWebhook)
+	err = as.Register(podValidatingWebhook)
 	if err != nil {
 		entryLog.Error(err, "unable to register webhooks in the admission server")
 		os.Exit(1)
