@@ -31,20 +31,48 @@ func validateContainer(container corev1.Container) containerResults {
 		Name: container.Name,
 	}
 
-	log.Info("validateing Container:", "container resources", container.Resources)
-	if container.Resources.Requests.Cpu().IsZero() {
+	resources(container, sb)
+	probes(container, sb)
+	tag(container, sb)
+
+	c.Reason = sb.String()
+	return c
+}
+
+func resources(c corev1.Container, sb strings.Builder) string {
+	log.Info("validating Container:", "container resources", c.Resources)
+	if c.Resources.Requests.Cpu().IsZero() {
 		sb.WriteString("- CPU requests are not set.\n")
 	}
-	if container.Resources.Requests.Memory().IsZero() {
+	if c.Resources.Requests.Memory().IsZero() {
 		sb.WriteString("- Memory requests are not set.\n")
 	}
-	if container.Resources.Limits.Cpu().IsZero() {
+	if c.Resources.Limits.Cpu().IsZero() {
 		sb.WriteString("- CPU limits are not set.\n")
 	}
-	if container.Resources.Limits.Memory().IsZero() {
+	if c.Resources.Limits.Memory().IsZero() {
 		sb.WriteString("- Memory limits are not set.\n")
 	}
-	c.Reason = sb.String()
 
-	return c
+	return sb.String()
+}
+
+func probes(c corev1.Container, sb strings.Builder) string {
+	if c.ReadinessProbe == nil {
+		sb.WriteString("- Readiness Probe is not set.\n")
+	}
+
+	if c.LivenessProbe == nil {
+		sb.WriteString("- Liveness Probe is not set.\n")
+	}
+	return sb.String()
+}
+
+func tag(c corev1.Container, sb strings.Builder) string {
+	img := strings.Split(c.Image, ":")
+	if len(img) == 1 || img[1] == "latest" {
+		sb.WriteString("- Image tag is latest.\n")
+	}
+
+	return sb.String()
 }
