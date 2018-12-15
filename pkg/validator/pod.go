@@ -16,7 +16,9 @@ package validator
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -46,46 +48,31 @@ func (v *PodValidator) Handle(ctx context.Context, req types.Request) types.Resp
 		return admission.ErrorResponse(http.StatusBadRequest, err)
 	}
 
-	allowed, reason, err := v.validatePods(ctx, pod)
-	if err != nil {
-		return admission.ErrorResponse(http.StatusInternalServerError, err)
-	}
+	allowed, reason := validatePods(ctx, pod)
+
 	return admission.ValidationResponse(allowed, reason)
 }
 
-func (v *PodValidator) validatePods(ctx context.Context, pod *corev1.Pod) (bool, string, error) {
+func validatePods(ctx context.Context, pod *corev1.Pod) (bool, string) {
+	var sb strings.Builder
+	allowed := true
 	for _, container := range pod.Spec.InitContainers {
-		if container.Resources.Requests.Cpu().IsZero() {
-			return false, "CPU resource request not Set", nil
-		}
-		if container.Resources.Requests.Memory().IsZero() {
-			return false, "Memory resource request not Set", nil
-		}
-		if container.Resources.Limits.Cpu().IsZero() {
-			return false, "CPU resource limit not Set", nil
-		}
-		if container.Resources.Limits.Memory().IsZero() {
-			return false, "Memory resource limit not Set", nil
+		c := validateContainer(container)
+		if c.Reason != "" {
+			sb.WriteString(fmt.Sprintf("\nContainer Name: %s\n%s", c.Name, c.Reason))
+			allowed = false
 		}
 	}
 
 	for _, container := range pod.Spec.Containers {
-		log.Info("validating container", "container", container.Resources, "memoryLimit", container.Resources.Limits.Memory().Value(), "isZero", container.Resources.Limits.Memory().IsZero())
-		if container.Resources.Requests.Cpu().IsZero() {
-			return false, "CPU resource request not Set", nil
-		}
-		if container.Resources.Requests.Memory().IsZero() {
-			return false, "Memory resource request not Set", nil
-		}
-		if container.Resources.Limits.Cpu().IsZero() {
-			return false, "CPU resource limit not Set", nil
-		}
-		if container.Resources.Limits.Memory().IsZero() {
-			return false, "Memory resource limit not Set", nil
+		c := validateContainer(container)
+		if c.Reason != "" {
+			sb.WriteString(fmt.Sprintf("\nName: %s\n%s", c.Name, c.Reason))
+			allowed = false
 		}
 	}
 
-	return true, "", nil
+	return allowed, sb.String()
 }
 
 // PodValidator implements inject.Client.

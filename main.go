@@ -16,9 +16,9 @@ package main
 
 import (
 	"flag"
-	"github.com/reactiveops/fairwinds/pkg/validator"
 	"os"
 
+	"github.com/reactiveops/fairwinds/pkg/validator"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	apitypes "k8s.io/apimachinery/pkg/types"
