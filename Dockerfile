@@ -11,4 +11,6 @@ RUN apk --no-cache add ca-certificates
 USER nobody
 COPY --from=build-env /go/src/github.com/reactiveops/fairwinds/fairwinds .
 
+WORKDIR /opt/app
+
 ENTRYPOINT ["fairwinds"]

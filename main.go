@@ -16,9 +16,12 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 
+	conf "github.com/reactiveops/fairwinds/pkg/config"
 	"github.com/reactiveops/fairwinds/pkg/validator"
+	"github.com/spf13/viper"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	apitypes "k8s.io/apimachinery/pkg/types"
@@ -43,6 +46,21 @@ func main() {
 	flag.Parse()
 	logf.SetLogger(logf.ZapLogger(false))
 	entryLog := log.WithName("entrypoint")
+
+	// Parse config.
+	viper.SetConfigName("config")
+	viper.AddConfigPath(".")
+	var conf conf.Configuration
+	if err := viper.ReadInConfig(); err != nil {
+		entryLog.Error(err, "config err")
+	}
+
+	if err := viper.Unmarshal(&conf); err != nil {
+		entryLog.Error(err, "unmarshal config err")
+	}
+
+	entryLog.Info(fmt.Sprintf("conf requests: %s", conf.Requests))
+	entryLog.Info(fmt.Sprintf("conf limits: %s", conf.Limits))
 
 	// Setup a Manager
 	entryLog.Info("setting up manager")
@@ -80,6 +98,7 @@ func main() {
 			Service: &webhook.Service{
 				Namespace: FairwindsName,
 				Name:      FairwindsName,
+
 				// Selectors should select the pods that runs this webhook server.
 				Selectors: map[string]string{
 					"app": FairwindsName,
@@ -93,8 +112,7 @@ func main() {
 	}
 
 	entryLog.Info("registering webhooks to the webhook server")
-	err = as.Register(podValidatingWebhook)
-	if err != nil {
+	if err = as.Register(podValidatingWebhook); err != nil {
 		entryLog.Error(err, "unable to register webhooks in the admission server")
 		os.Exit(1)
 	}

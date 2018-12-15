@@ -27,7 +27,7 @@ type containerResults struct {
 
 func validateContainer(container corev1.Container) containerResults {
 	var sb strings.Builder
-	c := containerResults{
+	results := containerResults{
 		Name: container.Name,
 	}
 
@@ -35,8 +35,8 @@ func validateContainer(container corev1.Container) containerResults {
 	probes(container, sb)
 	tag(container, sb)
 
-	c.Reason = sb.String()
-	return c
+	results.Reason = sb.String()
+	return results
 }
 
 func resources(c corev1.Container, sb strings.Builder) string {
@@ -74,5 +74,14 @@ func tag(c corev1.Container, sb strings.Builder) string {
 		sb.WriteString("- Image tag is latest.\n")
 	}
 
+	return sb.String()
+}
+
+func hostPort(c corev1.Container, sb strings.Builder) string {
+	for _, port := range c.Ports {
+		if port.HostPort != 0 {
+			sb.WriteString("- Host Port set.\n")
+		}
+	}
 	return sb.String()
 }

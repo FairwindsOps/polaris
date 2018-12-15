@@ -1,5 +1,26 @@
 ---
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fairwinds-config
+data:
+  config.yml: |
+    Requests:
+      cpu:
+        min: 100m
+        max: 2000m
+      memory:
+          min: 100M
+          max: 2000M
+    Limits:
+      cpu:
+        min: 100m
+        max: 2000m
+      memory:
+          min: 100M
+          max: 2000M
+---
+apiVersion: v1
 kind: Namespace
 metadata:
   name: fairwinds
@@ -73,7 +94,7 @@ spec:
       serviceAccountName: fairwinds
       containers:
       - name: fairwinds
-        image: "quay.io/robertjscott/fairwinds:a12"
+        image: quay.io/jessgreb/fairwinds
         imagePullPolicy: Always
         resources:
           limits:
@@ -84,8 +105,15 @@ spec:
             memory: 128Mi
         volumeMounts:
         - name: certs
-          mountPath: /tmp/cert
+          mountPath: /tmp/cert/
+        - name: config-yml
+          mountPath: /opt/app/config.yml
+          subPath: config.yml
+          readOnly: true
       volumes:
+      - name: config-yml
+        configMap:
+          name: fairwinds-config
       - name: certs
         secret:
           secretName: fairwinds
