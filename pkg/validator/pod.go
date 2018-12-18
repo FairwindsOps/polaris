@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"strings"
 
+	conf "github.com/reactiveops/fairwinds/pkg/config"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
@@ -34,6 +35,7 @@ var log = logf.Log.WithName("Fairwinds Validator")
 type PodValidator struct {
 	client  client.Client
 	decoder types.Decoder
+	Config  conf.Configuration
 }
 
 // Implement admission.Handler so the controller can handle admission request.
@@ -48,16 +50,16 @@ func (v *PodValidator) Handle(ctx context.Context, req types.Request) types.Resp
 		return admission.ErrorResponse(http.StatusBadRequest, err)
 	}
 
-	allowed, reason := validatePods(ctx, pod)
+	allowed, reason := validatePods(v.Config, pod)
 
 	return admission.ValidationResponse(allowed, reason)
 }
 
-func validatePods(ctx context.Context, pod *corev1.Pod) (bool, string) {
+func validatePods(conf conf.Configuration, pod *corev1.Pod) (bool, string) {
 	var sb strings.Builder
 	allowed := true
 	for _, container := range pod.Spec.InitContainers {
-		c := validateContainer(container)
+		c := validateContainer(conf, container)
 		if c.Reason != "" {
 			sb.WriteString(fmt.Sprintf("\nContainer Name: %s\n%s", c.Name, c.Reason))
 			allowed = false
@@ -65,7 +67,7 @@ func validatePods(ctx context.Context, pod *corev1.Pod) (bool, string) {
 	}
 
 	for _, container := range pod.Spec.Containers {
-		c := validateContainer(container)
+		c := validateContainer(conf, container)
 		if c.Reason != "" {
 			sb.WriteString(fmt.Sprintf("\nName: %s\n%s", c.Name, c.Reason))
 			allowed = false
