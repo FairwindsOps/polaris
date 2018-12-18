@@ -50,17 +50,16 @@ func main() {
 	// Parse config.
 	viper.SetConfigName("config")
 	viper.AddConfigPath(".")
-	var conf conf.Configuration
 	if err := viper.ReadInConfig(); err != nil {
 		entryLog.Error(err, "config err")
 	}
 
-	if err := viper.Unmarshal(&conf); err != nil {
+	var c conf.Configuration
+	if err := viper.Unmarshal(&c); err != nil {
 		entryLog.Error(err, "unmarshal config err")
 	}
 
-	entryLog.Info(fmt.Sprintf("conf requests: %s", conf.Requests))
-	entryLog.Info(fmt.Sprintf("conf limits: %s", conf.Limits))
+	entryLog.Info(fmt.Sprintf("conf: %#v", c))
 
 	// Setup a Manager
 	entryLog.Info("setting up manager")
@@ -76,7 +75,7 @@ func main() {
 		Operations(admissionregistrationv1beta1.Create, admissionregistrationv1beta1.Update).
 		WithManager(mgr).
 		ForType(&corev1.Pod{}).
-		Handlers(&validator.PodValidator{}).
+		Handlers(&validator.PodValidator{Config: c}).
 		Build()
 	if err != nil {
 		entryLog.Error(err, "unable to setup validating webhook")

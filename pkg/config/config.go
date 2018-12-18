@@ -1,12 +1,16 @@
 package config
 
-// example) min: 100m
-type minmax map[string]string
+import (
+	corev1 "k8s.io/api/core/v1"
+)
 
-// example) cpu.min: 100m
-type resources map[string]minmax
+type resourceQuanityRange struct {
+	Min string
+	Max string
+}
+
+type ResourceListRange map[corev1.ResourceName]resourceQuanityRange
 
 type Configuration struct {
-	Requests resources
-	Limits   resources
+	Resources ResourceListRange
 }

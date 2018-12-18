@@ -15,9 +15,12 @@
 package validator
 
 import (
+	"fmt"
 	"strings"
 
+	conf "github.com/reactiveops/fairwinds/pkg/config"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 type containerResults struct {
@@ -25,25 +28,38 @@ type containerResults struct {
 	Reason string
 }
 
-func validateContainer(container corev1.Container) containerResults {
+func validateContainer(conf conf.Configuration, container corev1.Container) containerResults {
 	var sb strings.Builder
 	results := containerResults{
 		Name: container.Name,
 	}
 
-	resources(container, sb)
-	probes(container, sb)
-	tag(container, sb)
+	sb.WriteString(resources(conf.Resources, container))
+	sb.WriteString(probes(container))
+	sb.WriteString(tag(container))
 
 	results.Reason = sb.String()
 	return results
 }
 
-func resources(c corev1.Container, sb strings.Builder) string {
-	log.Info("validating Container:", "container resources", c.Resources)
-	if c.Resources.Requests.Cpu().IsZero() {
-		sb.WriteString("- CPU requests are not set.\n")
+func resources(conf conf.ResourceListRange, c corev1.Container) string {
+	var sb strings.Builder
+	confCPUmin, err := resource.ParseQuantity(conf["cpu"].Min)
+	if err != nil {
+		log.Error(err, "cpu min parse quan")
 	}
+	// CPUmax, err := resource.ParseQuantity(conf["cpu"].Max)
+	// if err != nil {
+	// 	log.Error(err, "cpu max parse quan")
+	// }
+
+	ctrRequests := c.Resources.Requests.Cpu().MilliValue()
+	configMin := confCPUmin.MilliValue()
+	if ctrRequests < configMin {
+		s := fmt.Sprintf("- CPU requests are too low. Expected greater than: %d, Actual: %d.\n", configMin, ctrRequests)
+		sb.WriteString(s)
+	}
+
 	if c.Resources.Requests.Memory().IsZero() {
 		sb.WriteString("- Memory requests are not set.\n")
 	}
@@ -53,11 +69,11 @@ func resources(c corev1.Container, sb strings.Builder) string {
 	if c.Resources.Limits.Memory().IsZero() {
 		sb.WriteString("- Memory limits are not set.\n")
 	}
-
 	return sb.String()
 }
 
-func probes(c corev1.Container, sb strings.Builder) string {
+func probes(c corev1.Container) string {
+	var sb strings.Builder
 	if c.ReadinessProbe == nil {
 		sb.WriteString("- Readiness Probe is not set.\n")
 	}
@@ -68,7 +84,8 @@ func probes(c corev1.Container, sb strings.Builder) string {
 	return sb.String()
 }
 
-func tag(c corev1.Container, sb strings.Builder) string {
+func tag(c corev1.Container) string {
+	var sb strings.Builder
 	img := strings.Split(c.Image, ":")
 	if len(img) == 1 || img[1] == "latest" {
 		sb.WriteString("- Image tag is latest.\n")
@@ -77,7 +94,8 @@ func tag(c corev1.Container, sb strings.Builder) string {
 	return sb.String()
 }
 
-func hostPort(c corev1.Container, sb strings.Builder) string {
+func hostPort(c corev1.Container) string {
+	var sb strings.Builder
 	for _, port := range c.Ports {
 		if port.HostPort != 0 {
 			sb.WriteString("- Host Port set.\n")

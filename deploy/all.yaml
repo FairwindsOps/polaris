@@ -5,20 +5,13 @@ metadata:
   name: fairwinds-config
 data:
   config.yml: |
-    Requests:
+    resources:
       cpu:
         min: 100m
-        max: 2000m
+        max: 500m
       memory:
-          min: 100M
-          max: 2000M
-    Limits:
-      cpu:
-        min: 100m
-        max: 2000m
-      memory:
-          min: 100M
-          max: 2000M
+        min: 100M
+        max: 200M
 ---
 apiVersion: v1
 kind: Namespace
