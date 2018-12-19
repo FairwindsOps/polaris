@@ -67,6 +67,53 @@ metadata:
   labels:
     app: fairwinds
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fairwinds
+  namespace: fairwinds
+  labels:
+    app: fairwinds
+data:
+  config.yml: |
+    resources:
+      requests:
+        cpu:
+          min: 0.1
+          max: 1
+        memory:
+          min: 10m
+          max: 2000M
+      limits:
+        cpu:
+          min: 0.1
+          max: 1
+        memory:
+          min: 10m
+          max: 2000M
+    ingresses:
+      whitelist:
+        - '*.example.com'
+      prevent_overlaps: true
+    health_checks:
+      readiness:
+        require: true
+      liveness:
+        require: true
+    images:
+      require_tag: true
+      repos:
+        whitelist:
+          - gcr.io
+    namespaces:
+      require_labels: true
+    security_context:
+      capabilities:
+        whitelist:
+          - 'CAP_SYS_ADMIN'
+      prevent_privileged: true
+      read_only_file_system: true
+---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -87,7 +134,7 @@ spec:
       serviceAccountName: fairwinds
       containers:
       - name: fairwinds
-        image: quay.io/jessgreb/fairwinds
+        image: quay.io/reactiveops/fairwinds
         imagePullPolicy: Always
         resources:
           limits:
@@ -99,14 +146,14 @@ spec:
         volumeMounts:
         - name: certs
           mountPath: /tmp/cert/
-        - name: config-yml
+        - name: fairwinds
           mountPath: /opt/app/config.yml
           subPath: config.yml
           readOnly: true
       volumes:
-      - name: config-yml
+      - name: fairwinds
         configMap:
-          name: fairwinds-config
+          name: fairwinds
       - name: certs
         secret:
           secretName: fairwinds

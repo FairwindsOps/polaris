@@ -95,7 +95,7 @@ func createIfNotExists(ch certReadWriter) (*generator.Artifacts, bool, error) {
 
 // certReadWriter provides methods for reading and writing certificates.
 type certReadWriter interface {
-	// read reads a wehbook name and returns the certs for it.
+	// read reads a webhook name and returns the certs for it.
 	read() (*generator.Artifacts, error)
 	// write writes the certs and return the certs it wrote.
 	write() (*generator.Artifacts, error)
