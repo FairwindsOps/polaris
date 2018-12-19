@@ -15,35 +15,26 @@
 package validator
 
 import (
-	"fmt"
 	"strings"
 
 	conf "github.com/reactiveops/fairwinds/pkg/config"
+	"github.com/reactiveops/fairwinds/pkg/types"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
-type containerResults struct {
-	Name   string
-	Reason string
-}
-
-func validateContainer(conf conf.Configuration, container corev1.Container) containerResults {
-	var sb strings.Builder
-	results := containerResults{
+func validateContainer(conf conf.Configuration, container corev1.Container) types.ContainerResults {
+	ctrResults := types.ContainerResults{
 		Name: container.Name,
 	}
+	ctrResults = resources(conf.Resources, container, ctrResults)
+	// probes(container)
+	// tag(container)
 
-	sb.WriteString(resources(conf.Resources, container))
-	sb.WriteString(probes(container))
-	sb.WriteString(tag(container))
-
-	results.Reason = sb.String()
-	return results
+	return ctrResults
 }
 
-func resources(conf conf.ResourceRequestsAndLimits, c corev1.Container) string {
-	var sb strings.Builder
+func resources(conf conf.ResourceRequestsAndLimits, c corev1.Container, results types.ContainerResults) types.ContainerResults {
 	confCPUmin, err := resource.ParseQuantity(conf.Requests["cpu"].Min)
 	if err != nil {
 		log.Error(err, "cpu min parse quan")
@@ -53,23 +44,25 @@ func resources(conf conf.ResourceRequestsAndLimits, c corev1.Container) string {
 	// 	log.Error(err, "cpu max parse quan")
 	// }
 
-	ctrRequests := c.Resources.Requests.Cpu().MilliValue()
-	configMin := confCPUmin.MilliValue()
-	if ctrRequests < configMin {
-		s := fmt.Sprintf("- CPU requests are too low. Expected greater than: %d, Actual: %d.\n", configMin, ctrRequests)
-		sb.WriteString(s)
+	ctrRequests := c.Resources.Requests.Cpu()
+	if ctrRequests.MilliValue() < confCPUmin.MilliValue() {
+		f := types.NewFailure("CPU requests", confCPUmin.String(), ctrRequests.String())
+		results.Failures = append(results.Failures, *f)
 	}
 
 	if c.Resources.Requests.Memory().IsZero() {
-		sb.WriteString("- Memory requests are not set.\n")
+		f := types.NewFailure("Memory requests", "placeholder", "placeholder")
+		results.Failures = append(results.Failures, *f)
 	}
 	if c.Resources.Limits.Cpu().IsZero() {
-		sb.WriteString("- CPU limits are not set.\n")
+		f := types.NewFailure("CPU limits", "placeholder", "placeholder")
+		results.Failures = append(results.Failures, *f)
 	}
 	if c.Resources.Limits.Memory().IsZero() {
-		sb.WriteString("- Memory limits are not set.\n")
+		f := types.NewFailure("Memory limits", "placeholder", "placeholder")
+		results.Failures = append(results.Failures, *f)
 	}
-	return sb.String()
+	return results
 }
 
 func probes(c corev1.Container) string {
