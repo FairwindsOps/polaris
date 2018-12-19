@@ -18,41 +18,33 @@ type Results struct {
 	InitContainers []types.ContainerResults
 }
 
-func reason(f types.Failure) string {
-	return fmt.Sprintf("- %s: Expected: %s, Actual: %s.\n",
-		f.Name,
-		f.Expected,
-		f.Actual,
-	)
-}
-
 // Format structures the validation results to return back to k8s API.
 func (r *Results) Format() (bool, string) {
 	var sb strings.Builder
 
-	for _, ctr := range r.Containers {
-		if len(ctr.Failures) == 0 {
+	for _, container := range r.Containers {
+		if len(container.Failures) == 0 {
 			r.Pass = true
 		}
 
 		r.Pass = false
-		s := fmt.Sprintf("\nContainer: %s\n Failure/s:\n", ctr.Name)
+		s := fmt.Sprintf("\nContainer: %s\n Failure/s:\n", container.Name)
 		sb.WriteString(s)
-		for _, failure := range ctr.Failures {
-			sb.WriteString(reason(failure))
+		for _, failure := range container.Failures {
+			sb.WriteString(failure.Reason())
 		}
 	}
 
-	for _, ctr := range r.InitContainers {
-		if len(ctr.Failures) == 0 && r.Pass == true {
+	for _, container := range r.InitContainers {
+		if len(container.Failures) == 0 && r.Pass == true {
 			return r.Pass, r.FailMsg
 		}
 
 		r.Pass = false
-		s := fmt.Sprintf("\nInitContainer: %s\n Failure/s:\n", ctr.Name)
+		s := fmt.Sprintf("\nInitContainer: %s\n Failure/s:\n", container.Name)
 		sb.WriteString(s)
-		for _, failure := range ctr.Failures {
-			sb.WriteString(reason(failure))
+		for _, failure := range container.Failures {
+			sb.WriteString(failure.Reason())
 		}
 	}
 

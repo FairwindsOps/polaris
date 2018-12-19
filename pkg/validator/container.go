@@ -24,14 +24,14 @@ import (
 )
 
 func validateContainer(conf conf.Configuration, container corev1.Container) types.ContainerResults {
-	ctrResults := types.ContainerResults{
+	results := types.ContainerResults{
 		Name: container.Name,
 	}
-	ctrResults = resources(conf.Resources, container, ctrResults)
-	// probes(container)
-	// tag(container)
+	results = resources(conf.Resources, container, results)
+	results = probes(conf.Resources, container, results)
+	results = tag(conf.Resources, container, results)
 
-	return ctrResults
+	return results
 }
 
 func resources(conf conf.ResourceRequestsAndLimits, c corev1.Container, results types.ContainerResults) types.ContainerResults {
@@ -44,55 +44,47 @@ func resources(conf conf.ResourceRequestsAndLimits, c corev1.Container, results 
 	// 	log.Error(err, "cpu max parse quan")
 	// }
 
-	ctrRequests := c.Resources.Requests.Cpu()
-	if ctrRequests.MilliValue() < confCPUmin.MilliValue() {
-		f := types.NewFailure("CPU requests", confCPUmin.String(), ctrRequests.String())
-		results.Failures = append(results.Failures, *f)
+	containerRequests := c.Resources.Requests.Cpu()
+	if containerRequests.MilliValue() < confCPUmin.MilliValue() {
+		results.AddFailure("CPU requests", confCPUmin.String(), containerRequests.String())
 	}
 
 	if c.Resources.Requests.Memory().IsZero() {
-		f := types.NewFailure("Memory requests", "placeholder", "placeholder")
-		results.Failures = append(results.Failures, *f)
+		results.AddFailure("Memory requests", "placeholder", "placeholder")
 	}
 	if c.Resources.Limits.Cpu().IsZero() {
-		f := types.NewFailure("CPU limits", "placeholder", "placeholder")
-		results.Failures = append(results.Failures, *f)
+		results.AddFailure("CPU limits", "placeholder", "placeholder")
 	}
 	if c.Resources.Limits.Memory().IsZero() {
-		f := types.NewFailure("Memory limits", "placeholder", "placeholder")
-		results.Failures = append(results.Failures, *f)
+		results.AddFailure("Memory limits", "placeholder", "placeholder")
 	}
 	return results
 }
 
-func probes(c corev1.Container) string {
-	var sb strings.Builder
+func probes(conf conf.ResourceRequestsAndLimits, c corev1.Container, results types.ContainerResults) types.ContainerResults {
 	if c.ReadinessProbe == nil {
-		sb.WriteString("- Readiness Probe is not set.\n")
+		results.AddFailure("Readiness Probe", "placeholder", "placeholder")
 	}
 
 	if c.LivenessProbe == nil {
-		sb.WriteString("- Liveness Probe is not set.\n")
+		results.AddFailure("Liveness Probe", "placeholder", "placeholder")
 	}
-	return sb.String()
+	return results
 }
 
-func tag(c corev1.Container) string {
-	var sb strings.Builder
+func tag(conf conf.ResourceRequestsAndLimits, c corev1.Container, results types.ContainerResults) types.ContainerResults {
 	img := strings.Split(c.Image, ":")
 	if len(img) == 1 || img[1] == "latest" {
-		sb.WriteString("- Image tag is latest.\n")
+		results.AddFailure("Image Tag", "not latest", "latest")
 	}
-
-	return sb.String()
+	return results
 }
 
-func hostPort(c corev1.Container) string {
-	var sb strings.Builder
+func hostPort(conf conf.ResourceRequestsAndLimits, c corev1.Container, results types.ContainerResults) types.ContainerResults {
 	for _, port := range c.Ports {
 		if port.HostPort != 0 {
-			sb.WriteString("- Host Port set.\n")
+			results.AddFailure("Host port", "placeholder", "placeholder")
 		}
 	}
-	return sb.String()
+	return results
 }
