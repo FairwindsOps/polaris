@@ -1,4 +1,4 @@
-FROM golang:1.11 AS build-env
+FROM golang:1.11.4 AS build-env
 WORKDIR /go/src/github.com/reactiveops/fairwinds/
 
 COPY . .

@@ -48,7 +48,7 @@ type Options struct {
 	Objects []runtime.Object
 }
 
-// Provision provisions certificates for for the WebhookClientConfig.
+// Provision provisions certificates for the WebhookClientConfig.
 // It ensures the cert and CA are valid and not expiring.
 // It updates the CABundle in the webhookClientConfig if necessary.
 // It inject the WebhookClientConfig into options.Objects.

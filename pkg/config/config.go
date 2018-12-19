@@ -4,13 +4,18 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-type resourceQuanityRange struct {
+type ResourceMinMax struct {
 	Min string
 	Max string
 }
 
-type ResourceListRange map[corev1.ResourceName]resourceQuanityRange
+type ResourceList map[corev1.ResourceName]ResourceMinMax
+
+type ResourceRequestsAndLimits struct {
+	Requests ResourceList
+	Limits   ResourceList
+}
 
 type Configuration struct {
-	Resources ResourceListRange
+	Resources ResourceRequestsAndLimits
 }

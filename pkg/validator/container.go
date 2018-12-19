@@ -42,9 +42,9 @@ func validateContainer(conf conf.Configuration, container corev1.Container) cont
 	return results
 }
 
-func resources(conf conf.ResourceListRange, c corev1.Container) string {
+func resources(conf conf.ResourceRequestsAndLimits, c corev1.Container) string {
 	var sb strings.Builder
-	confCPUmin, err := resource.ParseQuantity(conf["cpu"].Min)
+	confCPUmin, err := resource.ParseQuantity(conf.Requests["cpu"].Min)
 	if err != nil {
 		log.Error(err, "cpu min parse quan")
 	}
