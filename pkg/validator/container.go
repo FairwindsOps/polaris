@@ -15,35 +15,26 @@
 package validator
 
 import (
-	"fmt"
 	"strings"
 
 	conf "github.com/reactiveops/fairwinds/pkg/config"
+	"github.com/reactiveops/fairwinds/pkg/types"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
-type containerResults struct {
-	Name   string
-	Reason string
-}
-
-func validateContainer(conf conf.Configuration, container corev1.Container) containerResults {
-	var sb strings.Builder
-	results := containerResults{
+func validateContainer(conf conf.Configuration, container corev1.Container) types.ContainerResults {
+	results := types.ContainerResults{
 		Name: container.Name,
 	}
+	results = resources(conf.Resources, container, results)
+	results = probes(conf.Resources, container, results)
+	results = tag(conf.Resources, container, results)
 
-	sb.WriteString(resources(conf.Resources, container))
-	sb.WriteString(probes(container))
-	sb.WriteString(tag(container))
-
-	results.Reason = sb.String()
 	return results
 }
 
-func resources(conf conf.ResourceRequestsAndLimits, c corev1.Container) string {
-	var sb strings.Builder
+func resources(conf conf.ResourceRequestsAndLimits, c corev1.Container, results types.ContainerResults) types.ContainerResults {
 	confCPUmin, err := resource.ParseQuantity(conf.Requests["cpu"].Min)
 	if err != nil {
 		log.Error(err, "cpu min parse quan")
@@ -53,53 +44,47 @@ func resources(conf conf.ResourceRequestsAndLimits, c corev1.Container) string {
 	// 	log.Error(err, "cpu max parse quan")
 	// }
 
-	ctrRequests := c.Resources.Requests.Cpu().MilliValue()
-	configMin := confCPUmin.MilliValue()
-	if ctrRequests < configMin {
-		s := fmt.Sprintf("- CPU requests are too low. Expected greater than: %d, Actual: %d.\n", configMin, ctrRequests)
-		sb.WriteString(s)
+	containerRequests := c.Resources.Requests.Cpu()
+	if containerRequests.MilliValue() < confCPUmin.MilliValue() {
+		results.AddFailure("CPU requests", confCPUmin.String(), containerRequests.String())
 	}
 
 	if c.Resources.Requests.Memory().IsZero() {
-		sb.WriteString("- Memory requests are not set.\n")
+		results.AddFailure("Memory requests", "placeholder", "placeholder")
 	}
 	if c.Resources.Limits.Cpu().IsZero() {
-		sb.WriteString("- CPU limits are not set.\n")
+		results.AddFailure("CPU limits", "placeholder", "placeholder")
 	}
 	if c.Resources.Limits.Memory().IsZero() {
-		sb.WriteString("- Memory limits are not set.\n")
+		results.AddFailure("Memory limits", "placeholder", "placeholder")
 	}
-	return sb.String()
+	return results
 }
 
-func probes(c corev1.Container) string {
-	var sb strings.Builder
+func probes(conf conf.ResourceRequestsAndLimits, c corev1.Container, results types.ContainerResults) types.ContainerResults {
 	if c.ReadinessProbe == nil {
-		sb.WriteString("- Readiness Probe is not set.\n")
+		results.AddFailure("Readiness Probe", "placeholder", "placeholder")
 	}
 
 	if c.LivenessProbe == nil {
-		sb.WriteString("- Liveness Probe is not set.\n")
+		results.AddFailure("Liveness Probe", "placeholder", "placeholder")
 	}
-	return sb.String()
+	return results
 }
 
-func tag(c corev1.Container) string {
-	var sb strings.Builder
+func tag(conf conf.ResourceRequestsAndLimits, c corev1.Container, results types.ContainerResults) types.ContainerResults {
 	img := strings.Split(c.Image, ":")
 	if len(img) == 1 || img[1] == "latest" {
-		sb.WriteString("- Image tag is latest.\n")
+		results.AddFailure("Image Tag", "not latest", "latest")
 	}
-
-	return sb.String()
+	return results
 }
 
-func hostPort(c corev1.Container) string {
-	var sb strings.Builder
+func hostPort(conf conf.ResourceRequestsAndLimits, c corev1.Container, results types.ContainerResults) types.ContainerResults {
 	for _, port := range c.Ports {
 		if port.HostPort != 0 {
-			sb.WriteString("- Host Port set.\n")
+			results.AddFailure("Host port", "placeholder", "placeholder")
 		}
 	}
-	return sb.String()
+	return results
 }
