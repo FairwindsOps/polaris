@@ -19,13 +19,13 @@ func (r *Results) Format() (bool, string) {
 	r.Pass = true
 
 	for _, cv := range r.ContainerValidations {
-		if !containerValidation(sb, cv) {
+		if !validContainer(&sb, &cv) {
 			r.Pass = false
 		}
 	}
 
 	for _, cv := range r.InitContainerValidations {
-		if !containerValidation(sb, cv) {
+		if !validContainer(&sb, &cv) {
 			r.Pass = false
 		}
 	}
@@ -34,7 +34,7 @@ func (r *Results) Format() (bool, string) {
 	return r.Pass, r.FailMsg
 }
 
-func containerValidation(sb strings.Builder, cv ContainerValidation) bool {
+func validContainer(sb *strings.Builder, cv *ContainerValidation) bool {
 	if len(cv.Failures) == 0 {
 		return true
 	}

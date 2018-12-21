@@ -51,13 +51,13 @@ func (cv *ContainerValidation) addFailure(name, expected, actual string) {
 
 func (cv *ContainerValidation) validateResources(conf conf.RequestsAndLimits) {
 	actualRes := cv.Container.Resources
-	cv.ensureWithinRange("requests.cpu", conf.Requests["cpu"], actualRes.Requests.Cpu())
-	cv.ensureWithinRange("requests.memory", conf.Requests["memory"], actualRes.Requests.Memory())
-	cv.ensureWithinRange("limits.cpu", conf.Limits["cpu"], actualRes.Limits.Cpu())
-	cv.ensureWithinRange("limits.memory", conf.Limits["memory"], actualRes.Limits.Memory())
+	cv.withinRange("requests.cpu", conf.Requests["cpu"], actualRes.Requests.Cpu())
+	cv.withinRange("requests.memory", conf.Requests["memory"], actualRes.Requests.Memory())
+	cv.withinRange("limits.cpu", conf.Limits["cpu"], actualRes.Limits.Cpu())
+	cv.withinRange("limits.memory", conf.Limits["memory"], actualRes.Limits.Memory())
 }
 
-func (cv *ContainerValidation) ensureWithinRange(resName string, expectedRange conf.ResourceMinMax, actual *resource.Quantity) {
+func (cv *ContainerValidation) withinRange(resName string, expectedRange conf.ResourceMinMax, actual *resource.Quantity) {
 	expectedMin, err := resource.ParseQuantity(expectedRange.Min)
 	if err != nil {
 		log.Error(err, fmt.Sprintf("Error parsing min quantity for %s", resName))
@@ -67,7 +67,7 @@ func (cv *ContainerValidation) ensureWithinRange(resName string, expectedRange c
 
 	expectedMax, err := resource.ParseQuantity(expectedRange.Max)
 	if err != nil {
-		log.Error(err, "Error parsing max quantity")
+		log.Error(err, fmt.Sprintf("Error parsing max quantity for %s", resName))
 	} else if expectedMax.MilliValue() < actual.MilliValue() {
 		cv.addFailure(resName, expectedMax.String(), actual.String())
 	}
