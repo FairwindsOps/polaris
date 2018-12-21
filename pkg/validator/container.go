@@ -16,7 +16,6 @@ package validator
 
 import (
 	"fmt"
-	"strings"
 
 	conf "github.com/reactiveops/fairwinds/pkg/config"
 	"github.com/reactiveops/fairwinds/pkg/types"
@@ -24,66 +23,80 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
-func validateContainer(conf conf.Configuration, container corev1.Container) types.ContainerResults {
-	results := types.ContainerResults{
-		Name: container.Name,
-	}
-	results = resources(conf.Resources, container, results)
-	results = probes(conf.Resources, container, results)
-	results = tag(conf.Resources, container, results)
-
-	return results
+// ContainerValidation tracks validation failures associated with a Container
+type ContainerValidation struct {
+	Container corev1.Container
+	Failures  []types.Failure
 }
 
-func ensureWithinRange(r types.ContainerResults, resName string, expectedRange conf.ResourceMinMax, actual *resource.Quantity) {
+func validateContainer(conf conf.Configuration, container corev1.Container) ContainerValidation {
+	cv := ContainerValidation{
+		Container: container,
+	}
+
+	cv.validateResources(conf.Resources)
+	// cv.validateHealthChecks(conf.HealthChecks)
+	// cv.validateTags(conf.Image)
+
+	return cv
+}
+
+func (cv *ContainerValidation) addFailure(name, expected, actual string) {
+	cv.Failures = append(cv.Failures, types.Failure{
+		Name:     name,
+		Expected: expected,
+		Actual:   actual,
+	})
+}
+
+func (cv *ContainerValidation) validateResources(conf conf.RequestsAndLimits) {
+	actualRes := cv.Container.Resources
+	cv.ensureWithinRange("requests.cpu", conf.Requests["cpu"], actualRes.Requests.Cpu())
+	cv.ensureWithinRange("requests.memory", conf.Requests["memory"], actualRes.Requests.Memory())
+	cv.ensureWithinRange("limits.cpu", conf.Limits["cpu"], actualRes.Limits.Cpu())
+	cv.ensureWithinRange("limits.memory", conf.Limits["memory"], actualRes.Limits.Memory())
+}
+
+func (cv *ContainerValidation) ensureWithinRange(resName string, expectedRange conf.ResourceMinMax, actual *resource.Quantity) {
 	expectedMin, err := resource.ParseQuantity(expectedRange.Min)
 	if err != nil {
 		log.Error(err, fmt.Sprintf("Error parsing min quantity for %s", resName))
 	} else if expectedMin.MilliValue() > actual.MilliValue() {
-		r.AddFailure(resName, expectedMin.String(), actual.String())
+		cv.addFailure(resName, expectedMin.String(), actual.String())
 	}
 
 	expectedMax, err := resource.ParseQuantity(expectedRange.Max)
 	if err != nil {
 		log.Error(err, "Error parsing max quantity")
 	} else if expectedMax.MilliValue() < actual.MilliValue() {
-		r.AddFailure(resName, expectedMax.String(), actual.String())
+		cv.addFailure(resName, expectedMax.String(), actual.String())
 	}
 }
 
-func resources(conf conf.ResourceRequestsAndLimits, c corev1.Container, results types.ContainerResults) types.ContainerResults {
-	ensureWithinRange(results, "requests.cpu", conf.Requests["cpu"], c.Resources.Requests.Cpu())
-	ensureWithinRange(results, "requests.memory", conf.Requests["memory"], c.Resources.Requests.Memory())
-	ensureWithinRange(results, "limits.cpu", conf.Limits["cpu"], c.Resources.Limits.Cpu())
-	ensureWithinRange(results, "limits.memory", conf.Limits["memory"], c.Resources.Limits.Memory())
+// func probes(conf conf.ResourceRequestsAndLimits, c corev1.Container, results types.ContainerResults) types.ContainerResults {
+// 	if c.ReadinessProbe == nil {
+// 		results.AddFailure("Readiness Probe", "placeholder", "placeholder")
+// 	}
 
-	return results
-}
+// 	if c.LivenessProbe == nil {
+// 		results.AddFailure("Liveness Probe", "placeholder", "placeholder")
+// 	}
+// 	return results
+// }
 
-func probes(conf conf.ResourceRequestsAndLimits, c corev1.Container, results types.ContainerResults) types.ContainerResults {
-	if c.ReadinessProbe == nil {
-		results.AddFailure("Readiness Probe", "placeholder", "placeholder")
-	}
+// func tag(conf conf.ResourceRequestsAndLimits, c corev1.Container, results types.ContainerResults) types.ContainerResults {
+// 	img := strings.Split(c.Image, ":")
+// 	if len(img) == 1 || img[1] == "latest" {
+// 		results.AddFailure("Image Tag", "not latest", "latest")
+// 	}
+// 	return results
+// }
 
-	if c.LivenessProbe == nil {
-		results.AddFailure("Liveness Probe", "placeholder", "placeholder")
-	}
-	return results
-}
-
-func tag(conf conf.ResourceRequestsAndLimits, c corev1.Container, results types.ContainerResults) types.ContainerResults {
-	img := strings.Split(c.Image, ":")
-	if len(img) == 1 || img[1] == "latest" {
-		results.AddFailure("Image Tag", "not latest", "latest")
-	}
-	return results
-}
-
-func hostPort(conf conf.ResourceRequestsAndLimits, c corev1.Container, results types.ContainerResults) types.ContainerResults {
-	for _, port := range c.Ports {
-		if port.HostPort != 0 {
-			results.AddFailure("Host port", "placeholder", "placeholder")
-		}
-	}
-	return results
-}
+// func hostPort(conf conf.ResourceRequestsAndLimits, c corev1.Container, results types.ContainerResults) types.ContainerResults {
+// 	for _, port := range c.Ports {
+// 		if port.HostPort != 0 {
+// 			results.AddFailure("Host port", "placeholder", "placeholder")
+// 		}
+// 	}
+// 	return results
+// }

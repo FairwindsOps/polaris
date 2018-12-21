@@ -11,11 +11,11 @@ type ResourceMinMax struct {
 
 type ResourceList map[corev1.ResourceName]ResourceMinMax
 
-type ResourceRequestsAndLimits struct {
+type RequestsAndLimits struct {
 	Requests ResourceList
 	Limits   ResourceList
 }
 
 type Configuration struct {
-	Resources ResourceRequestsAndLimits
+	Resources RequestsAndLimits
 }

@@ -19,7 +19,6 @@ import (
 	"net/http"
 
 	conf "github.com/reactiveops/fairwinds/pkg/config"
-	"github.com/reactiveops/fairwinds/pkg/report"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
@@ -49,23 +48,23 @@ func (v *PodValidator) Handle(ctx context.Context, req types.Request) types.Resp
 		return admission.ErrorResponse(http.StatusBadRequest, err)
 	}
 
-	results := validatePods(v.Config, pod, report.Results{})
+	results := validatePods(v.Config, pod, Results{})
 	allowed, reason := results.Format()
 
 	return admission.ValidationResponse(allowed, reason)
 }
 
-func validatePods(conf conf.Configuration, pod *corev1.Pod, results report.Results) report.Results {
+func validatePods(conf conf.Configuration, pod *corev1.Pod, results Results) Results {
 	for _, container := range pod.Spec.InitContainers {
-		results.InitContainers = append(
-			results.InitContainers,
+		results.InitContainerValidations = append(
+			results.InitContainerValidations,
 			validateContainer(conf, container),
 		)
 	}
 
 	for _, container := range pod.Spec.Containers {
-		results.Containers = append(
-			results.Containers,
+		results.ContainerValidations = append(
+			results.ContainerValidations,
 			validateContainer(conf, container),
 		)
 	}
