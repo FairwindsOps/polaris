@@ -15,6 +15,7 @@
 package validator
 
 import (
+	"fmt"
 	"strings"
 
 	conf "github.com/reactiveops/fairwinds/pkg/config"
@@ -34,30 +35,28 @@ func validateContainer(conf conf.Configuration, container corev1.Container) type
 	return results
 }
 
-func resources(conf conf.ResourceRequestsAndLimits, c corev1.Container, results types.ContainerResults) types.ContainerResults {
-	confCPUmin, err := resource.ParseQuantity(conf.Requests["cpu"].Min)
+func ensureWithinRange(r types.ContainerResults, resName string, expectedRange conf.ResourceMinMax, actual *resource.Quantity) {
+	expectedMin, err := resource.ParseQuantity(expectedRange.Min)
 	if err != nil {
-		log.Error(err, "cpu min parse quan")
-	}
-	// CPUmax, err := resource.ParseQuantity(conf["cpu"].Max)
-	// if err != nil {
-	// 	log.Error(err, "cpu max parse quan")
-	// }
-
-	containerRequests := c.Resources.Requests.Cpu()
-	if containerRequests.MilliValue() < confCPUmin.MilliValue() {
-		results.AddFailure("CPU requests", confCPUmin.String(), containerRequests.String())
+		log.Error(err, fmt.Sprintf("Error parsing min quantity for %s", resName))
+	} else if expectedMin.MilliValue() > actual.MilliValue() {
+		r.AddFailure(resName, expectedMin.String(), actual.String())
 	}
 
-	if c.Resources.Requests.Memory().IsZero() {
-		results.AddFailure("Memory requests", "placeholder", "placeholder")
+	expectedMax, err := resource.ParseQuantity(expectedRange.Max)
+	if err != nil {
+		log.Error(err, "Error parsing max quantity")
+	} else if expectedMax.MilliValue() < actual.MilliValue() {
+		r.AddFailure(resName, expectedMax.String(), actual.String())
 	}
-	if c.Resources.Limits.Cpu().IsZero() {
-		results.AddFailure("CPU limits", "placeholder", "placeholder")
-	}
-	if c.Resources.Limits.Memory().IsZero() {
-		results.AddFailure("Memory limits", "placeholder", "placeholder")
-	}
+}
+
+func resources(conf conf.ResourceRequestsAndLimits, c corev1.Container, results types.ContainerResults) types.ContainerResults {
+	ensureWithinRange(results, "requests.cpu", conf.Requests["cpu"], c.Resources.Requests.Cpu())
+	ensureWithinRange(results, "requests.memory", conf.Requests["memory"], c.Resources.Requests.Memory())
+	ensureWithinRange(results, "limits.cpu", conf.Limits["cpu"], c.Resources.Limits.Cpu())
+	ensureWithinRange(results, "limits.memory", conf.Limits["memory"], c.Resources.Limits.Memory())
+
 	return results
 }
 
