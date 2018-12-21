@@ -28,7 +28,7 @@ func validateContainer(conf conf.Configuration, container corev1.Container) type
 		Name: container.Name,
 	}
 	results = resources(conf.Resources, container, results)
-	results = probes(conf.Resources, container, results)
+	results = probes(conf.Healthchecks, container, results)
 	results = tag(conf.Resources, container, results)
 
 	return results
@@ -61,13 +61,13 @@ func resources(conf conf.ResourceRequestsAndLimits, c corev1.Container, results 
 	return results
 }
 
-func probes(conf conf.ResourceRequestsAndLimits, c corev1.Container, results types.ContainerResults) types.ContainerResults {
-	if c.ReadinessProbe == nil {
-		results.AddFailure("Readiness Probe", "placeholder", "placeholder")
+func probes(conf conf.ResourceHealthChecks, c corev1.Container, results types.ContainerResults) types.ContainerResults {
+	if conf.Readiness["require"] && c.ReadinessProbe == nil {
+		results.AddFailure("Readiness Probe", "probe to be configured", "nil")
 	}
 
-	if c.LivenessProbe == nil {
-		results.AddFailure("Liveness Probe", "placeholder", "placeholder")
+	if conf.Liveness["require"] && c.LivenessProbe == nil {
+		results.AddFailure("Liveness Probe", "probe to be configured", "nil")
 	}
 	return results
 }

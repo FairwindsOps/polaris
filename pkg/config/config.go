@@ -4,18 +4,31 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-type ResourceMinMax struct {
+// Configuration contains the config for the validation checks.
+type Configuration struct {
+	Resources    ResourceRequestsAndLimits
+	Healthchecks ResourceHealthChecks
+}
+
+type resourceMinMax struct {
 	Min string
 	Max string
 }
 
-type ResourceList map[corev1.ResourceName]ResourceMinMax
+type resourceList map[corev1.ResourceName]resourceMinMax
 
+// ResourceRequestsAndLimits contains config for resource requests and limits.
 type ResourceRequestsAndLimits struct {
-	Requests ResourceList
-	Limits   ResourceList
+	Requests resourceList
+	Limits   resourceList
 }
 
-type Configuration struct {
-	Resources ResourceRequestsAndLimits
+type require string
+
+type resourceRequire map[require]bool
+
+// ResourceHealthChecks contains config for the health check settings for probes.
+type ResourceHealthChecks struct {
+	Readiness resourceRequire
+	Liveness  resourceRequire
 }
