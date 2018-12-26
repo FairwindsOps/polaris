@@ -1,0 +1,61 @@
+version: 2
+
+references:
+  docker_build_and_push: &docker_build_and_push
+    run:
+      name: Docker login, build, and push
+      command: |
+        docker login quay.io -u="reactiveops+circleci" -p="${quay_token}"
+        docker build -f Dockerfile -t quay.io/reactiveops/fairwinds:$DOCKER_BASE_TAG .
+        docker push quay.io/reactiveops/fairwinds:$DOCKER_BASE_TAG
+jobs:
+  test:
+    working_directory: /go/src/github.com/reactiveops/fairwinds/
+    docker:
+      - image: circleci/golang:1.11
+
+    steps:
+      - checkout
+      - run: dep ensure
+      - run: go test ./pkg/... -coverprofile cover.out
+
+  build:
+    docker:
+      - image: circleci/buildpack-deps:stretch
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run: echo 'export DOCKER_BASE_TAG=dev-$CIRCLE_SHA1' >> $BASH_ENV
+      - *docker_build_and_push
+
+  release:
+    docker:
+      - image: circleci/buildpack-deps:stretch
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run: echo 'export DOCKER_BASE_TAG=$CIRCLE_TAG' >> $BASH_ENV
+      - *docker_build_and_push
+
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - test
+      - build:
+          context: org-global
+          # Allow using testing tags for testing circle test + build steps
+          filters:
+            tags:
+              only: /^testing-.*/
+  release:
+    jobs:
+      - release:
+          context: org-global
+          filters:
+            branches:
+              ignore: /.*/
+            # Testing tags are reserved for testing circle test + build steps
+            tags:
+              ignore: /^testing-.*/
