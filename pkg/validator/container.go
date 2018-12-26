@@ -35,7 +35,7 @@ func validateContainer(conf conf.Configuration, container corev1.Container) Cont
 	}
 
 	cv.validateResources(conf.Resources)
-	// cv.validateHealthChecks(conf.HealthChecks)
+	cv.validateHealthChecks(conf.Healthchecks)
 	// cv.validateTags(conf.Image)
 
 	return cv
@@ -73,16 +73,16 @@ func (cv *ContainerValidation) withinRange(resourceName string, expectedRange co
 	}
 }
 
-// func probes(conf conf.ResourceRequestsAndLimits, c corev1.Container, results types.ContainerResults) types.ContainerResults {
-// 	if c.ReadinessProbe == nil {
-// 		results.AddFailure("Readiness Probe", "placeholder", "placeholder")
-// 	}
+func (cv *ContainerValidation) isConfigured(required bool, name string, probe *corev1.Probe) {
+	if required && probe == nil {
+		cv.addFailure(name, "probe needs to be configured", "nil")
+	}
+}
 
-// 	if c.LivenessProbe == nil {
-// 		results.AddFailure("Liveness Probe", "placeholder", "placeholder")
-// 	}
-// 	return results
-// }
+func (cv *ContainerValidation) validateHealthChecks(conf conf.Probes) {
+	cv.isConfigured(conf.Readiness["require"], "readiness", cv.Container.ReadinessProbe)
+	cv.isConfigured(conf.Liveness["require"], "liveness", cv.Container.LivenessProbe)
+}
 
 // func tag(conf conf.ResourceRequestsAndLimits, c corev1.Container, results types.ContainerResults) types.ContainerResults {
 // 	img := strings.Split(c.Image, ":")

@@ -81,7 +81,7 @@ data:
       whitelist:
         - '*.example.com'
       prevent_overlaps: true
-    health_checks:
+    healthchecks:
       readiness:
         require: true
       liveness:
