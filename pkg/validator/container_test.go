@@ -44,11 +44,7 @@ func TestValidateResourcesEmptyContainer(t *testing.T) {
 		Name: "Empty",
 	}
 
-	cv := ContainerValidation{
-		Container: container,
-	}
-
-	expected := conf.RequestsAndLimits{
+	resourceConf := conf.RequestsAndLimits{
 		Requests: conf.ResourceList{
 			"cpu": conf.ResourceMinMax{
 				Min: "100m",
@@ -70,8 +66,6 @@ func TestValidateResourcesEmptyContainer(t *testing.T) {
 			},
 		},
 	}
-
-	cv.validateResources(expected)
 
 	expectedFailures := []types.Failure{
 		{
@@ -96,8 +90,7 @@ func TestValidateResourcesEmptyContainer(t *testing.T) {
 		},
 	}
 
-	assert.Len(t, cv.Failures, len(expectedFailures))
-	assert.ElementsMatch(t, cv.Failures, expectedFailures)
+	testValidateResources(t, &container, &resourceConf, &expectedFailures)
 }
 
 func TestValidateResourcesPartiallyValid(t *testing.T) {
@@ -119,11 +112,7 @@ func TestValidateResourcesPartiallyValid(t *testing.T) {
 		},
 	}
 
-	cv := ContainerValidation{
-		Container: container,
-	}
-
-	expected := conf.RequestsAndLimits{
+	resourceConf := conf.RequestsAndLimits{
 		Requests: conf.ResourceList{
 			"cpu": conf.ResourceMinMax{
 				Min: "100m",
@@ -146,8 +135,6 @@ func TestValidateResourcesPartiallyValid(t *testing.T) {
 		},
 	}
 
-	cv.validateResources(expected)
-
 	expectedFailures := []types.Failure{
 		{
 			Name:     "requests.memory",
@@ -161,8 +148,7 @@ func TestValidateResourcesPartiallyValid(t *testing.T) {
 		},
 	}
 
-	assert.Len(t, cv.Failures, len(expectedFailures))
-	assert.ElementsMatch(t, cv.Failures, expectedFailures)
+	testValidateResources(t, &container, &resourceConf, &expectedFailures)
 }
 
 func TestValidateResourcesFullyValid(t *testing.T) {
@@ -192,11 +178,7 @@ func TestValidateResourcesFullyValid(t *testing.T) {
 		},
 	}
 
-	cv := ContainerValidation{
-		Container: container,
-	}
-
-	expected := conf.RequestsAndLimits{
+	resourceConf := conf.RequestsAndLimits{
 		Requests: conf.ResourceList{
 			"cpu": conf.ResourceMinMax{
 				Min: "100m",
@@ -219,7 +201,15 @@ func TestValidateResourcesFullyValid(t *testing.T) {
 		},
 	}
 
-	cv.validateResources(expected)
+	testValidateResources(t, &container, &resourceConf, &[]types.Failure{})
+}
 
-	assert.Len(t, cv.Failures, 0)
+func testValidateResources(t *testing.T, container *corev1.Container, conf *conf.RequestsAndLimits, expectedFailures *[]types.Failure) {
+	cv := ContainerValidation{
+		Container: *container,
+	}
+
+	cv.validateResources(*conf)
+	assert.Len(t, cv.Failures, len(*expectedFailures))
+	assert.ElementsMatch(t, cv.Failures, *expectedFailures)
 }

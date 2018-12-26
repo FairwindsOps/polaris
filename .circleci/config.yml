@@ -45,6 +45,7 @@ workflows:
       - test
       - build:
           context: org-global
+          # Allow using testing tags for testing circle test + build steps
           filters:
             tags:
               only: /^testing-.*/
@@ -55,5 +56,6 @@ workflows:
           filters:
             branches:
               ignore: /.*/
+            # Testing tags are reserved for testing circle test + build steps
             tags:
               ignore: /^testing-.*/
