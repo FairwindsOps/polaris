@@ -55,11 +55,13 @@ func (cv *ContainerValidation) validateResources(conf conf.RequestsAndLimits) {
 	cv.withinRange("limits.memory", conf.Limits["memory"], actualRes.Limits.Memory())
 }
 
-func (cv *ContainerValidation) withinRange(resourceName string, resRange conf.ResourceMinMax, actual *resource.Quantity) {
-	if resRange.Min != nil && resRange.Min.MilliValue() > actual.MilliValue() {
-		cv.addFailure(resourceName, resRange.Min.String(), actual.String())
-	} else if resRange.Max != nil && resRange.Max.MilliValue() < actual.MilliValue() {
-		cv.addFailure(resourceName, resRange.Max.String(), actual.String())
+func (cv *ContainerValidation) withinRange(resourceName string, expectedRange conf.ResourceMinMax, actual *resource.Quantity) {
+	expectedMin := expectedRange.Min
+	expectedMax := expectedRange.Max
+	if expectedMin != nil && expectedMin.MilliValue() > actual.MilliValue() {
+		cv.addFailure(resourceName, expectedMin.String(), actual.String())
+	} else if expectedMax != nil && expectedMax.MilliValue() < actual.MilliValue() {
+		cv.addFailure(resourceName, expectedMax.String(), actual.String())
 	}
 }
 
