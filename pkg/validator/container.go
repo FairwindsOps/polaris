@@ -15,8 +15,6 @@
 package validator
 
 import (
-	"fmt"
-
 	conf "github.com/reactiveops/fairwinds/pkg/config"
 	"github.com/reactiveops/fairwinds/pkg/types"
 	corev1 "k8s.io/api/core/v1"
@@ -57,19 +55,11 @@ func (cv *ContainerValidation) validateResources(conf conf.RequestsAndLimits) {
 	cv.withinRange("limits.memory", conf.Limits["memory"], actualRes.Limits.Memory())
 }
 
-func (cv *ContainerValidation) withinRange(resourceName string, expectedRange conf.ResourceMinMax, actual *resource.Quantity) {
-	expectedMin, err := resource.ParseQuantity(expectedRange.Min)
-	if err != nil {
-		log.Error(err, fmt.Sprintf("Error parsing min quantity for %s", resourceName))
-	} else if expectedMin.MilliValue() > actual.MilliValue() {
-		cv.addFailure(resourceName, expectedMin.String(), actual.String())
-	}
-
-	expectedMax, err := resource.ParseQuantity(expectedRange.Max)
-	if err != nil {
-		log.Error(err, fmt.Sprintf("Error parsing max quantity for %s", resourceName))
-	} else if expectedMax.MilliValue() < actual.MilliValue() {
-		cv.addFailure(resourceName, expectedMax.String(), actual.String())
+func (cv *ContainerValidation) withinRange(resourceName string, resRange conf.ResourceMinMax, actual *resource.Quantity) {
+	if resRange.Min != nil && resRange.Min.MilliValue() > actual.MilliValue() {
+		cv.addFailure(resourceName, resRange.Min.String(), actual.String())
+	} else if resRange.Max != nil && resRange.Max.MilliValue() < actual.MilliValue() {
+		cv.addFailure(resourceName, resRange.Max.String(), actual.String())
 	}
 }
 

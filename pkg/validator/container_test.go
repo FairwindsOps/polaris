@@ -15,14 +15,32 @@
 package validator
 
 import (
-	"k8s.io/apimachinery/pkg/api/resource"
 	"testing"
 
 	conf "github.com/reactiveops/fairwinds/pkg/config"
 	types "github.com/reactiveops/fairwinds/pkg/types"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
+
+var resourceConf1 = `---
+resources:
+  requests:
+    cpu:
+      min: 100m
+      max: 1
+    memory:
+      min: 100Mi
+      max: 3Gi
+  limits:
+    cpu:
+      min: 150m
+      max: 2
+    memory:
+      min: 150Mi
+      max: 4Gi
+`
 
 func TestValidateResourcesEmptyConfig(t *testing.T) {
 	container := corev1.Container{
@@ -42,29 +60,6 @@ func TestValidateResourcesEmptyConfig(t *testing.T) {
 func TestValidateResourcesEmptyContainer(t *testing.T) {
 	container := corev1.Container{
 		Name: "Empty",
-	}
-
-	resourceConf := conf.RequestsAndLimits{
-		Requests: conf.ResourceList{
-			"cpu": conf.ResourceMinMax{
-				Min: "100m",
-				Max: "1",
-			},
-			"memory": conf.ResourceMinMax{
-				Min: "100Mi",
-				Max: "3Gi",
-			},
-		},
-		Limits: conf.ResourceList{
-			"cpu": conf.ResourceMinMax{
-				Min: "150m",
-				Max: "2",
-			},
-			"memory": conf.ResourceMinMax{
-				Min: "150Mi",
-				Max: "4Gi",
-			},
-		},
 	}
 
 	expectedFailures := []types.Failure{
@@ -90,15 +85,15 @@ func TestValidateResourcesEmptyContainer(t *testing.T) {
 		},
 	}
 
-	testValidateResources(t, &container, &resourceConf, &expectedFailures)
+	testValidateResources(t, &container, &resourceConf1, &expectedFailures)
 }
 
 func TestValidateResourcesPartiallyValid(t *testing.T) {
-	cpuRequest := resource.Quantity{}
-	cpuRequest.SetMilli(100)
+	cpuRequest, err := resource.ParseQuantity("100m")
+	assert.NoError(t, err, "Error parsing quantity")
 
-	cpuLimit := resource.Quantity{}
-	cpuLimit.SetMilli(200)
+	cpuLimit, err := resource.ParseQuantity("200m")
+	assert.NoError(t, err, "Error parsing quantity")
 
 	container := corev1.Container{
 		Name: "Empty",
@@ -108,29 +103,6 @@ func TestValidateResourcesPartiallyValid(t *testing.T) {
 			},
 			Limits: corev1.ResourceList{
 				"cpu": cpuLimit,
-			},
-		},
-	}
-
-	resourceConf := conf.RequestsAndLimits{
-		Requests: conf.ResourceList{
-			"cpu": conf.ResourceMinMax{
-				Min: "100m",
-				Max: "1",
-			},
-			"memory": conf.ResourceMinMax{
-				Min: "100Mi",
-				Max: "3Gi",
-			},
-		},
-		Limits: conf.ResourceList{
-			"cpu": conf.ResourceMinMax{
-				Min: "150m",
-				Max: "2",
-			},
-			"memory": conf.ResourceMinMax{
-				Min: "150Mi",
-				Max: "4Gi",
 			},
 		},
 	}
@@ -148,21 +120,21 @@ func TestValidateResourcesPartiallyValid(t *testing.T) {
 		},
 	}
 
-	testValidateResources(t, &container, &resourceConf, &expectedFailures)
+	testValidateResources(t, &container, &resourceConf1, &expectedFailures)
 }
 
 func TestValidateResourcesFullyValid(t *testing.T) {
-	cpuRequest := resource.Quantity{}
-	cpuRequest.SetMilli(100)
+	cpuRequest, err := resource.ParseQuantity("100m")
+	assert.NoError(t, err, "Error parsing quantity")
 
-	cpuLimit := resource.Quantity{}
-	cpuLimit.SetMilli(200)
+	cpuLimit, err := resource.ParseQuantity("200m")
+	assert.NoError(t, err, "Error parsing quantity")
 
-	memoryRequest := resource.Quantity{}
-	memoryRequest.SetScaled(105, resource.Mega)
+	memoryRequest, err := resource.ParseQuantity("100Mi")
+	assert.NoError(t, err, "Error parsing quantity")
 
-	memoryLimit := resource.Quantity{}
-	memoryLimit.SetScaled(200, resource.Mega)
+	memoryLimit, err := resource.ParseQuantity("200Mi")
+	assert.NoError(t, err, "Error parsing quantity")
 
 	container := corev1.Container{
 		Name: "Empty",
@@ -178,38 +150,18 @@ func TestValidateResourcesFullyValid(t *testing.T) {
 		},
 	}
 
-	resourceConf := conf.RequestsAndLimits{
-		Requests: conf.ResourceList{
-			"cpu": conf.ResourceMinMax{
-				Min: "100m",
-				Max: "1",
-			},
-			"memory": conf.ResourceMinMax{
-				Min: "100Mi",
-				Max: "3Gi",
-			},
-		},
-		Limits: conf.ResourceList{
-			"cpu": conf.ResourceMinMax{
-				Min: "150m",
-				Max: "2",
-			},
-			"memory": conf.ResourceMinMax{
-				Min: "150Mi",
-				Max: "4Gi",
-			},
-		},
-	}
-
-	testValidateResources(t, &container, &resourceConf, &[]types.Failure{})
+	testValidateResources(t, &container, &resourceConf1, &[]types.Failure{})
 }
 
-func testValidateResources(t *testing.T, container *corev1.Container, conf *conf.RequestsAndLimits, expectedFailures *[]types.Failure) {
+func testValidateResources(t *testing.T, container *corev1.Container, resourceConf *string, expectedFailures *[]types.Failure) {
 	cv := ContainerValidation{
 		Container: *container,
 	}
 
-	cv.validateResources(*conf)
+	parsedConf, err := conf.Parse([]byte(*resourceConf))
+	assert.NoError(t, err, "Expected no error when parsing config")
+
+	cv.validateResources(parsedConf.Resources)
 	assert.Len(t, cv.Failures, len(*expectedFailures))
 	assert.ElementsMatch(t, cv.Failures, *expectedFailures)
 }

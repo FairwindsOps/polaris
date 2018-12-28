@@ -16,12 +16,10 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
 
 	conf "github.com/reactiveops/fairwinds/pkg/config"
 	"github.com/reactiveops/fairwinds/pkg/validator"
-	"github.com/spf13/viper"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	apitypes "k8s.io/apimachinery/pkg/types"
@@ -47,19 +45,10 @@ func main() {
 	logf.SetLogger(logf.ZapLogger(false))
 	entryLog := log.WithName("entrypoint")
 
-	// Parse config.
-	viper.SetConfigName("config")
-	viper.AddConfigPath(".")
-	if err := viper.ReadInConfig(); err != nil {
-		entryLog.Error(err, "config err")
+	c, err := conf.ParseFile("config.yml")
+	if err != nil {
+		entryLog.Error(err, "parse config err")
 	}
-
-	var c conf.Configuration
-	if err := viper.Unmarshal(&c); err != nil {
-		entryLog.Error(err, "unmarshal config err")
-	}
-
-	entryLog.Info(fmt.Sprintf("conf: %#v", c))
 
 	// Setup a Manager
 	entryLog.Info("setting up manager")
