@@ -5,25 +5,32 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
+// ResourceMinMax sets a range for a min and max setting for a resource.
 type ResourceMinMax struct {
 	Min *resource.Quantity
 	Max *resource.Quantity
 }
 
+// ResourceList does x.
 type ResourceList map[corev1.ResourceName]ResourceMinMax
 
+// RequestsAndLimits contains config for resource requests and limits.
 type RequestsAndLimits struct {
 	Requests ResourceList
 	Limits   ResourceList
 }
 
+// Configuration contains all of the config for the validation checks.
 type Configuration struct {
-	Resources RequestsAndLimits
+	Resources    RequestsAndLimits
+	Healthchecks Probes
+	Images       Images
 }
 
 // ParseFile parses config from a file
@@ -48,4 +55,20 @@ func Parse(rawBytes []byte) (Configuration, error) {
 			return Configuration{}, fmt.Errorf("Decoding config failed: %v", err)
 		}
 	}
+}
+
+// Probes contains config for the readiness and liveness probes.
+type Probes struct {
+	Readiness resourceRequire
+	Liveness  resourceRequire
+}
+
+type resourceRequire map[require]bool
+
+type require string
+
+// Images contains the config for images.
+type Images struct {
+	TagRequired    bool
+	WhitelistRepos []string
 }

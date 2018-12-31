@@ -15,6 +15,8 @@
 package validator
 
 import (
+	"strings"
+
 	conf "github.com/reactiveops/fairwinds/pkg/config"
 	"github.com/reactiveops/fairwinds/pkg/types"
 	corev1 "k8s.io/api/core/v1"
@@ -33,8 +35,8 @@ func validateContainer(conf conf.Configuration, container corev1.Container) Cont
 	}
 
 	cv.validateResources(conf.Resources)
-	// cv.validateHealthChecks(conf.HealthChecks)
-	// cv.validateTags(conf.Image)
+	cv.validateHealthChecks(conf.Healthchecks)
+	cv.validateImage(conf.Images)
 
 	return cv
 }
@@ -65,24 +67,23 @@ func (cv *ContainerValidation) withinRange(resourceName string, expectedRange co
 	}
 }
 
-// func probes(conf conf.ResourceRequestsAndLimits, c corev1.Container, results types.ContainerResults) types.ContainerResults {
-// 	if c.ReadinessProbe == nil {
-// 		results.AddFailure("Readiness Probe", "placeholder", "placeholder")
-// 	}
+func (cv *ContainerValidation) validateHealthChecks(conf conf.Probes) {
+	if conf.Readiness["require"] && cv.Container.ReadinessProbe == nil {
+		cv.addFailure("readiness", "probe needs to be configured", "nil")
+	}
+	if conf.Liveness["require"] && cv.Container.LivenessProbe == nil {
+		cv.addFailure("liveness", "probe needs to be configured", "nil")
+	}
+}
 
-// 	if c.LivenessProbe == nil {
-// 		results.AddFailure("Liveness Probe", "placeholder", "placeholder")
-// 	}
-// 	return results
-// }
-
-// func tag(conf conf.ResourceRequestsAndLimits, c corev1.Container, results types.ContainerResults) types.ContainerResults {
-// 	img := strings.Split(c.Image, ":")
-// 	if len(img) == 1 || img[1] == "latest" {
-// 		results.AddFailure("Image Tag", "not latest", "latest")
-// 	}
-// 	return results
-// }
+func (cv *ContainerValidation) validateImage(conf conf.Images) {
+	if conf.TagRequired {
+		img := strings.Split(cv.Container.Image, ":")
+		if len(img) == 1 || img[1] == "latest" {
+			cv.addFailure("Image Tag", "not latest", "latest")
+		}
+	}
+}
 
 // func hostPort(conf conf.ResourceRequestsAndLimits, c corev1.Container, results types.ContainerResults) types.ContainerResults {
 // 	for _, port := range c.Ports {

@@ -81,16 +81,15 @@ data:
       whitelist:
         - '*.example.com'
       prevent_overlaps: true
-    health_checks:
+    healthchecks:
       readiness:
         require: true
       liveness:
         require: true
     images:
-      require_tag: true
-      repos:
-        whitelist:
-          - gcr.io
+      tagRequired: true
+      whitelistRepos:
+        - gcr.io
     namespaces:
       require_labels: true
     security_context:
