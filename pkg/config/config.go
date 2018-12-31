@@ -17,7 +17,7 @@ type ResourceMinMax struct {
 	Max *resource.Quantity
 }
 
-// ResourceList does x.
+// ResourceList maps the resource name to a range on min and max values.
 type ResourceList map[corev1.ResourceName]ResourceMinMax
 
 // RequestsAndLimits contains config for resource requests and limits.
@@ -33,7 +33,7 @@ type Configuration struct {
 	Images       Images
 }
 
-// ParseFile parses config from a file
+// ParseFile parses config from a file.
 func ParseFile(path string) (Configuration, error) {
 	rawBytes, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -42,7 +42,7 @@ func ParseFile(path string) (Configuration, error) {
 	return Parse(rawBytes)
 }
 
-// Parse parses config from a byte array
+// Parse parses config from a byte array.
 func Parse(rawBytes []byte) (Configuration, error) {
 	reader := bytes.NewReader(rawBytes)
 	conf := Configuration{}
