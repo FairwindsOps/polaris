@@ -165,3 +165,86 @@ func testValidateResources(t *testing.T, container *corev1.Container, resourceCo
 	assert.Len(t, cv.Failures, len(*expectedFailures))
 	assert.ElementsMatch(t, cv.Failures, *expectedFailures)
 }
+
+func TestValidateHealthChecks(t *testing.T) {
+
+	// Test setup.
+	p1 := conf.Probes{}
+	p2 := conf.Probes{
+		Readiness: conf.ResourceRequire{Require: false},
+		Liveness:  conf.ResourceRequire{Require: false},
+	}
+	p3 := conf.Probes{
+		Readiness: conf.ResourceRequire{Require: true},
+		Liveness:  conf.ResourceRequire{Require: true},
+	}
+
+	probe := corev1.Probe{}
+	cv1 := ContainerValidation{Container: corev1.Container{Name: ""}}
+	cv2 := ContainerValidation{Container: corev1.Container{Name: "", LivenessProbe: &probe, ReadinessProbe: &probe}}
+
+	l := types.Failure{Name: "liveness", Expected: "probe needs to be configured", Actual: "nil"}
+	r := types.Failure{Name: "readiness", Expected: "probe needs to be configured", Actual: "nil"}
+	f1 := []types.Failure{}
+	f2 := []types.Failure{r, l}
+
+	var testCases = []struct {
+		name     string
+		probes   conf.Probes
+		cv       ContainerValidation
+		expected []types.Failure
+	}{
+		{name: "probes not configured", probes: p1, cv: cv1, expected: f1},
+		{name: "probes not required", probes: p2, cv: cv1, expected: f1},
+		{name: "probes required & configured", probes: p3, cv: cv2, expected: f1},
+		{name: "probes required & not configured", probes: p3, cv: cv1, expected: f2},
+		{name: "probes configured, but not required", probes: p2, cv: cv2, expected: f1},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.cv.validateHealthChecks(tt.probes)
+			assert.Len(t, tt.cv.Failures, len(tt.expected))
+			assert.ElementsMatch(t, tt.cv.Failures, tt.expected)
+		})
+	}
+}
+
+func TestValidateImage(t *testing.T) {
+
+	// Test setup.
+	i1 := conf.Images{}
+	i2 := conf.Images{TagRequired: false}
+	i3 := conf.Images{TagRequired: true}
+
+	cv1 := ContainerValidation{Container: corev1.Container{Name: ""}}
+	cv2 := ContainerValidation{Container: corev1.Container{Name: "", Image: "test:tag"}}
+	cv3 := ContainerValidation{Container: corev1.Container{Name: "", Image: "test:latest"}}
+	cv4 := ContainerValidation{Container: corev1.Container{Name: "", Image: "test"}}
+
+	f := types.Failure{Name: "Image Tag", Expected: "not latest", Actual: "latest"}
+	f1 := []types.Failure{}
+	f2 := []types.Failure{f}
+
+	var testCases = []struct {
+		name     string
+		image    conf.Images
+		cv       ContainerValidation
+		expected []types.Failure
+	}{
+		{name: "image not configured", image: i1, cv: cv1, expected: f1},
+		{name: "image not required", image: i2, cv: cv1, expected: f1},
+		{name: "image tag required and configured", image: i3, cv: cv2, expected: f1},
+		{name: "image tag required, but not configured", image: i3, cv: cv1, expected: f2},
+		{name: "image tag required, but is latest", image: i3, cv: cv3, expected: f2},
+		{name: "image tag required, but is empty", image: i3, cv: cv4, expected: f2},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.cv.validateImage(tt.image)
+			assert.Len(t, tt.cv.Failures, len(tt.expected))
+			assert.ElementsMatch(t, tt.cv.Failures, tt.expected)
+		})
+	}
+}

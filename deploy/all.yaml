@@ -77,28 +77,15 @@ data:
         memory:
           min: 10m
           max: 2000M
-    ingresses:
-      whitelist:
-        - '*.example.com'
-      prevent_overlaps: true
-    health_checks:
+    healthChecks:
       readiness:
         require: true
       liveness:
         require: true
     images:
-      require_tag: true
-      repos:
-        whitelist:
-          - gcr.io
-    namespaces:
-      require_labels: true
-    security_context:
-      capabilities:
-        whitelist:
-          - 'CAP_SYS_ADMIN'
-      prevent_privileged: true
-      read_only_file_system: true
+      tagRequired: true
+      whitelistRepos:
+        - gcr.io
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment

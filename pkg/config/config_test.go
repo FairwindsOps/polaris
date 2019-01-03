@@ -23,7 +23,7 @@ import (
 
 var resourceConfInvalid1 = `test`
 
-var resourceConfYaml1 = `---
+var resourceConfYAML1 = `---
 resources:
   requests:
     cpu:
@@ -41,7 +41,7 @@ resources:
       max: 4G
 `
 
-var resourceConfJson1 = `{
+var resourceConfJSON1 = `{
 	"resources": {
 		"requests": {
 			"cpu": {
@@ -72,7 +72,7 @@ func TestParseError(t *testing.T) {
 }
 
 func TestParseYaml(t *testing.T) {
-	parsedConf, err := Parse([]byte(resourceConfYaml1))
+	parsedConf, err := Parse([]byte(resourceConfYAML1))
 	assert.NoError(t, err, "Expected no error when parsing config")
 
 	requests := parsedConf.Resources.Requests
@@ -89,7 +89,7 @@ func TestParseYaml(t *testing.T) {
 }
 
 func TestParseJson(t *testing.T) {
-	parsedConf, err := Parse([]byte(resourceConfJson1))
+	parsedConf, err := Parse([]byte(resourceConfJSON1))
 	assert.NoError(t, err, "Expected no error when parsing config")
 
 	requests := parsedConf.Resources.Requests
