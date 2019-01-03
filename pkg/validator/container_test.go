@@ -233,7 +233,7 @@ func TestValidateImage(t *testing.T) {
 		expected []types.Failure
 	}{
 		{name: "image not configured", image: i1, cv: cv1, expected: f1},
-		{name: "image not required	", image: i2, cv: cv1, expected: f1},
+		{name: "image not required", image: i2, cv: cv1, expected: f1},
 		{name: "image tag required and configured", image: i3, cv: cv2, expected: f1},
 		{name: "image tag required, but not configured", image: i3, cv: cv1, expected: f2},
 		{name: "image tag required, but is latest", image: i3, cv: cv3, expected: f2},
