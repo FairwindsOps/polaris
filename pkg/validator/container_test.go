@@ -166,7 +166,7 @@ func testValidateResources(t *testing.T, container *corev1.Container, resourceCo
 	assert.ElementsMatch(t, cv.Failures, *expectedFailures)
 }
 
-func TestVaidateHealthChecks(t *testing.T) {
+func TestValidateHealthChecks(t *testing.T) {
 
 	// Test setup.
 	p1 := conf.Probes{}
@@ -210,7 +210,7 @@ func TestVaidateHealthChecks(t *testing.T) {
 	}
 }
 
-func TestVaidateImage(t *testing.T) {
+func TestValidateImage(t *testing.T) {
 
 	// Test setup.
 	i1 := conf.Images{}
