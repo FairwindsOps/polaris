@@ -29,7 +29,7 @@ type RequestsAndLimits struct {
 // Configuration contains all of the config for the validation checks.
 type Configuration struct {
 	Resources    RequestsAndLimits
-	Healthchecks Probes
+	HealthChecks Probes
 	Images       Images
 }
 
@@ -59,13 +59,14 @@ func Parse(rawBytes []byte) (Configuration, error) {
 
 // Probes contains config for the readiness and liveness probes.
 type Probes struct {
-	Readiness resourceRequire
-	Liveness  resourceRequire
+	Readiness ResourceRequire
+	Liveness  ResourceRequire
 }
 
-type resourceRequire map[require]bool
-
-type require string
+// ResourceRequire indicates if this resource should be validated.
+type ResourceRequire struct {
+	Require bool
+}
 
 // Images contains the config for images.
 type Images struct {

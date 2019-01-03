@@ -35,7 +35,7 @@ func validateContainer(conf conf.Configuration, container corev1.Container) Cont
 	}
 
 	cv.validateResources(conf.Resources)
-	cv.validateHealthChecks(conf.Healthchecks)
+	cv.validateHealthChecks(conf.HealthChecks)
 	cv.validateImage(conf.Images)
 
 	return cv
@@ -68,10 +68,10 @@ func (cv *ContainerValidation) withinRange(resourceName string, expectedRange co
 }
 
 func (cv *ContainerValidation) validateHealthChecks(conf conf.Probes) {
-	if conf.Readiness["require"] && cv.Container.ReadinessProbe == nil {
+	if conf.Readiness.Require && cv.Container.ReadinessProbe == nil {
 		cv.addFailure("readiness", "probe needs to be configured", "nil")
 	}
-	if conf.Liveness["require"] && cv.Container.LivenessProbe == nil {
+	if conf.Liveness.Require && cv.Container.LivenessProbe == nil {
 		cv.addFailure("liveness", "probe needs to be configured", "nil")
 	}
 }
