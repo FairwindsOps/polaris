@@ -107,7 +107,7 @@ spec:
       serviceAccountName: fairwinds
       containers:
       - name: webhook
-        image: quay.io/jessgreb/fairwinds
+        image: quay.io/reactiveops/fairwinds
         command: ["fairwinds", "--webhook"]
         imagePullPolicy: Always
         resources:
@@ -125,7 +125,7 @@ spec:
           subPath: config.yml
           readOnly: true
       - name: dashboard
-        image: quay.io/jessgreb/fairwinds
+        image: quay.io/reactiveops/fairwinds
         command: ["fairwinds", "--dashboard"]
         imagePullPolicy: Always
         ports:
