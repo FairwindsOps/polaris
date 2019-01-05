@@ -106,8 +106,9 @@ spec:
     spec:
       serviceAccountName: fairwinds
       containers:
-      - name: fairwinds
-        image: quay.io/reactiveops/fairwinds
+      - name: webhook
+        image: quay.io/jessgreb/fairwinds
+        command: ["fairwinds", "--webhook"]
         imagePullPolicy: Always
         resources:
           limits:
@@ -119,6 +120,24 @@ spec:
         volumeMounts:
         - name: certs
           mountPath: /tmp/cert/
+        - name: fairwinds
+          mountPath: /opt/app/config.yml
+          subPath: config.yml
+          readOnly: true
+      - name: dashboard
+        image: quay.io/jessgreb/fairwinds
+        command: ["fairwinds", "--dashboard"]
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        volumeMounts:
         - name: fairwinds
           mountPath: /opt/app/config.yml
           subPath: config.yml
