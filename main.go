@@ -65,15 +65,6 @@ func main() {
 	}
 }
 
-// containers:
-//   name: example-123
-//   checks:
-//     - name: Resource Requests
-//       valid: true
-//     - name: Resource Limits
-//       valid: false
-//       message: "CPU resource limit is too low (expected: 1m, actual: nil)"
-
 func startDashboardServer(c conf.Configuration) {
 	http.HandleFunc("/validate", func(w http.ResponseWriter, r *http.Request) { validateHandler(w, r, c) })
 	glog.Println("Starting Fairwinds dashboard webserver on port 8080.")
@@ -91,7 +82,6 @@ func validateHandler(w http.ResponseWriter, r *http.Request, c conf.Configuratio
 		result := validator.ValidatePods(c, &pod, validator.Results{})
 		results = append(results, result)
 	}
-	// aggregate results
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)

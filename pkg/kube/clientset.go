@@ -7,13 +7,21 @@ import (
 
 	homedir "github.com/mitchellh/go-homedir"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-// createClientset loads kubeconfig and setups the connection to the k8s api.
 func createClientset() *kubernetes.Clientset {
+	var err error
+	var config *rest.Config
 	kubeconfig := getKubeConfig()
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+
+	switch kubeconfig {
+	case "":
+		config, err = rest.InClusterConfig()
+	default:
+		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
+	}
 	if err != nil {
 		fmt.Println("Error:", err)
 	}
@@ -22,11 +30,9 @@ func createClientset() *kubernetes.Clientset {
 	if err != nil {
 		fmt.Println("Error:", err)
 	}
-
 	return clientset
 }
 
-// getKubeConfig returns a valid kubeconfig path.
 func getKubeConfig() string {
 	var path string
 
@@ -53,9 +59,3 @@ var clientset = createClientset()
 
 // CoreV1API exports the v1 Core API client.
 var CoreV1API = clientset.CoreV1()
-
-// AutoscalingV1API exports the v1 Autoscaling API client.
-var AutoscalingV1API = clientset.AutoscalingV1()
-
-// AppsV1API exports the v1 Apps API client.
-var AppsV1API = clientset.AppsV1()

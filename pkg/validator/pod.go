@@ -54,7 +54,7 @@ func (v *PodValidator) Handle(ctx context.Context, req types.Request) types.Resp
 	return admission.ValidationResponse(allowed, reason)
 }
 
-// ValidatePods does x.
+// ValidatePods does validates that each pod conforms to the Fairwinds config.
 func ValidatePods(conf conf.Configuration, pod *corev1.Pod, results Results) Results {
 	for _, container := range pod.Spec.InitContainers {
 		results.InitContainerValidations = append(
