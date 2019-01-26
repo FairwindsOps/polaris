@@ -4,6 +4,7 @@
 *.dll
 *.so
 *.dylib
+fairwinds
 
 # Test binary, build with `go test -c`
 *.test
