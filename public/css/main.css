@@ -1,0 +1,196 @@
+body {
+  margin: 0;
+  font-family: 'Helvetica', 'Arial', sans-serif;
+}
+
+.header {
+  background-color: #006369;
+  color: #fff;
+  padding: 50px;
+}
+
+.header h1 {
+  font-family: 'Lobster', sans-serif;
+  font-size: 100px;
+  font-weight: normal;
+  text-align: center;
+  margin: 0;
+}
+
+.cluster-score {
+  margin: 0;
+  padding: 30px;
+  color: #003339;
+  background-color: #eaf3f9;
+  text-align: center;
+}
+
+.cluster-score h2 {
+  margin: 0;
+  font-size: 80px;
+}
+
+.cluster-score .status {
+  width: 400px;
+  height: 30px;
+  margin: 30px auto;
+}
+
+.cluster-score .status .passing, .cluster-score .status .failing, .cluster-score .status .warning {
+  height: 30px;
+  border-radius: 8px;
+}
+
+.cluster-score .status .passing {
+  background-color: #4ab977;
+  float: left;
+}
+
+.cluster-score .status .warning {
+  background-color: #bdbd63;
+  float: left;
+}
+
+.cluster-score .status .failing {
+  background-color: #c37575;
+  width: 400px;
+}
+
+.cluster-score p {
+  margin: 10px 0;
+  font-weight: 300;
+  font-size: 24px;
+}
+
+.cluster-score .summary {
+  margin: 30px auto;
+  font-weight: 300;
+  font-size: 24px;
+  width: 300px;
+  text-align: left;
+  line-height: 40px;
+}
+
+.cluster-score .summary .value {
+  float: right;
+  font-size: 28px;
+}
+
+.namespace-header {
+  background-color: #006369;
+  color: #fff;
+  font-size: 50px;
+  font-weight: normal;
+  padding: 20px;
+}
+
+.namespace-header h3 {
+  margin: 0;
+  font-weight: 300;
+  font-size: 30px;
+}
+
+.namespace-header h3 strong {
+  margin: 0;
+  font-weight: bold;
+  font-size: 30px;
+}
+
+.cluster-score .status {
+  width: 400px;
+  height: 30px;
+  margin: 30px auto;
+}
+
+.namespace-content {
+  width: 100%;
+  background-color: #eaf3f9;
+}
+
+.namespace-content tr {
+  height: 50px;
+}
+
+.namespace-content td {
+  padding: 15px 20px;
+  margin: 0;
+  font-size: 18px;
+  border-bottom: 1px solid #aac3c9;
+}
+
+.namespace-content .caret-expander {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  margin-right: 10px;
+  background-image: url('../images/caret-right.svg');
+  background-size: 15px auto;
+  background-repeat: no-repeat;
+  background-position: 2px center;
+}
+
+.namespace-content .caret-expander.expanded {
+  background-image: url('../images/caret-bottom.svg');
+  background-position: center center;
+}
+
+.namespace-content .extra {
+  list-style-type: none;
+  font-size: 14px;
+  line-height: 19px;
+  margin: 10px 30px;
+  padding: 0;
+}
+
+.namespace-content .extra span {
+  display: inline-block;
+  text-align: center;
+  width: 20px;
+}
+
+.namespace-content .extra .pass {
+  color: #2a9957;
+}
+
+.namespace-content .extra .warn {
+  color: #adad43;
+}
+
+.namespace-content .extra .warn span {
+  font-size: 11px;
+}
+
+.namespace-content .extra .fail {
+  color: #a35555;
+}
+
+.namespace-content td.status-bar {
+  vertical-align: top;
+  padding-top: 18px;
+}
+
+.namespace-content .status {
+  float: right;
+  width: 200px;
+}
+
+.namespace-content .status .passing, .namespace-content .status .failing, .namespace-content .status .warning {
+  height: 15px;
+  border-radius: 4px;
+}
+
+.namespace-content .status .passing {
+  background-color: #4ab977;
+  float: left;
+}
+
+.namespace-content .status .warning {
+  background-color: #bdbd63;
+  float: left;
+}
+
+.namespace-content .status .failing {
+  background-color: #c37575;
+  width: 200px;
+}
+
