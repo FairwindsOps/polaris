@@ -1,4 +1,3 @@
-package validator
 
 import (
 	"context"
@@ -54,19 +53,6 @@ func (v *DeployValidator) Handle(ctx context.Context, req types.Request) types.R
 
 // ValidateDeploys does validates that each deployment conforms to the Fairwinds config.
 func ValidateDeploys(conf conf.Configuration, deploy *appsv1.Deployment, results Results) Results {
-	for _, container := range deploy.Spec.Template.Spec.InitContainers {
-		results.InitContainerValidations = append(
-			results.InitContainerValidations,
-			validateContainer(conf, container),
-		)
-	}
-
-	for _, container := range deploy.Spec.Template.Spec.Containers {
-		results.ContainerValidations = append(
-			results.ContainerValidations,
-			validateContainer(conf, container),
-		)
-	}
-
-	return results
+	pod := deploy.Spec.Template.Spec
+	return ValidatePods(conf, pod, results)
 }
