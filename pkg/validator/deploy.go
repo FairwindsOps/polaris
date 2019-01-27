@@ -13,7 +13,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission/types"
 )
 
-// Validator validates Pods
+// Validator validates k8s resources.
 type Validator struct {
 	client  client.Client
 	decoder types.Decoder
@@ -38,7 +38,7 @@ func (v *Validator) InjectDecoder(d types.Decoder) error {
 
 var _ admission.Handler = &Validator{}
 
-// Handle for DeployValidator admits a deploy if validation passes.
+// Handle for Validator to run validation checks.
 func (v *Validator) Handle(ctx context.Context, req types.Request) types.Response {
 	deploy := appsv1.Deployment{}
 	err := v.decoder.Decode(req, &deploy)
