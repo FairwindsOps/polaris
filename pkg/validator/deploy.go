@@ -19,8 +19,6 @@ type DeployValidator struct {
 	Config  conf.Configuration
 }
 
-// PodValidator implements inject.Client.
-// A client will be automatically injected.
 var _ inject.Client = &DeployValidator{}
 
 // InjectClient injects the client.
@@ -29,8 +27,6 @@ func (v *DeployValidator) InjectClient(c client.Client) error {
 	return nil
 }
 
-// DeployValidator implements inject.Decoder.
-// A decoder will be automatically injected.
 var _ inject.Decoder = &DeployValidator{}
 
 // InjectDecoder injects the decoder.
@@ -39,10 +35,9 @@ func (v *DeployValidator) InjectDecoder(d types.Decoder) error {
 	return nil
 }
 
-// Implement admission.Handler so the controller can handle admission request.
 var _ admission.Handler = &DeployValidator{}
 
-// Handle for DeployValidator admits a pod if validation passes.
+// Handle for DeployValidator admits a deploy if validation passes.
 func (v *DeployValidator) Handle(ctx context.Context, req types.Request) types.Response {
 	deploy := appsv1.Deployment{}
 
