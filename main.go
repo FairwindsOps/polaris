@@ -22,6 +22,8 @@ import (
 
 	conf "github.com/reactiveops/fairwinds/pkg/config"
 	"github.com/reactiveops/fairwinds/pkg/validator"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	apitypes "k8s.io/apimachinery/pkg/types"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
@@ -106,10 +108,10 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 		os.Exit(1)
 	}
 
-	deployWebhook := validator.NewDeployWebhook(mgr, c)
-	podWebhook := validator.NewPodWebhook(mgr, c)
+	p := validator.NewWebhook("pod", mgr, validator.Validator{Config: c}, &corev1.Pod{})
+	d := validator.NewWebhook("deploy", mgr, validator.Validator{Config: c}, &appsv1.Deployment{})
 	entryLog.Info("registering webhooks to the webhook server")
-	if err = as.Register(podWebhook, deployWebhook); err != nil {
+	if err = as.Register(p, d); err != nil {
 		entryLog.Error(err, "unable to register webhooks in the admission server")
 		os.Exit(1)
 	}
