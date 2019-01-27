@@ -15,18 +15,13 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	glog "log"
 	"net/http"
 	"os"
 
 	conf "github.com/reactiveops/fairwinds/pkg/config"
-	"github.com/reactiveops/fairwinds/pkg/kube"
 	"github.com/reactiveops/fairwinds/pkg/validator"
-	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	apitypes "k8s.io/apimachinery/pkg/types"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
@@ -34,7 +29,6 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
-	"sigs.k8s.io/controller-runtime/pkg/webhook/admission/builder"
 )
 
 // FairwindsName is used for Kubernetes resource naming
@@ -66,25 +60,10 @@ func main() {
 }
 
 func startDashboardServer(c conf.Configuration) {
-	http.HandleFunc("/validate", func(w http.ResponseWriter, r *http.Request) { validateHandler(w, r, c) })
+	http.HandleFunc("/validate", func(w http.ResponseWriter, r *http.Request) { validator.DeployHandler(w, r, c) })
+	http.HandleFunc("/ping", validator.PingHandler)
 	glog.Println("Starting Fairwinds dashboard webserver on port 8080.")
 	glog.Fatal(http.ListenAndServe(":8080", nil))
-}
-
-func validateHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration) {
-	var results []validator.Results
-	pods, err := kube.CoreV1API.Pods("").List(metav1.ListOptions{})
-	if err != nil {
-		return
-	}
-	glog.Println("pods count:", len(pods.Items))
-	for _, pod := range pods.Items {
-		result := validator.ValidatePods(c, &pod, validator.Results{})
-		results = append(results, result)
-	}
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(results)
 }
 
 func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool) {
@@ -96,19 +75,6 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 	mgr, err := manager.New(config.GetConfigOrDie(), manager.Options{})
 	if err != nil {
 		entryLog.Error(err, "unable to set up overall controller manager")
-		os.Exit(1)
-	}
-
-	podValidatingWebhook, err := builder.NewWebhookBuilder().
-		Name("validating.k8s.io").
-		Validating().
-		Operations(admissionregistrationv1beta1.Create, admissionregistrationv1beta1.Update).
-		WithManager(mgr).
-		ForType(&corev1.Pod{}).
-		Handlers(&validator.PodValidator{Config: c}).
-		Build()
-	if err != nil {
-		entryLog.Error(err, "unable to setup validating webhook")
 		os.Exit(1)
 	}
 
@@ -140,8 +106,10 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 		os.Exit(1)
 	}
 
+	deployWebhook := validator.NewDeployWebhook(mgr, c)
+	podWebhook := validator.NewPodWebhook(mgr, c)
 	entryLog.Info("registering webhooks to the webhook server")
-	if err = as.Register(podValidatingWebhook); err != nil {
+	if err = as.Register(podWebhook, deployWebhook); err != nil {
 		entryLog.Error(err, "unable to register webhooks in the admission server")
 		os.Exit(1)
 	}

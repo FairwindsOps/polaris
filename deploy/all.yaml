@@ -1,4 +1,17 @@
 ---
+kind: Service
+apiVersion: v1
+metadata:
+  name: fairwinds-dash
+spec:
+  selector:
+    app: fairwinds
+  ports:
+  - name: dashboard
+    protocol: TCP
+    port: 80
+    targetPort: 8080
+---
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -22,9 +35,9 @@ metadata:
     app: fairwinds
 rules:
   - apiGroups:
-      - ''
-      - 'apps/v1'
-      - 'admissionregistration.k8s.io'
+    - ''
+    - 'apps'
+    - 'admissionregistration.k8s.io'
     resources:
       - '*'
     verbs:
@@ -110,6 +123,8 @@ spec:
         image: quay.io/reactiveops/fairwinds
         command: ["fairwinds", "--webhook"]
         imagePullPolicy: Always
+        ports:
+        - containerPort: 9876
         resources:
           limits:
             cpu: 100m
