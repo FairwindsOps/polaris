@@ -19,6 +19,7 @@ package validator
 
 type NamespacedResult struct {
 	Namespace string
+	Summary   *ResultSummary
 	Results   []ResourceResult
 }
 

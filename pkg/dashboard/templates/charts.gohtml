@@ -22,21 +22,21 @@
 
   <div class="dashboard-content">
     <div class="charts">
-        <div class="cluster-score chart-section">
-          <h3>Overall Score:</h3>
-          <div style="width:510px; height: 400px; left: -100px; position: relative;">
-            <canvas id="clusterScoreChart"></canvas>
-          </div>
+      <div class="cluster-score chart-section">
+        <h3>Overall Score:</h3>
+        <div style="width:510px; height: 400px; left: -100px; position: relative;">
+          <canvas id="clusterScoreChart"></canvas>
         </div>
-        <div class="namespace-score chart-section">
-          <h3>Scores By Namespace:</h3>
-          <canvas id="namespaceScoreChart"></canvas>
-        </div>
+      </div>
+      <div class="namespace-score chart-section">
+        <h3>Scores By Namespace:</h3>
+        <canvas id="namespaceScoreChart"></canvas>
+      </div>
     </div>
 
-    {{ range .NamespacedResults }}
+    {{ range $namespace, $results := .NamespacedResults }}
       <div class="namespace">
-        <h3>Namespace: <strong>{{ .Namespace }}</strong></h3>
+        <h3>Namespace: <strong>{{ $namespace }}</strong></h3>
 
         <table class="namespace-content" cellspacing="0">
           {{ range .Results }}
@@ -44,7 +44,7 @@
               <td>
                 <div class="name"><span class="caret-expander expanded"></span>{{ .Type }}: <strong>{{ .Name }}</strong></div>
                 <ul class="extra">
-                  {{ range .Messages}}
+                  {{ range $results.Messages}}
                     <li class="{{ .Type }}"><span>&#{{ .HTMLSpecialCharCode }};</span> {{ .Message }}</li>
                   {{ end }}
                 </ul>
@@ -52,8 +52,8 @@
               <td class="status-bar">
                 <div class="status">
                   <div class="failing">
-                    <div class="warning" style="width: {{ .Summary.WarningWidth 200 }}px;">
-                      <div class="passing" style="width: {{ .Summary.SuccessWidth 200 }}px;"></div>
+                    <div class="warning" style="width: {{ $results.Summary.WarningWidth 200 }}px;">
+                      <div class="passing" style="width: {{ $results.Summary.SuccessWidth 200 }}px;"></div>
                     </div>
                   </div>
                 </div>
