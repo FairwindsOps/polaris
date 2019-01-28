@@ -16,12 +16,11 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeployHandler creates a handler for to validate the current deploy workloads.
-func DeployHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration) {
+func DeployHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration) error {
 	var results []Results
 	deploys, err := kube.AppsV1API.Deployments("").List(metav1.ListOptions{})
 	if err != nil {
-		fmt.Fprintf(w, err.Error())
-		return
+		return err
 	}
 	for _, deploy := range deploys.Items {
 		result := ValidateDeploys(c, &deploy, Results{})
@@ -30,4 +29,5 @@ func DeployHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration)
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
+	return nil
 }

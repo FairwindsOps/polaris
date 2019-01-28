@@ -67,7 +67,13 @@ func main() {
 }
 
 func startDashboardServer(c conf.Configuration) {
-	http.HandleFunc("/validate", func(w http.ResponseWriter, r *http.Request) { validator.DeployHandler(w, r, c) })
+	http.HandleFunc("/validate", func(w http.ResponseWriter, r *http.Request) {
+		err := validator.DeployHandler(w, r, c)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+	})
 	http.HandleFunc("/ping", validator.PingHandler)
 	glog.Println("Starting Fairwinds dashboard webserver on port 8080.")
 	glog.Fatal(http.ListenAndServe(":8080", nil))
