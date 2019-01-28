@@ -21,3 +21,6 @@ var clientset = createClientset()
 
 // CoreV1API exports the v1 Core API client.
 var CoreV1API = clientset.CoreV1()
+
+// AppsV1API exports the v1 Apps API client.
+var AppsV1API = clientset.AppsV1()
