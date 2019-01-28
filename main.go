@@ -40,7 +40,7 @@ var FairwindsName = "fairwinds"
 var log = logf.Log.WithName(FairwindsName)
 
 func main() {
-	// dashboard := flag.Bool("dashboard", false, "Runs the webserver for Fairwinds dashboard.")
+	dashboard := flag.Bool("dashboard", false, "Runs the webserver for Fairwinds dashboard.")
 	webhook := flag.Bool("webhook", false, "Runs the webhook webserver.")
 
 	var disableWebhookConfigInstaller bool
@@ -59,9 +59,9 @@ func main() {
 		startWebhookServer(c, disableWebhookConfigInstaller)
 	}
 
-	// if *dashboard {
-	startDashboardServer(c)
-	// }
+	if *dashboard {
+		startDashboardServer(c)
+	}
 }
 
 func startDashboardServer(c conf.Configuration) {

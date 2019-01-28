@@ -1,0 +1,193 @@
+body {
+  margin: 0;
+  font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+  background: #eee;
+}
+
+.header {
+  background-color: #fff;
+  color: #006369;
+  padding: 20px 30px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+.header h1 {
+  font-family: 'Lobster', sans-serif;
+  font-size: 60px;
+  font-weight: normal;
+  margin: 0 auto;
+  width: 900px;
+}
+
+.dashboard-content {
+  width: 960px;
+  margin: 0 auto;
+}
+
+.charts {
+  height: 400px;
+}
+
+.chart-section {
+  float: left;
+  margin: 20px;
+  padding: 30px;
+  width: 300px;
+  height: 320px;
+  color: #333;
+  background-color: #fff;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  border-radius: 5px;
+}
+
+.chart-section.namespace-score {
+  margin-left: 0px;
+  width: 480px;
+}
+
+.chart-section h3 {
+  margin: 0 0 15px;
+  padding: 0 0 15px;
+  font-weight: 300;
+  font-size: 30px;
+  border-bottom: 1px solid #eee;
+}
+
+#clusterScoreChart {
+  width: 260px;
+  height: 260px;
+}
+
+#namespaceScoreChart {
+  width: 520px;
+  height: 260px;
+}
+
+.namespace {
+  margin: 20px;
+  padding: 10px 20px;
+  color: #333;
+  background-color: #fff;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  border-radius: 5px;
+}
+
+.namespace h3 {
+  margin: 0;
+  font-weight: 300;
+  font-size: 30px;
+  padding: 20px;
+}
+
+.namespace h3 strong {
+  margin: 0;
+  font-weight: bold;
+  font-size: 30px;
+}
+
+.cluster-score .status {
+  width: 400px;
+  height: 30px;
+  margin: 30px auto;
+}
+
+.namespace-content {
+  width: 100%;
+  border-spacing: 0;
+  border-collapse: collapse;
+}
+
+.namespace-content tr {
+  height: 50px;
+}
+
+.namespace-content td {
+  padding: 15px 20px;
+  margin: 0;
+  font-size: 18px;
+  border-top: 1px solid #eee;
+}
+
+.namespace-content .caret-expander {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  margin-right: 10px;
+  background-image: url('../images/caret-right.svg');
+  background-size: 15px auto;
+  background-repeat: no-repeat;
+  background-position: 2px center;
+}
+
+.namespace-content .caret-expander.expanded {
+  background-image: url('../images/caret-bottom.svg');
+  background-position: center center;
+}
+
+.namespace-content .extra {
+  list-style-type: none;
+  font-size: 14px;
+  line-height: 19px;
+  margin: 10px 30px;
+  padding: 0;
+}
+
+.namespace-content .extra span {
+  display: inline-block;
+  text-align: center;
+  width: 20px;
+  font-size: 20px;
+}
+
+.namespace-content .extra .success {
+  color: #006469;
+}
+
+.namespace-content .extra .warning {
+  color: #AE7500;
+}
+
+.namespace-content .extra .warning span {
+  font-size: 15px;
+}
+
+.namespace-content .extra .failure {
+  color: #AE0400;
+}
+
+.namespace-content td.status-bar {
+  vertical-align: top;
+  padding-top: 18px;
+}
+
+.namespace-content .status {
+  float: right;
+  width: 200px;
+}
+
+.namespace-content .status div {
+  height: 15px;
+  border-radius: 10px;
+}
+
+.namespace-content .status .passing {
+  background-color: #006469;
+  float: left;
+}
+
+.namespace-content .status .warning {
+  background-color: #AE7500;
+  float: left;
+}
+
+@keyframes fadeIn {
+  0% {opacity: 0;}
+  100% {opacity: 1;}
+}
+
+.namespace-content .status .failing {
+  background-color: #AE0400;
+  width: 200px;
+  animation: fadeIn 2s;
+}
+

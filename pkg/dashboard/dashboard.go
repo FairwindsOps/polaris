@@ -17,7 +17,7 @@ type DashboardData struct {
 	NamespacedResults []validator.NamespacedResult
 }
 
-var tmpl = template.Must(template.ParseFiles("pkg/dashboard/templates/dashboard.gohtml"))
+var tmpl = template.Must(template.ParseFiles("pkg/dashboard/templates/charts.gohtml"))
 
 func Render(w http.ResponseWriter, r *http.Request, c conf.Configuration) {
 	dashboardData := getDashboardData()
