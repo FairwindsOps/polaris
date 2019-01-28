@@ -1,0 +1,15 @@
+resources:
+  requests:
+    cpu:
+      min: 100m
+      max: 1
+    memory:
+      min: 100M
+      max: 3G
+  limits:
+    cpu:
+      min: 150m
+      max: 2
+    memory:
+      min: 150M
+      max: 4G

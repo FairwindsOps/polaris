@@ -21,6 +21,7 @@ import (
 	"os"
 
 	conf "github.com/reactiveops/fairwinds/pkg/config"
+	"github.com/reactiveops/fairwinds/pkg/dashboard"
 	"github.com/reactiveops/fairwinds/pkg/validator"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -49,7 +50,8 @@ func main() {
 
 	c, err := conf.ParseFile("config.yml")
 	if err != nil {
-		return
+		glog.Println("Error parsing config.yml:", err)
+		os.Exit(1)
 	}
 
 	if *webhook {
@@ -62,9 +64,18 @@ func main() {
 }
 
 func startDashboardServer(c conf.Configuration) {
-	http.HandleFunc("/validate", func(w http.ResponseWriter, r *http.Request) { validator.DeployHandler(w, r, c) })
-	http.HandleFunc("/ping", validator.PingHandler)
-	glog.Println("Starting Fairwinds dashboard webserver on port 8080.")
+	http.HandleFunc("/results.json", func(w http.ResponseWriter, r *http.Request) {
+		dashboard.RenderJSON(w, r, c)
+	})
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("public/"))))
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+		dashboard.Render(w, r, c)
+	})
+	glog.Println("Starting Fairwinds dashboard server on port 8080.")
 	glog.Fatal(http.ListenAndServe(":8080", nil))
 }
 

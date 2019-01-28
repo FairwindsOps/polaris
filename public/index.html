@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>Fairwinds</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://fonts.googleapis.com/css?family=Lobster" rel="stylesheet">
+  <link rel="stylesheet" href="css/normalize.css">
+  <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body>
+  <div class="header">
+    <h1>Fairwinds</h1>
+  </div>
+
+  <div class="cluster-score">
+    <p>Overall Score:</p>
+    <h2>64%</h2>
+    <div class="status">
+      <div class="failing">
+        <div class="warning" style="width: 300px;">
+          <div class="passing" style="width: 216px;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="summary">
+      <div class="item">
+        <span class="label">Successes:</span>
+        <strong class="value">118</strong>
+      </div>
+      <div class="item">
+        <span class="label">Warnings:</span>
+        <strong class="value">34</strong>
+      </div>
+      <div class="item">
+        <span class="label">Failures:</span>
+        <strong class="value">28</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="namespace-header">
+    <h3>Namespace: <strong>kube-system</strong></h3>
+  </div>
+
+  <table class="namespace-content" cellspacing="0">
+    <tr>
+      <td>
+        <div class="name"><span class="caret-expander"></span>DaemonSet: <strong>datadog-agent</strong></div>
+      </td>
+      <td class="status-bar">
+        <div class="status">
+          <div class="failing">
+            <div class="warning" style="width: 124px;">
+              <div class="passing" style="width: 82px;"></div>
+            </div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <div class="name"><span class="caret-expander expanded"></span>Deployment: <strong>tiller-deployment</strong></div>
+        <ul class="extra">
+          <li class="pass"><span>&#9745;</span> Image Tag Specified</li>
+          <li class="pass"><span>&#9745;</span> Resource Limits</li>
+          <li class="pass"><span>&#9745;</span> Resource Requests</li>
+          <li class="warn"><span>&#9888;</span> Run As Non Root User</li>
+          <li class="fail"><span>&#9746;</span> Liveness Probe</li>
+          <li class="fail"><span>&#9746;</span> Readiness Probe</li>
+        </ul>
+      </td>
+      <td class="status-bar">
+        <div class="status">
+          <div class="failing">
+            <div class="warning" style="width: 150px;">
+              <div class="passing" style="width: 106px;"></div>
+            </div>
+          </div>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+</body>
+
+</html>
