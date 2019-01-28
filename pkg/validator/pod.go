@@ -15,55 +15,23 @@
 package validator
 
 import (
-	"context"
-	"net/http"
-
 	conf "github.com/reactiveops/fairwinds/pkg/config"
 	corev1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
-	"sigs.k8s.io/controller-runtime/pkg/webhook/admission/types"
 )
 
 var log = logf.Log.WithName("Fairwinds Validator")
 
-// PodValidator validates Pods
-type PodValidator struct {
-	client  client.Client
-	decoder types.Decoder
-	Config  conf.Configuration
-}
-
-// Implement admission.Handler so the controller can handle admission request.
-var _ admission.Handler = &PodValidator{}
-
-// Handle for PodValidator admits a pod if validation passes.
-func (v *PodValidator) Handle(ctx context.Context, req types.Request) types.Response {
-	pod := &corev1.Pod{}
-
-	err := v.decoder.Decode(req, pod)
-	if err != nil {
-		return admission.ErrorResponse(http.StatusBadRequest, err)
-	}
-
-	results := ValidatePods(v.Config, pod, Results{})
-	allowed, reason := results.Format()
-
-	return admission.ValidationResponse(allowed, reason)
-}
-
-// ValidatePods does validates that each pod conforms to the Fairwinds config.
-func ValidatePods(conf conf.Configuration, pod *corev1.Pod, results Results) Results {
-	for _, container := range pod.Spec.InitContainers {
+// ValidatePods validates that each pod conforms to the Fairwinds config.
+func ValidatePods(conf conf.Configuration, pod *corev1.PodSpec, results Results) Results {
+	for _, container := range pod.InitContainers {
 		results.InitContainerValidations = append(
 			results.InitContainerValidations,
 			validateContainer(conf, container),
 		)
 	}
 
-	for _, container := range pod.Spec.Containers {
+	for _, container := range pod.Containers {
 		results.ContainerValidations = append(
 			results.ContainerValidations,
 			validateContainer(conf, container),
@@ -71,24 +39,4 @@ func ValidatePods(conf conf.Configuration, pod *corev1.Pod, results Results) Res
 	}
 
 	return results
-}
-
-// PodValidator implements inject.Client.
-// A client will be automatically injected.
-var _ inject.Client = &PodValidator{}
-
-// InjectClient injects the client.
-func (v *PodValidator) InjectClient(c client.Client) error {
-	v.client = c
-	return nil
-}
-
-// PodValidator implements inject.Decoder.
-// A decoder will be automatically injected.
-var _ inject.Decoder = &PodValidator{}
-
-// InjectDecoder injects the decoder.
-func (v *PodValidator) InjectDecoder(d types.Decoder) error {
-	v.decoder = d
-	return nil
 }

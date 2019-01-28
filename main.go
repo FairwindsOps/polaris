@@ -23,7 +23,7 @@ import (
 	conf "github.com/reactiveops/fairwinds/pkg/config"
 	"github.com/reactiveops/fairwinds/pkg/dashboard"
 	"github.com/reactiveops/fairwinds/pkg/validator"
-	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apitypes "k8s.io/apimachinery/pkg/types"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -32,7 +32,6 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
-	"sigs.k8s.io/controller-runtime/pkg/webhook/admission/builder"
 )
 
 // FairwindsName is used for Kubernetes resource naming
@@ -92,19 +91,6 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 		os.Exit(1)
 	}
 
-	podValidatingWebhook, err := builder.NewWebhookBuilder().
-		Name("validating.k8s.io").
-		Validating().
-		Operations(admissionregistrationv1beta1.Create, admissionregistrationv1beta1.Update).
-		WithManager(mgr).
-		ForType(&corev1.Pod{}).
-		Handlers(&validator.PodValidator{Config: c}).
-		Build()
-	if err != nil {
-		entryLog.Error(err, "unable to setup validating webhook")
-		os.Exit(1)
-	}
-
 	entryLog.Info("setting up webhook server")
 	as, err := webhook.NewServer(FairwindsName, mgr, webhook.ServerOptions{
 		Port:                          9876,
@@ -133,8 +119,10 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 		os.Exit(1)
 	}
 
+	p := validator.NewWebhook("pod", mgr, validator.Validator{Config: c}, &corev1.Pod{})
+	d := validator.NewWebhook("deploy", mgr, validator.Validator{Config: c}, &appsv1.Deployment{})
 	entryLog.Info("registering webhooks to the webhook server")
-	if err = as.Register(podValidatingWebhook); err != nil {
+	if err = as.Register(p, d); err != nil {
 		entryLog.Error(err, "unable to register webhooks in the admission server")
 		os.Exit(1)
 	}

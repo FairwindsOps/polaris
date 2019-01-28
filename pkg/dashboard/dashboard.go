@@ -33,7 +33,7 @@ func RenderJSON(w http.ResponseWriter, r *http.Request, c conf.Configuration) {
 	}
 	log.Println("pods count:", len(pods.Items))
 	for _, pod := range pods.Items {
-		result := validator.ValidatePods(c, &pod, validator.Results{})
+		result := validator.ValidatePods(c, &pod.Spec, validator.Results{})
 		results = append(results, result)
 	}
 	w.WriteHeader(http.StatusOK)
