@@ -2,7 +2,6 @@ package validator
 
 import (
 	"fmt"
-	"os"
 
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -12,7 +11,7 @@ import (
 )
 
 // NewWebhook creates a validating admission webhook for the apiType.
-func NewWebhook(name string, mgr manager.Manager, validator Validator, apiType runtime.Object) *admission.Webhook {
+func NewWebhook(name string, mgr manager.Manager, validator Validator, apiType runtime.Object) (*admission.Webhook, error) {
 	name = fmt.Sprintf("%s.k8s.io", name)
 	path := fmt.Sprintf("/validating-%s", name)
 
@@ -26,9 +25,8 @@ func NewWebhook(name string, mgr manager.Manager, validator Validator, apiType r
 		Handlers(&validator).
 		Build()
 	if err != nil {
-		log.Error(err, "unable to setup validating webhook:", name)
-		os.Exit(1)
+		return nil, err
 	}
 
-	return webhook
+	return webhook, nil
 }

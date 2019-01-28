@@ -44,21 +44,26 @@ func main() {
 	var disableWebhookConfigInstaller bool
 	flag.BoolVar(&disableWebhookConfigInstaller, "disable-webhook-config-installer", false,
 		"disable the installer in the webhook server, so it won't install webhook configuration resources during bootstrapping")
-
 	flag.Parse()
 
 	c, err := conf.ParseFile("config.yml")
 	if err != nil {
-		return
+		log.Error(err, "error parsing config file")
+		os.Exit(1)
 	}
 
 	if *webhook {
-		startWebhookServer(c, disableWebhookConfigInstaller)
+		err = startWebhookServer(c, disableWebhookConfigInstaller)
+	}
+	if err != nil {
+		log.Error(err, "error starting webhook server")
+		os.Exit(1)
 	}
 
 	if *dashboard {
 		startDashboardServer(c)
 	}
+
 }
 
 func startDashboardServer(c conf.Configuration) {
@@ -68,19 +73,16 @@ func startDashboardServer(c conf.Configuration) {
 	glog.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool) {
+func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool) error {
 	logf.SetLogger(logf.ZapLogger(false))
 	entryLog := log.WithName("entrypoint")
 
 	// Setup a Manager
-	entryLog.Info("setting up manager")
 	mgr, err := manager.New(config.GetConfigOrDie(), manager.Options{})
 	if err != nil {
-		entryLog.Error(err, "unable to set up overall controller manager")
-		os.Exit(1)
+		return err
 	}
 
-	entryLog.Info("setting up webhook server")
 	as, err := webhook.NewServer(FairwindsName, mgr, webhook.ServerOptions{
 		Port:                          9876,
 		CertDir:                       "/tmp/cert",
@@ -104,21 +106,25 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 		},
 	})
 	if err != nil {
-		entryLog.Error(err, "unable to create a new webhook server")
-		os.Exit(1)
+		return err
 	}
 
-	p := validator.NewWebhook("pod", mgr, validator.Validator{Config: c}, &corev1.Pod{})
-	d := validator.NewWebhook("deploy", mgr, validator.Validator{Config: c}, &appsv1.Deployment{})
-	entryLog.Info("registering webhooks to the webhook server")
+	p, err := validator.NewWebhook("pod", mgr, validator.Validator{Config: c}, &corev1.Pod{})
+	if err != nil {
+		return err
+	}
+	d, err := validator.NewWebhook("deploy", mgr, validator.Validator{Config: c}, &appsv1.Deployment{})
+	if err != nil {
+		return err
+	}
+	entryLog.Info("Registering webhooks to the webhook server...")
 	if err = as.Register(p, d); err != nil {
-		entryLog.Error(err, "unable to register webhooks in the admission server")
-		os.Exit(1)
+		return err
 	}
 
-	entryLog.Info("starting manager")
+	entryLog.Info("Starting Fairwinds webhook server on port 9876.")
 	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
-		entryLog.Error(err, "unable to run manager")
-		os.Exit(1)
+		return err
 	}
+	return nil
 }
