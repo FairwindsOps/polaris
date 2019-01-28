@@ -36,7 +36,7 @@ body {
   margin: 30px auto;
 }
 
-.cluster-score .status .passing, .cluster-score .status .failing, .cluster-score .status .warning {
+.cluster-score .status div {
   height: 30px;
   border-radius: 8px;
 }
@@ -105,6 +105,8 @@ body {
 .namespace-content {
   width: 100%;
   background-color: #eaf3f9;
+  border-spacing: 0;
+  border-collapse: collapse;
 }
 
 .namespace-content tr {
@@ -148,19 +150,19 @@ body {
   width: 20px;
 }
 
-.namespace-content .extra .pass {
+.namespace-content .extra .success {
   color: #2a9957;
 }
 
-.namespace-content .extra .warn {
+.namespace-content .extra .warning {
   color: #adad43;
 }
 
-.namespace-content .extra .warn span {
+.namespace-content .extra .warning span {
   font-size: 11px;
 }
 
-.namespace-content .extra .fail {
+.namespace-content .extra .failure {
   color: #a35555;
 }
 
@@ -174,7 +176,7 @@ body {
   width: 200px;
 }
 
-.namespace-content .status .passing, .namespace-content .status .failing, .namespace-content .status .warning {
+.namespace-content .status div {
   height: 15px;
   border-radius: 4px;
 }

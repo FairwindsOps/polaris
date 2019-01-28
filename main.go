@@ -15,18 +15,16 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	glog "log"
 	"net/http"
 	"os"
 
 	conf "github.com/reactiveops/fairwinds/pkg/config"
-	"github.com/reactiveops/fairwinds/pkg/kube"
+	"github.com/reactiveops/fairwinds/pkg/dashboard"
 	"github.com/reactiveops/fairwinds/pkg/validator"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	apitypes "k8s.io/apimachinery/pkg/types"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
@@ -42,7 +40,7 @@ var FairwindsName = "fairwinds"
 var log = logf.Log.WithName(FairwindsName)
 
 func main() {
-	dashboard := flag.Bool("dashboard", false, "Runs the webserver for Fairwinds dashboard.")
+	// dashboard := flag.Bool("dashboard", false, "Runs the webserver for Fairwinds dashboard.")
 	webhook := flag.Bool("webhook", false, "Runs the webhook webserver.")
 
 	var disableWebhookConfigInstaller bool
@@ -53,38 +51,33 @@ func main() {
 
 	c, err := conf.ParseFile("config.yml")
 	if err != nil {
-		return
+		glog.Println("Error parsing config.yml:", err)
+		os.Exit(1)
 	}
 
 	if *webhook {
 		startWebhookServer(c, disableWebhookConfigInstaller)
 	}
 
-	if *dashboard {
-		startDashboardServer(c)
-	}
+	// if *dashboard {
+	startDashboardServer(c)
+	// }
 }
 
 func startDashboardServer(c conf.Configuration) {
-	http.HandleFunc("/validate", func(w http.ResponseWriter, r *http.Request) { validateHandler(w, r, c) })
-	glog.Println("Starting Fairwinds dashboard webserver on port 8080.")
+	http.HandleFunc("/results.json", func(w http.ResponseWriter, r *http.Request) {
+		dashboard.RenderJSON(w, r, c)
+	})
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("public/"))))
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+		dashboard.Render(w, r, c)
+	})
+	glog.Println("Starting Fairwinds dashboard server on port 8080.")
 	glog.Fatal(http.ListenAndServe(":8080", nil))
-}
-
-func validateHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration) {
-	var results []validator.Results
-	pods, err := kube.CoreV1API.Pods("").List(metav1.ListOptions{})
-	if err != nil {
-		return
-	}
-	glog.Println("pods count:", len(pods.Items))
-	for _, pod := range pods.Items {
-		result := validator.ValidatePods(c, &pod, validator.Results{})
-		results = append(results, result)
-	}
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(results)
 }
 
 func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool) {
