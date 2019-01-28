@@ -40,22 +40,27 @@ var _ admission.Handler = &Validator{}
 
 // Handle for Validator to run validation checks.
 func (v *Validator) Handle(ctx context.Context, req types.Request) types.Response {
-	deploy := appsv1.Deployment{}
-	err := v.decoder.Decode(req, &deploy)
-	if err == nil {
-		results := ValidateDeploys(v.Config, &deploy, Results{})
-		allowed, reason := results.Format()
-		return admission.ValidationResponse(allowed, reason)
+	var err error
+	var allowed bool
+	var reason string
+	var results Results
+
+	switch req.AdmissionRequest.Kind.Kind {
+	case "Deployment":
+		deploy := appsv1.Deployment{}
+		err = v.decoder.Decode(req, &deploy)
+		results = ValidateDeploys(v.Config, &deploy, Results{})
+	case "Pod":
+		pod := corev1.Pod{}
+		err = v.decoder.Decode(req, &pod)
+		results = ValidatePods(v.Config, &pod.Spec, Results{})
+	}
+	if err != nil {
+		return admission.ErrorResponse(http.StatusBadRequest, err)
 	}
 
-	pod := corev1.Pod{}
-	err = v.decoder.Decode(req, &pod)
-	if err == nil {
-		results := ValidatePods(v.Config, &pod.Spec, Results{})
-		allowed, reason := results.Format()
-		return admission.ValidationResponse(allowed, reason)
-	}
-	return admission.ErrorResponse(http.StatusBadRequest, err)
+	allowed, reason = results.Format()
+	return admission.ValidationResponse(allowed, reason)
 }
 
 // ValidateDeploys validates that each deployment conforms to the Fairwinds config.
