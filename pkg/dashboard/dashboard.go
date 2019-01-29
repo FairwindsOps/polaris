@@ -54,9 +54,9 @@ func getDashboardData(c conf.Configuration) (DashboardData, error) {
 
 	dashboardData := DashboardData{
 		ClusterSummary: &validator.ResultSummary{
-			Successes: 46,
-			Warnings:  8,
-			Failures:  5,
+			Successes: 0,
+			Warnings:  4,
+			Failures:  0,
 		},
 		NamespacedResults: map[string]*validator.NamespacedResult{},
 	}
@@ -67,9 +67,9 @@ func getDashboardData(c conf.Configuration) (DashboardData, error) {
 			Name: deploy.Name,
 			Type: "Deployment",
 			Summary: &validator.ResultSummary{
-				Successes: 16,
-				Warnings:  4,
-				Failures:  2,
+				Successes: 0,
+				Warnings:  2,
+				Failures:  0,
 			},
 		}
 
@@ -77,26 +77,21 @@ func getDashboardData(c conf.Configuration) (DashboardData, error) {
 			dashboardData.NamespacedResults[deploy.Namespace] = &validator.NamespacedResult{
 				Results: []validator.ResourceResult{},
 				Summary: &validator.ResultSummary{
-					Successes: 16,
-					Warnings:  4,
-					Failures:  2,
+					Successes: 0,
+					Warnings:  3,
+					Failures:  0,
 				},
 			}
 		}
 
-		for _, containerValidation := range validationFailures.InitContainerValidations {
-			for _, failure := range containerValidation.Failures {
-				dashboardData.ClusterSummary.Failures++
-				dashboardData.NamespacedResults[deploy.Namespace].Summary.Failures++
-				resResult.Summary.Failures++
-				resResult.Messages = append(resResult.Messages, validator.ResultMessage{
-					Message: failure.Reason(),
-					Type:    "failure",
-				})
+		containerValidations := append(validationFailures.InitContainerValidations, validationFailures.ContainerValidations...)
+		for _, containerValidation := range containerValidations {
+			for _, success := range containerValidation.Successes {
+				dashboardData.ClusterSummary.Successes++
+				dashboardData.NamespacedResults[deploy.Namespace].Summary.Successes++
+				resResult.Summary.Successes++
+				resResult.Messages = append(resResult.Messages, success)
 			}
-		}
-
-		for _, containerValidation := range validationFailures.ContainerValidations {
 			for _, failure := range containerValidation.Failures {
 				dashboardData.ClusterSummary.Failures++
 				dashboardData.NamespacedResults[deploy.Namespace].Summary.Failures++

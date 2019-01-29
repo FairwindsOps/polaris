@@ -11,26 +11,43 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
-// ResourceMinMax sets a range for a min and max setting for a resource.
-type ResourceMinMax struct {
-	Min *resource.Quantity
-	Max *resource.Quantity
+// Configuration contains all of the config for the validation checks.
+type Configuration struct {
+	Resources    RequestsAndLimits `json:"resources"`
+	HealthChecks Probes            `json:"healthChecks"`
+	Images       Images            `json:"images"`
+}
+
+// RequestsAndLimits contains config for resource requests and limits.
+type RequestsAndLimits struct {
+	Requests ResourceList `json:"requests"`
+	Limits   ResourceList `json:"limits"`
 }
 
 // ResourceList maps the resource name to a range on min and max values.
 type ResourceList map[corev1.ResourceName]ResourceMinMax
 
-// RequestsAndLimits contains config for resource requests and limits.
-type RequestsAndLimits struct {
-	Requests ResourceList
-	Limits   ResourceList
+// ResourceMinMax sets a range for a min and max setting for a resource.
+type ResourceMinMax struct {
+	Min *resource.Quantity `json:"min"`
+	Max *resource.Quantity `json:"max"`
 }
 
-// Configuration contains all of the config for the validation checks.
-type Configuration struct {
-	Resources    RequestsAndLimits
-	HealthChecks Probes
-	Images       Images
+// Probes contains config for the readiness and liveness probes.
+type Probes struct {
+	Readiness ResourceRequire `json:"readiness"`
+	Liveness  ResourceRequire `json:"liveness"`
+}
+
+// ResourceRequire indicates if this resource should be validated.
+type ResourceRequire struct {
+	Require bool `json:"require"`
+}
+
+// Images contains the config for images.
+type Images struct {
+	TagRequired    bool     `json:"tagRequired"`
+	WhitelistRepos []string `json:"whitelistRepos"`
 }
 
 // ParseFile parses config from a file.
@@ -52,24 +69,7 @@ func Parse(rawBytes []byte) (Configuration, error) {
 			if err == io.EOF {
 				return conf, nil
 			}
-			return Configuration{}, fmt.Errorf("Decoding config failed: %v", err)
+			return conf, fmt.Errorf("Decoding config failed: %v", err)
 		}
 	}
-}
-
-// Probes contains config for the readiness and liveness probes.
-type Probes struct {
-	Readiness ResourceRequire
-	Liveness  ResourceRequire
-}
-
-// ResourceRequire indicates if this resource should be validated.
-type ResourceRequire struct {
-	Require bool
-}
-
-// Images contains the config for images.
-type Images struct {
-	TagRequired    bool
-	WhitelistRepos []string
 }
