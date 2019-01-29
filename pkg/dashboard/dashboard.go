@@ -68,6 +68,7 @@ func getDashboardData(c conf.Configuration) (DashboardData, error) {
 			Name: deploy.Name,
 			Type: "Deployment",
 		}
+
 		for _, containerValidation := range validationFailures.InitContainerValidations {
 			for _, failure := range containerValidation.Failures {
 				dashboardData.ClusterSummary.Failures++
@@ -93,7 +94,16 @@ func getDashboardData(c conf.Configuration) (DashboardData, error) {
 		}
 
 		log.Println("adding results to =======>", deploy.Namespace)
-		dashboardData.NamespacedResults[deploy.Namespace].Results = append(dashboardData.NamespacedResults[deploy.Namespace].Results, resResult)
+		rr := []validator.ResourceResult{}
+		rr = append(rr, resResult)
+		nsRes := validator.NamespacedResult{Results: rr}
+
+		ns := map[string]*validator.NamespacedResult{
+			deploy.Namespace: &nsRes,
+		}
+		dashboardData.NamespacedResults = ns
+
+		// dashboardData.NamespacedResults[deploy.Namespace].Results = append(dashboardData.NamespacedResults[deploy.Namespace].Results, resResult)
 		log.Println("adding results to =======>", len(dashboardData.NamespacedResults[deploy.Namespace].Results))
 	}
 
