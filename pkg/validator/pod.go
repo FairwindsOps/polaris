@@ -23,7 +23,8 @@ import (
 var log = logf.Log.WithName("Fairwinds Validator")
 
 // ValidatePods validates that each pod conforms to the Fairwinds config.
-func ValidatePods(conf conf.Configuration, pod *corev1.PodSpec, results Results) Results {
+func ValidatePods(conf conf.Configuration, pod *corev1.PodSpec) Results {
+	results := Results{}
 	for _, container := range pod.InitContainers {
 		results.InitContainerValidations = append(
 			results.InitContainerValidations,

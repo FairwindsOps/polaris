@@ -24,8 +24,7 @@ func DeployHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration)
 		return
 	}
 	for _, deploy := range deploys.Items {
-		result := ValidateDeploys(c, &deploy, Results{})
-		results = append(results, result)
+		results = append(results, ValidateDeploys(c, &deploy))
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")

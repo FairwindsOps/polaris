@@ -1,7 +1,7 @@
 resources:
   requests:
     cpu:
-      min: 100m
+      min: 50m
       max: 1
     memory:
       min: 100M
@@ -13,3 +13,12 @@ resources:
     memory:
       min: 150M
       max: 4G
+healthChecks:
+  readiness:
+    require: true
+  liveness:
+    require: true
+images:
+  tagRequired: true
+  whitelistRepos:
+    - gcr.io

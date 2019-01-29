@@ -13,7 +13,7 @@ type Failure struct {
 
 // Reason returns a string that describes the reason for a Failure.
 func (f *Failure) Reason() string {
-	return fmt.Sprintf("- %s: Expected: %s, Actual: %s.\n",
+	return fmt.Sprintf("%s: Expected: %s, Actual: %s.",
 		f.Name,
 		f.Expected,
 		f.Actual,

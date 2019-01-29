@@ -1,25 +1,8 @@
 package validator
 
-// namespaceResults: [{
-//   name: "kube-system",
-//   resourceResults: [{
-//     name: "example-deployment",
-//     type: "DaemonSet",
-//     summary: {
-//       successes: 28,
-//       warnings: 12,
-//       failures: 18,
-//     },
-//     messages: [{
-//       message: "Resource requests are not set",
-//       type: "failure",
-//     }]
-//   }]
-// }]
-
 type NamespacedResult struct {
-	Namespace string
-	Results   []ResourceResult
+	Summary *ResultSummary
+	Results []ResourceResult
 }
 
 type ResourceResult struct {

@@ -49,11 +49,11 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 	case "Deployment":
 		deploy := appsv1.Deployment{}
 		err = v.decoder.Decode(req, &deploy)
-		results = ValidateDeploys(v.Config, &deploy, Results{})
+		results = ValidateDeploys(v.Config, &deploy)
 	case "Pod":
 		pod := corev1.Pod{}
 		err = v.decoder.Decode(req, &pod)
-		results = ValidatePods(v.Config, &pod.Spec, Results{})
+		results = ValidatePods(v.Config, &pod.Spec)
 	}
 	if err != nil {
 		return admission.ErrorResponse(http.StatusBadRequest, err)
@@ -64,7 +64,7 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 }
 
 // ValidateDeploys validates that each deployment conforms to the Fairwinds config.
-func ValidateDeploys(conf conf.Configuration, deploy *appsv1.Deployment, results Results) Results {
+func ValidateDeploys(conf conf.Configuration, deploy *appsv1.Deployment) Results {
 	pod := deploy.Spec.Template.Spec
-	return ValidatePods(conf, &pod, results)
+	return ValidatePods(conf, &pod)
 }

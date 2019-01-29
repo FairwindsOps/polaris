@@ -15,6 +15,7 @@
 package validator
 
 import (
+	"fmt"
 	"strings"
 
 	conf "github.com/reactiveops/fairwinds/pkg/config"
@@ -27,6 +28,7 @@ import (
 type ContainerValidation struct {
 	Container corev1.Container
 	Failures  []types.Failure
+	Successes []ResultMessage
 }
 
 func validateContainer(conf conf.Configuration, container corev1.Container) ContainerValidation {
@@ -49,6 +51,13 @@ func (cv *ContainerValidation) addFailure(name, expected, actual string) {
 	})
 }
 
+func (cv *ContainerValidation) addSuccess(message string) {
+	cv.Successes = append(cv.Successes, ResultMessage{
+		Message: message,
+		Type:    "success",
+	})
+}
+
 func (cv *ContainerValidation) validateResources(conf conf.RequestsAndLimits) {
 	actualRes := cv.Container.Resources
 	cv.withinRange("requests.cpu", conf.Requests["cpu"], actualRes.Requests.Cpu())
@@ -64,15 +73,26 @@ func (cv *ContainerValidation) withinRange(resourceName string, expectedRange co
 		cv.addFailure(resourceName, expectedMin.String(), actual.String())
 	} else if expectedMax != nil && expectedMax.MilliValue() < actual.MilliValue() {
 		cv.addFailure(resourceName, expectedMax.String(), actual.String())
+	} else {
+		cv.addSuccess(fmt.Sprintf("Resource %s within expected range", resourceName))
 	}
 }
 
 func (cv *ContainerValidation) validateHealthChecks(conf conf.Probes) {
-	if conf.Readiness.Require && cv.Container.ReadinessProbe == nil {
-		cv.addFailure("readiness", "probe needs to be configured", "nil")
+	if conf.Readiness.Require {
+		if cv.Container.ReadinessProbe == nil {
+			cv.addFailure("readiness", "probe needs to be configured", "nil")
+		} else {
+			cv.addSuccess("Readiness probe configured")
+		}
 	}
-	if conf.Liveness.Require && cv.Container.LivenessProbe == nil {
-		cv.addFailure("liveness", "probe needs to be configured", "nil")
+
+	if conf.Liveness.Require {
+		if cv.Container.LivenessProbe == nil {
+			cv.addFailure("liveness", "probe needs to be configured", "nil")
+		} else {
+			cv.addSuccess("Liveness probe configured")
+		}
 	}
 }
 
@@ -81,6 +101,8 @@ func (cv *ContainerValidation) validateImage(conf conf.Images) {
 		img := strings.Split(cv.Container.Image, ":")
 		if len(img) == 1 || img[1] == "latest" {
 			cv.addFailure("Image Tag", "not latest", "latest")
+		} else {
+			cv.addSuccess("Image tag specified")
 		}
 	}
 }

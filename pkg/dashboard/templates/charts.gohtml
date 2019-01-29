@@ -13,6 +13,9 @@
   <link rel="stylesheet" href="/static/css/charts.css">
 
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/cash/3.0.0-beta.3/cash.min.js"></script>
+  <script type="text/javascript" src="/static/js/main.js"></script>
+
 </head>
 
 <body>
@@ -22,27 +25,27 @@
 
   <div class="dashboard-content">
     <div class="charts">
-        <div class="cluster-score chart-section">
-          <h3>Overall Score:</h3>
-          <div style="width:510px; height: 400px; left: -100px; position: relative;">
-            <canvas id="clusterScoreChart"></canvas>
-          </div>
+      <div class="cluster-score chart-section">
+        <h3>Overall Score:</h3>
+        <div style="width:510px; height: 400px; left: -100px; position: relative;">
+          <canvas id="clusterScoreChart"></canvas>
         </div>
-        <div class="namespace-score chart-section">
-          <h3>Scores By Namespace:</h3>
-          <canvas id="namespaceScoreChart"></canvas>
-        </div>
+      </div>
+      <div class="namespace-score chart-section">
+        <h3>Scores By Namespace:</h3>
+        <canvas id="namespaceScoreChart"></canvas>
+      </div>
     </div>
 
-    {{ range .NamespacedResults }}
+    {{ range $namespace, $results := .NamespacedResults }}
       <div class="namespace">
-        <h3>Namespace: <strong>{{ .Namespace }}</strong></h3>
+        <h3>Namespace: <strong>{{ $namespace }}</strong></h3>
 
         <table class="namespace-content" cellspacing="0">
-          {{ range .Results }}
+          {{ range $results.Results }}
             <tr>
-              <td>
-                <div class="name"><span class="caret-expander expanded"></span>{{ .Type }}: <strong>{{ .Name }}</strong></div>
+              <td class="resource-info">
+                <div class="name"><span class="caret-expander"></span>{{ .Type }}: <strong>{{ .Name }}</strong></div>
                 <ul class="extra">
                   {{ range .Messages}}
                     <li class="{{ .Type }}"><span>&#{{ .HTMLSpecialCharCode }};</span> {{ .Message }}</li>
@@ -66,64 +69,38 @@
   </div>
 
   <script>
-    window.onload = function renderCharts() {
-      Chart.pluginService.register({
-        beforeDraw: function (chart) {
-          if (chart.config.options.elements.center) {
-            //Get ctx from string
-            var ctx = chart.chart.ctx;
-
-            //Get options from the center object in options
-            var centerConfig = chart.config.options.elements.center;
-            var fontStyle = centerConfig.fontStyle || 'Arial';
-            var txt = centerConfig.text;
-            var color = centerConfig.color || '#000';
-            var sidePadding = centerConfig.sidePadding || 20;
-            var sidePaddingCalculated = (sidePadding/100) * (chart.innerRadius * 2)
-            //Start with a base font of 30px
-            ctx.font = "30px " + fontStyle;
-
-            //Get the width of the string and also the width of the element minus 10 to give it 5px side padding
-            var stringWidth = ctx.measureText(txt).width;
-            var elementWidth = (chart.innerRadius * 2) - sidePaddingCalculated;
-
-            // Find out how much the font can grow in width.
-            var widthRatio = elementWidth / stringWidth;
-            var newFontSize = Math.floor(30 * widthRatio);
-            var elementHeight = (chart.innerRadius * 2);
-
-            // Pick a new font size so it will not be larger than the height of label.
-            var fontSizeToUse = Math.min(newFontSize, elementHeight);
-
-            //Set font settings to draw it correctly.
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            var centerX = ((chart.chartArea.left + chart.chartArea.right) / 2);
-            var centerY = ((chart.chartArea.top + chart.chartArea.bottom) / 2);
-            ctx.font = "bold "+fontSizeToUse+"px " + fontStyle;
-            ctx.fillStyle = color;
-
-            //Draw text in center
-            ctx.fillText(txt, centerX, centerY);
-          }
-        }
-      });
-
+    $(function () {
       var namespaceChart = new Chart("namespaceScoreChart", {
         type: 'bar',
         data: {
-          labels: ["kube-system", "development", "staging", "infra", "default"],
+          labels: [
+            {{ range $namespace, $results := .NamespacedResults }}
+              "{{ $namespace }}",
+            {{ end }}
+          ],
           datasets: [{
             label: 'Passing',
-            data: [118, 78, 65, 56, 43],
+            data: [
+              {{ range $namespace, $results := .NamespacedResults }}
+                "{{ $results.Summary.Successes }}",
+              {{ end }}
+            ],
             backgroundColor: '#006469',
           },{
             label: 'Warning',
-            data: [85, 54, 28, 23, 21],
+            data: [
+              {{ range $namespace, $results := .NamespacedResults }}
+                "{{ $results.Summary.Warnings }}",
+              {{ end }}
+            ],
             backgroundColor: '#AE7500',
           },{
             label: 'Failing',
-            data: [38, 24, 18, 15, 12],
+            data: [
+              {{ range $namespace, $results := .NamespacedResults }}
+                "{{ $results.Summary.Failures }}",
+              {{ end }}
+            ],
             backgroundColor: '#AE0400',
           }]
         },
@@ -144,32 +121,32 @@
           }
         }
       });
-    }
 
-    var clusterChart = new Chart("clusterScoreChart", {
-      type: 'doughnut',
-      data: {
-        labels: ["Passing", "Warning", "Failing"],
-        datasets: [{
-          data: [{{ .ClusterSummary.Successes }}, {{ .ClusterSummary.Warnings }}, {{ .ClusterSummary.Failures }}],
-          backgroundColor: ['#006469','#AE7500','#AE0400'],
-        }]
-      },
-      options: {
-        // responsive: false,
-        cutoutPercentage: 75,
-        legend: {
-          display: false,
+      var clusterChart = new Chart("clusterScoreChart", {
+        type: 'doughnut',
+        data: {
+          labels: ["Passing", "Warning", "Failing"],
+          datasets: [{
+            data: [{{ .ClusterSummary.Successes }}, {{ .ClusterSummary.Warnings }}, {{ .ClusterSummary.Failures }}],
+            backgroundColor: ['#006469','#AE7500','#AE0400'],
+          }]
         },
-        elements: {
-          center: {
-            text: '{{ .ClusterSummary.Score }}%',
-            color: '#333', //Default black
-            fontStyle: 'Helvetica', //Default Arial
-            sidePadding: 30 //Default 20 (as a percentage)
+        options: {
+          // responsive: false,
+          cutoutPercentage: 75,
+          legend: {
+            display: false,
+          },
+          elements: {
+            center: {
+              text: '{{ .ClusterSummary.Score }}%',
+              color: '#333', //Default black
+              fontStyle: 'Helvetica', //Default Arial
+              sidePadding: 30 //Default 20 (as a percentage)
+            }
           }
         }
-      }
+      });
     });
   </script>
 </body>
