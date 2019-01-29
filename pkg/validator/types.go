@@ -18,9 +18,8 @@ package validator
 // }]
 
 type NamespacedResult struct {
-	Namespace string
-	Summary   *ResultSummary
-	Results   []ResourceResult
+	Summary *ResultSummary
+	Results []ResourceResult
 }
 
 type ResourceResult struct {

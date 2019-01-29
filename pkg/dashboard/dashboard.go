@@ -52,14 +52,13 @@ func getDashboardData(c conf.Configuration) (DashboardData, error) {
 		return DashboardData{}, err
 	}
 
-	log.Println("deploys =======>", len(deploys.Items))
-
 	dashboardData := DashboardData{
 		ClusterSummary: &validator.ResultSummary{
 			Successes: 46,
 			Warnings:  8,
 			Failures:  5,
 		},
+		NamespacedResults: map[string]*validator.NamespacedResult{},
 	}
 
 	for _, deploy := range deploys.Items {
@@ -67,13 +66,29 @@ func getDashboardData(c conf.Configuration) (DashboardData, error) {
 		resResult := validator.ResourceResult{
 			Name: deploy.Name,
 			Type: "Deployment",
+			Summary: &validator.ResultSummary{
+				Successes: 16,
+				Warnings:  4,
+				Failures:  2,
+			},
+		}
+
+		if dashboardData.NamespacedResults[deploy.Namespace] == nil {
+			dashboardData.NamespacedResults[deploy.Namespace] = &validator.NamespacedResult{
+				Results: []validator.ResourceResult{},
+				Summary: &validator.ResultSummary{
+					Successes: 16,
+					Warnings:  4,
+					Failures:  2,
+				},
+			}
 		}
 
 		for _, containerValidation := range validationFailures.InitContainerValidations {
 			for _, failure := range containerValidation.Failures {
 				dashboardData.ClusterSummary.Failures++
-				// rr := *resResult.Summary
-				// rr.Failures++
+				dashboardData.NamespacedResults[deploy.Namespace].Summary.Failures++
+				resResult.Summary.Failures++
 				resResult.Messages = append(resResult.Messages, validator.ResultMessage{
 					Message: failure.Reason(),
 					Type:    "failure",
@@ -84,8 +99,8 @@ func getDashboardData(c conf.Configuration) (DashboardData, error) {
 		for _, containerValidation := range validationFailures.ContainerValidations {
 			for _, failure := range containerValidation.Failures {
 				dashboardData.ClusterSummary.Failures++
-				// rr := *resResult.Summary
-				// rr.Failures++
+				dashboardData.NamespacedResults[deploy.Namespace].Summary.Failures++
+				resResult.Summary.Failures++
 				resResult.Messages = append(resResult.Messages, validator.ResultMessage{
 					Message: failure.Reason(),
 					Type:    "failure",
@@ -93,61 +108,8 @@ func getDashboardData(c conf.Configuration) (DashboardData, error) {
 			}
 		}
 
-		log.Println("adding results to =======>", deploy.Namespace)
-		rr := []validator.ResourceResult{}
-		rr = append(rr, resResult)
-		nsRes := validator.NamespacedResult{Results: rr}
-
-		ns := map[string]*validator.NamespacedResult{
-			deploy.Namespace: &nsRes,
-		}
-		dashboardData.NamespacedResults = ns
-
-		// dashboardData.NamespacedResults[deploy.Namespace].Results = append(dashboardData.NamespacedResults[deploy.Namespace].Results, resResult)
-		log.Println("adding results to =======>", len(dashboardData.NamespacedResults[deploy.Namespace].Results))
+		dashboardData.NamespacedResults[deploy.Namespace].Results = append(dashboardData.NamespacedResults[deploy.Namespace].Results, resResult)
 	}
 
 	return dashboardData, nil
-
-	// return DashboardData{
-	// 	ClusterSummary: &validator.ResultSummary{
-	// 		Successes: 46,
-	// 		Warnings:  8,
-	// 		Failures:  5,
-	// 	},
-	// 	NamespacedResults: {
-	// 		"kube-system": {
-	// 			Summary: &validator.ResultSummary{
-	// 				Successes: 7,
-	// 				Warnings:  3,
-	// 				Failures:  2,
-	// 			},
-	// 			Results: []validator.ResourceResult{{
-	// 				Name: "tiller",
-	// 				Type: "Deployment",
-	// 				Summary: &validator.ResultSummary{
-	// 					Successes: 7,
-	// 					Warnings:  3,
-	// 					Failures:  2,
-	// 				},
-	// 				Messages: []validator.ResultMessage{{
-	// 					Message: "Image Tag Specified",
-	// 					Type:    "success",
-	// 				}, {
-	// 					Message: "Liveness Probe Specified",
-	// 					Type:    "success",
-	// 				}, {
-	// 					Message: "Readiness Probe Specified",
-	// 					Type:    "success",
-	// 				}, {
-	// 					Message: "Container Running As Root",
-	// 					Type:    "warning",
-	// 				}, {
-	// 					Message: "Resource requests are not set",
-	// 					Type:    "failure",
-	// 				}},
-	// 			}},
-	// 		}
-	// 	}},
-	// }, nil
 }
