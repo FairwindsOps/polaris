@@ -108,28 +108,37 @@ body {
   border-top: 1px solid #eee;
 }
 
-.namespace-content .caret-expander {
+.namespace-content .resource-info .name {
+  cursor: pointer;
+}
+
+.namespace-content .resource-info .caret-expander {
   display: inline-block;
   width: 15px;
   height: 15px;
   margin-right: 10px;
   background-image: url('../images/caret-right.svg');
-  background-size: 15px auto;
+  background-size: 13px auto;
   background-repeat: no-repeat;
   background-position: 2px center;
 }
 
-.namespace-content .caret-expander.expanded {
+.namespace-content .resource-info.expanded .caret-expander {
   background-image: url('../images/caret-bottom.svg');
-  background-position: center center;
+  background-position: center 2px;
 }
 
-.namespace-content .extra {
+.namespace-content .resource-info .extra {
   list-style-type: none;
   font-size: 14px;
   line-height: 19px;
   margin: 10px 30px;
   padding: 0;
+  display: none;
+}
+
+.namespace-content .resource-info.expanded .extra {
+  display: block;
 }
 
 .namespace-content .extra span {
