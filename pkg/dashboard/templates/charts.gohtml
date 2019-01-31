@@ -20,7 +20,10 @@
 
 <body>
   <div class="header">
-    <h1>Fairwinds</h1>
+    <h1>
+      <img class="logo" src="/static/images/logo.png" alt="Fairwinds" />
+      <span class="alt-logo">Fairwinds</span>
+    </h1>
   </div>
 
   <div class="dashboard-content">
@@ -85,7 +88,7 @@
                 "{{ $results.Summary.Successes }}",
               {{ end }}
             ],
-            backgroundColor: '#006469',
+            backgroundColor: '#230f39',
           },{
             label: 'Warning',
             data: [
@@ -93,7 +96,7 @@
                 "{{ $results.Summary.Warnings }}",
               {{ end }}
             ],
-            backgroundColor: '#AE7500',
+            backgroundColor: '#f26c21',
           },{
             label: 'Failing',
             data: [
@@ -101,7 +104,7 @@
                 "{{ $results.Summary.Failures }}",
               {{ end }}
             ],
-            backgroundColor: '#AE0400',
+            backgroundColor: '#a11f4c',
           }]
         },
         options: {
@@ -128,7 +131,7 @@
           labels: ["Passing", "Warning", "Failing"],
           datasets: [{
             data: [{{ .ClusterSummary.Successes }}, {{ .ClusterSummary.Warnings }}, {{ .ClusterSummary.Failures }}],
-            backgroundColor: ['#006469','#AE7500','#AE0400'],
+            backgroundColor: ['#230f39','#f26c21','#a11f4c'],
           }]
         },
         options: {

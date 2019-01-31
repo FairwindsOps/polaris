@@ -17,21 +17,24 @@
 
 <body>
   <div class="header">
-    <h1>Fairwinds</h1>
+    <h1>
+      <img class="logo" src="images/logo.png" alt="Fairwinds" />
+      <span class="alt-logo">Fairwinds</span>
+    </h1>
   </div>
 
   <div class="dashboard-content">
     <div class="charts">
-        <div class="cluster-score chart-section">
-          <h3>Overall Score:</h3>
-          <div style="width:510px; height: 400px; left: -100px; position: relative;">
-            <canvas id="clusterScoreChart"></canvas>
-          </div>
+      <div class="cluster-score chart-section">
+        <h3>Overall Score:</h3>
+        <div style="width:510px; height: 400px; left: -100px; position: relative;">
+          <canvas id="clusterScoreChart"></canvas>
         </div>
-        <div class="namespace-score chart-section">
-          <h3>Scores By Namespace:</h3>
-          <canvas id="namespaceScoreChart"></canvas>
-        </div>
+      </div>
+      <div class="namespace-score chart-section">
+        <h3>Scores By Namespace:</h3>
+        <canvas id="namespaceScoreChart"></canvas>
+      </div>
     </div>
 
     <div class="namespace">
@@ -92,7 +95,7 @@
             var txt = centerConfig.text;
             var color = centerConfig.color || '#000';
             var sidePadding = centerConfig.sidePadding || 20;
-            var sidePaddingCalculated = (sidePadding/100) * (chart.innerRadius * 2)
+            var sidePaddingCalculated = (sidePadding / 100) * (chart.innerRadius * 2)
             //Start with a base font of 30px
             ctx.font = "30px " + fontStyle;
 
@@ -113,7 +116,7 @@
             ctx.textBaseline = 'middle';
             var centerX = ((chart.chartArea.left + chart.chartArea.right) / 2);
             var centerY = ((chart.chartArea.top + chart.chartArea.bottom) / 2);
-            ctx.font = "bold "+fontSizeToUse+"px " + fontStyle;
+            ctx.font = "bold " + fontSizeToUse + "px " + fontStyle;
             ctx.fillStyle = color;
 
             //Draw text in center
@@ -131,15 +134,15 @@
           datasets: [{
             label: 'Passing',
             data: [118, 78, 65, 56, 43],
-            backgroundColor: '#006469',
-          },{
+            backgroundColor: '#230f39',
+          }, {
             label: 'Warning',
             data: [85, 54, 28, 23, 21],
-            backgroundColor: '#AE7500',
-          },{
+            backgroundColor: '#f26c21',
+          }, {
             label: 'Failing',
             data: [38, 24, 18, 15, 12],
-            backgroundColor: '#AE0400',
+            backgroundColor: '#a11f4c',
           }]
         },
         options: {
@@ -167,7 +170,7 @@
         labels: ["Passing", "Warning", "Failing"],
         datasets: [{
           data: [118, 34, 28],
-          backgroundColor: ['#006469','#AE7500','#AE0400'],
+          backgroundColor: ['#230f39', '#f26c21', '#a11f4c'],
         }]
       },
       options: {

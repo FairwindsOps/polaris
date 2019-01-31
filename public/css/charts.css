@@ -7,16 +7,24 @@ body {
 .header {
   background-color: #fff;
   color: #006369;
-  padding: 20px 30px;
+  padding: 10px 20px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.3);
 }
 
 .header h1 {
+  margin: 0 auto;
+  width: 900px;
+}
+
+.header h1 .logo {
+  width: 280px;
+}
+
+.header h1 span {
   font-family: 'Lobster', sans-serif;
   font-size: 60px;
   font-weight: normal;
-  margin: 0 auto;
-  width: 900px;
+  display: none;
 }
 
 .dashboard-content {
@@ -149,11 +157,11 @@ body {
 }
 
 .namespace-content .extra .success {
-  color: #006469;
+  color: #230f39;
 }
 
 .namespace-content .extra .warning {
-  color: #AE7500;
+  color: #f26c21;
 }
 
 .namespace-content .extra .warning span {
@@ -161,7 +169,7 @@ body {
 }
 
 .namespace-content .extra .failure {
-  color: #AE0400;
+  color: #a11f4c;
 }
 
 .namespace-content td.status-bar {
@@ -180,12 +188,12 @@ body {
 }
 
 .namespace-content .status .passing {
-  background-color: #006469;
+  background-color: #230f39;
   float: left;
 }
 
 .namespace-content .status .warning {
-  background-color: #AE7500;
+  background-color: #f26c21;
   float: left;
 }
 
@@ -195,7 +203,7 @@ body {
 }
 
 .namespace-content .status .failing {
-  background-color: #AE0400;
+  background-color: #a11f4c;
   width: 200px;
   animation: fadeIn 2s;
 }
