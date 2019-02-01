@@ -18,7 +18,8 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 // DeployHandler creates a handler for to validate the current deploy workloads.
 func DeployHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration) {
 	var results []Results
-	deploys, err := kube.AppsV1API.Deployments("").List(metav1.ListOptions{})
+	clientset := kube.CreateClientset()
+	deploys, err := clientset.AppsV1().Deployments("").List(metav1.ListOptions{})
 	if err != nil {
 		fmt.Fprintf(w, err.Error())
 		return
