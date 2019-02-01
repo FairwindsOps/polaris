@@ -31,7 +31,8 @@ func Render(w http.ResponseWriter, r *http.Request, c conf.Configuration) {
 
 func RenderJSON(w http.ResponseWriter, r *http.Request, c conf.Configuration) {
 	results := []validator.Results{}
-	pods, err := kube.CoreV1API.Pods("").List(metav1.ListOptions{})
+	var clientset = kube.CreateClientset()
+	pods, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
 	if err != nil {
 		http.Error(w, "Error Fetching Pods", 500)
 		return
@@ -47,7 +48,8 @@ func RenderJSON(w http.ResponseWriter, r *http.Request, c conf.Configuration) {
 }
 
 func getDashboardData(c conf.Configuration) (DashboardData, error) {
-	deploys, err := kube.AppsV1API.Deployments("").List(metav1.ListOptions{})
+	var clientset = kube.CreateClientset()
+	deploys, err := clientset.AppsV1().Deployments("").List(metav1.ListOptions{})
 	if err != nil {
 		return DashboardData{}, err
 	}
