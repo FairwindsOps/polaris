@@ -12,6 +12,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// DashboardData stores validation results organized by namespace and also
+// tracks the total cluster count of failed/successed validation checks.
 type DashboardData struct {
 	ClusterSummary    *validator.ResultSummary
 	NamespacedResults validator.NamespacedResults
@@ -19,6 +21,7 @@ type DashboardData struct {
 
 var tmpl = template.Must(template.ParseFiles("pkg/dashboard/templates/dashboard.gohtml"))
 
+// Render populates the dashboard template with validation data.
 func Render(w http.ResponseWriter, r *http.Request, c conf.Configuration) {
 	dashboardData, err := getDashboardData(c)
 	if err != nil {
@@ -29,6 +32,7 @@ func Render(w http.ResponseWriter, r *http.Request, c conf.Configuration) {
 	tmpl.Execute(w, dashboardData)
 }
 
+// RenderJSON returns pod validation data in JSON format.
 func RenderJSON(w http.ResponseWriter, r *http.Request, c conf.Configuration) {
 	var clientset = kube.CreateClientset()
 	pods, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
@@ -54,24 +58,22 @@ func getDashboardData(c conf.Configuration) (DashboardData, error) {
 	// from each validation.
 	nsResults, _ := validator.ValidateDeploys(c)
 
-	var clusterSuccesses uint
-	var clusterFailures uint
-	var clusterWarnings uint
+	var clusterSuccesses, clusterFailures, clusterWarnings uint
 
 	// Aggregate all summary counts to get a clusterwide count.
 	for _, nsRes := range nsResults {
 		for _, rr := range nsRes.Results {
-			clusterSuccesses += rr.Summary.Successes
 			clusterFailures += rr.Summary.Failures
 			clusterWarnings += rr.Summary.Warnings
+			clusterSuccesses += rr.Summary.Successes
 		}
 	}
 
 	dashboardData := DashboardData{
 		ClusterSummary: &validator.ResultSummary{
-			Successes: clusterSuccesses,
-			Warnings:  clusterWarnings,
 			Failures:  clusterFailures,
+			Warnings:  clusterWarnings,
+			Successes: clusterSuccesses,
 		},
 		NamespacedResults: nsResults,
 	}

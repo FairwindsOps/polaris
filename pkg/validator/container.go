@@ -27,7 +27,17 @@ import (
 type ContainerValidation struct {
 	Container corev1.Container
 	Summary   ResultSummary
-	Messages  []ResultMessage
+	Failures  []ResultMessage
+	Warnings  []ResultMessage
+	Successes []ResultMessage
+}
+
+func (cv *ContainerValidation) messages() []ResultMessage {
+	mssgs := []ResultMessage{}
+	mssgs = append(mssgs, cv.Failures...)
+	mssgs = append(mssgs, cv.Warnings...)
+	mssgs = append(mssgs, cv.Successes...)
+	return mssgs
 }
 
 func validateContainer(conf conf.Configuration, container corev1.Container) (ContainerResult, ResultSummary) {
@@ -42,33 +52,33 @@ func validateContainer(conf conf.Configuration, container corev1.Container) (Con
 
 	cRes := ContainerResult{
 		Name:     container.Name,
-		Messages: cv.Messages,
+		Messages: cv.messages(),
 	}
 
 	return cRes, cv.Summary
 }
 
-func (cv *ContainerValidation) addSuccess(message string) {
-	cv.Summary.Successes++
-	cv.Messages = append(cv.Messages, ResultMessage{
+func (cv *ContainerValidation) addFailure(message string) {
+	cv.Summary.Failures++
+	cv.Failures = append(cv.Failures, ResultMessage{
 		Message: message,
-		Type:    "success",
+		Type:    "failure",
 	})
 }
 
 func (cv *ContainerValidation) addWarning(message string) {
 	cv.Summary.Warnings++
-	cv.Messages = append(cv.Messages, ResultMessage{
+	cv.Warnings = append(cv.Warnings, ResultMessage{
 		Message: message,
 		Type:    "warning",
 	})
 }
 
-func (cv *ContainerValidation) addFailure(message string) {
-	cv.Summary.Failures++
-	cv.Messages = append(cv.Messages, ResultMessage{
+func (cv *ContainerValidation) addSuccess(message string) {
+	cv.Summary.Successes++
+	cv.Successes = append(cv.Successes, ResultMessage{
 		Message: message,
-		Type:    "failure",
+		Type:    "success",
 	})
 }
 
