@@ -11,68 +11,152 @@
   <link href="https://fonts.googleapis.com/css?family=Lobster" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/normalize.css">
   <link rel="stylesheet" href="/static/css/main.css">
+
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/cash/3.0.0-beta.3/cash.min.js"></script>
+  <script type="text/javascript" src="/static/js/main.js"></script>
+
 </head>
 
 <body>
   <div class="header">
-    <h1>Fairwinds</h1>
+    <h1>
+      <img class="logo" src="/static/images/logo.png" alt="Fairwinds" />
+      <span class="alt-logo">Fairwinds</span>
+    </h1>
   </div>
 
-  <div class="cluster-score">
-    <p>Overall Score:</p>
-    <h2>{{ .ClusterSummary.Score }}%</h2>
-    <div class="status">
-      <div class="failing">
-        <div class="warning" style="width: {{ .ClusterSummary.WarningWidth 400 }}px;">
-          <div class="passing" style="width: {{ .ClusterSummary.SuccessWidth 400 }}px;"></div>
+  <div class="dashboard-content">
+    <div class="charts">
+      <div class="cluster-score chart-section">
+        <h3>Overall Score:</h3>
+        <div style="width:510px; height: 400px; left: -100px; position: relative;">
+          <canvas id="clusterScoreChart"></canvas>
         </div>
       </div>
-    </div>
-    <div class="summary">
-      <div class="item">
-        <span class="label">Successes:</span>
-        <strong class="value">{{ .ClusterSummary.Successes }}</strong>
-      </div>
-      <div class="item">
-        <span class="label">Warnings:</span>
-        <strong class="value">{{ .ClusterSummary.Warnings }}</strong>
-      </div>
-      <div class="item">
-        <span class="label">Failures:</span>
-        <strong class="value">{{ .ClusterSummary.Failures }}</strong>
+      <div class="namespace-score chart-section">
+        <h3>Scores By Namespace:</h3>
+        <canvas id="namespaceScoreChart"></canvas>
       </div>
     </div>
-  </div>
 
-{{ range .NamespacedResults }}
-  <div class="namespace-header">
-    <h3>Namespace: <strong>{{ .Namespace }}</strong></h3>
-  </div>
+    {{ range $namespace, $results := .NamespacedResults }}
+      <div class="namespace">
+        <h3>Namespace: <strong>{{ $namespace }}</strong></h3>
 
-  <table class="namespace-content">
-    {{ range .Results }}
-      <tr>
-        <td>
-          <div class="name"><span class="caret-expander expanded"></span>{{ .Type }}: <strong>{{ .Name }}</strong></div>
-          <ul class="extra">
-            {{ range .Messages}}
-              <li class="{{ .Type }}"><span>&#{{ .HTMLSpecialCharCode }};</span> {{ .Message }}</li>
-            {{ end }}
-          </ul>
-        </td>
-        <td class="status-bar">
-          <div class="status">
-            <div class="failing">
-              <div class="warning" style="width: {{ .Summary.WarningWidth 200 }}px;">
-                <div class="passing" style="width: {{ .Summary.SuccessWidth 200 }}px;"></div>
-              </div>
-            </div>
-          </div>
-        </td>
-      </tr>
+        <table class="namespace-content" cellspacing="0">
+          {{ range $results.Results }}
+            <tr>
+              <td class="resource-info">
+                <div class="name"><span class="caret-expander"></span>{{ .Type }}: <strong>{{ .Name }}</strong></div>
+                {{ range .ContainerResults}}
+                  <div class="extra">
+                    <h4>{{ .Name }}</h4>
+                    <ul>
+                      {{ range .Messages}}
+                        <li class="{{ .Type }}"><span>&#{{ .HTMLSpecialCharCode }};</span> {{ .Message }}</li>
+                      {{ end }}
+                    </ul>
+                  </div>
+                {{ end }}
+              </td>
+              <td class="status-bar">
+                <div class="status">
+                  <div class="failing">
+                    <div class="warning" style="width: {{ .Summary.WarningWidth 200 }}px;">
+                      <div class="passing" style="width: {{ .Summary.SuccessWidth 200 }}px;"></div>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          {{ end }}
+        </table>
+      </div>
     {{ end }}
-  </table>
-{{ end }}
+  </div>
+
+  <script>
+    $(function () {
+      var namespaceChart = new Chart("namespaceScoreChart", {
+        type: 'bar',
+        data: {
+          labels: [
+            {{ range $namespace, $results := .NamespacedResults }}
+              "{{ $namespace }}",
+            {{ end }}
+          ],
+          datasets: [{
+            label: 'Passing',
+            data: [
+              {{ range $namespace, $results := .NamespacedResults }}
+                "{{ $results.Summary.Successes }}",
+              {{ end }}
+            ],
+            backgroundColor: '#8BD2DC',
+          },{
+            label: 'Warning',
+            data: [
+              {{ range $namespace, $results := .NamespacedResults }}
+                "{{ $results.Summary.Warnings }}",
+              {{ end }}
+            ],
+            backgroundColor: '#f26c21',
+          },{
+            label: 'Failing',
+            data: [
+              {{ range $namespace, $results := .NamespacedResults }}
+                "{{ $results.Summary.Failures }}",
+              {{ end }}
+            ],
+            backgroundColor: '#a11f4c',
+          }]
+        },
+        options: {
+          legend: {
+            display: false,
+          },
+          scales: {
+            xAxes: [{
+              stacked: true,
+            }],
+            yAxes: [{
+              stacked: true,
+              ticks: {
+                beginAtZero: true
+              }
+            }]
+          }
+        }
+      });
+
+      var clusterChart = new Chart("clusterScoreChart", {
+        type: 'doughnut',
+        data: {
+          labels: ["Passing", "Warning", "Failing"],
+          datasets: [{
+            data: [{{ .ClusterSummary.Successes }}, {{ .ClusterSummary.Warnings }}, {{ .ClusterSummary.Failures }}],
+            backgroundColor: ['#8BD2DC','#f26c21','#a11f4c'],
+          }]
+        },
+        options: {
+          // responsive: false,
+          cutoutPercentage: 75,
+          legend: {
+            display: false,
+          },
+          elements: {
+            center: {
+              text: '{{ .ClusterSummary.Score }}%',
+              color: '#333', //Default black
+              fontStyle: 'Helvetica', //Default Arial
+              sidePadding: 30 //Default 20 (as a percentage)
+            }
+          }
+        }
+      });
+    });
+  </script>
 </body>
 
 </html>

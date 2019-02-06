@@ -6,16 +6,21 @@ type NamespacedResult struct {
 }
 
 type ResourceResult struct {
-	Name     string
-	Type     string
-	Summary  *ResultSummary
-	Messages []ResultMessage
+	Name             string
+	Type             string
+	Summary          *ResultSummary
+	ContainerResults []ContainerResult
 }
 
 type ResultSummary struct {
 	Successes uint
 	Warnings  uint
 	Failures  uint
+}
+
+type ContainerResult struct {
+	Name     string
+	Messages []ResultMessage
 }
 
 type ResultMessage struct {

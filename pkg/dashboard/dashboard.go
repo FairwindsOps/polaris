@@ -17,7 +17,7 @@ type DashboardData struct {
 	NamespacedResults map[string]*validator.NamespacedResult
 }
 
-var tmpl = template.Must(template.ParseFiles("pkg/dashboard/templates/charts.gohtml"))
+var tmpl = template.Must(template.ParseFiles("pkg/dashboard/templates/dashboard.gohtml"))
 
 func Render(w http.ResponseWriter, r *http.Request, c conf.Configuration) {
 	dashboardData, err := getDashboardData(c)
@@ -65,7 +65,7 @@ func getDashboardData(c conf.Configuration) (DashboardData, error) {
 
 	for _, deploy := range deploys.Items {
 		validationFailures := validator.ValidateDeploys(c, &deploy)
-		resResult := validator.ResourceResult{
+		deployResult := validator.ResourceResult{
 			Name: deploy.Name,
 			Type: "Deployment",
 			Summary: &validator.ResultSummary{
@@ -73,6 +73,7 @@ func getDashboardData(c conf.Configuration) (DashboardData, error) {
 				Warnings:  2,
 				Failures:  0,
 			},
+			ContainerResults: []validator.ContainerResult{},
 		}
 
 		if dashboardData.NamespacedResults[deploy.Namespace] == nil {
@@ -88,24 +89,27 @@ func getDashboardData(c conf.Configuration) (DashboardData, error) {
 
 		containerValidations := append(validationFailures.InitContainerValidations, validationFailures.ContainerValidations...)
 		for _, containerValidation := range containerValidations {
+			containerResult := validator.ContainerResult{
+				Name:     containerValidation.Container.Name,
+				Messages: []validator.ResultMessage{},
+			}
 			for _, success := range containerValidation.Successes {
 				dashboardData.ClusterSummary.Successes++
 				dashboardData.NamespacedResults[deploy.Namespace].Summary.Successes++
-				resResult.Summary.Successes++
-				resResult.Messages = append(resResult.Messages, success)
+				deployResult.Summary.Successes++
+				containerResult.Messages = append(containerResult.Messages, success)
 			}
 			for _, failure := range containerValidation.Failures {
 				dashboardData.ClusterSummary.Failures++
 				dashboardData.NamespacedResults[deploy.Namespace].Summary.Failures++
-				resResult.Summary.Failures++
-				resResult.Messages = append(resResult.Messages, validator.ResultMessage{
-					Message: failure.Reason(),
-					Type:    "failure",
-				})
+				deployResult.Summary.Failures++
+				containerResult.Messages = append(containerResult.Messages, failure)
 			}
+			deployResult.ContainerResults = append(deployResult.ContainerResults, containerResult)
 		}
 
-		dashboardData.NamespacedResults[deploy.Namespace].Results = append(dashboardData.NamespacedResults[deploy.Namespace].Results, resResult)
+		dashboardData.NamespacedResults[deploy.Namespace].Results = append(
+			dashboardData.NamespacedResults[deploy.Namespace].Results, deployResult)
 	}
 
 	return dashboardData, nil

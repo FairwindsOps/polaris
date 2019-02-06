@@ -1,96 +1,92 @@
 body {
   margin: 0;
-  font-family: 'Helvetica', 'Arial', sans-serif;
+  font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+  background: #eee;
 }
 
 .header {
-  background-color: #006369;
-  color: #fff;
-  padding: 50px;
+  background-color: #fff;
+  padding: 10px 20px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
 }
 
 .header h1 {
+  margin: 0 auto;
+  width: 900px;
+}
+
+.header h1 .logo {
+  width: 280px;
+}
+
+.header h1 span {
   font-family: 'Lobster', sans-serif;
-  font-size: 100px;
+  font-size: 60px;
   font-weight: normal;
-  text-align: center;
-  margin: 0;
+  display: none;
 }
 
-.cluster-score {
-  margin: 0;
+.dashboard-content {
+  width: 960px;
+  margin: 0 auto;
+}
+
+.charts {
+  height: 400px;
+}
+
+.chart-section {
+  float: left;
+  margin: 20px;
   padding: 30px;
-  color: #003339;
-  background-color: #eaf3f9;
-  text-align: center;
-}
-
-.cluster-score h2 {
-  margin: 0;
-  font-size: 80px;
-}
-
-.cluster-score .status {
-  width: 400px;
-  height: 30px;
-  margin: 30px auto;
-}
-
-.cluster-score .status div {
-  height: 30px;
-  border-radius: 8px;
-}
-
-.cluster-score .status .passing {
-  background-color: #4ab977;
-  float: left;
-}
-
-.cluster-score .status .warning {
-  background-color: #bdbd63;
-  float: left;
-}
-
-.cluster-score .status .failing {
-  background-color: #c37575;
-  width: 400px;
-}
-
-.cluster-score p {
-  margin: 10px 0;
-  font-weight: 300;
-  font-size: 24px;
-}
-
-.cluster-score .summary {
-  margin: 30px auto;
-  font-weight: 300;
-  font-size: 24px;
   width: 300px;
-  text-align: left;
-  line-height: 40px;
+  height: 320px;
+  color: #333;
+  background-color: #fff;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  border-radius: 5px;
 }
 
-.cluster-score .summary .value {
-  float: right;
-  font-size: 28px;
+.chart-section.namespace-score {
+  margin-left: 0px;
+  width: 480px;
 }
 
-.namespace-header {
-  background-color: #006369;
-  color: #fff;
-  font-size: 50px;
-  font-weight: normal;
-  padding: 20px;
+.chart-section h3 {
+  margin: 0 0 15px;
+  padding: 0 0 15px;
+  font-weight: 300;
+  font-size: 30px;
+  border-bottom: 1px solid #eee;
 }
 
-.namespace-header h3 {
+#clusterScoreChart {
+  width: 260px;
+  height: 260px;
+}
+
+#namespaceScoreChart {
+  width: 520px;
+  height: 260px;
+}
+
+.namespace {
+  margin: 20px;
+  padding: 10px 20px;
+  color: #333;
+  background-color: #fff;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  border-radius: 5px;
+}
+
+.namespace h3 {
   margin: 0;
   font-weight: 300;
   font-size: 30px;
+  padding: 20px;
 }
 
-.namespace-header h3 strong {
+.namespace h3 strong {
   margin: 0;
   font-weight: bold;
   font-size: 30px;
@@ -104,7 +100,6 @@ body {
 
 .namespace-content {
   width: 100%;
-  background-color: #eaf3f9;
   border-spacing: 0;
   border-collapse: collapse;
 }
@@ -117,53 +112,74 @@ body {
   padding: 15px 20px;
   margin: 0;
   font-size: 18px;
-  border-bottom: 1px solid #aac3c9;
+  border-top: 1px solid #eee;
 }
 
-.namespace-content .caret-expander {
+.namespace-content .resource-info .name {
+  cursor: pointer;
+}
+
+.namespace-content .resource-info .caret-expander {
   display: inline-block;
   width: 15px;
   height: 15px;
   margin-right: 10px;
   background-image: url('../images/caret-right.svg');
-  background-size: 15px auto;
+  background-size: 13px auto;
   background-repeat: no-repeat;
   background-position: 2px center;
 }
 
-.namespace-content .caret-expander.expanded {
+.namespace-content .resource-info.expanded .caret-expander {
   background-image: url('../images/caret-bottom.svg');
-  background-position: center center;
+  background-position: center 2px;
 }
 
-.namespace-content .extra {
+.namespace-content .resource-info .extra {
+  display: none;
+  color: #6a6a6a;
+}
+
+.namespace-content .resource-info.expanded .extra {
+  display: block;
+}
+
+.namespace-content .extra h4 {
+  font-weight: bold;
+  font-size: 15px;
+  margin: 12px 25px 5px;
+}
+
+.namespace-content .extra ul {
   list-style-type: none;
-  font-size: 14px;
-  line-height: 19px;
-  margin: 10px 30px;
+  font-size: 13px;
+  line-height: 20px;
+  margin: 5px 35px;
   padding: 0;
+  color: #6a6a6a;
 }
 
 .namespace-content .extra span {
   display: inline-block;
   text-align: center;
   width: 20px;
+  font-size: 20px;
+  font-weight: bold;
+  position: relative;
+  bottom: -1px;
 }
 
-.namespace-content .extra .success {
-  color: #2a9957;
-}
-
-.namespace-content .extra .warning {
-  color: #adad43;
+.namespace-content .extra .success span {
+  color: #8BD2DC;
 }
 
 .namespace-content .extra .warning span {
-  font-size: 11px;
+  color: #f26c21;
+  font-size: 15px;
 }
 
-.namespace-content .extra .failure {
-  color: #a35555;
+.namespace-content .extra .failure span {
+  color: #a11f4c;
 }
 
 .namespace-content td.status-bar {
@@ -178,21 +194,27 @@ body {
 
 .namespace-content .status div {
   height: 15px;
-  border-radius: 4px;
+  border-radius: 10px;
 }
 
 .namespace-content .status .passing {
-  background-color: #4ab977;
+  background-color: #8BD2DC;
   float: left;
 }
 
 .namespace-content .status .warning {
-  background-color: #bdbd63;
+  background-color: #f26c21;
   float: left;
 }
 
+@keyframes fadeIn {
+  0% {opacity: 0;}
+  100% {opacity: 1;}
+}
+
 .namespace-content .status .failing {
-  background-color: #c37575;
+  background-color: #a11f4c;
   width: 200px;
+  animation: fadeIn 2s;
 }
 

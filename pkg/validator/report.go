@@ -42,7 +42,7 @@ func validContainer(sb *strings.Builder, cv *ContainerValidation) bool {
 	s := fmt.Sprintf("\nContainer: %s\n Failure/s:\n", cv.Container.Name)
 	sb.WriteString(s)
 	for _, failure := range cv.Failures {
-		sb.WriteString(fmt.Sprintf("- %s\n", failure.Reason()))
+		sb.WriteString(fmt.Sprintf("- %s\n", failure.Message))
 	}
 	return false
 }
