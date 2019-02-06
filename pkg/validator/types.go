@@ -5,6 +5,8 @@ type NamespacedResult struct {
 	Results []ResourceResult
 }
 
+type NamespacedResults map[string]*NamespacedResult
+
 type ResourceResult struct {
 	Name             string
 	Type             string

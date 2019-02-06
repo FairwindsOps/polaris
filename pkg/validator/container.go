@@ -26,33 +26,49 @@ import (
 // ContainerValidation tracks validation failures associated with a Container
 type ContainerValidation struct {
 	Container corev1.Container
-	Failures  []ResultMessage
-	Successes []ResultMessage
+	Summary   ResultSummary
+	Messages  []ResultMessage
 }
 
-func validateContainer(conf conf.Configuration, container corev1.Container) ContainerValidation {
+func validateContainer(conf conf.Configuration, container corev1.Container) (ContainerResult, ResultSummary) {
 	cv := ContainerValidation{
 		Container: container,
+		Summary:   ResultSummary{},
 	}
 
 	cv.validateResources(conf.Resources)
 	cv.validateHealthChecks(conf.HealthChecks)
 	cv.validateImage(conf.Images)
 
-	return cv
-}
+	cRes := ContainerResult{
+		Name:     container.Name,
+		Messages: cv.Messages,
+	}
 
-func (cv *ContainerValidation) addFailure(message string) {
-	cv.Failures = append(cv.Failures, ResultMessage{
-		Message: message,
-		Type:    "failure",
-	})
+	return cRes, cv.Summary
 }
 
 func (cv *ContainerValidation) addSuccess(message string) {
-	cv.Successes = append(cv.Successes, ResultMessage{
+	cv.Summary.Successes++
+	cv.Messages = append(cv.Messages, ResultMessage{
 		Message: message,
 		Type:    "success",
+	})
+}
+
+func (cv *ContainerValidation) addWarning(message string) {
+	cv.Summary.Warnings++
+	cv.Messages = append(cv.Messages, ResultMessage{
+		Message: message,
+		Type:    "warning",
+	})
+}
+
+func (cv *ContainerValidation) addFailure(message string) {
+	cv.Summary.Failures++
+	cv.Messages = append(cv.Messages, ResultMessage{
+		Message: message,
+		Type:    "failure",
 	})
 }
 
