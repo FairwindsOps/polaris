@@ -68,7 +68,11 @@ func (cv *ContainerValidation) withinRange(resourceName string, expectedRange co
 	expectedMin := expectedRange.Min
 	expectedMax := expectedRange.Max
 	if expectedMin != nil && expectedMin.MilliValue() > actual.MilliValue() {
-		cv.addFailure(fmt.Sprintf("%s are too low", resourceName))
+		if actual.MilliValue() == 0 {
+			cv.addFailure(fmt.Sprintf("%s are not set", resourceName))
+		} else {
+			cv.addFailure(fmt.Sprintf("%s are too low", resourceName))
+		}
 	} else if expectedMax != nil && expectedMax.MilliValue() < actual.MilliValue() {
 		cv.addFailure(fmt.Sprintf("%s are too high", resourceName))
 	} else {

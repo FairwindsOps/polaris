@@ -18,7 +18,6 @@ import (
 	"testing"
 
 	conf "github.com/reactiveops/fairwinds/pkg/config"
-	types "github.com/reactiveops/fairwinds/pkg/types"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -62,26 +61,22 @@ func TestValidateResourcesEmptyContainer(t *testing.T) {
 		Name: "Empty",
 	}
 
-	expectedFailures := []types.Failure{
+	expectedFailures := []ResultMessage{
 		{
-			Name:     "requests.cpu",
-			Expected: "100m",
-			Actual:   "0",
+			Type:    "failure",
+			Message: "CPU Requests are not set",
 		},
 		{
-			Name:     "requests.memory",
-			Expected: "100Mi",
-			Actual:   "0",
+			Type:    "failure",
+			Message: "Memory Requests are not set",
 		},
 		{
-			Name:     "limits.cpu",
-			Expected: "150m",
-			Actual:   "0",
+			Type:    "failure",
+			Message: "CPU Limits are not set",
 		},
 		{
-			Name:     "limits.memory",
-			Expected: "150Mi",
-			Actual:   "0",
+			Type:    "failure",
+			Message: "Memory Limits are not set",
 		},
 	}
 
@@ -107,16 +102,14 @@ func TestValidateResourcesPartiallyValid(t *testing.T) {
 		},
 	}
 
-	expectedFailures := []types.Failure{
+	expectedFailures := []ResultMessage{
 		{
-			Name:     "requests.memory",
-			Expected: "100Mi",
-			Actual:   "0",
+			Type:    "failure",
+			Message: "Memory Requests are not set",
 		},
 		{
-			Name:     "limits.memory",
-			Expected: "150Mi",
-			Actual:   "0",
+			Type:    "failure",
+			Message: "Memory Limits are not set",
 		},
 	}
 
@@ -150,10 +143,10 @@ func TestValidateResourcesFullyValid(t *testing.T) {
 		},
 	}
 
-	testValidateResources(t, &container, &resourceConf1, &[]types.Failure{})
+	testValidateResources(t, &container, &resourceConf1, &[]ResultMessage{})
 }
 
-func testValidateResources(t *testing.T, container *corev1.Container, resourceConf *string, expectedFailures *[]types.Failure) {
+func testValidateResources(t *testing.T, container *corev1.Container, resourceConf *string, expectedFailures *[]ResultMessage) {
 	cv := ContainerValidation{
 		Container: *container,
 	}
@@ -183,16 +176,16 @@ func TestValidateHealthChecks(t *testing.T) {
 	cv1 := ContainerValidation{Container: corev1.Container{Name: ""}}
 	cv2 := ContainerValidation{Container: corev1.Container{Name: "", LivenessProbe: &probe, ReadinessProbe: &probe}}
 
-	l := types.Failure{Name: "liveness", Expected: "probe needs to be configured", Actual: "nil"}
-	r := types.Failure{Name: "readiness", Expected: "probe needs to be configured", Actual: "nil"}
-	f1 := []types.Failure{}
-	f2 := []types.Failure{r, l}
+	l := ResultMessage{Type: "failure", Message: "Liveness probe needs to be configured"}
+	r := ResultMessage{Type: "failure", Message: "Readiness probe needs to be configured"}
+	f1 := []ResultMessage{}
+	f2 := []ResultMessage{r, l}
 
 	var testCases = []struct {
 		name     string
 		probes   conf.Probes
 		cv       ContainerValidation
-		expected []types.Failure
+		expected []ResultMessage
 	}{
 		{name: "probes not configured", probes: p1, cv: cv1, expected: f1},
 		{name: "probes not required", probes: p2, cv: cv1, expected: f1},
@@ -222,15 +215,15 @@ func TestValidateImage(t *testing.T) {
 	cv3 := ContainerValidation{Container: corev1.Container{Name: "", Image: "test:latest"}}
 	cv4 := ContainerValidation{Container: corev1.Container{Name: "", Image: "test"}}
 
-	f := types.Failure{Name: "Image Tag", Expected: "not latest", Actual: "latest"}
-	f1 := []types.Failure{}
-	f2 := []types.Failure{f}
+	f := ResultMessage{Message: "Image tag should be specified", Type: "failure"}
+	f1 := []ResultMessage{}
+	f2 := []ResultMessage{f}
 
 	var testCases = []struct {
 		name     string
 		image    conf.Images
 		cv       ContainerValidation
-		expected []types.Failure
+		expected []ResultMessage
 	}{
 		{name: "image not configured", image: i1, cv: cv1, expected: f1},
 		{name: "image not required", image: i2, cv: cv1, expected: f1},
