@@ -3,7 +3,6 @@ package dashboard
 import (
 	"encoding/json"
 	"html/template"
-	"log"
 	"net/http"
 
 	conf "github.com/reactiveops/fairwinds/pkg/config"
@@ -12,49 +11,46 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type DashboardData struct {
+// TemplateData represents data in a format that's template friendly.
+type TemplateData struct {
 	ClusterSummary    *validator.ResultSummary
 	NamespacedResults map[string]*validator.NamespacedResult
 }
 
 var tmpl = template.Must(template.ParseFiles("pkg/dashboard/templates/dashboard.gohtml"))
 
-func Render(w http.ResponseWriter, r *http.Request, c conf.Configuration) {
-	dashboardData, err := getDashboardData(c)
+// MainHandler gets template data and renders the dashboard with it.
+func MainHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration) {
+	templateData, err := getTemplateData(c)
 	if err != nil {
-		http.Error(w, "Error Fetching Deploys", 500)
+		http.Error(w, "Error Fetching Deployments", 500)
 		return
 	}
 
-	tmpl.Execute(w, dashboardData)
+	tmpl.Execute(w, templateData)
 }
 
-func RenderJSON(w http.ResponseWriter, r *http.Request, c conf.Configuration) {
-	results := []validator.Results{}
-	var clientset = kube.CreateClientset()
-	pods, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
+// EndpointHandler gets template data and renders json with it.
+func EndpointHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration) {
+	templateData, err := getTemplateData(c)
 	if err != nil {
-		http.Error(w, "Error Fetching Pods", 500)
+		http.Error(w, "Error Fetching Deployments", 500)
 		return
 	}
-	log.Println("pods count:", len(pods.Items))
-	for _, pod := range pods.Items {
-		result := validator.ValidatePods(c, &pod.Spec)
-		results = append(results, result)
-	}
+
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(results)
+	json.NewEncoder(w).Encode(templateData)
 }
 
-func getDashboardData(c conf.Configuration) (DashboardData, error) {
+func getTemplateData(c conf.Configuration) (TemplateData, error) {
 	var clientset = kube.CreateClientset()
 	deploys, err := clientset.AppsV1().Deployments("").List(metav1.ListOptions{})
 	if err != nil {
-		return DashboardData{}, err
+		return TemplateData{}, err
 	}
 
-	dashboardData := DashboardData{
+	templateData := TemplateData{
 		ClusterSummary: &validator.ResultSummary{
 			Successes: 0,
 			Warnings:  4,
@@ -76,8 +72,8 @@ func getDashboardData(c conf.Configuration) (DashboardData, error) {
 			ContainerResults: []validator.ContainerResult{},
 		}
 
-		if dashboardData.NamespacedResults[deploy.Namespace] == nil {
-			dashboardData.NamespacedResults[deploy.Namespace] = &validator.NamespacedResult{
+		if templateData.NamespacedResults[deploy.Namespace] == nil {
+			templateData.NamespacedResults[deploy.Namespace] = &validator.NamespacedResult{
 				Results: []validator.ResourceResult{},
 				Summary: &validator.ResultSummary{
 					Successes: 0,
@@ -94,23 +90,23 @@ func getDashboardData(c conf.Configuration) (DashboardData, error) {
 				Messages: []validator.ResultMessage{},
 			}
 			for _, success := range containerValidation.Successes {
-				dashboardData.ClusterSummary.Successes++
-				dashboardData.NamespacedResults[deploy.Namespace].Summary.Successes++
+				templateData.ClusterSummary.Successes++
+				templateData.NamespacedResults[deploy.Namespace].Summary.Successes++
 				deployResult.Summary.Successes++
 				containerResult.Messages = append(containerResult.Messages, success)
 			}
 			for _, failure := range containerValidation.Failures {
-				dashboardData.ClusterSummary.Failures++
-				dashboardData.NamespacedResults[deploy.Namespace].Summary.Failures++
+				templateData.ClusterSummary.Failures++
+				templateData.NamespacedResults[deploy.Namespace].Summary.Failures++
 				deployResult.Summary.Failures++
 				containerResult.Messages = append(containerResult.Messages, failure)
 			}
 			deployResult.ContainerResults = append(deployResult.ContainerResults, containerResult)
 		}
 
-		dashboardData.NamespacedResults[deploy.Namespace].Results = append(
-			dashboardData.NamespacedResults[deploy.Namespace].Results, deployResult)
+		templateData.NamespacedResults[deploy.Namespace].Results = append(
+			templateData.NamespacedResults[deploy.Namespace].Results, deployResult)
 	}
 
-	return dashboardData, nil
+	return templateData, nil
 }
