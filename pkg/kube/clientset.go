@@ -3,8 +3,8 @@ package kube
 import (
 	"fmt"
 
-	"k8s.io/client-go/kubernetes" // Required for GKE auth.
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	"k8s.io/client-go/kubernetes"
+	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp" // Required for GKE auth.
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 )
 

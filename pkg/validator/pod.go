@@ -22,7 +22,7 @@ import (
 
 var log = logf.Log.WithName("Fairwinds Validator")
 
-// ValidatePods validates that each pod conforms to the Fairwinds config, returns a ResourceResult.
+// ValidatePod validates that each pod conforms to the Fairwinds config, returns a ResourceResult.
 func ValidatePod(conf conf.Configuration, pod *corev1.PodSpec) ResourceResult {
 	resResult := ResourceResult{
 		Type:             "Pod",
