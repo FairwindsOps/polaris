@@ -23,7 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
-// ContainerValidation tracks validation failures associated with a Container
+// ContainerValidation tracks validation failures associated with a Container.
 type ContainerValidation struct {
 	Container corev1.Container
 	Summary   ResultSummary

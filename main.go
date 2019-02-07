@@ -65,7 +65,7 @@ func main() {
 
 func startDashboardServer(c conf.Configuration) {
 	http.HandleFunc("/results.json", func(w http.ResponseWriter, r *http.Request) {
-		dashboard.RenderJSON(w, r, c)
+		dashboard.EndpointHandler(w, r, c)
 	})
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("public/"))))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -73,7 +73,7 @@ func startDashboardServer(c conf.Configuration) {
 			http.NotFound(w, r)
 			return
 		}
-		dashboard.Render(w, r, c)
+		dashboard.MainHandler(w, r, c)
 	})
 	glog.Println("Starting Fairwinds dashboard server on port 8080.")
 	glog.Fatal(http.ListenAndServe(":8080", nil))

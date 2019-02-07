@@ -3,60 +3,53 @@ package dashboard
 import (
 	"encoding/json"
 	"html/template"
-	"log"
 	"net/http"
 
 	conf "github.com/reactiveops/fairwinds/pkg/config"
-	"github.com/reactiveops/fairwinds/pkg/kube"
 	"github.com/reactiveops/fairwinds/pkg/validator"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// DashboardData stores validation results organized by namespace and also
-// tracks the total cluster count of failed/successed validation checks.
-type DashboardData struct {
+// TemplateData represents data in a format that's template friendly.
+type TemplateData struct {
 	ClusterSummary    *validator.ResultSummary
 	NamespacedResults validator.NamespacedResults
 }
 
 var tmpl = template.Must(template.ParseFiles("pkg/dashboard/templates/dashboard.gohtml"))
 
-// Render populates the dashboard template with validation data.
-func Render(w http.ResponseWriter, r *http.Request, c conf.Configuration) {
-	dashboardData, err := getDashboardData(c)
+// MainHandler gets template data and renders the dashboard with it.
+func MainHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration) {
+	templateData, err := getTemplateData(c)
 	if err != nil {
-		http.Error(w, "Error Fetching Deploys", 500)
+		http.Error(w, "Error Fetching Deployments", 500)
 		return
 	}
 
-	tmpl.Execute(w, dashboardData)
+	tmpl.Execute(w, templateData)
 }
 
-// RenderJSON returns pod validation data in JSON format.
-func RenderJSON(w http.ResponseWriter, r *http.Request, c conf.Configuration) {
-	var clientset = kube.CreateClientset()
-	pods, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
+// EndpointHandler gets template data and renders json with it.
+func EndpointHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration) {
+	templateData, err := getTemplateData(c)
 	if err != nil {
-		http.Error(w, "Error Fetching Pods", 500)
+		http.Error(w, "Error Fetching Deployments", 500)
 		return
 	}
-	log.Println("pods count:", len(pods.Items))
-	res := []validator.ResourceResult{}
-	for _, pod := range pods.Items {
-		resResult := validator.ValidatePod(c, &pod.Spec)
-		resResult.Name = pod.Name
-		res = append(res, resResult)
-	}
+
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(res)
+	json.NewEncoder(w).Encode(templateData)
 }
 
-func getDashboardData(c conf.Configuration) (DashboardData, error) {
+func getTemplateData(c conf.Configuration) (TemplateData, error) {
+
 	// TODO: Once we are validating more than deployments,
 	// we will need to merge the namespaceResults that get returned
 	// from each validation.
-	nsResults, _ := validator.ValidateDeploys(c)
+	nsResults, err := validator.ValidateDeploys(c)
+	if err != nil {
+		return TemplateData{}, err
+	}
 
 	var clusterSuccesses, clusterFailures, clusterWarnings uint
 
@@ -69,7 +62,7 @@ func getDashboardData(c conf.Configuration) (DashboardData, error) {
 		}
 	}
 
-	dashboardData := DashboardData{
+	templateData := TemplateData{
 		ClusterSummary: &validator.ResultSummary{
 			Failures:  clusterFailures,
 			Warnings:  clusterWarnings,
@@ -78,5 +71,5 @@ func getDashboardData(c conf.Configuration) (DashboardData, error) {
 		NamespacedResults: nsResults,
 	}
 
-	return dashboardData, nil
+	return templateData, nil
 }
