@@ -8,7 +8,6 @@ import (
 	"github.com/reactiveops/fairwinds/pkg/kube"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
@@ -79,17 +78,15 @@ func ValidateDeploy(conf conf.Configuration, deploy *appsv1.Deployment) Resource
 
 // ValidateDeploys validates that each deployment conforms to the Fairwinds config,
 // returns a list of ResourceResults organized by namespace.
-func ValidateDeploys(conf conf.Configuration) (NamespacedResults, error) {
+func ValidateDeploys(config conf.Configuration, k8sAPI *kube.API) (NamespacedResults, error) {
 	nsResults := NamespacedResults{}
-
-	var clientset = kube.CreateClientset()
-	deploys, err := clientset.AppsV1().Deployments("").List(metav1.ListOptions{})
+	deploys, err := k8sAPI.GetDeploys()
 	if err != nil {
 		return nsResults, err
 	}
 
 	for _, deploy := range deploys.Items {
-		resResult := ValidateDeploy(conf, &deploy)
+		resResult := ValidateDeploy(config, &deploy)
 		nsResults = addResult(resResult, nsResults, deploy.Namespace)
 	}
 

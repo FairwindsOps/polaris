@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	conf "github.com/reactiveops/fairwinds/pkg/config"
+	"github.com/reactiveops/fairwinds/pkg/kube"
 	"github.com/reactiveops/fairwinds/pkg/validator"
 )
 
@@ -15,22 +16,21 @@ type TemplateData struct {
 	NamespacedResults validator.NamespacedResults
 }
 
-var tmpl = template.Must(template.ParseFiles("pkg/dashboard/templates/dashboard.gohtml"))
-
 // MainHandler gets template data and renders the dashboard with it.
-func MainHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration) {
-	templateData, err := getTemplateData(c)
+func MainHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration, kubeAPI *kube.API) {
+	templateData, err := getTemplateData(c, kubeAPI)
 	if err != nil {
 		http.Error(w, "Error Fetching Deployments", 500)
 		return
 	}
 
+	tmpl := template.Must(template.ParseFiles("pkg/dashboard/templates/dashboard.gohtml"))
 	tmpl.Execute(w, templateData)
 }
 
 // EndpointHandler gets template data and renders json with it.
-func EndpointHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration) {
-	templateData, err := getTemplateData(c)
+func EndpointHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration, kubeAPI *kube.API) {
+	templateData, err := getTemplateData(c, kubeAPI)
 	if err != nil {
 		http.Error(w, "Error Fetching Deployments", 500)
 		return
@@ -41,12 +41,12 @@ func EndpointHandler(w http.ResponseWriter, r *http.Request, c conf.Configuratio
 	json.NewEncoder(w).Encode(templateData)
 }
 
-func getTemplateData(c conf.Configuration) (TemplateData, error) {
+func getTemplateData(config conf.Configuration, kubeAPI *kube.API) (TemplateData, error) {
 
 	// TODO: Once we are validating more than deployments,
 	// we will need to merge the namespaceResults that get returned
 	// from each validation.
-	nsResults, err := validator.ValidateDeploys(c)
+	nsResults, err := validator.ValidateDeploys(config, kubeAPI)
 	if err != nil {
 		return TemplateData{}, err
 	}

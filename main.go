@@ -22,6 +22,7 @@ import (
 
 	conf "github.com/reactiveops/fairwinds/pkg/config"
 	"github.com/reactiveops/fairwinds/pkg/dashboard"
+	"github.com/reactiveops/fairwinds/pkg/kube"
 	"github.com/reactiveops/fairwinds/pkg/validator"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -64,8 +65,9 @@ func main() {
 }
 
 func startDashboardServer(c conf.Configuration) {
+	k, _ := kube.CreateKubeAPI()
 	http.HandleFunc("/results.json", func(w http.ResponseWriter, r *http.Request) {
-		dashboard.EndpointHandler(w, r, c)
+		dashboard.EndpointHandler(w, r, c, k)
 	})
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("public/"))))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -73,7 +75,7 @@ func startDashboardServer(c conf.Configuration) {
 			http.NotFound(w, r)
 			return
 		}
-		dashboard.MainHandler(w, r, c)
+		dashboard.MainHandler(w, r, c, k)
 	})
 	glog.Println("Starting Fairwinds dashboard server on port 8080.")
 	glog.Fatal(http.ListenAndServe(":8080", nil))
