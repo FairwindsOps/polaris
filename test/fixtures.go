@@ -52,5 +52,4 @@ func SetupAddDeploys(k *kube.API, namespace string) *kube.API {
 		fmt.Println(err)
 	}
 	return k
-
 }

@@ -15,11 +15,7 @@ type API struct {
 
 // GetDeploys gets all the deployments in the k8s cluster.
 func (api *API) GetDeploys() (*appsv1.DeploymentList, error) {
-	deploys, err := api.Clientset.AppsV1().Deployments("").List(metav1.ListOptions{})
-	if err != nil {
-		return nil, err
-	}
-	return deploys, nil
+	return api.Clientset.AppsV1().Deployments("").List(metav1.ListOptions{})
 }
 
 // CreateKubeAPI returns a new KubeAPI object to interact with the cluster API with.
