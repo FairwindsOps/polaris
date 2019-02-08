@@ -22,22 +22,36 @@ import (
 
 var log = logf.Log.WithName("Fairwinds Validator")
 
-// ValidatePods validates that each pod conforms to the Fairwinds config.
-func ValidatePods(conf conf.Configuration, pod *corev1.PodSpec) Results {
-	results := Results{}
+// ValidatePod validates that each pod conforms to the Fairwinds config, returns a ResourceResult.
+func ValidatePod(conf conf.Configuration, pod *corev1.PodSpec) ResourceResult {
+	resResult := ResourceResult{
+		Type:             "Pod",
+		Summary:          &ResultSummary{},
+		ContainerResults: []ContainerResult{},
+	}
+
+	// Adds containerResults to resourceResults
 	for _, container := range pod.InitContainers {
-		results.InitContainerValidations = append(
-			results.InitContainerValidations,
-			validateContainer(conf, container),
+		ctrRes, summary := validateContainer(conf, container)
+		resResult.Summary.Successes += summary.Successes
+		resResult.Summary.Warnings += summary.Warnings
+		resResult.Summary.Failures += summary.Failures
+		resResult.ContainerResults = append(
+			resResult.ContainerResults,
+			ctrRes,
 		)
 	}
 
 	for _, container := range pod.Containers {
-		results.ContainerValidations = append(
-			results.ContainerValidations,
-			validateContainer(conf, container),
+		ctrRes, summary := validateContainer(conf, container)
+		resResult.Summary.Successes += summary.Successes
+		resResult.Summary.Warnings += summary.Warnings
+		resResult.Summary.Failures += summary.Failures
+		resResult.ContainerResults = append(
+			resResult.ContainerResults,
+			ctrRes,
 		)
 	}
 
-	return results
+	return resResult
 }

@@ -6,6 +6,9 @@ type NamespacedResult struct {
 	Results []ResourceResult
 }
 
+// NamespacedResults is a mapping of namespace name to the validation results.
+type NamespacedResults map[string]*NamespacedResult
+
 // ResourceResult groups container results by parent resource.
 type ResourceResult struct {
 	Name             string
