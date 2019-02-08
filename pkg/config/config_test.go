@@ -68,7 +68,8 @@ var resourceConfJSON1 = `{
 
 func TestParseError(t *testing.T) {
 	_, err := Parse([]byte(resourceConfInvalid1))
-	assert.EqualError(t, err, "Decoding config failed: error unmarshaling JSON: json: cannot unmarshal string into Go value of type config.Configuration")
+	expectedErr := "Decoding config failed: error unmarshaling JSON: while decoding JSON: json: cannot unmarshal string into Go value of type config.Configuration"
+	assert.EqualError(t, err, expectedErr)
 }
 
 func TestParseYaml(t *testing.T) {
