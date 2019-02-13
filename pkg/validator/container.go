@@ -151,6 +151,6 @@ func (cv *ContainerValidation) validateHostPort(conf conf.HostNetworking) {
 				return
 			}
 		}
-		cv.addSuccess("Host port should not be configured")
+		cv.addSuccess("Host port is not configured")
 	}
 }

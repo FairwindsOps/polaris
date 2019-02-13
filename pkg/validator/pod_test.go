@@ -31,10 +31,10 @@ func TestValidatePod(t *testing.T) {
 	}
 
 	expectedMssgs := []ResultMessage{
-		ResultMessage{Message: "Host alias should not be configured", Type: "success"},
-		ResultMessage{Message: "Host IPC should not be configured", Type: "success"},
-		ResultMessage{Message: "Host PID should not be configured", Type: "success"},
-		ResultMessage{Message: "Host network sould not be configured", Type: "success"},
+		ResultMessage{Message: "Host alias is not configured", Type: "success"},
+		ResultMessage{Message: "Host IPC is not configured", Type: "success"},
+		ResultMessage{Message: "Host PID is not configured", Type: "success"},
+		ResultMessage{Message: "Host network is not configured", Type: "success"},
 	}
 
 	actualRR := ValidatePod(c, &pod.Spec)

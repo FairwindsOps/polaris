@@ -123,7 +123,7 @@ func (pv *PodValidation) hostAlias(conf conf.HostNetworking) {
 				return
 			}
 		}
-		pv.addSuccess("Host alias should not be configured")
+		pv.addSuccess("Host alias is not configured")
 	}
 }
 
@@ -133,7 +133,7 @@ func (pv *PodValidation) hostIPC(conf conf.HostNetworking) {
 			pv.addFailure("Host IPC is configured, but it shouldn't be")
 			return
 		}
-		pv.addSuccess("Host IPC should not be configured")
+		pv.addSuccess("Host IPC is not configured")
 	}
 }
 
@@ -143,7 +143,7 @@ func (pv *PodValidation) hostPID(conf conf.HostNetworking) {
 			pv.addFailure("Host PID is configured, but it shouldn't be")
 			return
 		}
-		pv.addSuccess("Host PID should not be configured")
+		pv.addSuccess("Host PID is not configured")
 	}
 }
 
@@ -153,6 +153,6 @@ func (pv *PodValidation) hostNetwork(conf conf.HostNetworking) {
 			pv.addFailure("Host network is configured, but it shouldn't be")
 			return
 		}
-		pv.addSuccess("Host network sould not be configured")
+		pv.addSuccess("Host network is not configured")
 	}
 }
