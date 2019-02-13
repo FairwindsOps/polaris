@@ -46,7 +46,7 @@ func ValidatePod(conf conf.Configuration, pod *corev1.PodSpec) ResourceResult {
 		Summary: ResultSummary{},
 	}
 
-	pv.validateHostNetwork(conf.HostNetwork)
+	pv.validateHostNetwork(conf.HostNetworking)
 
 	pRes := PodResult{
 		Messages:         pv.messages(),
@@ -108,14 +108,14 @@ func (pv *PodValidation) addSuccess(message string) {
 	})
 }
 
-func (pv *PodValidation) validateHostNetwork(conf conf.HostNetwork) {
+func (pv *PodValidation) validateHostNetwork(conf conf.HostNetworking) {
 	pv.hostAlias(conf)
 	pv.hostIPC(conf)
 	pv.hostPID(conf)
 	pv.hostNetwork(conf)
 }
 
-func (pv *PodValidation) hostAlias(conf conf.HostNetwork) {
+func (pv *PodValidation) hostAlias(conf conf.HostNetworking) {
 	if conf.HostAlias.Require {
 		for _, alias := range pv.Pod.HostAliases {
 			if alias.IP != "" && len(alias.Hostnames) == 0 {
@@ -127,7 +127,7 @@ func (pv *PodValidation) hostAlias(conf conf.HostNetwork) {
 	}
 }
 
-func (pv *PodValidation) hostIPC(conf conf.HostNetwork) {
+func (pv *PodValidation) hostIPC(conf conf.HostNetworking) {
 	if conf.HostIPC.Require {
 		if pv.Pod.HostIPC {
 			pv.addFailure("Host IPC is configured, but it shouldn't be")
@@ -137,7 +137,7 @@ func (pv *PodValidation) hostIPC(conf conf.HostNetwork) {
 	}
 }
 
-func (pv *PodValidation) hostPID(conf conf.HostNetwork) {
+func (pv *PodValidation) hostPID(conf conf.HostNetworking) {
 	if conf.HostPID.Require {
 		if pv.Pod.HostPID {
 			pv.addFailure("Host PID is configured, but it shouldn't be")
@@ -147,7 +147,7 @@ func (pv *PodValidation) hostPID(conf conf.HostNetwork) {
 	}
 }
 
-func (pv *PodValidation) hostNetwork(conf conf.HostNetwork) {
+func (pv *PodValidation) hostNetwork(conf conf.HostNetworking) {
 	if conf.HostNetwork.Require {
 		if pv.Pod.HostNetwork {
 			pv.addFailure("Host network is configured, but it shouldn't be")

@@ -49,7 +49,7 @@ func validateContainer(conf conf.Configuration, container corev1.Container) Reso
 	cv.validateResources(conf.Resources)
 	cv.validateHealthChecks(conf.HealthChecks)
 	cv.validateImage(conf.Images)
-	cv.validateHostPort(conf.HostNetwork)
+	cv.validateHostPort(conf.HostNetworking)
 
 	cRes := ContainerResult{
 		Name:     container.Name,
@@ -143,7 +143,7 @@ func (cv *ContainerValidation) validateImage(conf conf.Images) {
 	}
 }
 
-func (cv *ContainerValidation) validateHostPort(conf conf.HostNetwork) {
+func (cv *ContainerValidation) validateHostPort(conf conf.HostNetworking) {
 	if conf.HostPort.Require {
 		for _, port := range cv.Container.Ports {
 			if port.HostPort != 0 {

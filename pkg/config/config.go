@@ -13,10 +13,10 @@ import (
 
 // Configuration contains all of the config for the validation checks.
 type Configuration struct {
-	Resources    RequestsAndLimits `json:"resources"`
-	HealthChecks Probes            `json:"healthChecks"`
-	Images       Images            `json:"images"`
-	HostNetwork  HostNetwork       `json:"hostNetwork"`
+	Resources      RequestsAndLimits `json:"resources"`
+	HealthChecks   Probes            `json:"healthChecks"`
+	Images         Images            `json:"images"`
+	HostNetworking HostNetworking    `json:"hostNetworking"`
 }
 
 // RequestsAndLimits contains config for resource requests and limits.
@@ -51,8 +51,8 @@ type Images struct {
 	WhitelistRepos []string `json:"whitelistRepos"`
 }
 
-// HostNetwork contains the config for host networking validations.
-type HostNetwork struct {
+// HostNetworking contains the config for host networking validations.
+type HostNetworking struct {
 	HostAlias   ResourceRequire `json:"hostAlias"`
 	HostIPC     ResourceRequire `json:"hostIPC"`
 	HostNetwork ResourceRequire `json:"hostNetwork"`
