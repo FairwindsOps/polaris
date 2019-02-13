@@ -49,6 +49,7 @@ func validateContainer(conf conf.Configuration, container corev1.Container) Reso
 	cv.validateResources(conf.Resources)
 	cv.validateHealthChecks(conf.HealthChecks)
 	cv.validateImage(conf.Images)
+	cv.validateHostPort(conf.HostNetwork)
 
 	cRes := ContainerResult{
 		Name:     container.Name,
@@ -139,5 +140,17 @@ func (cv *ContainerValidation) validateImage(conf conf.Images) {
 		} else {
 			cv.addSuccess("Image tag specified")
 		}
+	}
+}
+
+func (cv *ContainerValidation) validateHostPort(conf conf.HostNetwork) {
+	if conf.HostPort {
+		for _, port := range cv.Container.Ports {
+			if port.HostPort != 0 {
+				cv.addFailure("Host port should not be configured")
+				return
+			}
+		}
+		cv.addSuccess("Host port is not configured")
 	}
 }

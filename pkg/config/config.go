@@ -16,6 +16,7 @@ type Configuration struct {
 	Resources    RequestsAndLimits `json:"resources"`
 	HealthChecks Probes            `json:"healthChecks"`
 	Images       Images            `json:"images"`
+	HostNetwork  HostNetwork       `json:"hostNetwork"`
 }
 
 // RequestsAndLimits contains config for resource requests and limits.
@@ -48,6 +49,11 @@ type ResourceRequire struct {
 type Images struct {
 	TagRequired    bool     `json:"tagRequired"`
 	WhitelistRepos []string `json:"whitelistRepos"`
+}
+
+// HostNetwork contains the config for host networking validations.
+type HostNetwork struct {
+	HostPort bool `json:"hostPort"`
 }
 
 // ParseFile parses config from a file.
