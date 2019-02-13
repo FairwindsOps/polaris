@@ -53,7 +53,11 @@ type Images struct {
 
 // HostNetwork contains the config for host networking validations.
 type HostNetwork struct {
-	HostPort bool `json:"hostPort"`
+	HostAlias   ResourceRequire `json:"hostAlias"`
+	HostIPC     ResourceRequire `json:"hostIPC"`
+	HostNetwork ResourceRequire `json:"hostNetwork"`
+	HostPID     ResourceRequire `json:"hostPID"`
+	HostPort    ResourceRequire `json:"hostPort"`
 }
 
 // ParseFile parses config from a file.

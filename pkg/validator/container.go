@@ -144,13 +144,13 @@ func (cv *ContainerValidation) validateImage(conf conf.Images) {
 }
 
 func (cv *ContainerValidation) validateHostPort(conf conf.HostNetwork) {
-	if conf.HostPort {
+	if conf.HostPort.Require {
 		for _, port := range cv.Container.Ports {
 			if port.HostPort != 0 {
-				cv.addFailure("Host port should not be configured")
+				cv.addFailure("Host port is configured, but it shouldn't be")
 				return
 			}
 		}
-		cv.addSuccess("Host port is not configured")
+		cv.addSuccess("Host port should not be configured")
 	}
 }

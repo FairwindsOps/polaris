@@ -15,6 +15,7 @@ type ResourceResult struct {
 	Type             string
 	Summary          *ResultSummary
 	ContainerResults []ContainerResult
+	PodResults       []PodResult
 }
 
 // ResultSummary provides a high level overview of success, warnings, and failures.
@@ -28,6 +29,13 @@ type ResultSummary struct {
 type ContainerResult struct {
 	Name     string
 	Messages []ResultMessage
+}
+
+// PodResult provides a list of validation messages for each pod.
+type PodResult struct {
+	Name             string
+	Messages         []ResultMessage
+	ContainerResults []ContainerResult
 }
 
 // ResultMessage contains a message and a type indicator (success, warning, or failure).
