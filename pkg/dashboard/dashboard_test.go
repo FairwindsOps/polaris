@@ -31,5 +31,7 @@ func TestGetTemplateData(t *testing.T) {
 
 	assert.EqualValues(t, actualTmplData.ClusterSummary, sum)
 	assert.Equal(t, len(actualTmplData.NamespacedResults["test"].Results), 1, "should be equal")
-	assert.Equal(t, len(actualTmplData.NamespacedResults["test"].Results[0].ContainerResults[0].Messages), 5, "should be equal")
+	assert.Equal(t, len(actualTmplData.NamespacedResults["test"].Results[0].PodResults), 1, "should be equal")
+	assert.Equal(t, len(actualTmplData.NamespacedResults["test"].Results[0].PodResults[0].ContainerResults), 1, "should be equal")
+	assert.Equal(t, len(actualTmplData.NamespacedResults["test"].Results[0].PodResults[0].ContainerResults[0].Messages), 5, "should be equal")
 }
