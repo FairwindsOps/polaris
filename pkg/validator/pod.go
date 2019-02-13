@@ -30,26 +30,26 @@ func ValidatePod(conf conf.Configuration, pod *corev1.PodSpec) ResourceResult {
 		ContainerResults: []ContainerResult{},
 	}
 
-	// Adds containerResults to resourceResults
+	// Add container resource results to the pod resource results.
 	for _, container := range pod.InitContainers {
-		ctrRes, summary := validateContainer(conf, container)
-		resResult.Summary.Successes += summary.Successes
-		resResult.Summary.Warnings += summary.Warnings
-		resResult.Summary.Failures += summary.Failures
+		ctrRR := validateContainer(conf, container)
+		resResult.Summary.Successes += ctrRR.Summary.Successes
+		resResult.Summary.Warnings += ctrRR.Summary.Warnings
+		resResult.Summary.Failures += ctrRR.Summary.Failures
 		resResult.ContainerResults = append(
 			resResult.ContainerResults,
-			ctrRes,
+			ctrRR.ContainerResults[0],
 		)
 	}
 
 	for _, container := range pod.Containers {
-		ctrRes, summary := validateContainer(conf, container)
-		resResult.Summary.Successes += summary.Successes
-		resResult.Summary.Warnings += summary.Warnings
-		resResult.Summary.Failures += summary.Failures
+		ctrRR := validateContainer(conf, container)
+		resResult.Summary.Successes += ctrRR.Summary.Successes
+		resResult.Summary.Warnings += ctrRR.Summary.Warnings
+		resResult.Summary.Failures += ctrRR.Summary.Failures
 		resResult.ContainerResults = append(
 			resResult.ContainerResults,
-			ctrRes,
+			ctrRR.ContainerResults[0],
 		)
 	}
 

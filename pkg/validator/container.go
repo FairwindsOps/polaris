@@ -40,7 +40,7 @@ func (cv *ContainerValidation) messages() []ResultMessage {
 	return mssgs
 }
 
-func validateContainer(conf conf.Configuration, container corev1.Container) (ContainerResult, ResultSummary) {
+func validateContainer(conf conf.Configuration, container corev1.Container) ResourceResult {
 	cv := ContainerValidation{
 		Container: container,
 		Summary:   ResultSummary{},
@@ -55,7 +55,14 @@ func validateContainer(conf conf.Configuration, container corev1.Container) (Con
 		Messages: cv.messages(),
 	}
 
-	return cRes, cv.Summary
+	rr := ResourceResult{
+		Name:             container.Name,
+		Type:             "Container",
+		Summary:          &cv.Summary,
+		ContainerResults: []ContainerResult{cRes},
+	}
+
+	return rr
 }
 
 func (cv *ContainerValidation) addFailure(message string) {
@@ -134,12 +141,3 @@ func (cv *ContainerValidation) validateImage(conf conf.Images) {
 		}
 	}
 }
-
-// func hostPort(conf conf.ResourceRequestsAndLimits, c corev1.Container, results types.ContainerResults) types.ContainerResults {
-// 	for _, port := range c.Ports {
-// 		if port.HostPort != 0 {
-// 			results.AddFailure("Host port", "placeholder", "placeholder")
-// 		}
-// 	}
-// 	return results
-// }
