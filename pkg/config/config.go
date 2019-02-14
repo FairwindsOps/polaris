@@ -13,9 +13,10 @@ import (
 
 // Configuration contains all of the config for the validation checks.
 type Configuration struct {
-	Resources    RequestsAndLimits `json:"resources"`
-	HealthChecks Probes            `json:"healthChecks"`
-	Images       Images            `json:"images"`
+	Resources      RequestsAndLimits `json:"resources"`
+	HealthChecks   Probes            `json:"healthChecks"`
+	Images         Images            `json:"images"`
+	HostNetworking HostNetworking    `json:"hostNetworking"`
 }
 
 // RequestsAndLimits contains config for resource requests and limits.
@@ -48,6 +49,15 @@ type ResourceRequire struct {
 type Images struct {
 	TagRequired    bool     `json:"tagRequired"`
 	WhitelistRepos []string `json:"whitelistRepos"`
+}
+
+// HostNetworking contains the config for host networking validations.
+type HostNetworking struct {
+	HostAlias   ResourceRequire `json:"hostAlias"`
+	HostIPC     ResourceRequire `json:"hostIPC"`
+	HostNetwork ResourceRequire `json:"hostNetwork"`
+	HostPID     ResourceRequire `json:"hostPID"`
+	HostPort    ResourceRequire `json:"hostPort"`
 }
 
 // ParseFile parses config from a file.

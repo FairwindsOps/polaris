@@ -16,7 +16,8 @@ func mockContainer(name string) corev1.Container {
 	return c
 }
 
-func mockPod() corev1.PodTemplateSpec {
+// MockPod creates a pod object.
+func MockPod() corev1.PodTemplateSpec {
 	c1 := mockContainer("test")
 	p := corev1.PodTemplateSpec{
 		Spec: corev1.PodSpec{
@@ -29,7 +30,7 @@ func mockPod() corev1.PodTemplateSpec {
 }
 
 func mockDeploy() appsv1.Deployment {
-	p := mockPod()
+	p := MockPod()
 	d := appsv1.Deployment{
 		Spec: appsv1.DeploymentSpec{
 			Template: p,

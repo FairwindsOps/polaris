@@ -99,6 +99,17 @@ data:
       tagRequired: true
       whitelistRepos:
         - gcr.io
+    hostNetwork:
+      hostAlias:
+        require: true
+      hostIPC:
+        require: true
+      hostNetwork:
+        require: true
+      hostPID:
+        require: true
+      hostPort:
+        require: true
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
