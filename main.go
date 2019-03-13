@@ -19,6 +19,7 @@ import (
 	glog "log"
 	"net/http"
 	"os"
+	"strconv"
 
 	conf "github.com/reactiveops/fairwinds/pkg/config"
 	"github.com/reactiveops/fairwinds/pkg/dashboard"
@@ -42,6 +43,8 @@ var log = logf.Log.WithName(FairwindsName)
 func main() {
 	dashboard := flag.Bool("dashboard", false, "Runs the webserver for Fairwinds dashboard.")
 	webhook := flag.Bool("webhook", false, "Runs the webhook webserver.")
+	dashboardPort := flag.Int("dashboard-port", 8080, "Port for the dashboard webserver")
+	webhookPort := flag.Int("webhook-port", 9876, "Port for the webhook webserver")
 
 	var disableWebhookConfigInstaller bool
 	flag.BoolVar(&disableWebhookConfigInstaller, "disable-webhook-config-installer", false,
@@ -56,15 +59,20 @@ func main() {
 	}
 
 	if *webhook {
-		startWebhookServer(c, disableWebhookConfigInstaller)
+		startWebhookServer(c, disableWebhookConfigInstaller, *webhookPort)
 	}
 
 	if *dashboard {
-		startDashboardServer(c)
+		startDashboardServer(c, *dashboardPort)
+	}
+
+	if !*dashboard && !*webhook {
+		glog.Println("Must specify either -webhook, -dashboard, or both")
+		os.Exit(1)
 	}
 }
 
-func startDashboardServer(c conf.Configuration) {
+func startDashboardServer(c conf.Configuration, port int) {
 	k, _ := kube.CreateKubeAPI()
 	http.HandleFunc("/results.json", func(w http.ResponseWriter, r *http.Request) {
 		dashboard.EndpointHandler(w, r, c, k)
@@ -77,11 +85,12 @@ func startDashboardServer(c conf.Configuration) {
 		}
 		dashboard.MainHandler(w, r, c, k)
 	})
-	glog.Println("Starting Fairwinds dashboard server on port 8080.")
-	glog.Fatal(http.ListenAndServe(":8080", nil))
+	portStr := strconv.Itoa(port)
+	glog.Println("Starting Fairwinds dashboard server on port " + portStr)
+	glog.Fatal(http.ListenAndServe(":" + portStr, nil))
 }
 
-func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool) {
+func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool, port int) {
 	logf.SetLogger(logf.ZapLogger(false))
 	entryLog := log.WithName("entrypoint")
 
@@ -95,7 +104,7 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 
 	entryLog.Info("setting up webhook server")
 	as, err := webhook.NewServer(FairwindsName, mgr, webhook.ServerOptions{
-		Port:                          9876,
+		Port:                          int32(port),
 		CertDir:                       "/tmp/cert",
 		DisableWebhookConfigInstaller: &disableWebhookConfigInstaller,
 		BootstrapOptions: &webhook.BootstrapOptions{
@@ -119,6 +128,8 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 	if err != nil {
 		entryLog.Error(err, "unable to create a new webhook server")
 		os.Exit(1)
+	} else {
+		glog.Println("Fairwinds webhook server listening on port " + strconv.Itoa(port))
 	}
 
 	p := validator.NewWebhook("pod", mgr, validator.Validator{Config: c}, &corev1.Pod{})
