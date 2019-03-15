@@ -26,14 +26,14 @@ func MainHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration, k
 		http.Error(w, "Error Fetching Deployments", 500)
 		return
 	}
-    tmpl, err := template.New(TEMPLATE_NAME).Funcs(template.FuncMap{
-	    "getWarningWidth": func(rs validator.ResultSummary, fullWidth int) uint {
+	tmpl, err := template.New(TEMPLATE_NAME).Funcs(template.FuncMap{
+		"getWarningWidth": func(rs validator.ResultSummary, fullWidth int) uint {
 			return uint(float64(rs.Successes+rs.Warnings) / float64(rs.Successes+rs.Warnings+rs.Failures) * float64(fullWidth))
 		},
-	    "getSuccessWidth": func(rs validator.ResultSummary, fullWidth int) uint {
+		"getSuccessWidth": func(rs validator.ResultSummary, fullWidth int) uint {
 			return uint(float64(rs.Successes) / float64(rs.Successes+rs.Warnings+rs.Failures) * float64(fullWidth))
-	    },
-        "getIcon": func(rm validator.ResultMessage) string {
+		},
+		"getIcon": func(rm validator.ResultMessage) string {
 			switch rm.Type {
 			case "success":
 				return "fas fa-check"
@@ -43,14 +43,14 @@ func MainHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration, k
 				return "fas fa-times"
 			}
 		},
-    }).ParseFiles(TEMPLATE_FILE)
+	}).ParseFiles(TEMPLATE_FILE)
 	if err != nil {
 		panic(err)
 	}
 	err = template.Must(tmpl.Clone()).Execute(w, templateData)
-    if err != nil {
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-    }
+	}
 }
 
 // EndpointHandler gets template data and renders json with it.
