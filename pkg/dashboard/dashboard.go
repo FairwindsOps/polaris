@@ -45,11 +45,13 @@ func MainHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration, k
 		},
 	}).ParseFiles(TEMPLATE_FILE)
 	if err != nil {
-		panic(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	err = template.Must(tmpl.Clone()).Execute(w, templateData)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
 
