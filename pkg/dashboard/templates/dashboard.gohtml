@@ -53,8 +53,8 @@
                     <div class="extra">
                       <h4>Pod:</h4>
                       <ul>
-                        {{ range .Messages}}
-                          <li class="{{ .Type }}"><span>&#{{ .HTMLSpecialCharCode }};</span> {{ .Message }}</li>
+                        {{ range $message := .Messages}}
+                          <li class="{{ .Type }}"><span>&#{{ getCharCode $message }};</span> {{ .Message }}</li>
                         {{ end }}
                       </ul>
                     </div>
@@ -62,8 +62,8 @@
                       <div class="extra">
                         <h4>Container: {{ .Name }}</h4>
                         <ul>
-                          {{ range .Messages}}
-                            <li class="{{ .Type }}"><span>&#{{ .HTMLSpecialCharCode }};</span> {{ .Message }}</li>
+                          {{ range $message := .Messages}}
+                            <li class="{{ .Type }}"><span>&#{{ getCharCode $message }};</span> {{ .Message }}</li>
                           {{ end }}
                         </ul>
                       </div>
@@ -73,8 +73,8 @@
               <td class="status-bar">
                 <div class="status">
                   <div class="failing">
-                    <div class="warning" style="width: {{ .Summary.WarningWidth 200 }}px;">
-                      <div class="passing" style="width: {{ .Summary.SuccessWidth 200 }}px;"></div>
+                    <div class="warning" style="width: {{ getWarningWidth .Summary 200 }}px;">
+                      <div class="passing" style="width: {{ getSuccessWidth .Summary 200 }}px;"></div>
                     </div>
                   </div>
                 </div>

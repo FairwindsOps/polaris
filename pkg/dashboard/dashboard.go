@@ -10,6 +10,9 @@ import (
 	"github.com/reactiveops/fairwinds/pkg/validator"
 )
 
+const TEMPLATE_NAME = "dashboard.gohtml"
+const TEMPLATE_FILE = "pkg/dashboard/templates/" + TEMPLATE_NAME
+
 // TemplateData represents data in a format that's template friendly.
 type TemplateData struct {
 	ClusterSummary    *validator.ResultSummary
@@ -23,9 +26,31 @@ func MainHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration, k
 		http.Error(w, "Error Fetching Deployments", 500)
 		return
 	}
-
-	tmpl := template.Must(template.ParseFiles("pkg/dashboard/templates/dashboard.gohtml"))
-	tmpl.Execute(w, templateData)
+    tmpl, err := template.New(TEMPLATE_NAME).Funcs(template.FuncMap{
+	    "getWarningWidth": func(rs validator.ResultSummary, fullWidth int) uint {
+			return uint(float64(rs.Successes+rs.Warnings) / float64(rs.Successes+rs.Warnings+rs.Failures) * float64(fullWidth))
+		},
+	    "getSuccessWidth": func(rs validator.ResultSummary, fullWidth int) uint {
+			return uint(float64(rs.Successes) / float64(rs.Successes+rs.Warnings+rs.Failures) * float64(fullWidth))
+	    },
+        "getCharCode": func(rm validator.ResultMessage) string {
+			switch rm.Type {
+			case "success":
+				return "9745"
+			case "warning":
+				return "9888"
+			default:
+				return "9746"
+			}
+		},
+    }).ParseFiles(TEMPLATE_FILE)
+	if err != nil {
+		panic(err)
+	}
+	err = template.Must(tmpl.Clone()).Execute(w, templateData)
+    if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
 }
 
 // EndpointHandler gets template data and renders json with it.
