@@ -33,14 +33,14 @@ func MainHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration, k
 	    "getSuccessWidth": func(rs validator.ResultSummary, fullWidth int) uint {
 			return uint(float64(rs.Successes) / float64(rs.Successes+rs.Warnings+rs.Failures) * float64(fullWidth))
 	    },
-        "getCharCode": func(rm validator.ResultMessage) string {
+        "getIcon": func(rm validator.ResultMessage) string {
 			switch rm.Type {
 			case "success":
-				return "9745"
+				return "fas fa-check"
 			case "warning":
-				return "9888"
+				return "fas fa-exclamation"
 			default:
-				return "9746"
+				return "fas fa-times"
 			}
 		},
     }).ParseFiles(TEMPLATE_FILE)
