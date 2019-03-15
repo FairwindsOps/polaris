@@ -6,58 +6,89 @@ import (
 	"io"
 	"io/ioutil"
 
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
 // Configuration contains all of the config for the validation checks.
 type Configuration struct {
-	Resources      RequestsAndLimits `json:"resources"`
-	HealthChecks   Probes            `json:"healthChecks"`
-	Images         Images            `json:"images"`
-	HostNetworking HostNetworking    `json:"hostNetworking"`
+	Resources    Resources    `json:"resources"`
+	HealthChecks HealthChecks `json:"healthChecks"`
+	Images       Images       `json:"images"`
+	Networking   Networking   `json:"networking"`
+	Security     Security     `json:"security"`
 }
 
-// RequestsAndLimits contains config for resource requests and limits.
-type RequestsAndLimits struct {
-	Requests ResourceList `json:"requests"`
-	Limits   ResourceList `json:"limits"`
+// Severity represents the severity of action to take (Ignore, Warning, Error).
+type Severity string
+
+// Resources contains config for resource requests and limits.
+type Resources struct {
+	CPURequests    Resource `json:"cpuRequests"`
+	CPULimits      Resource `json:"cpuLimits"`
+	MemoryRequests Resource `json:"memoryRequests"`
+	MemoryLimits   Resource `json:"memoryLimits"`
 }
 
-// ResourceList maps the resource name to a range on min and max values.
-type ResourceList map[corev1.ResourceName]ResourceMinMax
-
-// ResourceMinMax sets a range for a min and max setting for a resource.
-type ResourceMinMax struct {
-	Min *resource.Quantity `json:"min"`
-	Max *resource.Quantity `json:"max"`
+// Resource contains config for requests or limits for a specific resource.
+type Resource struct {
+	Absent  Severity      `json:"absent"`
+	Warning ResourceRange `json:"warning"`
+	Error   ResourceRange `json:"error"`
 }
 
-// Probes contains config for the readiness and liveness probes.
-type Probes struct {
-	Readiness ResourceRequire `json:"readiness"`
-	Liveness  ResourceRequire `json:"liveness"`
+// ResourceRange can contain below and above conditions for validation.
+type ResourceRange struct {
+	Below *resource.Quantity `json:"below"`
+	Above *resource.Quantity `json:"above"`
 }
 
-// ResourceRequire indicates if this resource should be validated.
-type ResourceRequire struct {
-	Require bool `json:"require"`
+// HealthChecks contains config for readiness and liveness probes.
+type HealthChecks struct {
+	ReadinessProbeMissing Severity `json:"readinessProbeMissing"`
+	LivenessProbeMissing  Severity `json:"livenessProbeMissing"`
 }
 
 // Images contains the config for images.
 type Images struct {
-	TagRequired    bool     `json:"tagRequired"`
-	WhitelistRepos []string `json:"whitelistRepos"`
+	TagNotSpecified     Severity     `json:"tagNotSpecified"`
+	PullPolicyNotAlways Severity     `json:"pullPolicyNotAlways"`
+	Repositories        Repositories `json:"repositories"`
 }
 
-// HostNetworking contains the config for host networking validations.
-type HostNetworking struct {
-	HostAlias   ResourceRequire `json:"hostAlias"`
-	HostIPC     ResourceRequire `json:"hostIPC"`
-	HostNetwork ResourceRequire `json:"hostNetwork"`
-	HostPID     ResourceRequire `json:"hostPID"`
-	HostPort    ResourceRequire `json:"hostPort"`
+// Repositories provides lists of patterns to match or avoid in image tags.
+type Repositories struct {
+	Error   WhitelistBlacklist `json:"error"`
+	Warning WhitelistBlacklist `json:"warning"`
+}
+
+// WhitelistBlacklist can contain a whitelist or blacklist.
+type WhitelistBlacklist struct {
+	Whitelist []string `json:"whitelist"`
+	Blacklist []string `json:"blacklist"`
+}
+
+// Networking contains the config for networking validations.
+type Networking struct {
+	HostAliasSet   Severity `json:"hostAliasSet"`
+	HostIPCSet     Severity `json:"hostIPCSet"`
+	HostNetworkSet Severity `json:"hostNetworkSet"`
+	HostPIDSet     Severity `json:"hostPIDSet"`
+	HostPortSet    Severity `json:"hostPortSet"`
+}
+
+// Security contains the config for security validations.
+type Security struct {
+	runAsNonRoot              Severity             `json:"runAsNonRoot"`
+	runAsPriviliged           Severity             `json:"runAsPriviliged"`
+	notReadOnlyRootFileSystem Severity             `json:"notReadOnlyRootFileSystem"`
+	capabilities              SecurityCapabilities `json:"capabilities"`
+}
+
+// SecurityCapabilities contains the config for security capabilities validations.
+type SecurityCapabilities struct {
+	Error   WhitelistBlacklist `json:"error"`
+	Warning WhitelistBlacklist `json:"warning"`
 }
 
 // ParseFile parses config from a file.
