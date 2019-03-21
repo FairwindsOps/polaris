@@ -49,24 +49,3 @@ func (rs *ResultSummary) Score() uint {
 	return uint(float64(rs.Successes) / float64(rs.Successes+rs.Warnings+rs.Failures) * 100)
 }
 
-// WarningWidth is a UI specific helper that helps determine the width of a progress bar.
-func (rs *ResultSummary) WarningWidth(fullWidth uint) uint {
-	return uint(float64(rs.Successes+rs.Warnings) / float64(rs.Successes+rs.Warnings+rs.Failures) * float64(fullWidth))
-}
-
-// SuccessWidth is a UI specific helper that helps determine the width of a progress bar.
-func (rs *ResultSummary) SuccessWidth(fullWidth uint) uint {
-	return uint(float64(rs.Successes) / float64(rs.Successes+rs.Warnings+rs.Failures) * float64(fullWidth))
-}
-
-// HTMLSpecialCharCode is a UI specific helper that provides an HTML char code.
-func (rm *ResultMessage) HTMLSpecialCharCode() string {
-	switch rm.Type {
-	case "success":
-		return "9745"
-	case "warning":
-		return "9888"
-	default:
-		return "9746"
-	}
-}

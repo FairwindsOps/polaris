@@ -11,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css?family=Lobster" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/normalize.css">
   <link rel="stylesheet" href="/static/css/main.css">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
 
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/cash/3.0.0-beta.3/cash.min.js"></script>
@@ -53,8 +54,8 @@
                     <div class="extra">
                       <h4>Pod:</h4>
                       <ul>
-                        {{ range .Messages}}
-                          <li class="{{ .Type }}"><span>&#{{ .HTMLSpecialCharCode }};</span> {{ .Message }}</li>
+                        {{ range $message := .Messages}}
+                          <li class="{{ .Type }}"><i class="{{ getIcon $message }}"></i> {{ .Message }}</li>
                         {{ end }}
                       </ul>
                     </div>
@@ -62,8 +63,8 @@
                       <div class="extra">
                         <h4>Container: {{ .Name }}</h4>
                         <ul>
-                          {{ range .Messages}}
-                            <li class="{{ .Type }}"><span>&#{{ .HTMLSpecialCharCode }};</span> {{ .Message }}</li>
+                          {{ range $message := .Messages}}
+                            <li class="{{ .Type }}"><i class="{{ getIcon $message }}"></i> {{ .Message }}</li>
                           {{ end }}
                         </ul>
                       </div>
@@ -73,8 +74,8 @@
               <td class="status-bar">
                 <div class="status">
                   <div class="failing">
-                    <div class="warning" style="width: {{ .Summary.WarningWidth 200 }}px;">
-                      <div class="passing" style="width: {{ .Summary.SuccessWidth 200 }}px;"></div>
+                    <div class="warning" style="width: {{ getWarningWidth .Summary 200 }}px;">
+                      <div class="passing" style="width: {{ getSuccessWidth .Summary 200 }}px;"></div>
                     </div>
                   </div>
                 </div>

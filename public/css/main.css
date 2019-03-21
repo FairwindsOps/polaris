@@ -159,26 +159,31 @@ body {
   color: #6a6a6a;
 }
 
-.namespace-content .extra span {
+.namespace-content .extra ul li {
+  margin-bottom: 5px;
+}
+
+.namespace-content .extra i {
   display: inline-block;
+  margin-right: 10px;
   text-align: center;
   width: 20px;
   font-size: 20px;
   font-weight: bold;
   position: relative;
-  bottom: -1px;
+  bottom: -3px;
 }
 
-.namespace-content .extra .success span {
+.namespace-content .extra .success i {
   color: #8BD2DC;
 }
 
-.namespace-content .extra .warning span {
+.namespace-content .extra .warning i {
   color: #f26c21;
   font-size: 15px;
 }
 
-.namespace-content .extra .failure span {
+.namespace-content .extra .failure i {
   color: #a11f4c;
 }
 
