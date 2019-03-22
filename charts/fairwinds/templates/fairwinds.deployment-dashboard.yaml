@@ -1,0 +1,53 @@
+{{- if .Values.dashboard.enable -}}
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: '{{.Release.Name}}'
+    chart: '{{.Chart.Name}}-{{.Chart.Version}}'
+    heritage: '{{.Release.Service}}'
+    release: '{{.Release.Name}}'
+  name: '{{ template "fullname" . }}-dashboard'
+  namespace: '{{.Release.Namespace}}'
+spec:
+  replicas: {{.Values.dashboard.replicas}}
+  selector:
+    matchLabels:
+      app: '{{.Release.Name}}'
+  template:
+    metadata:
+      labels:
+        app: '{{.Release.Name}}'
+    spec:
+      volumes:
+      - configMap:
+          name: '{{ template "fullname" . }}'
+        name: '{{ template "fullname" . }}'
+      - name: certs
+        secret:
+          secretName: '{{ template "fullname" . }}'
+      containers:
+      - command:
+        - fairwinds
+        - --dashboard
+        image: '{{.Values.dashboard.image}}:{{.Values.dashboard.imageTag}}'
+        imagePullPolicy: '{{.Values.dashboard.imagePullPolicy}}'
+        name: dashboard
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        volumeMounts:
+        - mountPath: /opt/app/config.yml
+          name: '{{ template "fullname" . }}'
+          readOnly: true
+          subPath: config.yml
+      imagePullSecrets:
+      - name: '{{.Values.imagePullSecrets}}'
+      serviceAccountName: '{{ template "fullname" . }}'
+{{- end -}}

@@ -1,0 +1,53 @@
+---
+config: |
+  resources:
+    requests:
+      cpu:
+        min: 0.1
+        max: 1
+      memory:
+        min: 10m
+        max: 2000M
+    limits:
+      cpu:
+        min: 0.1
+        max: 1
+      memory:
+        min: 10m
+        max: 2000M
+  healthChecks:
+    readiness:
+      require: true
+    liveness:
+      require: true
+  images:
+    tagRequired: true
+    whitelistRepos:
+      - gcr.io
+  hostNetwork:
+    hostAlias:
+      require: true
+    hostIPC:
+      require: true
+    hostNetwork:
+      require: true
+    hostPID:
+      require: true
+    hostPort:
+      require: true
+dashboard:
+  enable: true
+  service:
+    type: ClusterIP
+  image: quay.io/reactiveops/fairwinds
+  imagePullPolicy: IfNotPresent
+  imageTag: dev-f16f12d0af38fd547918d394ce717037223b7f94
+webhook:
+  enable: false
+  image: quay.io/reactiveops/fairwinds
+  imagePullPolicy: IfNotPresent
+  imageTag: dev-f16f12d0af38fd547918d394ce717037223b7f94
+imagePullSecrets: fairwinds
+replicas: 1 
+rbac:
+  enable: true

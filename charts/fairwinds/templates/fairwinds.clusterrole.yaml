@@ -1,0 +1,22 @@
+{{- if .Values.rbac.enable -}}
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  labels:
+    app: '{{.Release.Name}}'
+    chart: '{{.Chart.Name}}-{{.Chart.Version}}'
+    heritage: '{{.Release.Service}}'
+    release: '{{.Release.Name}}'
+  name: '{{ template "fullname" . }}'
+  namespace: '{{.Release.Namespace}}'
+rules:
+  - apiGroups:
+    - ''
+    - 'apps'
+    - 'admissionregistration.k8s.io'
+    resources:
+      - '*'
+    verbs:
+      - '*'
+{{- end -}}
