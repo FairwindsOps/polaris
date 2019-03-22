@@ -20,6 +20,7 @@ Then apply the config:
 kubectl apply -f deploy/all.yaml
 ```
 
+
 ## Options
 
 * `dashboard` Runs the webserver for Fairwinds dashboard.
@@ -29,3 +30,15 @@ kubectl apply -f deploy/all.yaml
 * `disable-webhook-config-installer`: disable the installer in the webhook server, so it won't install webhook configuration resources during bootstrapping
 * `kubeconfig`: Paths to a kubeconfig. Only required if out-of-cluster.
 * `master`: The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.
+
+## Helm Deploy Option
+
+* Create ImagePullSecret:
+`kubectl -n fairwinds create secret docker-registry fairwinds --docker-server=<docker_registry> --docker-username=<docker_username> --docker-password=<docker_password> --docker-email=<docker_email>`
+
+* Create release with Helm:
+```
+helm upgrade --install fairwinds charts/fairwinds/ --namespace fairwinds --recreate-pods
+kubectl port-forward --namespace fairwinds svc/fairwinds-fairwinds-dashboard 8080:80 &
+open http://localhost:8080
+```
