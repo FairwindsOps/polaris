@@ -1,3 +1,17 @@
+// Copyright 2019 ReactiveOps
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package config
 
 import (
@@ -18,9 +32,6 @@ type Configuration struct {
 	Networking   Networking   `json:"networking"`
 	Security     Security     `json:"security"`
 }
-
-// Severity represents the severity of action to take (Ignore, Warning, Error).
-type Severity string
 
 // Resources contains config for resource requests and limits.
 type Resources struct {
@@ -79,10 +90,10 @@ type Networking struct {
 
 // Security contains the config for security validations.
 type Security struct {
-	runAsNonRoot              Severity             `json:"runAsNonRoot"`
-	runAsPriviliged           Severity             `json:"runAsPriviliged"`
-	notReadOnlyRootFileSystem Severity             `json:"notReadOnlyRootFileSystem"`
-	capabilities              SecurityCapabilities `json:"capabilities"`
+	RunAsNonRoot              Severity             `json:"runAsNonRoot"`
+	RunAsPriviliged           Severity             `json:"runAsPriviliged"`
+	NotReadOnlyRootFileSystem Severity             `json:"notReadOnlyRootFileSystem"`
+	Capabilities              SecurityCapabilities `json:"capabilities"`
 }
 
 // SecurityCapabilities contains the config for security capabilities validations.

@@ -1,4 +1,4 @@
-// Copyright 2018 ReactiveOps
+// Copyright 2019 ReactiveOps
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -46,10 +46,10 @@ func validateContainer(conf conf.Configuration, container corev1.Container) Reso
 		Summary:   ResultSummary{},
 	}
 
-	cv.validateResources(conf.Resources)
-	cv.validateHealthChecks(conf.HealthChecks)
-	cv.validateImage(conf.Images)
-	cv.validateHostPort(conf.HostNetworking)
+	cv.validateResources(&conf.Resources)
+	cv.validateHealthChecks(&conf.HealthChecks)
+	cv.validateImage(&conf.Images)
+	cv.validateNetworking(&conf.Networking)
 
 	cRes := ContainerResult{
 		Name:     container.Name,
@@ -64,6 +64,14 @@ func validateContainer(conf conf.Configuration, container corev1.Container) Reso
 	}
 
 	return rr
+}
+
+func (cv *ContainerValidation) addMessage(message string, severity conf.Severity) {
+	if severity == conf.SeverityError {
+		cv.addFailure(message)
+	} else if severity == conf.SeverityWarning {
+		cv.addWarning(message)
+	}
 }
 
 func (cv *ContainerValidation) addFailure(message string) {
@@ -90,67 +98,85 @@ func (cv *ContainerValidation) addSuccess(message string) {
 	})
 }
 
-func (cv *ContainerValidation) validateResources(conf conf.RequestsAndLimits) {
+func (cv *ContainerValidation) validateResources(resourcesConf *conf.Resources) {
 	actualRes := cv.Container.Resources
-	cv.withinRange("CPU Requests", conf.Requests["cpu"], actualRes.Requests.Cpu())
-	cv.withinRange("Memory Requests", conf.Requests["memory"], actualRes.Requests.Memory())
-	cv.withinRange("CPU Limits", conf.Limits["cpu"], actualRes.Limits.Cpu())
-	cv.withinRange("Memory Limits", conf.Limits["memory"], actualRes.Limits.Memory())
+	cv.validateResource("CPU Requests", &resourcesConf.CPURequests, actualRes.Requests.Cpu())
+	cv.validateResource("Memory Requests", &resourcesConf.MemoryRequests, actualRes.Requests.Memory())
+	cv.validateResource("CPU Limits", &resourcesConf.CPULimits, actualRes.Limits.Cpu())
+	cv.validateResource("Memory Limits", &resourcesConf.MemoryLimits, actualRes.Limits.Memory())
 }
 
-func (cv *ContainerValidation) withinRange(resourceName string, expectedRange conf.ResourceMinMax, actual *resource.Quantity) {
-	expectedMin := expectedRange.Min
-	expectedMax := expectedRange.Max
-	if expectedMin != nil && expectedMin.MilliValue() > actual.MilliValue() {
-		if actual.MilliValue() == 0 {
-			cv.addFailure(fmt.Sprintf("%s are not set", resourceName))
+func (cv *ContainerValidation) validateResource(resourceName string, resourceConf *conf.Resource, actual *resource.Quantity) {
+	if resourceConf.Absent.IsActionable() && actual.MilliValue() == 0 {
+		msg := fmt.Sprintf("%s are not set", resourceName)
+		if resourceConf.Absent == conf.SeverityError {
+			cv.addFailure(msg)
 		} else {
-			cv.addFailure(fmt.Sprintf("%s are too low", resourceName))
+			cv.addWarning(msg)
 		}
-	} else if expectedMax != nil && expectedMax.MilliValue() < actual.MilliValue() {
-		cv.addFailure(fmt.Sprintf("%s are too high", resourceName))
 	} else {
-		cv.addSuccess(fmt.Sprintf("%s are within the expected range", resourceName))
+		warnAbove := resourceConf.Warning.Above
+		warnBelow := resourceConf.Warning.Below
+		errorAbove := resourceConf.Error.Above
+		errorBelow := resourceConf.Error.Below
+
+		if errorAbove != nil && errorAbove.MilliValue() < actual.MilliValue() {
+			cv.addFailure(fmt.Sprintf("%s are too high", resourceName))
+		} else if warnAbove != nil && warnAbove.MilliValue() < actual.MilliValue() {
+			cv.addWarning(fmt.Sprintf("%s are too high", resourceName))
+		} else if errorBelow != nil && errorBelow.MilliValue() > actual.MilliValue() {
+			cv.addFailure(fmt.Sprintf("%s are too low", resourceName))
+		} else if warnBelow != nil && warnBelow.MilliValue() > actual.MilliValue() {
+			cv.addWarning(fmt.Sprintf("%s are too low", resourceName))
+		} else {
+			cv.addSuccess(fmt.Sprintf("%s are within the expected range", resourceName))
+		}
 	}
 }
 
-func (cv *ContainerValidation) validateHealthChecks(conf conf.Probes) {
-	if conf.Readiness.Require {
+func (cv *ContainerValidation) validateHealthChecks(conf *conf.HealthChecks) {
+	if conf.ReadinessProbeMissing.IsActionable() {
 		if cv.Container.ReadinessProbe == nil {
-			cv.addFailure("Readiness probe needs to be configured")
+			cv.addMessage("Readiness probe needs to be configured", conf.ReadinessProbeMissing)
 		} else {
 			cv.addSuccess("Readiness probe configured")
 		}
 	}
 
-	if conf.Liveness.Require {
+	if conf.LivenessProbeMissing.IsActionable() {
 		if cv.Container.LivenessProbe == nil {
-			cv.addFailure("Liveness probe needs to be configured")
+			cv.addMessage("Liveness probe needs to be configured", conf.LivenessProbeMissing)
 		} else {
 			cv.addSuccess("Liveness probe configured")
 		}
 	}
 }
 
-func (cv *ContainerValidation) validateImage(conf conf.Images) {
-	if conf.TagRequired {
+func (cv *ContainerValidation) validateImage(imageConf *conf.Images) {
+	if imageConf.TagNotSpecified.IsActionable() {
 		img := strings.Split(cv.Container.Image, ":")
 		if len(img) == 1 || img[1] == "latest" {
-			cv.addFailure("Image tag should be specified")
+			cv.addMessage("Image tag should be specified", imageConf.TagNotSpecified)
 		} else {
 			cv.addSuccess("Image tag specified")
 		}
 	}
 }
 
-func (cv *ContainerValidation) validateHostPort(conf conf.HostNetworking) {
-	if conf.HostPort.Require {
+func (cv *ContainerValidation) validateNetworking(networkConf *conf.Networking) {
+	if networkConf.HostPortSet.IsActionable() {
+		hostPortSet := false
 		for _, port := range cv.Container.Ports {
 			if port.HostPort != 0 {
-				cv.addFailure("Host port is configured, but it shouldn't be")
-				return
+				hostPortSet = true
+				break
 			}
 		}
-		cv.addSuccess("Host port is not configured")
+
+		if hostPortSet {
+			cv.addMessage("Host port is configured, but it shouldn't be", networkConf.HostAliasSet)
+		} else {
+			cv.addSuccess("Host port is not configured")
+		}
 	}
 }

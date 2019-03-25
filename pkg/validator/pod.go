@@ -1,4 +1,4 @@
-// Copyright 2018 ReactiveOps
+// Copyright 2019 ReactiveOps
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,21 +32,21 @@ type PodValidation struct {
 }
 
 func (pv *PodValidation) messages() []ResultMessage {
-	mssgs := []ResultMessage{}
-	mssgs = append(mssgs, pv.Failures...)
-	mssgs = append(mssgs, pv.Warnings...)
-	mssgs = append(mssgs, pv.Successes...)
-	return mssgs
+	messages := []ResultMessage{}
+	messages = append(messages, pv.Failures...)
+	messages = append(messages, pv.Warnings...)
+	messages = append(messages, pv.Successes...)
+	return messages
 }
 
 // ValidatePod validates that each pod conforms to the Fairwinds config, returns a ResourceResult.
-func ValidatePod(conf conf.Configuration, pod *corev1.PodSpec) ResourceResult {
+func ValidatePod(podConf conf.Configuration, pod *corev1.PodSpec) ResourceResult {
 	pv := PodValidation{
 		Pod:     *pod,
 		Summary: ResultSummary{},
 	}
 
-	pv.validateHostNetwork(conf.HostNetworking)
+	pv.validateNetworking(&podConf.Networking)
 
 	pRes := PodResult{
 		Messages:         pv.messages(),
@@ -55,7 +55,7 @@ func ValidatePod(conf conf.Configuration, pod *corev1.PodSpec) ResourceResult {
 
 	// Add container resource results to the pod resource results.
 	for _, container := range pod.InitContainers {
-		ctrRR := validateContainer(conf, container)
+		ctrRR := validateContainer(podConf, container)
 		pv.Summary.Successes += ctrRR.Summary.Successes
 		pv.Summary.Warnings += ctrRR.Summary.Warnings
 		pv.Summary.Failures += ctrRR.Summary.Failures
@@ -66,7 +66,7 @@ func ValidatePod(conf conf.Configuration, pod *corev1.PodSpec) ResourceResult {
 	}
 
 	for _, container := range pod.Containers {
-		ctrRR := validateContainer(conf, container)
+		ctrRR := validateContainer(podConf, container)
 		pv.Summary.Successes += ctrRR.Summary.Successes
 		pv.Summary.Warnings += ctrRR.Summary.Warnings
 		pv.Summary.Failures += ctrRR.Summary.Failures
@@ -82,6 +82,14 @@ func ValidatePod(conf conf.Configuration, pod *corev1.PodSpec) ResourceResult {
 	}
 
 	return rr
+}
+
+func (pv *PodValidation) addMessage(message string, severity conf.Severity) {
+	if severity == conf.SeverityError {
+		pv.addFailure(message)
+	} else if severity == conf.SeverityWarning {
+		pv.addWarning(message)
+	}
 }
 
 func (pv *PodValidation) addFailure(message string) {
@@ -108,51 +116,57 @@ func (pv *PodValidation) addSuccess(message string) {
 	})
 }
 
-func (pv *PodValidation) validateHostNetwork(conf conf.HostNetworking) {
-	pv.hostAlias(conf)
-	pv.hostIPC(conf)
-	pv.hostPID(conf)
-	pv.hostNetwork(conf)
+func (pv *PodValidation) validateNetworking(networkConf *conf.Networking) {
+	pv.validateHostAlias(networkConf)
+	pv.validateHostIPC(networkConf)
+	pv.validateHostPID(networkConf)
+	pv.validateHostNetwork(networkConf)
 }
 
-func (pv *PodValidation) hostAlias(conf conf.HostNetworking) {
-	if conf.HostAlias.Require {
+func (pv *PodValidation) validateHostAlias(networkConf *conf.Networking) {
+	if networkConf.HostAliasSet.IsActionable() {
+		hostAliasSet := false
 		for _, alias := range pv.Pod.HostAliases {
 			if alias.IP != "" && len(alias.Hostnames) == 0 {
-				pv.addFailure("Host alias should is configured, but it shouldn't be")
-				return
+				hostAliasSet = true
+				break
 			}
 		}
-		pv.addSuccess("Host alias is not configured")
+
+		if hostAliasSet {
+			pv.addMessage("Host alias should is configured, but it shouldn't be", networkConf.HostAliasSet)
+		} else {
+			pv.addSuccess("Host alias is not configured")
+		}
 	}
 }
 
-func (pv *PodValidation) hostIPC(conf conf.HostNetworking) {
-	if conf.HostIPC.Require {
+func (pv *PodValidation) validateHostIPC(networkConf *conf.Networking) {
+	if networkConf.HostIPCSet.IsActionable() {
 		if pv.Pod.HostIPC {
-			pv.addFailure("Host IPC is configured, but it shouldn't be")
-			return
+			pv.addMessage("Host IPC is configured, but it shouldn't be", networkConf.HostIPCSet)
+		} else {
+			pv.addSuccess("Host IPC is not configured")
 		}
-		pv.addSuccess("Host IPC is not configured")
 	}
 }
 
-func (pv *PodValidation) hostPID(conf conf.HostNetworking) {
-	if conf.HostPID.Require {
+func (pv *PodValidation) validateHostPID(networkConf *conf.Networking) {
+	if networkConf.HostPIDSet.IsActionable() {
 		if pv.Pod.HostPID {
-			pv.addFailure("Host PID is configured, but it shouldn't be")
-			return
+			pv.addMessage("Host PID is configured, but it shouldn't be", networkConf.HostPIDSet)
+		} else {
+			pv.addSuccess("Host PID is not configured")
 		}
-		pv.addSuccess("Host PID is not configured")
 	}
 }
 
-func (pv *PodValidation) hostNetwork(conf conf.HostNetworking) {
-	if conf.HostNetwork.Require {
+func (pv *PodValidation) validateHostNetwork(networkConf *conf.Networking) {
+	if networkConf.HostNetworkSet.IsActionable() {
 		if pv.Pod.HostNetwork {
-			pv.addFailure("Host network is configured, but it shouldn't be")
-			return
+			pv.addMessage("Host network is configured, but it shouldn't be", networkConf.HostNetworkSet)
+		} else {
+			pv.addSuccess("Host network is not configured")
 		}
-		pv.addSuccess("Host network is not configured")
 	}
 }

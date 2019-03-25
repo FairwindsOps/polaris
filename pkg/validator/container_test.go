@@ -1,4 +1,4 @@
-// Copyright 2018 ReactiveOps
+// Copyright 2019 ReactiveOps
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,20 +25,46 @@ import (
 
 var resourceConf1 = `---
 resources:
-  requests:
-    cpu:
-      min: 100m
-      max: 1
-    memory:
-      min: 100Mi
-      max: 3Gi
-  limits:
-    cpu:
-      min: 150m
-      max: 2
-    memory:
-      min: 150Mi
-      max: 4Gi
+  cpuRequests:
+    error:
+      below: 100m
+      above: 1
+    warning:
+      below: 200m
+      above: 800m
+  memoryRequests:
+    error:
+      below: 100M
+      above: 3G
+    warning:
+      below: 200M
+      above: 2G
+  cpuLimits:
+    error:
+      below: 100m
+      above: 2
+    warning:
+      below: 300m
+      above: 1800m
+  memoryLimits:
+    error:
+      below: 200M
+      above: 6G
+    warning:
+      below: 300M
+      above: 4G
+`
+
+var resourceConf2 = `---
+resources:
+  cpuRequests:
+    absent: warning
+  memoryRequests:
+    absent: warning
+  cpuLimits:
+    absent: error
+  memoryLimits:
+    absent: error
 `
 
 func TestValidateResourcesEmptyConfig(t *testing.T) {
@@ -50,9 +76,9 @@ func TestValidateResourcesEmptyConfig(t *testing.T) {
 		Container: container,
 	}
 
-	expected := conf.RequestsAndLimits{}
+	expected := conf.Resources{}
 
-	cv.validateResources(expected)
+	cv.validateResources(&expected)
 	assert.Len(t, cv.Failures, 0)
 }
 
@@ -61,15 +87,18 @@ func TestValidateResourcesEmptyContainer(t *testing.T) {
 		Name: "Empty",
 	}
 
-	expectedFailures := []ResultMessage{
+	expectedWarnings := []ResultMessage{
 		{
-			Type:    "failure",
+			Type:    "warning",
 			Message: "CPU Requests are not set",
 		},
 		{
-			Type:    "failure",
+			Type:    "warning",
 			Message: "Memory Requests are not set",
 		},
+	}
+
+	expectedFailures := []ResultMessage{
 		{
 			Type:    "failure",
 			Message: "CPU Limits are not set",
@@ -80,7 +109,7 @@ func TestValidateResourcesEmptyContainer(t *testing.T) {
 		},
 	}
 
-	testValidateResources(t, &container, &resourceConf1, &expectedFailures)
+	testValidateResources(t, &container, &resourceConf2, &expectedFailures, &expectedWarnings)
 }
 
 func TestValidateResourcesPartiallyValid(t *testing.T) {
@@ -102,31 +131,42 @@ func TestValidateResourcesPartiallyValid(t *testing.T) {
 		},
 	}
 
-	expectedFailures := []ResultMessage{
+	expectedWarnings := []ResultMessage{
 		{
-			Type:    "failure",
-			Message: "Memory Requests are not set",
+			Type:    "warning",
+			Message: "CPU Requests are too low",
 		},
 		{
-			Type:    "failure",
-			Message: "Memory Limits are not set",
+			Type:    "warning",
+			Message: "CPU Limits are too low",
 		},
 	}
 
-	testValidateResources(t, &container, &resourceConf1, &expectedFailures)
+	expectedFailures := []ResultMessage{
+		{
+			Type:    "failure",
+			Message: "Memory Requests are too low",
+		},
+		{
+			Type:    "failure",
+			Message: "Memory Limits are too low",
+		},
+	}
+
+	testValidateResources(t, &container, &resourceConf1, &expectedFailures, &expectedWarnings)
 }
 
 func TestValidateResourcesFullyValid(t *testing.T) {
-	cpuRequest, err := resource.ParseQuantity("100m")
+	cpuRequest, err := resource.ParseQuantity("300m")
 	assert.NoError(t, err, "Error parsing quantity")
 
-	cpuLimit, err := resource.ParseQuantity("200m")
+	cpuLimit, err := resource.ParseQuantity("400m")
 	assert.NoError(t, err, "Error parsing quantity")
 
-	memoryRequest, err := resource.ParseQuantity("100Mi")
+	memoryRequest, err := resource.ParseQuantity("400Mi")
 	assert.NoError(t, err, "Error parsing quantity")
 
-	memoryLimit, err := resource.ParseQuantity("200Mi")
+	memoryLimit, err := resource.ParseQuantity("500Mi")
 	assert.NoError(t, err, "Error parsing quantity")
 
 	container := corev1.Container{
@@ -143,10 +183,10 @@ func TestValidateResourcesFullyValid(t *testing.T) {
 		},
 	}
 
-	testValidateResources(t, &container, &resourceConf1, &[]ResultMessage{})
+	testValidateResources(t, &container, &resourceConf1, &[]ResultMessage{}, &[]ResultMessage{})
 }
 
-func testValidateResources(t *testing.T, container *corev1.Container, resourceConf *string, expectedFailures *[]ResultMessage) {
+func testValidateResources(t *testing.T, container *corev1.Container, resourceConf *string, expectedFailures *[]ResultMessage, expectedWarnings *[]ResultMessage) {
 	cv := ContainerValidation{
 		Container: *container,
 	}
@@ -154,7 +194,10 @@ func testValidateResources(t *testing.T, container *corev1.Container, resourceCo
 	parsedConf, err := conf.Parse([]byte(*resourceConf))
 	assert.NoError(t, err, "Expected no error when parsing config")
 
-	cv.validateResources(parsedConf.Resources)
+	cv.validateResources(&parsedConf.Resources)
+	assert.Len(t, cv.Warnings, len(*expectedWarnings))
+	assert.ElementsMatch(t, cv.Warnings, *expectedWarnings)
+
 	assert.Len(t, cv.Failures, len(*expectedFailures))
 	assert.ElementsMatch(t, cv.Failures, *expectedFailures)
 }
@@ -162,43 +205,51 @@ func testValidateResources(t *testing.T, container *corev1.Container, resourceCo
 func TestValidateHealthChecks(t *testing.T) {
 
 	// Test setup.
-	p1 := conf.Probes{}
-	p2 := conf.Probes{
-		Readiness: conf.ResourceRequire{Require: false},
-		Liveness:  conf.ResourceRequire{Require: false},
+	p1 := conf.HealthChecks{}
+	p2 := conf.HealthChecks{
+		ReadinessProbeMissing: conf.SeverityIgnore,
+		LivenessProbeMissing:  conf.SeverityIgnore,
 	}
-	p3 := conf.Probes{
-		Readiness: conf.ResourceRequire{Require: true},
-		Liveness:  conf.ResourceRequire{Require: true},
+	p3 := conf.HealthChecks{
+		ReadinessProbeMissing: conf.SeverityError,
+		LivenessProbeMissing:  conf.SeverityWarning,
 	}
 
 	probe := corev1.Probe{}
 	cv1 := ContainerValidation{Container: corev1.Container{Name: ""}}
 	cv2 := ContainerValidation{Container: corev1.Container{Name: "", LivenessProbe: &probe, ReadinessProbe: &probe}}
 
-	l := ResultMessage{Type: "failure", Message: "Liveness probe needs to be configured"}
+	l := ResultMessage{Type: "warning", Message: "Liveness probe needs to be configured"}
 	r := ResultMessage{Type: "failure", Message: "Readiness probe needs to be configured"}
 	f1 := []ResultMessage{}
-	f2 := []ResultMessage{r, l}
+	f2 := []ResultMessage{r}
+	w1 := []ResultMessage{l}
 
 	var testCases = []struct {
 		name     string
-		probes   conf.Probes
+		probes   conf.HealthChecks
 		cv       ContainerValidation
-		expected []ResultMessage
+		failures *[]ResultMessage
+		warnings *[]ResultMessage
 	}{
-		{name: "probes not configured", probes: p1, cv: cv1, expected: f1},
-		{name: "probes not required", probes: p2, cv: cv1, expected: f1},
-		{name: "probes required & configured", probes: p3, cv: cv2, expected: f1},
-		{name: "probes required & not configured", probes: p3, cv: cv1, expected: f2},
-		{name: "probes configured, but not required", probes: p2, cv: cv2, expected: f1},
+		{name: "probes not configured", probes: p1, cv: cv1, failures: &f1},
+		{name: "probes not required", probes: p2, cv: cv1, failures: &f1},
+		{name: "probes required & configured", probes: p3, cv: cv2, failures: &f1},
+		{name: "probes required & not configured", probes: p3, cv: cv1, failures: &f2, warnings: &w1},
+		{name: "probes configured, but not required", probes: p2, cv: cv2, failures: &f1},
 	}
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.cv.validateHealthChecks(tt.probes)
-			assert.Len(t, tt.cv.Failures, len(tt.expected))
-			assert.ElementsMatch(t, tt.cv.Failures, tt.expected)
+			tt.cv.validateHealthChecks(&tt.probes)
+
+			if tt.warnings != nil {
+				assert.Len(t, tt.cv.Warnings, len(*tt.warnings))
+				assert.ElementsMatch(t, tt.cv.Warnings, *tt.warnings)
+			}
+
+			assert.Len(t, tt.cv.Failures, len(*tt.failures))
+			assert.ElementsMatch(t, tt.cv.Failures, *tt.failures)
 		})
 	}
 }
@@ -207,8 +258,8 @@ func TestValidateImage(t *testing.T) {
 
 	// Test setup.
 	i1 := conf.Images{}
-	i2 := conf.Images{TagRequired: false}
-	i3 := conf.Images{TagRequired: true}
+	i2 := conf.Images{TagNotSpecified: conf.SeverityIgnore}
+	i3 := conf.Images{TagNotSpecified: conf.SeverityError}
 
 	cv1 := ContainerValidation{Container: corev1.Container{Name: ""}}
 	cv2 := ContainerValidation{Container: corev1.Container{Name: "", Image: "test:tag"}}
@@ -235,7 +286,7 @@ func TestValidateImage(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.cv.validateImage(tt.image)
+			tt.cv.validateImage(&tt.image)
 			assert.Len(t, tt.cv.Failures, len(tt.expected))
 			assert.ElementsMatch(t, tt.cv.Failures, tt.expected)
 		})
