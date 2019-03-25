@@ -76,40 +76,111 @@ metadata:
 data:
   config.yml: |
     resources:
-      requests:
-        cpu:
-          min: 0.1
-          max: 1
-        memory:
-          min: 10m
-          max: 2000M
-      limits:
-        cpu:
-          min: 0.1
-          max: 1
-        memory:
-          min: 10m
-          max: 2000M
-    healthChecks:
-      readiness:
-        require: true
-      liveness:
-        require: true
+      cpuRequestsMissing: warning
+      cpuRequestRanges:
+        warning:
+          below: 50m
+          above: 1000m
+        error:
+          below: 500m
+          above: 2000m
+      cpuLimitsMissing: warning
+      cpuLimitRanges:
+        warning:
+          below: 50m
+          above: 1000m
+        error:
+          below: 500m
+          above: 2000m
+      memoryRequestsMissing: warning
+      memoryRequestRanges:
+        warning:
+          below: 50M
+          above: 2G
+        error:
+          below: 100M
+          above: 4G
+      memoryLimitsMissing: warning
+      memoryLimitRanges:
+        warning:
+          below: 50M
+          above: 2G
+        error:
+          below: 100M
+          above: 4G
+    resources:
+      cpuRequests:
+        error:
+          below: 100m
+          above: 1
+        warning:
+          below: 200m
+          above: 800m
+      memoryRequests:
+        error:
+          below: 100M
+          above: 3G
+        warning:
+          below: 200M
+          above: 2G
+      cpuLimits:
+        error:
+          below: 100m
+          above: 2
+        warning:
+          below: 300m
+          above: 1800m
+      memoryLimits:
+        error:
+          below: 200M
+          above: 6G
+        warning:
+          below: 300M
+          above: 4G
     images:
-      tagRequired: true
-      whitelistRepos:
-        - gcr.io
-    hostNetwork:
-      hostAlias:
-        require: true
-      hostIPC:
-        require: true
-      hostNetwork:
-        require: true
-      hostPID:
-        require: true
-      hostPort:
-        require: true
+      tagNotSpecified: 'error'
+      pullPolicyNotAlways: 'warning'
+      error:
+        whitelist:
+          - gcr.io/*
+      warning:
+        blacklist:
+          - docker.io/*
+    healthChecks:
+      readinessProbeMissing: warning
+      livenessProbeMissing: warning
+    networking:
+      hostAliasSet: error
+      hostIPCSet: error
+      hostNetworkSet: error
+      hostPIDSet: error
+      hostPortSet: error
+    security:
+      runAsPriviliged: warning
+      notReadOnlyRootFileSystem: warning
+      runAsNonRoot: warning
+      capabilities:
+        warning:
+          blacklist:
+            - CHOWN
+            - SYS_CHROOT
+            - AUDIT_WRITE
+        error:
+          whitelist:
+            - CHOWN
+            - DAC_OVERRIDE
+            - FSETID
+            - FOWNER
+            - MKNOD
+            - NET_RAW
+            - SETGID
+            - SETUID
+            - SETFCAP
+            - SETPCAP
+            - NET_BIND_SERVICE
+            - SYS_CHROOT
+            - KILL
+            - AUDIT_WRITE
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment

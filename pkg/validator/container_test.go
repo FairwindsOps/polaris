@@ -25,28 +25,28 @@ import (
 
 var resourceConf1 = `---
 resources:
-  cpuRequests:
+  cpuRequestRanges:
     error:
       below: 100m
       above: 1
     warning:
       below: 200m
       above: 800m
-  memoryRequests:
+  memoryRequestRanges:
     error:
       below: 100M
       above: 3G
     warning:
       below: 200M
       above: 2G
-  cpuLimits:
+  cpuLimitRanges:
     error:
       below: 100m
       above: 2
     warning:
       below: 300m
       above: 1800m
-  memoryLimits:
+  memoryLimitRanges:
     error:
       below: 200M
       above: 6G
@@ -57,14 +57,10 @@ resources:
 
 var resourceConf2 = `---
 resources:
-  cpuRequests:
-    absent: warning
-  memoryRequests:
-    absent: warning
-  cpuLimits:
-    absent: error
-  memoryLimits:
-    absent: error
+  cpuRequestsMissing: warning
+  memoryRequestsMissing: warning
+  cpuLimitsMissing: error
+  memoryLimitsMissing: error
 `
 
 func TestValidateResourcesEmptyConfig(t *testing.T) {

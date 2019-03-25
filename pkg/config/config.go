@@ -35,15 +35,18 @@ type Configuration struct {
 
 // Resources contains config for resource requests and limits.
 type Resources struct {
-	CPURequests    Resource `json:"cpuRequests"`
-	CPULimits      Resource `json:"cpuLimits"`
-	MemoryRequests Resource `json:"memoryRequests"`
-	MemoryLimits   Resource `json:"memoryLimits"`
+	CPURequestsMissing    Severity       `json:"cpuRequestsMissing"`
+	CPURequestRanges      ResourceRanges `json:"cpuRequestRanges"`
+	CPULimitsMissing      Severity       `json:"cpuLimitsMissing"`
+	CPULimitRanges        ResourceRanges `json:"cpuLimitRanges"`
+	MemoryRequestsMissing Severity       `json:"memoryRequestsMissing"`
+	MemoryRequestRanges   ResourceRanges `json:"memoryRequestRanges"`
+	MemoryLimitsMissing   Severity       `json:"memoryLimitsMissing"`
+	MemoryLimitRanges     ResourceRanges `json:"memoryLimitRanges"`
 }
 
-// Resource contains config for requests or limits for a specific resource.
-type Resource struct {
-	Absent  Severity      `json:"absent"`
+// ResourceRanges contains config for requests or limits for a specific resource.
+type ResourceRanges struct {
 	Warning ResourceRange `json:"warning"`
 	Error   ResourceRange `json:"error"`
 }

@@ -1,30 +1,30 @@
 resources:
-  cpuRequests:
-    onAbsence: warning
+  cpuRequestsMissing: warning
+  cpuRequestRanges:
     warning:
       below: 50m
       above: 1000m
     error:
       below: 500m
       above: 2000m
-  cpuLimits:
-    onAbsence: warning
+  cpuLimitsMissing: warning
+  cpuLimitRanges:
     warning:
       below: 50m
       above: 1000m
     error:
       below: 500m
       above: 2000m
-  memoryRequests:
-    onAbsence: warning
+  memoryRequestsMissing: warning
+  memoryRequestRanges:
     warning:
       below: 50M
       above: 2G
     error:
       below: 100M
       above: 4G
-  memoryLimits:
-    onAbsence: warning
+  memoryLimitsMissing: warning
+  memoryLimitRanges:
     warning:
       below: 50M
       above: 2G

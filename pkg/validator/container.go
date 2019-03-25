@@ -98,39 +98,50 @@ func (cv *ContainerValidation) addSuccess(message string) {
 	})
 }
 
-func (cv *ContainerValidation) validateResources(resourcesConf *conf.Resources) {
-	actualRes := cv.Container.Resources
-	cv.validateResource("CPU Requests", &resourcesConf.CPURequests, actualRes.Requests.Cpu())
-	cv.validateResource("Memory Requests", &resourcesConf.MemoryRequests, actualRes.Requests.Memory())
-	cv.validateResource("CPU Limits", &resourcesConf.CPULimits, actualRes.Limits.Cpu())
-	cv.validateResource("Memory Limits", &resourcesConf.MemoryLimits, actualRes.Limits.Memory())
+func (cv *ContainerValidation) validateResources(resConf *conf.Resources) {
+	res := cv.Container.Resources
+
+	if resConf.CPURequestsMissing.IsActionable() && res.Requests.Cpu().MilliValue() == 0 {
+		cv.addMessage("CPU Requests are not set", resConf.CPURequestsMissing)
+	} else {
+		cv.validateResourceRange("CPU Requests", &resConf.CPURequestRanges, res.Requests.Cpu())
+	}
+
+	if resConf.CPULimitsMissing.IsActionable() && res.Limits.Cpu().MilliValue() == 0 {
+		cv.addMessage("CPU Limits are not set", resConf.CPULimitsMissing)
+	} else {
+		cv.validateResourceRange("CPU Limits", &resConf.CPULimitRanges, res.Requests.Cpu())
+	}
+
+	if resConf.MemoryRequestsMissing.IsActionable() && res.Requests.Memory().MilliValue() == 0 {
+		cv.addMessage("Memory Requests are not set", resConf.MemoryRequestsMissing)
+	} else {
+		cv.validateResourceRange("Memory Requests", &resConf.MemoryRequestRanges, res.Requests.Memory())
+	}
+
+	if resConf.MemoryLimitsMissing.IsActionable() && res.Limits.Memory().MilliValue() == 0 {
+		cv.addMessage("Memory Limits are not set", resConf.MemoryLimitsMissing)
+	} else {
+		cv.validateResourceRange("Memory Limits", &resConf.MemoryLimitRanges, res.Limits.Memory())
+	}
 }
 
-func (cv *ContainerValidation) validateResource(resourceName string, resourceConf *conf.Resource, actual *resource.Quantity) {
-	if resourceConf.Absent.IsActionable() && actual.MilliValue() == 0 {
-		msg := fmt.Sprintf("%s are not set", resourceName)
-		if resourceConf.Absent == conf.SeverityError {
-			cv.addFailure(msg)
-		} else {
-			cv.addWarning(msg)
-		}
-	} else {
-		warnAbove := resourceConf.Warning.Above
-		warnBelow := resourceConf.Warning.Below
-		errorAbove := resourceConf.Error.Above
-		errorBelow := resourceConf.Error.Below
+func (cv *ContainerValidation) validateResourceRange(resourceName string, rangeConf *conf.ResourceRanges, res *resource.Quantity) {
+	warnAbove := rangeConf.Warning.Above
+	warnBelow := rangeConf.Warning.Below
+	errorAbove := rangeConf.Error.Above
+	errorBelow := rangeConf.Error.Below
 
-		if errorAbove != nil && errorAbove.MilliValue() < actual.MilliValue() {
-			cv.addFailure(fmt.Sprintf("%s are too high", resourceName))
-		} else if warnAbove != nil && warnAbove.MilliValue() < actual.MilliValue() {
-			cv.addWarning(fmt.Sprintf("%s are too high", resourceName))
-		} else if errorBelow != nil && errorBelow.MilliValue() > actual.MilliValue() {
-			cv.addFailure(fmt.Sprintf("%s are too low", resourceName))
-		} else if warnBelow != nil && warnBelow.MilliValue() > actual.MilliValue() {
-			cv.addWarning(fmt.Sprintf("%s are too low", resourceName))
-		} else {
-			cv.addSuccess(fmt.Sprintf("%s are within the expected range", resourceName))
-		}
+	if errorAbove != nil && errorAbove.MilliValue() < res.MilliValue() {
+		cv.addFailure(fmt.Sprintf("%s are too high", resourceName))
+	} else if warnAbove != nil && warnAbove.MilliValue() < res.MilliValue() {
+		cv.addWarning(fmt.Sprintf("%s are too high", resourceName))
+	} else if errorBelow != nil && errorBelow.MilliValue() > res.MilliValue() {
+		cv.addFailure(fmt.Sprintf("%s are too low", resourceName))
+	} else if warnBelow != nil && warnBelow.MilliValue() > res.MilliValue() {
+		cv.addWarning(fmt.Sprintf("%s are too low", resourceName))
+	} else {
+		cv.addSuccess(fmt.Sprintf("%s are within the expected range", resourceName))
 	}
 }
 

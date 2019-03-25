@@ -25,28 +25,28 @@ var resourceConfInvalid1 = `test`
 
 var resourceConfYAML1 = `---
 resources:
-  cpuRequests:
+  cpuRequestRanges:
     error:
       below: 100m
       above: 1
     warning:
       below: 200m
       above: 800m
-  memoryRequests:
+  memoryRequestRanges:
     error:
       below: 100M
       above: 3G
     warning:
       below: 200M
       above: 2G
-  cpuLimits:
+  cpuLimitRanges:
     error:
       below: 100m
       above: 2
     warning:
       below: 300m
       above: 1800m
-  memoryLimits:
+  memoryLimitRanges:
     error:
       below: 200M
       above: 6G
@@ -57,7 +57,7 @@ resources:
 
 var resourceConfJSON1 = `{
 	"resources": {
-		"cpuRequests": {
+		"cpuRequestRanges": {
 			"error": {
 				"below": "100m",
 				"above": 1
@@ -67,7 +67,7 @@ var resourceConfJSON1 = `{
 				"above": "800m"
 			}
 		},
-		"memoryRequests": {
+		"memoryRequestRanges": {
 			"error": {
 				"below": "100M",
 				"above": "3G"
@@ -77,7 +77,7 @@ var resourceConfJSON1 = `{
 				"above": "2G"
 			}
 		},
-		"cpuLimits": {
+		"cpuLimitRanges": {
 			"error": {
 				"below": "100m",
 				"above": 2
@@ -87,7 +87,7 @@ var resourceConfJSON1 = `{
 				"above": "1800m"
 			}
 		},
-		"memoryLimits": {
+		"memoryLimitRanges": {
 			"error": {
 				"below": "200M",
 				"above": "6G"
@@ -121,25 +121,25 @@ func TestParseJson(t *testing.T) {
 }
 
 func testParsedConfig(t *testing.T, config *Configuration) {
-	cpuRequests := config.Resources.CPURequests
+	cpuRequests := config.Resources.CPURequestRanges
 	assert.Equal(t, int64(100), cpuRequests.Error.Below.ScaledValue(resource.Milli))
 	assert.Equal(t, int64(1000), cpuRequests.Error.Above.ScaledValue(resource.Milli))
 	assert.Equal(t, int64(200), cpuRequests.Warning.Below.ScaledValue(resource.Milli))
 	assert.Equal(t, int64(800), cpuRequests.Warning.Above.ScaledValue(resource.Milli))
 
-	memRequests := config.Resources.MemoryRequests
+	memRequests := config.Resources.MemoryRequestRanges
 	assert.Equal(t, int64(100), memRequests.Error.Below.ScaledValue(resource.Mega))
 	assert.Equal(t, int64(3000), memRequests.Error.Above.ScaledValue(resource.Mega))
 	assert.Equal(t, int64(200), memRequests.Warning.Below.ScaledValue(resource.Mega))
 	assert.Equal(t, int64(2000), memRequests.Warning.Above.ScaledValue(resource.Mega))
 
-	cpuLimits := config.Resources.CPULimits
+	cpuLimits := config.Resources.CPULimitRanges
 	assert.Equal(t, int64(100), cpuLimits.Error.Below.ScaledValue(resource.Milli))
 	assert.Equal(t, int64(2000), cpuLimits.Error.Above.ScaledValue(resource.Milli))
 	assert.Equal(t, int64(300), cpuLimits.Warning.Below.ScaledValue(resource.Milli))
 	assert.Equal(t, int64(1800), cpuLimits.Warning.Above.ScaledValue(resource.Milli))
 
-	memLimits := config.Resources.MemoryLimits
+	memLimits := config.Resources.MemoryLimitRanges
 	assert.Equal(t, int64(200), memLimits.Error.Below.ScaledValue(resource.Mega))
 	assert.Equal(t, int64(6000), memLimits.Error.Above.ScaledValue(resource.Mega))
 	assert.Equal(t, int64(300), memLimits.Warning.Below.ScaledValue(resource.Mega))
