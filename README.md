@@ -33,9 +33,6 @@ kubectl apply -f deploy/all.yaml
 
 ## Helm Deploy Option
 
-* Create ImagePullSecret:
-`kubectl -n fairwinds create secret docker-registry fairwinds --docker-server=<docker_registry> --docker-username=<docker_username> --docker-password=<docker_password> --docker-email=<docker_email>`
-
 * Create release with Helm:
 ```
 helm upgrade --install fairwinds charts/fairwinds/ --namespace fairwinds --recreate-pods

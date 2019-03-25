@@ -45,7 +45,6 @@ webhook:
   image: quay.io/reactiveops/fairwinds
   imagePullPolicy: IfNotPresent
   imageTag: dev-f16f12d0af38fd547918d394ce717037223b7f94
-imagePullSecrets: fairwinds
 replicas: 1 
 rbac:
-  enable: true
+  create: true
