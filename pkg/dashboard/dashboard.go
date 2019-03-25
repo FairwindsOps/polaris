@@ -10,8 +10,13 @@ import (
 	"github.com/reactiveops/fairwinds/pkg/validator"
 )
 
-const TEMPLATE_NAME = "dashboard.gohtml"
-const TEMPLATE_FILE = "pkg/dashboard/templates/" + TEMPLATE_NAME
+const (
+	// TemplateName references the dashboard template to use
+	TemplateName = "dashboard.gohtml"
+
+	// TemplateFile references the path of the dashboard template to use
+	TemplateFile = "pkg/dashboard/templates/" + TemplateName
+)
 
 // TemplateData represents data in a format that's template friendly.
 type TemplateData struct {
@@ -26,7 +31,7 @@ func MainHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration, k
 		http.Error(w, "Error Fetching Deployments", 500)
 		return
 	}
-	tmpl, err := template.New(TEMPLATE_NAME).Funcs(template.FuncMap{
+	tmpl, err := template.New(TemplateName).Funcs(template.FuncMap{
 		"getWarningWidth": func(rs validator.ResultSummary, fullWidth int) uint {
 			return uint(float64(rs.Successes+rs.Warnings) / float64(rs.Successes+rs.Warnings+rs.Failures) * float64(fullWidth))
 		},
@@ -43,7 +48,7 @@ func MainHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration, k
 				return "fas fa-times"
 			}
 		},
-	}).ParseFiles(TEMPLATE_FILE)
+	}).ParseFiles(TemplateFile)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
