@@ -37,6 +37,19 @@ spec:
         name: webhook
         ports:
         - containerPort: 9876
+        livenessProbe:
+          exec:
+            command:
+            - sh 
+            - -c
+            - ps -ef | grep fairwinds
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        readinessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20
         resources:
           limits:
             cpu: 100m
