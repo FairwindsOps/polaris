@@ -108,35 +108,6 @@ data:
         error:
           below: 100M
           above: 4G
-    resources:
-      cpuRequests:
-        error:
-          below: 100m
-          above: 1
-        warning:
-          below: 200m
-          above: 800m
-      memoryRequests:
-        error:
-          below: 100M
-          above: 3G
-        warning:
-          below: 200M
-          above: 2G
-      cpuLimits:
-        error:
-          below: 100m
-          above: 2
-        warning:
-          below: 300m
-          above: 1800m
-      memoryLimits:
-        error:
-          below: 200M
-          above: 6G
-        warning:
-          below: 300M
-          above: 4G
     images:
       tagNotSpecified: 'error'
       pullPolicyNotAlways: 'warning'
