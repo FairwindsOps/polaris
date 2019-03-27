@@ -21,10 +21,15 @@
 
 <body>
   <div class="header">
-    <h1>
+    <div class="header-content">
       <img class="logo" src="/static/images/logo.png" alt="Fairwinds" />
-      <span class="alt-logo">Fairwinds</span>
-    </h1>
+      <div class="header-right">
+        <a href="https://reactiveops.com?source=fairwinds">
+          <span class="by-text">by</span>
+          <img class="ro-logo" src="/static/images/ro-logo.png" alt="ReactiveOps" />
+        </a>
+      </div>
+    </div>
   </div>
 
   <div class="dashboard-content">
@@ -85,6 +90,10 @@
         </table>
       </div>
     {{ end }} {{/* end range .NamespacedResults */}}
+  </div>
+
+  <div class="footer">
+    &copy; 2019, <a href="https://reactiveops.com?source=fairwinds">ReactiveOps Inc.</a>
   </div>
 
   <script>

@@ -10,20 +10,33 @@ body {
   box-shadow: 0 2px 5px rgba(0,0,0,0.3);
 }
 
-.header h1 {
+.header .header-content {
   margin: 0 auto;
   width: 900px;
 }
 
-.header h1 .logo {
+.header .header-right {
+  float: right;
+}
+
+.header .logo {
   width: 280px;
 }
 
-.header h1 span {
+.header span.by-text {
   font-family: 'Lobster', sans-serif;
-  font-size: 60px;
-  font-weight: normal;
-  display: none;
+  color: #23103A;
+  vertical-align: top;
+  display: inline-block;
+  margin-top: 4px;
+}
+
+.header a {
+  text-decoration: none;
+}
+
+.header .ro-logo {
+  height: 64px;
 }
 
 .dashboard-content {
@@ -223,3 +236,12 @@ body {
   animation: fadeIn 2s;
 }
 
+.footer {
+  text-align: center;
+  padding-top: 10px;
+  padding-bottom: 30px;
+}
+
+.footer, .footer a {
+  color: #999;
+}
