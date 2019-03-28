@@ -12,18 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package validator
+package webhook
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"os"
 
 	conf "github.com/reactiveops/fairwinds/pkg/config"
+	validator "github.com/reactiveops/fairwinds/pkg/validator"
+	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission/builder"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission/types"
 )
 
@@ -52,22 +59,45 @@ func (v *Validator) InjectDecoder(d types.Decoder) error {
 
 var _ admission.Handler = &Validator{}
 
+// NewWebhook creates a validating admission webhook for the apiType.
+func NewWebhook(name string, mgr manager.Manager, validator Validator, apiType runtime.Object) *admission.Webhook {
+	name = fmt.Sprintf("%s.k8s.io", name)
+	path := fmt.Sprintf("/validating-%s", name)
+
+	webhook, err := builder.NewWebhookBuilder().
+		Name(name).
+		Validating().
+		Path(path).
+		Operations(admissionregistrationv1beta1.Create, admissionregistrationv1beta1.Update).
+		WithManager(mgr).
+		ForType(apiType).
+		Handlers(&validator).
+		Build()
+	if err != nil {
+		fmt.Printf("Unable to setup validating webhook: %s\n", name)
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	return webhook
+}
+
 // Handle for Validator to run validation checks.
 func (v *Validator) Handle(ctx context.Context, req types.Request) types.Response {
 	var err error
 	var allowed bool
 	var reason string
-	var results ResourceResult
+	var results validator.ResourceResult
 
 	switch req.AdmissionRequest.Kind.Kind {
 	case "Deployment":
 		deploy := appsv1.Deployment{}
 		err = v.decoder.Decode(req, &deploy)
-		results = ValidateDeploy(v.Config, &deploy)
+		results = validator.ValidateDeploy(v.Config, &deploy)
 	case "Pod":
 		pod := corev1.Pod{}
 		err = v.decoder.Decode(req, &pod)
-		results = ValidatePod(v.Config, &pod.Spec)
+		results = validator.ValidatePod(v.Config, &pod.Spec)
 	}
 	if err != nil {
 		return admission.ErrorResponse(http.StatusBadRequest, err)

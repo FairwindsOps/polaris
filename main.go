@@ -16,6 +16,8 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"io/ioutil"
 	glog "log"
 	"net/http"
 	"os"
@@ -24,7 +26,7 @@ import (
 	conf "github.com/reactiveops/fairwinds/pkg/config"
 	"github.com/reactiveops/fairwinds/pkg/dashboard"
 	"github.com/reactiveops/fairwinds/pkg/kube"
-	"github.com/reactiveops/fairwinds/pkg/validator"
+	fwebhook "github.com/reactiveops/fairwinds/pkg/webhook"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apitypes "k8s.io/apimachinery/pkg/types"
@@ -36,9 +38,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
-// FairwindsName is used for Kubernetes resource naming
-var FairwindsName = "fairwinds"
-var log = logf.Log.WithName(FairwindsName)
+var log = logf.Log.WithName("fairwinds")
 
 func main() {
 	dashboard := flag.Bool("dashboard", false, "Runs the webserver for Fairwinds dashboard.")
@@ -87,7 +87,7 @@ func startDashboardServer(c conf.Configuration, port int) {
 	})
 	portStr := strconv.Itoa(port)
 	glog.Println("Starting Fairwinds dashboard server on port " + portStr)
-	glog.Fatal(http.ListenAndServe(":" + portStr, nil))
+	glog.Fatal(http.ListenAndServe(":"+portStr, nil))
 }
 
 func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool, port int) {
@@ -102,25 +102,33 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 		os.Exit(1)
 	}
 
+	fairwindsResourceName := "fairwinds"
+	fairwindsNamespaceBytes, _ := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace")
+	fairwindsNamespace := string(fairwindsNamespaceBytes)
+	if fairwindsNamespace == "" {
+		fmt.Printf("could not determine current namespace, creating resources in %s namespace\n", fairwindsResourceName)
+		fairwindsNamespace = fairwindsResourceName
+	}
+
 	entryLog.Info("setting up webhook server")
-	as, err := webhook.NewServer(FairwindsName, mgr, webhook.ServerOptions{
+	as, err := webhook.NewServer(fairwindsResourceName, mgr, webhook.ServerOptions{
 		Port:                          int32(port),
 		CertDir:                       "/tmp/cert",
 		DisableWebhookConfigInstaller: &disableWebhookConfigInstaller,
 		BootstrapOptions: &webhook.BootstrapOptions{
-			ValidatingWebhookConfigName: FairwindsName,
+			ValidatingWebhookConfigName: fairwindsResourceName,
 			Secret: &apitypes.NamespacedName{
-				Namespace: FairwindsName,
-				Name:      FairwindsName,
+				Namespace: fairwindsNamespace,
+				Name:      fairwindsResourceName,
 			},
 
 			Service: &webhook.Service{
-				Namespace: FairwindsName,
-				Name:      FairwindsName,
+				Namespace: fairwindsNamespace,
+				Name:      fairwindsResourceName,
 
 				// Selectors should select the pods that runs this webhook server.
 				Selectors: map[string]string{
-					"app": FairwindsName,
+					"app": fairwindsResourceName,
 				},
 			},
 		},
@@ -132,8 +140,8 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 		glog.Println("Fairwinds webhook server listening on port " + strconv.Itoa(port))
 	}
 
-	p := validator.NewWebhook("pod", mgr, validator.Validator{Config: c}, &corev1.Pod{})
-	d := validator.NewWebhook("deploy", mgr, validator.Validator{Config: c}, &appsv1.Deployment{})
+	p := fwebhook.NewWebhook("pod", mgr, fwebhook.Validator{Config: c}, &corev1.Pod{})
+	d := fwebhook.NewWebhook("deploy", mgr, fwebhook.Validator{Config: c}, &appsv1.Deployment{})
 	entryLog.Info("registering webhooks to the webhook server")
 	if err = as.Register(p, d); err != nil {
 		entryLog.Error(err, "unable to register webhooks in the admission server")
