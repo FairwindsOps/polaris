@@ -65,21 +65,16 @@ type HealthChecks struct {
 
 // Images contains the config for images.
 type Images struct {
-	TagNotSpecified     Severity     `json:"tagNotSpecified"`
-	PullPolicyNotAlways Severity     `json:"pullPolicyNotAlways"`
-	Repositories        Repositories `json:"repositories"`
+	TagNotSpecified     Severity          `json:"tagNotSpecified"`
+	PullPolicyNotAlways Severity          `json:"pullPolicyNotAlways"`
+	Whitelist           ErrorWarningLists `json:"whitelist"`
+	Blacklist           ErrorWarningLists `json:"blacklist"`
 }
 
-// Repositories provides lists of patterns to match or avoid in image tags.
-type Repositories struct {
-	Error   WhitelistBlacklist `json:"error"`
-	Warning WhitelistBlacklist `json:"warning"`
-}
-
-// WhitelistBlacklist can contain a whitelist or blacklist.
-type WhitelistBlacklist struct {
-	Whitelist []string `json:"whitelist"`
-	Blacklist []string `json:"blacklist"`
+// ErrorWarningLists provides lists of patterns to match or avoid in image tags.
+type ErrorWarningLists struct {
+	Error   []string `json:"error"`
+	Warning []string `json:"warning"`
 }
 
 // Networking contains the config for networking validations.
@@ -101,8 +96,8 @@ type Security struct {
 
 // SecurityCapabilities contains the config for security capabilities validations.
 type SecurityCapabilities struct {
-	Error   WhitelistBlacklist `json:"error"`
-	Warning WhitelistBlacklist `json:"warning"`
+	Whitelist ErrorWarningLists `json:"whitelist"`
+	Blacklist ErrorWarningLists `json:"blacklist"`
 }
 
 // ParseFile parses config from a file.

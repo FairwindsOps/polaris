@@ -69,13 +69,16 @@ func TestValidateResourcesEmptyConfig(t *testing.T) {
 	}
 
 	cv := ContainerValidation{
-		Container: container,
+		Container: &container,
+		ResourceValidation: &ResourceValidation{
+			Summary: &ResultSummary{},
+		},
 	}
 
 	expected := conf.Resources{}
 
 	cv.validateResources(&expected)
-	assert.Len(t, cv.Failures, 0)
+	assert.Len(t, cv.Errors, 0)
 }
 
 func TestValidateResourcesEmptyContainer(t *testing.T) {
@@ -83,7 +86,7 @@ func TestValidateResourcesEmptyContainer(t *testing.T) {
 		Name: "Empty",
 	}
 
-	expectedWarnings := []ResultMessage{
+	expectedWarnings := []*ResultMessage{
 		{
 			Type:    "warning",
 			Message: "CPU Requests are not set",
@@ -94,18 +97,18 @@ func TestValidateResourcesEmptyContainer(t *testing.T) {
 		},
 	}
 
-	expectedFailures := []ResultMessage{
+	expectedErrors := []*ResultMessage{
 		{
-			Type:    "failure",
+			Type:    "error",
 			Message: "CPU Limits are not set",
 		},
 		{
-			Type:    "failure",
+			Type:    "error",
 			Message: "Memory Limits are not set",
 		},
 	}
 
-	testValidateResources(t, &container, &resourceConf2, &expectedFailures, &expectedWarnings)
+	testValidateResources(t, &container, &resourceConf2, &expectedErrors, &expectedWarnings)
 }
 
 func TestValidateResourcesPartiallyValid(t *testing.T) {
@@ -127,7 +130,7 @@ func TestValidateResourcesPartiallyValid(t *testing.T) {
 		},
 	}
 
-	expectedWarnings := []ResultMessage{
+	expectedWarnings := []*ResultMessage{
 		{
 			Type:    "warning",
 			Message: "CPU Requests are too low",
@@ -138,18 +141,18 @@ func TestValidateResourcesPartiallyValid(t *testing.T) {
 		},
 	}
 
-	expectedFailures := []ResultMessage{
+	expectedErrors := []*ResultMessage{
 		{
-			Type:    "failure",
+			Type:    "error",
 			Message: "Memory Requests are too low",
 		},
 		{
-			Type:    "failure",
+			Type:    "error",
 			Message: "Memory Limits are too low",
 		},
 	}
 
-	testValidateResources(t, &container, &resourceConf1, &expectedFailures, &expectedWarnings)
+	testValidateResources(t, &container, &resourceConf1, &expectedErrors, &expectedWarnings)
 }
 
 func TestValidateResourcesFullyValid(t *testing.T) {
@@ -179,12 +182,15 @@ func TestValidateResourcesFullyValid(t *testing.T) {
 		},
 	}
 
-	testValidateResources(t, &container, &resourceConf1, &[]ResultMessage{}, &[]ResultMessage{})
+	testValidateResources(t, &container, &resourceConf1, &[]*ResultMessage{}, &[]*ResultMessage{})
 }
 
-func testValidateResources(t *testing.T, container *corev1.Container, resourceConf *string, expectedFailures *[]ResultMessage, expectedWarnings *[]ResultMessage) {
+func testValidateResources(t *testing.T, container *corev1.Container, resourceConf *string, expectedErrors *[]*ResultMessage, expectedWarnings *[]*ResultMessage) {
 	cv := ContainerValidation{
-		Container: *container,
+		Container: container,
+		ResourceValidation: &ResourceValidation{
+			Summary: &ResultSummary{},
+		},
 	}
 
 	parsedConf, err := conf.Parse([]byte(*resourceConf))
@@ -194,8 +200,8 @@ func testValidateResources(t *testing.T, container *corev1.Container, resourceCo
 	assert.Len(t, cv.Warnings, len(*expectedWarnings))
 	assert.ElementsMatch(t, cv.Warnings, *expectedWarnings)
 
-	assert.Len(t, cv.Failures, len(*expectedFailures))
-	assert.ElementsMatch(t, cv.Failures, *expectedFailures)
+	assert.Len(t, cv.Errors, len(*expectedErrors))
+	assert.ElementsMatch(t, cv.Errors, *expectedErrors)
 }
 
 func TestValidateHealthChecks(t *testing.T) {
@@ -212,27 +218,41 @@ func TestValidateHealthChecks(t *testing.T) {
 	}
 
 	probe := corev1.Probe{}
-	cv1 := ContainerValidation{Container: corev1.Container{Name: ""}}
-	cv2 := ContainerValidation{Container: corev1.Container{Name: "", LivenessProbe: &probe, ReadinessProbe: &probe}}
+	cv1 := ContainerValidation{
+		Container: &corev1.Container{Name: ""},
+		ResourceValidation: &ResourceValidation{
+			Summary: &ResultSummary{},
+		},
+	}
+	cv2 := ContainerValidation{
+		Container: &corev1.Container{
+			Name:           "",
+			LivenessProbe:  &probe,
+			ReadinessProbe: &probe,
+		},
+		ResourceValidation: &ResourceValidation{
+			Summary: &ResultSummary{},
+		},
+	}
 
-	l := ResultMessage{Type: "warning", Message: "Liveness probe needs to be configured"}
-	r := ResultMessage{Type: "failure", Message: "Readiness probe needs to be configured"}
-	f1 := []ResultMessage{}
-	f2 := []ResultMessage{r}
-	w1 := []ResultMessage{l}
+	l := &ResultMessage{Type: "warning", Message: "Liveness probe needs to be configured"}
+	r := &ResultMessage{Type: "error", Message: "Readiness probe needs to be configured"}
+	f1 := []*ResultMessage{}
+	f2 := []*ResultMessage{r}
+	w1 := []*ResultMessage{l}
 
 	var testCases = []struct {
 		name     string
 		probes   conf.HealthChecks
 		cv       ContainerValidation
-		failures *[]ResultMessage
-		warnings *[]ResultMessage
+		errors   *[]*ResultMessage
+		warnings *[]*ResultMessage
 	}{
-		{name: "probes not configured", probes: p1, cv: cv1, failures: &f1},
-		{name: "probes not required", probes: p2, cv: cv1, failures: &f1},
-		{name: "probes required & configured", probes: p3, cv: cv2, failures: &f1},
-		{name: "probes required & not configured", probes: p3, cv: cv1, failures: &f2, warnings: &w1},
-		{name: "probes configured, but not required", probes: p2, cv: cv2, failures: &f1},
+		{name: "probes not configured", probes: p1, cv: cv1, errors: &f1},
+		{name: "probes not required", probes: p2, cv: cv1, errors: &f1},
+		{name: "probes required & configured", probes: p3, cv: cv2, errors: &f1},
+		{name: "probes required & not configured", probes: p3, cv: cv1, errors: &f2, warnings: &w1},
+		{name: "probes configured, but not required", probes: p2, cv: cv2, errors: &f1},
 	}
 
 	for _, tt := range testCases {
@@ -244,8 +264,8 @@ func TestValidateHealthChecks(t *testing.T) {
 				assert.ElementsMatch(t, tt.cv.Warnings, *tt.warnings)
 			}
 
-			assert.Len(t, tt.cv.Failures, len(*tt.failures))
-			assert.ElementsMatch(t, tt.cv.Failures, *tt.failures)
+			assert.Len(t, tt.cv.Errors, len(*tt.errors))
+			assert.ElementsMatch(t, tt.cv.Errors, *tt.errors)
 		})
 	}
 }
@@ -257,20 +277,43 @@ func TestValidateImage(t *testing.T) {
 	i2 := conf.Images{TagNotSpecified: conf.SeverityIgnore}
 	i3 := conf.Images{TagNotSpecified: conf.SeverityError}
 
-	cv1 := ContainerValidation{Container: corev1.Container{Name: ""}}
-	cv2 := ContainerValidation{Container: corev1.Container{Name: "", Image: "test:tag"}}
-	cv3 := ContainerValidation{Container: corev1.Container{Name: "", Image: "test:latest"}}
-	cv4 := ContainerValidation{Container: corev1.Container{Name: "", Image: "test"}}
+	cv1 := ContainerValidation{
+		Container: &corev1.Container{Name: ""},
+		ResourceValidation: &ResourceValidation{
+			Summary: &ResultSummary{},
+		},
+	}
 
-	f := ResultMessage{Message: "Image tag should be specified", Type: "failure"}
-	f1 := []ResultMessage{}
-	f2 := []ResultMessage{f}
+	cv2 := ContainerValidation{
+		Container: &corev1.Container{Name: "", Image: "test:tag"},
+		ResourceValidation: &ResourceValidation{
+			Summary: &ResultSummary{},
+		},
+	}
+
+	cv3 := ContainerValidation{
+		Container: &corev1.Container{Name: "", Image: "test:latest"},
+		ResourceValidation: &ResourceValidation{
+			Summary: &ResultSummary{},
+		},
+	}
+
+	cv4 := ContainerValidation{
+		Container: &corev1.Container{Name: "", Image: "test"},
+		ResourceValidation: &ResourceValidation{
+			Summary: &ResultSummary{},
+		},
+	}
+
+	f := &ResultMessage{Message: "Image tag should be specified", Type: "error"}
+	f1 := []*ResultMessage{}
+	f2 := []*ResultMessage{f}
 
 	var testCases = []struct {
 		name     string
 		image    conf.Images
 		cv       ContainerValidation
-		expected []ResultMessage
+		expected []*ResultMessage
 	}{
 		{name: "image not configured", image: i1, cv: cv1, expected: f1},
 		{name: "image not required", image: i2, cv: cv1, expected: f1},
@@ -283,8 +326,8 @@ func TestValidateImage(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.cv.validateImage(&tt.image)
-			assert.Len(t, tt.cv.Failures, len(tt.expected))
-			assert.ElementsMatch(t, tt.cv.Failures, tt.expected)
+			assert.Len(t, tt.cv.Errors, len(tt.expected))
+			assert.ElementsMatch(t, tt.cv.Errors, tt.expected)
 		})
 	}
 }

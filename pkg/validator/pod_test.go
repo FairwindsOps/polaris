@@ -40,10 +40,10 @@ func TestValidatePod(t *testing.T) {
 	expectedSum := ResultSummary{
 		Successes: uint(9),
 		Warnings:  uint(0),
-		Failures:  uint(0),
+		Errors:    uint(0),
 	}
 
-	expectedMessages := []ResultMessage{
+	expectedMessages := []*ResultMessage{
 		{Message: "Host alias is not configured", Type: "success"},
 		{Message: "Host IPC is not configured", Type: "success"},
 		{Message: "Host PID is not configured", Type: "success"},

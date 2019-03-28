@@ -109,13 +109,13 @@ data:
           below: 100M
           above: 4G
     images:
-      tagNotSpecified: 'error'
-      pullPolicyNotAlways: 'warning'
-      error:
-        whitelist:
+      tagNotSpecified: error
+      pullPolicyNotAlways: warning
+      whitelist:
+        error:
           - gcr.io/*
-      warning:
-        blacklist:
+      blacklist:
+        warning:
           - docker.io/*
     healthChecks:
       readinessProbeMissing: warning
@@ -131,13 +131,13 @@ data:
       notReadOnlyRootFileSystem: warning
       runAsNonRoot: warning
       capabilities:
-        warning:
-          blacklist:
+        blacklist:
+          error:
             - CHOWN
             - SYS_CHROOT
             - AUDIT_WRITE
-        error:
-          whitelist:
+        whitelist:
+          warning:
             - CHOWN
             - DAC_OVERRIDE
             - FSETID

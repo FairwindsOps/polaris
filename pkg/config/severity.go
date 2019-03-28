@@ -18,6 +18,9 @@ package config
 type Severity string
 
 const (
+	// SeveritySuccess indicates validation success
+	SeveritySuccess Severity = "success"
+
 	// SeverityIgnore ignores validation failures
 	SeverityIgnore Severity = "ignore"
 

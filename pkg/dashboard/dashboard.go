@@ -83,12 +83,12 @@ func getTemplateData(config conf.Configuration, kubeAPI *kube.API) (TemplateData
 		return TemplateData{}, err
 	}
 
-	var clusterSuccesses, clusterFailures, clusterWarnings uint
+	var clusterSuccesses, clusterErrors, clusterWarnings uint
 
 	// Aggregate all summary counts to get a clusterwide count.
 	for _, nsRes := range nsResults {
 		for _, rr := range nsRes.Results {
-			clusterFailures += rr.Summary.Failures
+			clusterErrors += rr.Summary.Errors
 			clusterWarnings += rr.Summary.Warnings
 			clusterSuccesses += rr.Summary.Successes
 		}
@@ -96,7 +96,7 @@ func getTemplateData(config conf.Configuration, kubeAPI *kube.API) (TemplateData
 
 	templateData := TemplateData{
 		ClusterSummary: &validator.ResultSummary{
-			Failures:  clusterFailures,
+			Errors:  clusterErrors,
 			Warnings:  clusterWarnings,
 			Successes: clusterSuccesses,
 		},

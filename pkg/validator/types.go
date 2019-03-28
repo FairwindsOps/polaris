@@ -14,6 +14,10 @@
 
 package validator
 
+import (
+	conf "github.com/reactiveops/fairwinds/pkg/config"
+)
+
 // NamespacedResult groups resource results by namespace.
 type NamespacedResult struct {
 	Summary *ResultSummary
@@ -32,34 +36,33 @@ type ResourceResult struct {
 	PodResults       []PodResult
 }
 
-// ResultSummary provides a high level overview of success, warnings, and failures.
+// ResultSummary provides a high level overview of success, warnings, and errors.
 type ResultSummary struct {
 	Successes uint
 	Warnings  uint
-	Failures  uint
+	Errors    uint
 }
 
 // ContainerResult provides a list of validation messages for each container.
 type ContainerResult struct {
 	Name     string
-	Messages []ResultMessage
+	Messages []*ResultMessage
 }
 
 // PodResult provides a list of validation messages for each pod.
 type PodResult struct {
 	Name             string
-	Messages         []ResultMessage
+	Messages         []*ResultMessage
 	ContainerResults []ContainerResult
 }
 
-// ResultMessage contains a message and a type indicator (success, warning, or failure).
+// ResultMessage contains a message and a type indicator (success, warning, or error).
 type ResultMessage struct {
 	Message string
-	Type    string
+	Type    conf.Severity
 }
 
 // Score represents a percentage of validations that were successful.
 func (rs *ResultSummary) Score() uint {
-	return uint(float64(rs.Successes) / float64(rs.Successes+rs.Warnings+rs.Failures) * 100)
+	return uint(float64(rs.Successes) / float64(rs.Successes+rs.Warnings+rs.Errors) * 100)
 }
-

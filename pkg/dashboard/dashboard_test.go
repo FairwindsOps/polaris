@@ -23,7 +23,7 @@ func TestGetTemplateData(t *testing.T) {
 	sum := &validator.ResultSummary{
 		Successes: uint(4),
 		Warnings:  uint(1),
-		Failures:  uint(1),
+		Errors:    uint(1),
 	}
 
 	actualTmplData, _ := getTemplateData(c, k8s)
