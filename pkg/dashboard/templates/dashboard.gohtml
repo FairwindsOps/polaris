@@ -54,10 +54,10 @@
             <tr>
               <td class="resource-info">
                 <div class="name"><span class="caret-expander"></span>{{ .Type }}: <strong>{{ .Name }}</strong></div>
-                
+
                   {{ range .PodResults}}
                     <div class="extra">
-                      <h4>Pod:</h4>
+                      <h4>Pod Spec:</h4>
                       <ul>
                         {{ range $message := .Messages}}
                           <li class="{{ .Type }}"><i class="{{ getIcon $message }}"></i> {{ .Message }}</li>
@@ -126,7 +126,7 @@
             label: 'Failing',
             data: [
               {{ range $namespace, $results := .NamespacedResults }}
-                "{{ $results.Summary.Failures }}",
+                "{{ $results.Summary.Errors }}",
               {{ end }}
             ],
             backgroundColor: '#a11f4c',
@@ -155,7 +155,7 @@
         data: {
           labels: ["Passing", "Warning", "Failing"],
           datasets: [{
-            data: [{{ .ClusterSummary.Successes }}, {{ .ClusterSummary.Warnings }}, {{ .ClusterSummary.Failures }}],
+            data: [{{ .ClusterSummary.Successes }}, {{ .ClusterSummary.Warnings }}, {{ .ClusterSummary.Errors }}],
             backgroundColor: ['#8BD2DC','#f26c21','#a11f4c'],
           }]
         },

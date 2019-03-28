@@ -76,40 +76,82 @@ metadata:
 data:
   config.yml: |
     resources:
-      requests:
-        cpu:
-          min: 0.1
-          max: 1
-        memory:
-          min: 10m
-          max: 2000M
-      limits:
-        cpu:
-          min: 0.1
-          max: 1
-        memory:
-          min: 10m
-          max: 2000M
-    healthChecks:
-      readiness:
-        require: true
-      liveness:
-        require: true
+      cpuRequestsMissing: warning
+      cpuRequestRanges:
+        warning:
+          below: 50m
+          above: 1000m
+        error:
+          below: 500m
+          above: 2000m
+      cpuLimitsMissing: warning
+      cpuLimitRanges:
+        warning:
+          below: 50m
+          above: 1000m
+        error:
+          below: 500m
+          above: 2000m
+      memoryRequestsMissing: warning
+      memoryRequestRanges:
+        warning:
+          below: 50M
+          above: 2G
+        error:
+          below: 100M
+          above: 4G
+      memoryLimitsMissing: warning
+      memoryLimitRanges:
+        warning:
+          below: 50M
+          above: 2G
+        error:
+          below: 100M
+          above: 4G
     images:
-      tagRequired: true
-      whitelistRepos:
-        - gcr.io
-    hostNetwork:
-      hostAlias:
-        require: true
-      hostIPC:
-        require: true
-      hostNetwork:
-        require: true
-      hostPID:
-        require: true
-      hostPort:
-        require: true
+      tagNotSpecified: error
+      pullPolicyNotAlways: warning
+      whitelist:
+        error:
+          - gcr.io/*
+      blacklist:
+        warning:
+          - docker.io/*
+    healthChecks:
+      readinessProbeMissing: warning
+      livenessProbeMissing: warning
+    networking:
+      hostAliasSet: error
+      hostIPCSet: error
+      hostNetworkSet: error
+      hostPIDSet: error
+      hostPortSet: error
+    security:
+      runAsPriviliged: warning
+      notReadOnlyRootFileSystem: warning
+      runAsNonRoot: warning
+      capabilities:
+        blacklist:
+          error:
+            - CHOWN
+            - SYS_CHROOT
+            - AUDIT_WRITE
+        whitelist:
+          warning:
+            - CHOWN
+            - DAC_OVERRIDE
+            - FSETID
+            - FOWNER
+            - MKNOD
+            - NET_RAW
+            - SETGID
+            - SETUID
+            - SETFCAP
+            - SETPCAP
+            - NET_BIND_SERVICE
+            - SYS_CHROOT
+            - KILL
+            - AUDIT_WRITE
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment

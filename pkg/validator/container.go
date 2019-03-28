@@ -1,4 +1,4 @@
-// Copyright 2018 ReactiveOps
+// Copyright 2019 ReactiveOps
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,31 +25,23 @@ import (
 
 // ContainerValidation tracks validation failures associated with a Container.
 type ContainerValidation struct {
-	Container corev1.Container
-	Summary   ResultSummary
-	Failures  []ResultMessage
-	Warnings  []ResultMessage
-	Successes []ResultMessage
+	*ResourceValidation
+	Container *corev1.Container
 }
 
-func (cv *ContainerValidation) messages() []ResultMessage {
-	mssgs := []ResultMessage{}
-	mssgs = append(mssgs, cv.Failures...)
-	mssgs = append(mssgs, cv.Warnings...)
-	mssgs = append(mssgs, cv.Successes...)
-	return mssgs
-}
-
-func validateContainer(conf conf.Configuration, container corev1.Container) ResourceResult {
+// ValidateContainer validates that each pod conforms to the Fairwinds config, returns a ResourceResult.
+func ValidateContainer(cnConf *conf.Configuration, container *corev1.Container) ResourceResult {
 	cv := ContainerValidation{
 		Container: container,
-		Summary:   ResultSummary{},
+		ResourceValidation: &ResourceValidation{
+			Summary: &ResultSummary{},
+		},
 	}
 
-	cv.validateResources(conf.Resources)
-	cv.validateHealthChecks(conf.HealthChecks)
-	cv.validateImage(conf.Images)
-	cv.validateHostPort(conf.HostNetworking)
+	cv.validateResources(&cnConf.Resources)
+	cv.validateHealthChecks(&cnConf.HealthChecks)
+	cv.validateImage(&cnConf.Images)
+	cv.validateNetworking(&cnConf.Networking)
 
 	cRes := ContainerResult{
 		Name:     container.Name,
@@ -59,98 +51,103 @@ func validateContainer(conf conf.Configuration, container corev1.Container) Reso
 	rr := ResourceResult{
 		Name:             container.Name,
 		Type:             "Container",
-		Summary:          &cv.Summary,
+		Summary:          cv.Summary,
 		ContainerResults: []ContainerResult{cRes},
 	}
 
 	return rr
 }
 
-func (cv *ContainerValidation) addFailure(message string) {
-	cv.Summary.Failures++
-	cv.Failures = append(cv.Failures, ResultMessage{
-		Message: message,
-		Type:    "failure",
-	})
+func (cv *ContainerValidation) validateResources(resConf *conf.Resources) {
+	res := cv.Container.Resources
+
+	if resConf.CPURequestsMissing.IsActionable() && res.Requests.Cpu().MilliValue() == 0 {
+		cv.addFailure("CPU Requests are not set", resConf.CPURequestsMissing)
+	} else {
+		cv.validateResourceRange("CPU Requests", &resConf.CPURequestRanges, res.Requests.Cpu())
+	}
+
+	if resConf.CPULimitsMissing.IsActionable() && res.Limits.Cpu().MilliValue() == 0 {
+		cv.addFailure("CPU Limits are not set", resConf.CPULimitsMissing)
+	} else {
+		cv.validateResourceRange("CPU Limits", &resConf.CPULimitRanges, res.Requests.Cpu())
+	}
+
+	if resConf.MemoryRequestsMissing.IsActionable() && res.Requests.Memory().MilliValue() == 0 {
+		cv.addFailure("Memory Requests are not set", resConf.MemoryRequestsMissing)
+	} else {
+		cv.validateResourceRange("Memory Requests", &resConf.MemoryRequestRanges, res.Requests.Memory())
+	}
+
+	if resConf.MemoryLimitsMissing.IsActionable() && res.Limits.Memory().MilliValue() == 0 {
+		cv.addFailure("Memory Limits are not set", resConf.MemoryLimitsMissing)
+	} else {
+		cv.validateResourceRange("Memory Limits", &resConf.MemoryLimitRanges, res.Limits.Memory())
+	}
 }
 
-func (cv *ContainerValidation) addWarning(message string) {
-	cv.Summary.Warnings++
-	cv.Warnings = append(cv.Warnings, ResultMessage{
-		Message: message,
-		Type:    "warning",
-	})
-}
+func (cv *ContainerValidation) validateResourceRange(resourceName string, rangeConf *conf.ResourceRanges, res *resource.Quantity) {
+	warnAbove := rangeConf.Warning.Above
+	warnBelow := rangeConf.Warning.Below
+	errorAbove := rangeConf.Error.Above
+	errorBelow := rangeConf.Error.Below
 
-func (cv *ContainerValidation) addSuccess(message string) {
-	cv.Summary.Successes++
-	cv.Successes = append(cv.Successes, ResultMessage{
-		Message: message,
-		Type:    "success",
-	})
-}
-
-func (cv *ContainerValidation) validateResources(conf conf.RequestsAndLimits) {
-	actualRes := cv.Container.Resources
-	cv.withinRange("CPU Requests", conf.Requests["cpu"], actualRes.Requests.Cpu())
-	cv.withinRange("Memory Requests", conf.Requests["memory"], actualRes.Requests.Memory())
-	cv.withinRange("CPU Limits", conf.Limits["cpu"], actualRes.Limits.Cpu())
-	cv.withinRange("Memory Limits", conf.Limits["memory"], actualRes.Limits.Memory())
-}
-
-func (cv *ContainerValidation) withinRange(resourceName string, expectedRange conf.ResourceMinMax, actual *resource.Quantity) {
-	expectedMin := expectedRange.Min
-	expectedMax := expectedRange.Max
-	if expectedMin != nil && expectedMin.MilliValue() > actual.MilliValue() {
-		if actual.MilliValue() == 0 {
-			cv.addFailure(fmt.Sprintf("%s are not set", resourceName))
-		} else {
-			cv.addFailure(fmt.Sprintf("%s are too low", resourceName))
-		}
-	} else if expectedMax != nil && expectedMax.MilliValue() < actual.MilliValue() {
-		cv.addFailure(fmt.Sprintf("%s are too high", resourceName))
+	if errorAbove != nil && errorAbove.MilliValue() < res.MilliValue() {
+		cv.addError(fmt.Sprintf("%s are too high", resourceName))
+	} else if warnAbove != nil && warnAbove.MilliValue() < res.MilliValue() {
+		cv.addWarning(fmt.Sprintf("%s are too high", resourceName))
+	} else if errorBelow != nil && errorBelow.MilliValue() > res.MilliValue() {
+		cv.addError(fmt.Sprintf("%s are too low", resourceName))
+	} else if warnBelow != nil && warnBelow.MilliValue() > res.MilliValue() {
+		cv.addWarning(fmt.Sprintf("%s are too low", resourceName))
 	} else {
 		cv.addSuccess(fmt.Sprintf("%s are within the expected range", resourceName))
 	}
 }
 
-func (cv *ContainerValidation) validateHealthChecks(conf conf.Probes) {
-	if conf.Readiness.Require {
+func (cv *ContainerValidation) validateHealthChecks(conf *conf.HealthChecks) {
+	if conf.ReadinessProbeMissing.IsActionable() {
 		if cv.Container.ReadinessProbe == nil {
-			cv.addFailure("Readiness probe needs to be configured")
+			cv.addFailure("Readiness probe needs to be configured", conf.ReadinessProbeMissing)
 		} else {
 			cv.addSuccess("Readiness probe configured")
 		}
 	}
 
-	if conf.Liveness.Require {
+	if conf.LivenessProbeMissing.IsActionable() {
 		if cv.Container.LivenessProbe == nil {
-			cv.addFailure("Liveness probe needs to be configured")
+			cv.addFailure("Liveness probe needs to be configured", conf.LivenessProbeMissing)
 		} else {
 			cv.addSuccess("Liveness probe configured")
 		}
 	}
 }
 
-func (cv *ContainerValidation) validateImage(conf conf.Images) {
-	if conf.TagRequired {
+func (cv *ContainerValidation) validateImage(imageConf *conf.Images) {
+	if imageConf.TagNotSpecified.IsActionable() {
 		img := strings.Split(cv.Container.Image, ":")
 		if len(img) == 1 || img[1] == "latest" {
-			cv.addFailure("Image tag should be specified")
+			cv.addFailure("Image tag should be specified", imageConf.TagNotSpecified)
 		} else {
 			cv.addSuccess("Image tag specified")
 		}
 	}
 }
 
-func (cv *ContainerValidation) validateHostPort(conf conf.HostNetworking) {
-	if conf.HostPort.Require {
+func (cv *ContainerValidation) validateNetworking(networkConf *conf.Networking) {
+	if networkConf.HostPortSet.IsActionable() {
+		hostPortSet := false
 		for _, port := range cv.Container.Ports {
 			if port.HostPort != 0 {
-				cv.addFailure("Host port is configured, but it shouldn't be")
-				return
+				hostPortSet = true
+				break
 			}
 		}
-		cv.addSuccess("Host port is not configured")
+
+		if hostPortSet {
+			cv.addFailure("Host port is configured, but it shouldn't be", networkConf.HostAliasSet)
+		} else {
+			cv.addSuccess("Host port is not configured")
+		}
 	}
 }

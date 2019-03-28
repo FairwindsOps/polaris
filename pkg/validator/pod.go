@@ -1,4 +1,4 @@
-// Copyright 2018 ReactiveOps
+// Copyright 2019 ReactiveOps
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,135 +24,102 @@ var log = logf.Log.WithName("Fairwinds Validator")
 
 // PodValidation tracks validation failures associated with a Pod.
 type PodValidation struct {
-	Pod       corev1.PodSpec
-	Summary   ResultSummary
-	Failures  []ResultMessage
-	Warnings  []ResultMessage
-	Successes []ResultMessage
-}
-
-func (pv *PodValidation) messages() []ResultMessage {
-	mssgs := []ResultMessage{}
-	mssgs = append(mssgs, pv.Failures...)
-	mssgs = append(mssgs, pv.Warnings...)
-	mssgs = append(mssgs, pv.Successes...)
-	return mssgs
+	*ResourceValidation
+	Pod *corev1.PodSpec
 }
 
 // ValidatePod validates that each pod conforms to the Fairwinds config, returns a ResourceResult.
-func ValidatePod(conf conf.Configuration, pod *corev1.PodSpec) ResourceResult {
+func ValidatePod(podConf conf.Configuration, pod *corev1.PodSpec) ResourceResult {
 	pv := PodValidation{
-		Pod:     *pod,
-		Summary: ResultSummary{},
+		Pod: pod,
+		ResourceValidation: &ResourceValidation{
+			Summary: &ResultSummary{},
+		},
 	}
 
-	pv.validateHostNetwork(conf.HostNetworking)
+	pv.validateNetworking(&podConf.Networking)
 
 	pRes := PodResult{
 		Messages:         pv.messages(),
 		ContainerResults: []ContainerResult{},
 	}
 
-	// Add container resource results to the pod resource results.
-	for _, container := range pod.InitContainers {
-		ctrRR := validateContainer(conf, container)
-		pv.Summary.Successes += ctrRR.Summary.Successes
-		pv.Summary.Warnings += ctrRR.Summary.Warnings
-		pv.Summary.Failures += ctrRR.Summary.Failures
-		pRes.ContainerResults = append(
-			pRes.ContainerResults,
-			ctrRR.ContainerResults[0],
-		)
-	}
+	pv.validateContainers(pod.InitContainers, &pRes, &podConf)
+	pv.validateContainers(pod.Containers, &pRes, &podConf)
 
-	for _, container := range pod.Containers {
-		ctrRR := validateContainer(conf, container)
-		pv.Summary.Successes += ctrRR.Summary.Successes
-		pv.Summary.Warnings += ctrRR.Summary.Warnings
-		pv.Summary.Failures += ctrRR.Summary.Failures
-		pRes.ContainerResults = append(
-			pRes.ContainerResults,
-			ctrRR.ContainerResults[0],
-		)
-	}
 	rr := ResourceResult{
 		Type:       "Pod",
-		Summary:    &pv.Summary,
+		Summary:    pv.Summary,
 		PodResults: []PodResult{pRes},
 	}
 
 	return rr
 }
 
-func (pv *PodValidation) addFailure(message string) {
-	pv.Summary.Failures++
-	pv.Failures = append(pv.Failures, ResultMessage{
-		Message: message,
-		Type:    "failure",
-	})
+func (pv *PodValidation) validateContainers(containers []corev1.Container, pRes *PodResult, podConf *conf.Configuration) {
+	for _, container := range containers {
+		ctrRR := ValidateContainer(podConf, &container)
+		pv.Summary.Successes += ctrRR.Summary.Successes
+		pv.Summary.Warnings += ctrRR.Summary.Warnings
+		pv.Summary.Errors += ctrRR.Summary.Errors
+		pRes.ContainerResults = append(
+			pRes.ContainerResults,
+			ctrRR.ContainerResults[0],
+		)
+	}
 }
 
-func (pv *PodValidation) addWarning(message string) {
-	pv.Summary.Warnings++
-	pv.Warnings = append(pv.Warnings, ResultMessage{
-		Message: message,
-		Type:    "warning",
-	})
+func (pv *PodValidation) validateNetworking(networkConf *conf.Networking) {
+	pv.validateHostAlias(networkConf)
+	pv.validateHostIPC(networkConf)
+	pv.validateHostPID(networkConf)
+	pv.validateHostNetwork(networkConf)
 }
 
-func (pv *PodValidation) addSuccess(message string) {
-	pv.Summary.Successes++
-	pv.Successes = append(pv.Successes, ResultMessage{
-		Message: message,
-		Type:    "success",
-	})
-}
-
-func (pv *PodValidation) validateHostNetwork(conf conf.HostNetworking) {
-	pv.hostAlias(conf)
-	pv.hostIPC(conf)
-	pv.hostPID(conf)
-	pv.hostNetwork(conf)
-}
-
-func (pv *PodValidation) hostAlias(conf conf.HostNetworking) {
-	if conf.HostAlias.Require {
+func (pv *PodValidation) validateHostAlias(networkConf *conf.Networking) {
+	if networkConf.HostAliasSet.IsActionable() {
+		hostAliasSet := false
 		for _, alias := range pv.Pod.HostAliases {
 			if alias.IP != "" && len(alias.Hostnames) == 0 {
-				pv.addFailure("Host alias should is configured, but it shouldn't be")
-				return
+				hostAliasSet = true
+				break
 			}
 		}
-		pv.addSuccess("Host alias is not configured")
+
+		if hostAliasSet {
+			pv.addFailure("Host alias should is configured, but it shouldn't be", networkConf.HostAliasSet)
+		} else {
+			pv.addSuccess("Host alias is not configured")
+		}
 	}
 }
 
-func (pv *PodValidation) hostIPC(conf conf.HostNetworking) {
-	if conf.HostIPC.Require {
+func (pv *PodValidation) validateHostIPC(networkConf *conf.Networking) {
+	if networkConf.HostIPCSet.IsActionable() {
 		if pv.Pod.HostIPC {
-			pv.addFailure("Host IPC is configured, but it shouldn't be")
-			return
+			pv.addFailure("Host IPC is configured, but it shouldn't be", networkConf.HostIPCSet)
+		} else {
+			pv.addSuccess("Host IPC is not configured")
 		}
-		pv.addSuccess("Host IPC is not configured")
 	}
 }
 
-func (pv *PodValidation) hostPID(conf conf.HostNetworking) {
-	if conf.HostPID.Require {
+func (pv *PodValidation) validateHostPID(networkConf *conf.Networking) {
+	if networkConf.HostPIDSet.IsActionable() {
 		if pv.Pod.HostPID {
-			pv.addFailure("Host PID is configured, but it shouldn't be")
-			return
+			pv.addFailure("Host PID is configured, but it shouldn't be", networkConf.HostPIDSet)
+		} else {
+			pv.addSuccess("Host PID is not configured")
 		}
-		pv.addSuccess("Host PID is not configured")
 	}
 }
 
-func (pv *PodValidation) hostNetwork(conf conf.HostNetworking) {
-	if conf.HostNetwork.Require {
+func (pv *PodValidation) validateHostNetwork(networkConf *conf.Networking) {
+	if networkConf.HostNetworkSet.IsActionable() {
 		if pv.Pod.HostNetwork {
-			pv.addFailure("Host network is configured, but it shouldn't be")
-			return
+			pv.addFailure("Host network is configured, but it shouldn't be", networkConf.HostNetworkSet)
+		} else {
+			pv.addSuccess("Host network is not configured")
 		}
-		pv.addSuccess("Host network is not configured")
 	}
 }

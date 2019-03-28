@@ -1,3 +1,17 @@
+// Copyright 2019 ReactiveOps
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package config
 
 import (
@@ -6,58 +20,84 @@ import (
 	"io"
 	"io/ioutil"
 
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
 // Configuration contains all of the config for the validation checks.
 type Configuration struct {
-	Resources      RequestsAndLimits `json:"resources"`
-	HealthChecks   Probes            `json:"healthChecks"`
-	Images         Images            `json:"images"`
-	HostNetworking HostNetworking    `json:"hostNetworking"`
+	Resources    Resources    `json:"resources"`
+	HealthChecks HealthChecks `json:"healthChecks"`
+	Images       Images       `json:"images"`
+	Networking   Networking   `json:"networking"`
+	Security     Security     `json:"security"`
 }
 
-// RequestsAndLimits contains config for resource requests and limits.
-type RequestsAndLimits struct {
-	Requests ResourceList `json:"requests"`
-	Limits   ResourceList `json:"limits"`
+// Resources contains config for resource requests and limits.
+type Resources struct {
+	CPURequestsMissing    Severity       `json:"cpuRequestsMissing"`
+	CPURequestRanges      ResourceRanges `json:"cpuRequestRanges"`
+	CPULimitsMissing      Severity       `json:"cpuLimitsMissing"`
+	CPULimitRanges        ResourceRanges `json:"cpuLimitRanges"`
+	MemoryRequestsMissing Severity       `json:"memoryRequestsMissing"`
+	MemoryRequestRanges   ResourceRanges `json:"memoryRequestRanges"`
+	MemoryLimitsMissing   Severity       `json:"memoryLimitsMissing"`
+	MemoryLimitRanges     ResourceRanges `json:"memoryLimitRanges"`
 }
 
-// ResourceList maps the resource name to a range on min and max values.
-type ResourceList map[corev1.ResourceName]ResourceMinMax
-
-// ResourceMinMax sets a range for a min and max setting for a resource.
-type ResourceMinMax struct {
-	Min *resource.Quantity `json:"min"`
-	Max *resource.Quantity `json:"max"`
+// ResourceRanges contains config for requests or limits for a specific resource.
+type ResourceRanges struct {
+	Warning ResourceRange `json:"warning"`
+	Error   ResourceRange `json:"error"`
 }
 
-// Probes contains config for the readiness and liveness probes.
-type Probes struct {
-	Readiness ResourceRequire `json:"readiness"`
-	Liveness  ResourceRequire `json:"liveness"`
+// ResourceRange can contain below and above conditions for validation.
+type ResourceRange struct {
+	Below *resource.Quantity `json:"below"`
+	Above *resource.Quantity `json:"above"`
 }
 
-// ResourceRequire indicates if this resource should be validated.
-type ResourceRequire struct {
-	Require bool `json:"require"`
+// HealthChecks contains config for readiness and liveness probes.
+type HealthChecks struct {
+	ReadinessProbeMissing Severity `json:"readinessProbeMissing"`
+	LivenessProbeMissing  Severity `json:"livenessProbeMissing"`
 }
 
 // Images contains the config for images.
 type Images struct {
-	TagRequired    bool     `json:"tagRequired"`
-	WhitelistRepos []string `json:"whitelistRepos"`
+	TagNotSpecified     Severity          `json:"tagNotSpecified"`
+	PullPolicyNotAlways Severity          `json:"pullPolicyNotAlways"`
+	Whitelist           ErrorWarningLists `json:"whitelist"`
+	Blacklist           ErrorWarningLists `json:"blacklist"`
 }
 
-// HostNetworking contains the config for host networking validations.
-type HostNetworking struct {
-	HostAlias   ResourceRequire `json:"hostAlias"`
-	HostIPC     ResourceRequire `json:"hostIPC"`
-	HostNetwork ResourceRequire `json:"hostNetwork"`
-	HostPID     ResourceRequire `json:"hostPID"`
-	HostPort    ResourceRequire `json:"hostPort"`
+// ErrorWarningLists provides lists of patterns to match or avoid in image tags.
+type ErrorWarningLists struct {
+	Error   []string `json:"error"`
+	Warning []string `json:"warning"`
+}
+
+// Networking contains the config for networking validations.
+type Networking struct {
+	HostAliasSet   Severity `json:"hostAliasSet"`
+	HostIPCSet     Severity `json:"hostIPCSet"`
+	HostNetworkSet Severity `json:"hostNetworkSet"`
+	HostPIDSet     Severity `json:"hostPIDSet"`
+	HostPortSet    Severity `json:"hostPortSet"`
+}
+
+// Security contains the config for security validations.
+type Security struct {
+	RunAsNonRoot              Severity             `json:"runAsNonRoot"`
+	RunAsPriviliged           Severity             `json:"runAsPriviliged"`
+	NotReadOnlyRootFileSystem Severity             `json:"notReadOnlyRootFileSystem"`
+	Capabilities              SecurityCapabilities `json:"capabilities"`
+}
+
+// SecurityCapabilities contains the config for security capabilities validations.
+type SecurityCapabilities struct {
+	Whitelist ErrorWarningLists `json:"whitelist"`
+	Blacklist ErrorWarningLists `json:"blacklist"`
 }
 
 // ParseFile parses config from a file.
