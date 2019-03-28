@@ -18,15 +18,9 @@ const (
 	TemplateFile = "pkg/dashboard/templates/" + TemplateName
 )
 
-// TemplateData represents data in a format that's template friendly.
-type TemplateData struct {
-	ClusterSummary    *validator.ResultSummary
-	NamespacedResults validator.NamespacedResults
-}
-
 // MainHandler gets template data and renders the dashboard with it.
 func MainHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration, kubeAPI *kube.API) {
-	templateData, err := getTemplateData(c, kubeAPI)
+	templateData, err := validator.RunAudit(c, kubeAPI)
 	if err != nil {
 		http.Error(w, "Error Fetching Deployments", 500)
 		return
@@ -62,7 +56,7 @@ func MainHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration, k
 
 // EndpointHandler gets template data and renders json with it.
 func EndpointHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration, kubeAPI *kube.API) {
-	templateData, err := getTemplateData(c, kubeAPI)
+	templateData, err := validator.RunAudit(c, kubeAPI)
 	if err != nil {
 		http.Error(w, "Error Fetching Deployments", 500)
 		return
@@ -71,37 +65,4 @@ func EndpointHandler(w http.ResponseWriter, r *http.Request, c conf.Configuratio
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(templateData)
-}
-
-func getTemplateData(config conf.Configuration, kubeAPI *kube.API) (TemplateData, error) {
-
-	// TODO: Once we are validating more than deployments,
-	// we will need to merge the namespaceResults that get returned
-	// from each validation.
-	nsResults, err := validator.ValidateDeploys(config, kubeAPI)
-	if err != nil {
-		return TemplateData{}, err
-	}
-
-	var clusterSuccesses, clusterErrors, clusterWarnings uint
-
-	// Aggregate all summary counts to get a clusterwide count.
-	for _, nsRes := range nsResults {
-		for _, rr := range nsRes.Results {
-			clusterErrors += rr.Summary.Errors
-			clusterWarnings += rr.Summary.Warnings
-			clusterSuccesses += rr.Summary.Successes
-		}
-	}
-
-	templateData := TemplateData{
-		ClusterSummary: &validator.ResultSummary{
-			Errors:    clusterErrors,
-			Warnings:  clusterWarnings,
-			Successes: clusterSuccesses,
-		},
-		NamespacedResults: nsResults,
-	}
-
-	return templateData, nil
 }
