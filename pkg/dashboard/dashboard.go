@@ -33,10 +33,10 @@ func MainHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration, k
 	}
 	tmpl, err := template.New(TemplateName).Funcs(template.FuncMap{
 		"getWarningWidth": func(rs validator.ResultSummary, fullWidth int) uint {
-			return uint(float64(rs.Successes+rs.Warnings) / float64(rs.Successes+rs.Warnings+rs.Failures) * float64(fullWidth))
+			return uint(float64(rs.Successes+rs.Warnings) / float64(rs.Successes+rs.Warnings+rs.Errors) * float64(fullWidth))
 		},
 		"getSuccessWidth": func(rs validator.ResultSummary, fullWidth int) uint {
-			return uint(float64(rs.Successes) / float64(rs.Successes+rs.Warnings+rs.Failures) * float64(fullWidth))
+			return uint(float64(rs.Successes) / float64(rs.Successes+rs.Warnings+rs.Errors) * float64(fullWidth))
 		},
 		"getIcon": func(rm validator.ResultMessage) string {
 			switch rm.Type {
@@ -96,7 +96,7 @@ func getTemplateData(config conf.Configuration, kubeAPI *kube.API) (TemplateData
 
 	templateData := TemplateData{
 		ClusterSummary: &validator.ResultSummary{
-			Errors:  clusterErrors,
+			Errors:    clusterErrors,
 			Warnings:  clusterWarnings,
 			Successes: clusterSuccesses,
 		},

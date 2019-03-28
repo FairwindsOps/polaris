@@ -160,7 +160,7 @@ body {
 .namespace-content .extra h4 {
   font-weight: bold;
   font-size: 15px;
-  margin: 12px 25px 5px;
+  margin: 15px 25px 6px;
 }
 
 .namespace-content .extra ul {
@@ -178,10 +178,10 @@ body {
 
 .namespace-content .extra i {
   display: inline-block;
-  margin-right: 10px;
+  margin-right: 7px;
   text-align: center;
   width: 20px;
-  font-size: 20px;
+  font-size: 17px;
   font-weight: bold;
   position: relative;
   bottom: -3px;
@@ -193,10 +193,9 @@ body {
 
 .namespace-content .extra .warning i {
   color: #f26c21;
-  font-size: 15px;
 }
 
-.namespace-content .extra .failure i {
+.namespace-content .extra .error i {
   color: #a11f4c;
 }
 

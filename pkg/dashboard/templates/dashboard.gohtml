@@ -57,7 +57,7 @@
 
                   {{ range .PodResults}}
                     <div class="extra">
-                      <h4>Pod:</h4>
+                      <h4>Pod Spec:</h4>
                       <ul>
                         {{ range $message := .Messages}}
                           <li class="{{ .Type }}"><i class="{{ getIcon $message }}"></i> {{ .Message }}</li>
