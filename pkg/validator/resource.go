@@ -51,7 +51,7 @@ func (rv *ResourceValidation) addError(message string) {
 	rv.Summary.Errors++
 	rv.Errors = append(rv.Errors, &ResultMessage{
 		Message: message,
-		Type:    conf.SeverityError,
+		Type:    MessageTypeError,
 	})
 }
 
@@ -59,7 +59,7 @@ func (rv *ResourceValidation) addWarning(message string) {
 	rv.Summary.Warnings++
 	rv.Warnings = append(rv.Warnings, &ResultMessage{
 		Message: message,
-		Type:    conf.SeverityWarning,
+		Type:    MessageTypeWarning,
 	})
 }
 
@@ -67,6 +67,6 @@ func (rv *ResourceValidation) addSuccess(message string) {
 	rv.Summary.Successes++
 	rv.Successes = append(rv.Successes, &ResultMessage{
 		Message: message,
-		Type:    conf.SeveritySuccess,
+		Type:    MessageTypeSuccess,
 	})
 }

@@ -14,8 +14,18 @@
 
 package validator
 
-import (
-	conf "github.com/reactiveops/fairwinds/pkg/config"
+// MessageType represents the type of Message
+type MessageType string
+
+const (
+	// MessageTypeSuccess indicates a validation success
+	MessageTypeSuccess MessageType = "success"
+
+	// MessageTypeWarning indicates a validation warning
+	MessageTypeWarning MessageType = "warning"
+
+	// MessageTypeError indicates a validation error
+	MessageTypeError MessageType = "error"
 )
 
 // NamespacedResult groups resource results by namespace.
@@ -59,7 +69,7 @@ type PodResult struct {
 // ResultMessage contains a message and a type indicator (success, warning, or error).
 type ResultMessage struct {
 	Message string
-	Type    conf.Severity
+	Type    MessageType
 }
 
 // Score represents a percentage of validations that were successful.
