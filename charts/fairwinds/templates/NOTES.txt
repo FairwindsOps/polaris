@@ -1,0 +1,12 @@
+** Please be patient while the chart is being deployed **
+
+Enjoy Fairwinds and smooth sailing!
+
+{{- if contains "ClusterIP" .Values.dashboard.service.type }}
+
+## To view the dashboard execute these commands:
+
+kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ template "fullname" . }}-dashboard 8080:80 &
+open http://localhost:8080
+
+{{- end }}

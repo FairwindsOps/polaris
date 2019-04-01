@@ -1,0 +1,67 @@
+{{- if .Values.webhook.enable -}}
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    checksum/config: '{{ include (print $.Template.BasePath "/fairwinds.configmap.yaml") . | sha256sum }}'
+  labels:
+    app: '{{.Release.Name}}'
+    chart: '{{.Chart.Name}}-{{.Chart.Version}}'
+    heritage: '{{.Release.Service}}'
+    release: '{{.Release.Name}}'
+  name: '{{ template "fullname" . }}-webhook'
+spec:
+  replicas: {{.Values.webhookreplicas}}
+  selector:
+    matchLabels:
+      app: '{{.Release.Name}}'
+  template:
+    metadata:
+      labels:
+        app: '{{.Release.Name}}'
+    spec:
+      volumes:
+      - configMap:
+          name: '{{ template "fullname" . }}'
+        name: '{{ template "fullname" . }}'
+      - name: certs
+        secret:
+          secretName: '{{ template "fullname" . }}'
+      containers:
+      - command:
+        - fairwinds
+        - --webhook
+        image: '{{.Values.webhook.image.repository}}:{{.Values.webhook.image.tag}}'
+        imagePullPolicy: '{{.Values.webhook.image.pullPolicy}}'
+        name: webhook
+        ports:
+        - containerPort: 9876
+        livenessProbe:
+          exec:
+            command:
+            - sh 
+            - -c
+            - ps -ef | grep fairwinds
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        readinessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        volumeMounts:
+        - mountPath: /tmp/cert/
+          name: certs
+        - mountPath: /opt/app/config.yml
+          name: '{{ template "fullname" . }}'
+          readOnly: true
+          subPath: config.yml
+      serviceAccountName: '{{ template "fullname" . }}'
+{{- end -}}
