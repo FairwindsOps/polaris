@@ -7,7 +7,6 @@ metadata:
     heritage: '{{.Release.Service}}'
     release: '{{.Release.Name}}'
   name: '{{ template "fullname" . }}-dashboard'
-  namespace: '{{.Release.Namespace}}'
 spec:
   ports:
   - name: dashboard

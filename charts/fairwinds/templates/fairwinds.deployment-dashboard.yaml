@@ -10,7 +10,6 @@ metadata:
     heritage: '{{.Release.Service}}'
     release: '{{.Release.Name}}'
   name: '{{ template "fullname" . }}-dashboard'
-  namespace: '{{.Release.Namespace}}'
 spec:
   replicas: {{.Values.dashboard.replicas}}
   selector:
@@ -32,21 +31,20 @@ spec:
       - command:
         - fairwinds
         - --dashboard
-        image: '{{.Values.dashboard.image}}:{{.Values.dashboard.imageTag}}'
-        imagePullPolicy: '{{.Values.dashboard.imagePullPolicy}}'
+        image: '{{.Values.webhook.image.repository}}:{{.Values.webhook.image.tag}}'
+        imagePullPolicy: '{{.Values.webhook.image.pullPolicy}}'
         name: dashboard
         ports:
         - containerPort: 8080
         livenessProbe:
-          exec:
-            command:
-            - sh 
-            - -c
-            - ps -ef | grep fairwinds
+          httpGet:
+            path: /
+            port: 8080
           initialDelaySeconds: 5
           periodSeconds: 5
         readinessProbe:
-          tcpSocket:
+          httpGet:
+            path: /
             port: 8080
           initialDelaySeconds: 15
           periodSeconds: 20

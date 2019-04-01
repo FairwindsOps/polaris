@@ -10,7 +10,6 @@ metadata:
     heritage: '{{.Release.Service}}'
     release: '{{.Release.Name}}'
   name: '{{ template "fullname" . }}-webhook'
-  namespace: '{{.Release.Namespace}}'
 spec:
   replicas: {{.Values.webhookreplicas}}
   selector:
@@ -32,8 +31,8 @@ spec:
       - command:
         - fairwinds
         - --webhook
-        image: '{{.Values.webhook.image}}:{{.Values.webhook.imageTag}}'
-        imagePullPolicy: '{{.Values.webhook.imagePullPolicy}}'
+        image: '{{.Values.webhook.image.repository}}:{{.Values.webhook.image.tag}}'
+        imagePullPolicy: '{{.Values.webhook.image.pullPolicy}}'
         name: webhook
         ports:
         - containerPort: 9876
