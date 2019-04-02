@@ -39,10 +39,16 @@ $(function () {
       }
     }
   });
+});
 
+$(document).ready(function() {
   $('.namespace .resource-info .name').on('click', function(e) {
     console.log('clicked', arguments)
     console.log('parent', $(e.srcElement).parent('.resource-info'));
     $(e.srcElement).parents('.resource-info').toggleClass('expanded');
   });
+
+  if (window.location.search.indexOf('expand=') !== -1) {
+    $('.resource-info').addClass('expanded');
+  }
 });

@@ -15,3 +15,5 @@ fairwinds
 Tiltfile
 main
 .DS_Store
+
+node_modules
