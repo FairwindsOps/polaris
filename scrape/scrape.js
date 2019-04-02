@@ -7,7 +7,7 @@ const URL = `${HOST}?expand=true`;
   const page = await browser.newPage();
   await page.goto(URL, {waitUntil: 'networkidle0'});
   await page.waitFor(1000);
-  let height = await page.evaluate(() => document.documentElement.offsetHeight);
+  const height = await page.evaluate(() => document.documentElement.offsetHeight);
   const pdf = await page.pdf({ path: OUT_FILE, width: '8.27in', height: height + 'px' });
   await browser.close();
   return pdf
