@@ -39,3 +39,10 @@ helm upgrade --install fairwinds charts/fairwinds/ --namespace fairwinds --recre
 kubectl port-forward --namespace fairwinds svc/fairwinds-fairwinds-dashboard 8080:80 &
 open http://localhost:8080
 ```
+
+## Run tests
+```
+go list ./ | grep -v vendor | xargs golint -set_exit_status
+go list ./ | grep -v vendor | xargs go vet
+go test ./pkg/... -v -coverprofile cover.out
+```
