@@ -39,3 +39,9 @@ helm upgrade --install fairwinds charts/fairwinds/ --namespace fairwinds --recre
 kubectl port-forward --namespace fairwinds svc/fairwinds-fairwinds-dashboard 8080:80 &
 open http://localhost:8080
 ```
+
+## Create PDF snapshot
+```
+npm i -g scrape-to-pdf
+scrape-to-pdf fairwinds.pdf http://localhost:8080?expand=true
+```
