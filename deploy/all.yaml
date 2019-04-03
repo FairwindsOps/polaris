@@ -127,7 +127,7 @@ data:
       hostPIDSet: error
       hostPortSet: error
     security:
-      runAsPriviliged: warning
+      RunAsPrivileged: warning
       notReadOnlyRootFileSystem: warning
       runAsNonRoot: warning
       capabilities:

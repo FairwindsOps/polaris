@@ -331,3 +331,76 @@ func TestValidateImage(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateSecurity(t *testing.T) {
+	trueVar := true
+	falseVar := false
+
+	// Test setup.
+	emptyConf := conf.Security{}
+	standardConf := conf.Security{
+		RunAsRootAllowed:           conf.SeverityWarning,
+		RunAsPrivileged:            conf.SeverityError,
+		NotReadOnlyRootFileSystem:  conf.SeverityWarning,
+		PrivilegeEscalationAllowed: conf.SeverityError,
+	}
+
+	emptyCV := ContainerValidation{
+		Container: &corev1.Container{Name: ""},
+		ResourceValidation: &ResourceValidation{
+			Summary: &ResultSummary{},
+		},
+	}
+
+	badCV := ContainerValidation{
+		Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
+			RunAsNonRoot:             &falseVar,
+			ReadOnlyRootFilesystem:   &falseVar,
+			Privileged:               &trueVar,
+			AllowPrivilegeEscalation: &trueVar,
+		}},
+		ResourceValidation: &ResourceValidation{
+			Summary: &ResultSummary{},
+		},
+	}
+
+	var testCases = []struct {
+		name             string
+		securityConf     conf.Security
+		cv               ContainerValidation
+		expectedMessages []*ResultMessage
+	}{
+		{
+			name:             "empty security context + empty validation config",
+			securityConf:     emptyConf,
+			cv:               emptyCV,
+			expectedMessages: []*ResultMessage{},
+		},
+		{
+			name:         "bad security context + standard validation config",
+			securityConf: standardConf,
+			cv:           badCV,
+			expectedMessages: []*ResultMessage{{
+				Message: "Container is allowed to run as root",
+				Type:    "warning",
+			}, {
+				Message: "Container is not running with a read only filesystem",
+				Type:    "warning",
+			}, {
+				Message: "Container is not running as privileged",
+				Type:    "success",
+			}, {
+				Message: "Container does not allow privilege escalation",
+				Type:    "success",
+			}},
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.cv.validateSecurity(&tt.securityConf)
+			assert.Len(t, tt.cv.messages(), len(tt.expectedMessages))
+			assert.ElementsMatch(t, tt.cv.messages(), tt.expectedMessages)
+		})
+	}
+}

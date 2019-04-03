@@ -42,6 +42,7 @@ func ValidateContainer(cnConf *conf.Configuration, container *corev1.Container) 
 	cv.validateHealthChecks(&cnConf.HealthChecks)
 	cv.validateImage(&cnConf.Images)
 	cv.validateNetworking(&cnConf.Networking)
+	cv.validateSecurity(&cnConf.Security)
 
 	cRes := ContainerResult{
 		Name:     container.Name,
@@ -150,4 +151,125 @@ func (cv *ContainerValidation) validateNetworking(networkConf *conf.Networking) 
 			cv.addSuccess("Host port is not configured")
 		}
 	}
+}
+
+func (cv *ContainerValidation) validateSecurity(securityConf *conf.Security) {
+	securityContext := cv.Container.SecurityContext
+	if securityContext == nil {
+		securityContext = &corev1.SecurityContext{}
+	}
+
+	if securityContext.Capabilities == nil {
+		securityContext.Capabilities = &corev1.Capabilities{}
+	}
+
+	if securityConf.RunAsRootAllowed.IsActionable() {
+		if *securityContext.RunAsNonRoot {
+			cv.addSuccess("Container is not allowed to run as root")
+		} else {
+			cv.addFailure("Container is allowed to run as root", securityConf.RunAsRootAllowed)
+		}
+	}
+
+	if securityConf.RunAsPrivileged.IsActionable() {
+		if *securityContext.Privileged {
+			cv.addSuccess("Container is not running as privileged")
+		} else {
+			cv.addFailure("Container is running as privileged", securityConf.RunAsPrivileged)
+		}
+	}
+
+	if securityConf.NotReadOnlyRootFileSystem.IsActionable() {
+		if *securityContext.ReadOnlyRootFilesystem {
+			cv.addSuccess("Container is running with a read only filesystem")
+		} else {
+			cv.addFailure("Container is not running with a read only filesystem", securityConf.NotReadOnlyRootFileSystem)
+		}
+	}
+
+	if securityConf.PrivilegeEscalationAllowed.IsActionable() {
+		if *cv.Container.SecurityContext.AllowPrivilegeEscalation {
+			cv.addSuccess("Container does not allow privilege escalation")
+		} else {
+			cv.addFailure("Container allows privilege escalation", securityConf.PrivilegeEscalationAllowed)
+		}
+	}
+
+	capAdds := securityContext.Capabilities.Add
+	if len(securityConf.Capabilities.Added.Error) > 0 {
+		intersectCaps := intersection(capAdds, securityConf.Capabilities.Added.Error)
+		if len(intersectCaps) > 0 {
+			failMsg := fmt.Sprintf("Security capabilities added from error list: %v", intersectCaps)
+			cv.addFailure(failMsg, conf.SeverityError)
+		} else if contains(capAdds, "ALL") {
+			cv.addFailure("Container has all security capabilities added", conf.SeverityError)
+		} else {
+			cv.addSuccess("No security capabilities added from error list")
+		}
+	}
+
+	if len(securityConf.Capabilities.Added.Warning) > 0 {
+		intersectCaps := intersection(capAdds, securityConf.Capabilities.Added.Warning)
+		if len(intersectCaps) > 0 {
+			failMsg := fmt.Sprintf("Security capabilities added from warning list: %v", intersectCaps)
+			cv.addFailure(failMsg, conf.SeverityWarning)
+		} else if contains(capAdds, "ALL") {
+			cv.addFailure("Container has all security capabilities added", conf.SeverityWarning)
+		} else {
+			cv.addSuccess("No security capabilities added from warning list")
+		}
+	}
+
+	capDrops := securityContext.Capabilities.Drop
+	if len(securityConf.Capabilities.Dropped.Error) > 0 {
+		intersectCaps := intersection(capDrops, securityConf.Capabilities.Dropped.Error)
+		if len(intersectCaps) > 0 {
+			failMsg := fmt.Sprintf("Security capabilities dropped from error list: %v", intersectCaps)
+			cv.addFailure(failMsg, conf.SeverityError)
+		} else if contains(capDrops, "ALL") {
+			cv.addFailure("Container has all security capabilities dropped", conf.SeverityError)
+		} else {
+			cv.addSuccess("No security capabilities dropped from error list")
+		}
+	}
+
+	if len(securityConf.Capabilities.Dropped.Warning) > 0 {
+		intersectCaps := intersection(capDrops, securityConf.Capabilities.Dropped.Warning)
+		if len(intersectCaps) > 0 {
+			failMsg := fmt.Sprintf("Security capabilities dropped from warning list: %v", intersectCaps)
+			cv.addFailure(failMsg, conf.SeverityWarning)
+		} else if contains(capDrops, "ALL") {
+			cv.addFailure("Container has all security capabilities dropped", conf.SeverityWarning)
+		} else {
+			cv.addSuccess("No security capabilities dropped from warning list")
+		}
+	}
+
+}
+
+func contains(list []corev1.Capability, val corev1.Capability) bool {
+	for _, s := range list {
+		if s == val {
+			return true
+		}
+	}
+
+	return false
+}
+
+func intersection(a, b []corev1.Capability) []corev1.Capability {
+	result := []corev1.Capability{}
+	hash := map[corev1.Capability]bool{}
+
+	for _, s := range a {
+		hash[s] = true
+	}
+
+	for _, s := range b {
+		if hash[s] {
+			result = append(result, s)
+		}
+	}
+
+	return result
 }
