@@ -15,6 +15,9 @@
 
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/cash/3.0.0-beta.3/cash.min.js"></script>
+  <script>
+    window.fairwindsAuditData = {{ .JSON }};
+  </script>
   <script type="text/javascript" src="/static/js/main.js"></script>
 
 </head>
@@ -46,7 +49,7 @@
       </div>
     </div>
 
-    {{ range $namespace, $results := .NamespacedResults }}
+    {{ range $namespace, $results := .AuditData.NamespacedResults }}
       <div class="namespace">
         <h3>Namespace: <strong>{{ $namespace }}</strong></h3>
         <table class="namespace-content" cellspacing="0">
@@ -89,93 +92,14 @@
           {{ end }} {{/* end range .Results */}}
         </table>
       </div>
-    {{ end }} {{/* end range .NamespacedResults */}}
+    {{ end }} {{/* end range .AuditData.NamespacedResults */}}
   </div>
 
   <div class="footer">
     &copy; 2019, <a href="https://reactiveops.com?source=fairwinds">ReactiveOps Inc.</a>
   </div>
 
-  <script>
-    $(function () {
-      var namespaceChart = new Chart("namespaceScoreChart", {
-        type: 'bar',
-        data: {
-          labels: [
-            {{ range $namespace, $results := .NamespacedResults }}
-              "{{ $namespace }}",
-            {{ end }}
-          ],
-          datasets: [{
-            label: 'Passing',
-            data: [
-              {{ range $namespace, $results := .NamespacedResults }}
-                "{{ $results.Summary.Successes }}",
-              {{ end }}
-            ],
-            backgroundColor: '#8BD2DC',
-          },{
-            label: 'Warning',
-            data: [
-              {{ range $namespace, $results := .NamespacedResults }}
-                "{{ $results.Summary.Warnings }}",
-              {{ end }}
-            ],
-            backgroundColor: '#f26c21',
-          },{
-            label: 'Failing',
-            data: [
-              {{ range $namespace, $results := .NamespacedResults }}
-                "{{ $results.Summary.Errors }}",
-              {{ end }}
-            ],
-            backgroundColor: '#a11f4c',
-          }]
-        },
-        options: {
-          legend: {
-            display: false,
-          },
-          scales: {
-            xAxes: [{
-              stacked: true,
-            }],
-            yAxes: [{
-              stacked: true,
-              ticks: {
-                beginAtZero: true
-              }
-            }]
-          }
-        }
-      });
-
-      var clusterChart = new Chart("clusterScoreChart", {
-        type: 'doughnut',
-        data: {
-          labels: ["Passing", "Warning", "Failing"],
-          datasets: [{
-            data: [{{ .ClusterSummary.Successes }}, {{ .ClusterSummary.Warnings }}, {{ .ClusterSummary.Errors }}],
-            backgroundColor: ['#8BD2DC','#f26c21','#a11f4c'],
-          }]
-        },
-        options: {
-          // responsive: false,
-          cutoutPercentage: 75,
-          legend: {
-            display: false,
-          },
-          elements: {
-            center: {
-              text: '{{ .ClusterSummary.Score }}%',
-              color: '#333', //Default black
-              fontStyle: 'Helvetica', //Default Arial
-              sidePadding: 30 //Default 20 (as a percentage)
-            }
-          }
-        }
-      });
-    });
+  <script src="/static/js/charts.js">
   </script>
 </body>
 
