@@ -98,14 +98,15 @@ type Security struct {
 
 // SecurityCapabilities contains the config for security capabilities validations.
 type SecurityCapabilities struct {
-	Added   ErrorWarningCapLists `json:"added"`
-	Dropped ErrorWarningCapLists `json:"dropped"`
+	Error   SecurityCapabilityLists `json:"error"`
+	Warning SecurityCapabilityLists `json:"warning"`
 }
 
-// ErrorWarningCapLists provides lists of capabilities that should trigger an error or warning.
-type ErrorWarningCapLists struct {
-	Error   []corev1.Capability `json:"error"`
-	Warning []corev1.Capability `json:"warning"`
+// SecurityCapabilityLists contains the config for security capabilitie list validations.
+type SecurityCapabilityLists struct {
+	IfAnyAdded       []corev1.Capability `json:"ifAnyAdded"`
+	IfAnyAddedBeyond []corev1.Capability `json:"ifAnyAddedBeyond"`
+	IfAnyNotDropped  []corev1.Capability `json:"ifAnyNotDropped"`
 }
 
 // ParseFile parses config from a file.

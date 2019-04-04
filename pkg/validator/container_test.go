@@ -343,6 +343,14 @@ func TestValidateSecurity(t *testing.T) {
 		RunAsPrivileged:            conf.SeverityError,
 		NotReadOnlyRootFileSystem:  conf.SeverityWarning,
 		PrivilegeEscalationAllowed: conf.SeverityError,
+		Capabilities: conf.SecurityCapabilities{
+			Error: conf.SecurityCapabilityLists{
+				IfAnyAdded: []corev1.Capability{"ALL", "SYS_ADMIN", "NET_ADMIN"},
+			},
+			Warning: conf.SecurityCapabilityLists{
+				IfAnyAddedBeyond: []corev1.Capability{"NONE"},
+			},
+		},
 	}
 
 	emptyCV := ContainerValidation{
@@ -358,6 +366,24 @@ func TestValidateSecurity(t *testing.T) {
 			ReadOnlyRootFilesystem:   &falseVar,
 			Privileged:               &trueVar,
 			AllowPrivilegeEscalation: &trueVar,
+			Capabilities: &corev1.Capabilities{
+				Add: []corev1.Capability{"AUDIT_CONTROL", "SYS_ADMIN", "NET_ADMIN"},
+			},
+		}},
+		ResourceValidation: &ResourceValidation{
+			Summary: &ResultSummary{},
+		},
+	}
+
+	goodCV := ContainerValidation{
+		Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
+			RunAsNonRoot:             &trueVar,
+			ReadOnlyRootFilesystem:   &trueVar,
+			Privileged:               &falseVar,
+			AllowPrivilegeEscalation: &falseVar,
+			Capabilities: &corev1.Capabilities{
+				Drop: []corev1.Capability{"ALL"},
+			},
 		}},
 		ResourceValidation: &ResourceValidation{
 			Summary: &ResultSummary{},
@@ -377,9 +403,9 @@ func TestValidateSecurity(t *testing.T) {
 			expectedMessages: []*ResultMessage{},
 		},
 		{
-			name:         "bad security context + standard validation config",
+			name:         "empty security context + standard validation config",
 			securityConf: standardConf,
-			cv:           badCV,
+			cv:           emptyCV,
 			expectedMessages: []*ResultMessage{{
 				Message: "Container is allowed to run as root",
 				Type:    "warning",
@@ -391,6 +417,60 @@ func TestValidateSecurity(t *testing.T) {
 				Type:    "success",
 			}, {
 				Message: "Container does not allow privilege escalation",
+				Type:    "success",
+			}, {
+				Message: "No security capabilities added from error list",
+				Type:    "success",
+			}, {
+				Message: "No security capabilities added beyond warning list",
+				Type:    "success",
+			}},
+		},
+		{
+			name:         "bad security context + standard validation config",
+			securityConf: standardConf,
+			cv:           badCV,
+			expectedMessages: []*ResultMessage{{
+				Message: "Security capabilities added from error list: SYS_ADMIN, NET_ADMIN",
+				Type:    "error",
+			}, {
+				Message: "Container allows privilege escalation",
+				Type:    "error",
+			}, {
+				Message: "Container is running as privileged",
+				Type:    "error",
+			}, {
+				Message: "Security capabilities added beyond warning list: AUDIT_CONTROL, SYS_ADMIN, NET_ADMIN",
+				Type:    "warning",
+			}, {
+				Message: "Container is allowed to run as root",
+				Type:    "warning",
+			}, {
+				Message: "Container is not running with a read only filesystem",
+				Type:    "warning",
+			}},
+		},
+		{
+			name:         "good security context + standard validation config",
+			securityConf: standardConf,
+			cv:           goodCV,
+			expectedMessages: []*ResultMessage{{
+				Message: "Container is not allowed to run as root",
+				Type:    "success",
+			}, {
+				Message: "Container is running with a read only filesystem",
+				Type:    "success",
+			}, {
+				Message: "Container is not running as privileged",
+				Type:    "success",
+			}, {
+				Message: "Container does not allow privilege escalation",
+				Type:    "success",
+			}, {
+				Message: "No security capabilities added from error list",
+				Type:    "success",
+			}, {
+				Message: "No security capabilities added beyond warning list",
 				Type:    "success",
 			}},
 		},

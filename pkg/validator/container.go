@@ -159,20 +159,16 @@ func (cv *ContainerValidation) validateSecurity(securityConf *conf.Security) {
 		securityContext = &corev1.SecurityContext{}
 	}
 
-	if securityContext.Capabilities == nil {
-		securityContext.Capabilities = &corev1.Capabilities{}
-	}
-
 	if securityConf.RunAsRootAllowed.IsActionable() {
-		if *securityContext.RunAsNonRoot {
-			cv.addSuccess("Container is not allowed to run as root")
-		} else {
+		if securityContext.RunAsNonRoot == (*bool)(nil) || !*securityContext.RunAsNonRoot {
 			cv.addFailure("Container is allowed to run as root", securityConf.RunAsRootAllowed)
+		} else {
+			cv.addSuccess("Container is not allowed to run as root")
 		}
 	}
 
 	if securityConf.RunAsPrivileged.IsActionable() {
-		if *securityContext.Privileged {
+		if securityContext.Privileged == (*bool)(nil) || !*securityContext.Privileged {
 			cv.addSuccess("Container is not running as privileged")
 		} else {
 			cv.addFailure("Container is running as privileged", securityConf.RunAsPrivileged)
@@ -180,84 +176,75 @@ func (cv *ContainerValidation) validateSecurity(securityConf *conf.Security) {
 	}
 
 	if securityConf.NotReadOnlyRootFileSystem.IsActionable() {
-		if *securityContext.ReadOnlyRootFilesystem {
-			cv.addSuccess("Container is running with a read only filesystem")
-		} else {
+		if securityContext.ReadOnlyRootFilesystem == (*bool)(nil) || !*securityContext.ReadOnlyRootFilesystem {
 			cv.addFailure("Container is not running with a read only filesystem", securityConf.NotReadOnlyRootFileSystem)
+		} else {
+			cv.addSuccess("Container is running with a read only filesystem")
 		}
 	}
 
 	if securityConf.PrivilegeEscalationAllowed.IsActionable() {
-		if *cv.Container.SecurityContext.AllowPrivilegeEscalation {
+		if securityContext.AllowPrivilegeEscalation == (*bool)(nil) || !*securityContext.AllowPrivilegeEscalation {
 			cv.addSuccess("Container does not allow privilege escalation")
 		} else {
 			cv.addFailure("Container allows privilege escalation", securityConf.PrivilegeEscalationAllowed)
 		}
 	}
 
-	capAdds := securityContext.Capabilities.Add
-	if len(securityConf.Capabilities.Added.Error) > 0 {
-		intersectCaps := intersection(capAdds, securityConf.Capabilities.Added.Error)
-		if len(intersectCaps) > 0 {
-			failMsg := fmt.Sprintf("Security capabilities added from error list: %v", intersectCaps)
-			cv.addFailure(failMsg, conf.SeverityError)
-		} else if contains(capAdds, "ALL") {
-			cv.addFailure("Container has all security capabilities added", conf.SeverityError)
-		} else {
-			cv.addSuccess("No security capabilities added from error list")
-		}
-	}
-
-	if len(securityConf.Capabilities.Added.Warning) > 0 {
-		intersectCaps := intersection(capAdds, securityConf.Capabilities.Added.Warning)
-		if len(intersectCaps) > 0 {
-			failMsg := fmt.Sprintf("Security capabilities added from warning list: %v", intersectCaps)
-			cv.addFailure(failMsg, conf.SeverityWarning)
-		} else if contains(capAdds, "ALL") {
-			cv.addFailure("Container has all security capabilities added", conf.SeverityWarning)
-		} else {
-			cv.addSuccess("No security capabilities added from warning list")
-		}
-	}
-
-	capDrops := securityContext.Capabilities.Drop
-	if len(securityConf.Capabilities.Dropped.Error) > 0 {
-		intersectCaps := intersection(capDrops, securityConf.Capabilities.Dropped.Error)
-		if len(intersectCaps) > 0 {
-			failMsg := fmt.Sprintf("Security capabilities dropped from error list: %v", intersectCaps)
-			cv.addFailure(failMsg, conf.SeverityError)
-		} else if contains(capDrops, "ALL") {
-			cv.addFailure("Container has all security capabilities dropped", conf.SeverityError)
-		} else {
-			cv.addSuccess("No security capabilities dropped from error list")
-		}
-	}
-
-	if len(securityConf.Capabilities.Dropped.Warning) > 0 {
-		intersectCaps := intersection(capDrops, securityConf.Capabilities.Dropped.Warning)
-		if len(intersectCaps) > 0 {
-			failMsg := fmt.Sprintf("Security capabilities dropped from warning list: %v", intersectCaps)
-			cv.addFailure(failMsg, conf.SeverityWarning)
-		} else if contains(capDrops, "ALL") {
-			cv.addFailure("Container has all security capabilities dropped", conf.SeverityWarning)
-		} else {
-			cv.addSuccess("No security capabilities dropped from warning list")
-		}
-	}
-
+	cv.validateCapabilities(securityConf.Capabilities.Error, conf.SeverityError)
+	cv.validateCapabilities(securityConf.Capabilities.Warning, conf.SeverityWarning)
 }
 
-func contains(list []corev1.Capability, val corev1.Capability) bool {
-	for _, s := range list {
-		if s == val {
-			return true
+func (cv *ContainerValidation) validateCapabilities(confLists conf.SecurityCapabilityLists, severity conf.Severity) {
+	capabilities := &corev1.Capabilities{}
+	if cv.Container.SecurityContext != nil && cv.Container.SecurityContext.Capabilities != nil {
+		capabilities = cv.Container.SecurityContext.Capabilities
+	}
+
+	if len(confLists.IfAnyAdded) > 0 {
+		intersectAdds := capIntersection(capabilities.Add, confLists.IfAnyAdded)
+		if len(intersectAdds) > 0 {
+			capsString := commaSeparatedCapabilities(intersectAdds)
+			cv.addFailure(fmt.Sprintf("Security capabilities added from %v list: %v", severity, capsString), severity)
+		} else if capContains(capabilities.Add, "ALL") {
+			cv.addFailure(fmt.Sprintf("All security capabilities added, violating %v list", severity), severity)
+		} else {
+			cv.addSuccess(fmt.Sprintf("No security capabilities added from %v list", severity))
 		}
 	}
 
-	return false
+	if len(confLists.IfAnyAddedBeyond) > 0 {
+		differentAdds := capDifference(capabilities.Add, confLists.IfAnyAddedBeyond)
+		if len(differentAdds) > 0 {
+			capsString := commaSeparatedCapabilities(differentAdds)
+			cv.addFailure(fmt.Sprintf("Security capabilities added beyond %v list: %v", severity, capsString), severity)
+		} else if capContains(capabilities.Add, "ALL") {
+			cv.addFailure(fmt.Sprintf("All security capabilities added, going beyond %v list", severity), severity)
+		} else {
+			cv.addSuccess(fmt.Sprintf("No security capabilities added beyond %v list", severity))
+		}
+	}
+
+	if len(confLists.IfAnyNotDropped) > 0 {
+		intersectDrops := capIntersection(capabilities.Drop, confLists.IfAnyNotDropped)
+		if len(intersectDrops) > 0 && !capContains(capabilities.Drop, "ALL") {
+			capsString := commaSeparatedCapabilities(intersectDrops)
+			cv.addFailure(fmt.Sprintf("Security capabilities not dropped from %v list: %v", severity, capsString), severity)
+		} else {
+			cv.addSuccess(fmt.Sprintf("All security capabilities dropped from %v list", severity))
+		}
+	}
 }
 
-func intersection(a, b []corev1.Capability) []corev1.Capability {
+func commaSeparatedCapabilities(caps []corev1.Capability) string {
+	capsString := ""
+	for _, cap := range caps {
+		capsString = fmt.Sprintf("%s, %s", capsString, cap)
+	}
+	return capsString[2:]
+}
+
+func capIntersection(a, b []corev1.Capability) []corev1.Capability {
 	result := []corev1.Capability{}
 	hash := map[corev1.Capability]bool{}
 
@@ -272,4 +259,31 @@ func intersection(a, b []corev1.Capability) []corev1.Capability {
 	}
 
 	return result
+}
+
+func capDifference(b, a []corev1.Capability) []corev1.Capability {
+	result := []corev1.Capability{}
+	hash := map[corev1.Capability]bool{}
+
+	for _, s := range a {
+		hash[s] = true
+	}
+
+	for _, s := range b {
+		if !hash[s] {
+			result = append(result, s)
+		}
+	}
+
+	return result
+}
+
+func capContains(list []corev1.Capability, val corev1.Capability) bool {
+	for _, s := range list {
+		if s == val {
+			return true
+		}
+	}
+
+	return false
 }
