@@ -1,6 +1,7 @@
 package dashboard
 
 import (
+	"bytes"
 	"encoding/json"
 	"html/template"
 	"net/http"
@@ -47,10 +48,13 @@ func MainHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration, k
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	err = template.Must(tmpl.Clone()).Execute(w, templateData)
+
+	buf := &bytes.Buffer{}
+	err = template.Must(tmpl.Clone()).Execute(buf, templateData)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	} else {
+		buf.WriteTo(w)
 	}
 }
 
