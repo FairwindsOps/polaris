@@ -3,6 +3,7 @@ package dashboard
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"net/http"
 
@@ -22,13 +23,14 @@ const (
 // TemplateData is passed to the dashboard HTML template
 type TemplateData struct {
 	AuditData validator.AuditData
-	JSON template.JS
+	JSON      template.JS
 }
 
 // MainHandler gets template data and renders the dashboard with it.
 func MainHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration, kubeAPI *kube.API) {
 	auditData, err := validator.RunAudit(c, kubeAPI)
 	if err != nil {
+		fmt.Printf("Error getting audit data %v \n", err)
 		http.Error(w, "Error running audit", 500)
 		return
 	}
@@ -39,7 +41,7 @@ func MainHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration, k
 	}
 	templateData := TemplateData{
 		AuditData: auditData,
-		JSON: template.JS(jsonData),
+		JSON:      template.JS(jsonData),
 	}
 	tmpl, err := template.New(TemplateName).Funcs(template.FuncMap{
 		"getWarningWidth": func(rs validator.ResultSummary, fullWidth int) uint {
