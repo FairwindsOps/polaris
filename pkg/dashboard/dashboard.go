@@ -19,12 +19,27 @@ const (
 	TemplateFile = "pkg/dashboard/templates/" + TemplateName
 )
 
+// TemplateData is passed to the dashboard HTML template
+type TemplateData struct {
+	AuditData validator.AuditData
+	JSON template.JS
+}
+
 // MainHandler gets template data and renders the dashboard with it.
 func MainHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration, kubeAPI *kube.API) {
-	templateData, err := validator.RunAudit(c, kubeAPI)
+	auditData, err := validator.RunAudit(c, kubeAPI)
 	if err != nil {
-		http.Error(w, "Error Fetching Deployments", 500)
+		http.Error(w, "Error running audit", 500)
 		return
+	}
+	jsonData, err := json.Marshal(auditData)
+	if err != nil {
+		http.Error(w, "Error serializing audit data", 500)
+		return
+	}
+	templateData := TemplateData{
+		AuditData: auditData,
+		JSON: template.JS(jsonData),
 	}
 	tmpl, err := template.New(TemplateName).Funcs(template.FuncMap{
 		"getWarningWidth": func(rs validator.ResultSummary, fullWidth int) uint {
