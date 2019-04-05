@@ -226,12 +226,13 @@ func (cv *ContainerValidation) validateCapabilities(confLists conf.SecurityCapab
 	}
 
 	if len(confLists.IfAnyNotDropped) > 0 {
-		intersectDrops := capIntersection(capabilities.Drop, confLists.IfAnyNotDropped)
-		if len(intersectDrops) > 0 && !capContains(capabilities.Drop, "ALL") {
-			capsString := commaSeparatedCapabilities(intersectDrops)
+		missingDrops := capDifference(confLists.IfAnyNotDropped, capabilities.Drop)
+
+		if len(missingDrops) > 0 && !capContains(capabilities.Drop, "ALL") {
+			capsString := commaSeparatedCapabilities(missingDrops)
 			cv.addFailure(fmt.Sprintf("Security capabilities not dropped from %v list: %v", severity, capsString), severity)
 		} else {
-			cv.addSuccess(fmt.Sprintf("All security capabilities dropped from %v list", severity))
+			cv.addSuccess(fmt.Sprintf("Required security capabilities dropped from %v list", severity))
 		}
 	}
 }
