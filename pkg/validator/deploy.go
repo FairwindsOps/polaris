@@ -67,6 +67,6 @@ func addResult(resResult ResourceResult, nsResults NamespacedResults, nsName str
 	// Aggregate all resource results summary counts to get a namespace wide count.
 	nsResult.Summary.Successes += resResult.Summary.Successes
 	nsResult.Summary.Warnings += resResult.Summary.Warnings
-	nsResult.Summary.Errors += resResult.Summary.Successes
+	nsResult.Summary.Errors += resResult.Summary.Errors
 	return nsResults
 }

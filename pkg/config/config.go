@@ -20,6 +20,7 @@ import (
 	"io"
 	"io/ioutil"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
@@ -88,16 +89,24 @@ type Networking struct {
 
 // Security contains the config for security validations.
 type Security struct {
-	RunAsNonRoot              Severity             `json:"runAsNonRoot"`
-	RunAsPriviliged           Severity             `json:"runAsPriviliged"`
-	NotReadOnlyRootFileSystem Severity             `json:"notReadOnlyRootFileSystem"`
-	Capabilities              SecurityCapabilities `json:"capabilities"`
+	RunAsRootAllowed           Severity             `json:"runAsRootAllowed"`
+	RunAsPrivileged            Severity             `json:"RunAsPrivileged"`
+	NotReadOnlyRootFileSystem  Severity             `json:"notReadOnlyRootFileSystem"`
+	PrivilegeEscalationAllowed Severity             `json:"privilegeEscalationAllowed"`
+	Capabilities               SecurityCapabilities `json:"capabilities"`
 }
 
 // SecurityCapabilities contains the config for security capabilities validations.
 type SecurityCapabilities struct {
-	Whitelist ErrorWarningLists `json:"whitelist"`
-	Blacklist ErrorWarningLists `json:"blacklist"`
+	Error   SecurityCapabilityLists `json:"error"`
+	Warning SecurityCapabilityLists `json:"warning"`
+}
+
+// SecurityCapabilityLists contains the config for security capabilitie list validations.
+type SecurityCapabilityLists struct {
+	IfAnyAdded       []corev1.Capability `json:"ifAnyAdded"`
+	IfAnyAddedBeyond []corev1.Capability `json:"ifAnyAddedBeyond"`
+	IfAnyNotDropped  []corev1.Capability `json:"ifAnyNotDropped"`
 }
 
 // ParseFile parses config from a file.

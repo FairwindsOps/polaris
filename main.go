@@ -58,9 +58,9 @@ func main() {
 
 	flag.Parse()
 
-	c, err := conf.ParseFile("config.yml")
+	c, err := conf.ParseFile("config.yaml")
 	if err != nil {
-		glog.Println("Error parsing config.yml:", err)
+		glog.Println("Error parsing config.yaml:", err)
 		os.Exit(1)
 	}
 
