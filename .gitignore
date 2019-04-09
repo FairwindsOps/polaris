@@ -6,6 +6,8 @@
 *.dylib
 fairwinds
 
+!deploy/helm/fairwinds
+
 # Test binary, build with `go test -c`
 *.test
 

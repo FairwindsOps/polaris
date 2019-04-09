@@ -3,30 +3,35 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   annotations:
-    checksum/config: '{{ include (print $.Template.BasePath "/fairwinds.configmap.yaml") . | sha256sum }}'
+    checksum/config: '{{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}'
+  name: {{ include "fairwinds.fullname" . }}-dashboard
   labels:
-    app: '{{.Release.Name}}'
-    chart: '{{.Chart.Name}}-{{.Chart.Version}}'
-    heritage: '{{.Release.Service}}'
-    release: '{{.Release.Name}}'
-  name: '{{ template "fullname" . }}-dashboard'
+    app.kubernetes.io/name: {{ include "fairwinds.name" . }}
+    helm.sh/chart: {{ include "fairwinds.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    component: dashboard
 spec:
   replicas: {{.Values.dashboard.replicas}}
   selector:
     matchLabels:
-      app: '{{.Release.Name}}'
+      app.kubernetes.io/name: {{ include "fairwinds.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      component: dashboard
   template:
     metadata:
       labels:
-        app: '{{.Release.Name}}'
+        app.kubernetes.io/name: {{ include "fairwinds.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        component: dashboard
     spec:
       volumes:
       - configMap:
-          name: '{{ template "fullname" . }}'
-        name: '{{ template "fullname" . }}'
+          name: {{ include "fairwinds.name" . }}
+        name: {{ include "fairwinds.name" . }}
       - name: certs
         secret:
-          secretName: '{{ template "fullname" . }}'
+          secretName: {{ include "fairwinds.name" . }}
       containers:
       - command:
         - fairwinds
@@ -56,9 +61,9 @@ spec:
             cpu: 100m
             memory: 128Mi
         volumeMounts:
-        - mountPath: /opt/app/config.yml
-          name: '{{ template "fullname" . }}'
+        - mountPath: /opt/app/config.yaml
+          name: {{ include "fairwinds.name" . }}
           readOnly: true
-          subPath: config.yml
-      serviceAccountName: '{{ template "fullname" . }}'
+          subPath: config.yaml
+      serviceAccountName: {{ include "fairwinds.name" . }}
 {{- end -}}
