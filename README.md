@@ -35,7 +35,7 @@ kubectl apply -f deploy/all.yaml
 
 * Create release with Helm:
 ```
-helm upgrade --install fairwinds charts/fairwinds/ --namespace fairwinds --recreate-pods
+helm upgrade --install fairwinds deploy/helm/fairwinds/ --namespace fairwinds --recreate-pods
 kubectl port-forward --namespace fairwinds svc/fairwinds-fairwinds-dashboard 8080:80 &
 open http://localhost:8080
 ```
