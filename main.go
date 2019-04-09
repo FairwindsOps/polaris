@@ -51,6 +51,7 @@ func main() {
 	dashboardPort := flag.Int("dashboard-port", 8080, "Port for the dashboard webserver")
 	webhookPort := flag.Int("webhook-port", 9876, "Port for the webhook webserver")
 	auditDestination := flag.String("audit-destination", "", "Destination URL to send audit results (prints to stdout if unspecified)")
+	configPath := flag.String("config", "config.yaml", "Location of Fairwinds configuration file")
 
 	var disableWebhookConfigInstaller bool
 	flag.BoolVar(&disableWebhookConfigInstaller, "disable-webhook-config-installer", false,
@@ -58,9 +59,9 @@ func main() {
 
 	flag.Parse()
 
-	c, err := conf.ParseFile("config.yaml")
+	c, err := conf.ParseFile(*configPath)
 	if err != nil {
-		glog.Println("Error parsing config.yaml:", err)
+		glog.Println("Error parsing config at " + *configPath, err)
 		os.Exit(1)
 	}
 

@@ -23,7 +23,8 @@ kubectl apply -f deploy/all.yaml
 
 ## Options
 
-* `dashboard` Runs the webserver for Fairwinds dashboard.
+* `config`: Specify a location for the Fairwinds config
+* `dashboard`: Runs the webserver for Fairwinds dashboard.
 * `dashboard-port`: Port for the dashboard webserver (default 8080)
 * `webhook`: Runs the webhook webserver.
 * `webhook-port`: Port for the webhook webserver (default 9876)
