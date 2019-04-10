@@ -16,6 +16,7 @@ package validator
 
 import (
 	conf "github.com/reactiveops/fairwinds/pkg/config"
+	"github.com/reactiveops/fairwinds/pkg/validator/messages"
 	corev1 "k8s.io/api/core/v1"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
@@ -87,9 +88,9 @@ func (pv *PodValidation) validateHostAlias(networkConf *conf.Networking) {
 		}
 
 		if hostAliasSet {
-			pv.addFailure("Host alias should is configured, but it shouldn't be", networkConf.HostAliasSet)
+			pv.addFailure(messages.HostAliasConfigured, networkConf.HostAliasSet)
 		} else {
-			pv.addSuccess("Host alias is not configured")
+			pv.addSuccess(messages.HostAliasNotConfigured)
 		}
 	}
 }
@@ -97,9 +98,9 @@ func (pv *PodValidation) validateHostAlias(networkConf *conf.Networking) {
 func (pv *PodValidation) validateHostIPC(networkConf *conf.Networking) {
 	if networkConf.HostIPCSet.IsActionable() {
 		if pv.Pod.HostIPC {
-			pv.addFailure("Host IPC is configured, but it shouldn't be", networkConf.HostIPCSet)
+			pv.addFailure(messages.HostIPCConfigured, networkConf.HostIPCSet)
 		} else {
-			pv.addSuccess("Host IPC is not configured")
+			pv.addSuccess(messages.HostIPCNotConfigured)
 		}
 	}
 }
@@ -107,9 +108,9 @@ func (pv *PodValidation) validateHostIPC(networkConf *conf.Networking) {
 func (pv *PodValidation) validateHostPID(networkConf *conf.Networking) {
 	if networkConf.HostPIDSet.IsActionable() {
 		if pv.Pod.HostPID {
-			pv.addFailure("Host PID is configured, but it shouldn't be", networkConf.HostPIDSet)
+			pv.addFailure(messages.HostPIDConfigured, networkConf.HostPIDSet)
 		} else {
-			pv.addSuccess("Host PID is not configured")
+			pv.addSuccess(messages.HostPIDNotConfigured)
 		}
 	}
 }
@@ -117,9 +118,9 @@ func (pv *PodValidation) validateHostPID(networkConf *conf.Networking) {
 func (pv *PodValidation) validateHostNetwork(networkConf *conf.Networking) {
 	if networkConf.HostNetworkSet.IsActionable() {
 		if pv.Pod.HostNetwork {
-			pv.addFailure("Host network is configured, but it shouldn't be", networkConf.HostNetworkSet)
+			pv.addFailure(messages.HostNetworkConfigured, networkConf.HostNetworkSet)
 		} else {
-			pv.addSuccess("Host network is not configured")
+			pv.addSuccess(messages.HostNetworkNotConfigured)
 		}
 	}
 }

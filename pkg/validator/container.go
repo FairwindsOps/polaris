@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	conf "github.com/reactiveops/fairwinds/pkg/config"
+	"github.com/reactiveops/fairwinds/pkg/validator/messages"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
@@ -63,27 +64,27 @@ func (cv *ContainerValidation) validateResources(resConf *conf.Resources) {
 	res := cv.Container.Resources
 
 	if resConf.CPURequestsMissing.IsActionable() && res.Requests.Cpu().MilliValue() == 0 {
-		cv.addFailure("CPU Requests are not set", resConf.CPURequestsMissing)
+		cv.addFailure(messages.CPURequestsMissing, resConf.CPURequestsMissing)
 	} else {
-		cv.validateResourceRange("CPU Requests", &resConf.CPURequestRanges, res.Requests.Cpu())
+		cv.validateResourceRange(messages.CPURequestsLabel, &resConf.CPURequestRanges, res.Requests.Cpu())
 	}
 
 	if resConf.CPULimitsMissing.IsActionable() && res.Limits.Cpu().MilliValue() == 0 {
-		cv.addFailure("CPU Limits are not set", resConf.CPULimitsMissing)
+		cv.addFailure(messages.CPULimitsMissing, resConf.CPULimitsMissing)
 	} else {
-		cv.validateResourceRange("CPU Limits", &resConf.CPULimitRanges, res.Requests.Cpu())
+		cv.validateResourceRange(messages.CPULimitsLabel, &resConf.CPULimitRanges, res.Requests.Cpu())
 	}
 
 	if resConf.MemoryRequestsMissing.IsActionable() && res.Requests.Memory().MilliValue() == 0 {
-		cv.addFailure("Memory Requests are not set", resConf.MemoryRequestsMissing)
+		cv.addFailure(messages.MemoryRequestsMissing, resConf.MemoryRequestsMissing)
 	} else {
-		cv.validateResourceRange("Memory Requests", &resConf.MemoryRequestRanges, res.Requests.Memory())
+		cv.validateResourceRange(messages.MemoryRequestsLabel, &resConf.MemoryRequestRanges, res.Requests.Memory())
 	}
 
 	if resConf.MemoryLimitsMissing.IsActionable() && res.Limits.Memory().MilliValue() == 0 {
-		cv.addFailure("Memory Limits are not set", resConf.MemoryLimitsMissing)
+		cv.addFailure(messages.MemoryLimitsMissing, resConf.MemoryLimitsMissing)
 	} else {
-		cv.validateResourceRange("Memory Limits", &resConf.MemoryLimitRanges, res.Limits.Memory())
+		cv.validateResourceRange(messages.MemoryLimitsLabel, &resConf.MemoryLimitRanges, res.Limits.Memory())
 	}
 }
 
@@ -94,32 +95,32 @@ func (cv *ContainerValidation) validateResourceRange(resourceName string, rangeC
 	errorBelow := rangeConf.Error.Below
 
 	if errorAbove != nil && errorAbove.MilliValue() < res.MilliValue() {
-		cv.addError(fmt.Sprintf("%s are too high", resourceName))
+		cv.addError(fmt.Sprintf(messages.ResourceAmountTooHigh, resourceName, errorAbove.String()))
 	} else if warnAbove != nil && warnAbove.MilliValue() < res.MilliValue() {
-		cv.addWarning(fmt.Sprintf("%s are too high", resourceName))
+		cv.addWarning(fmt.Sprintf(messages.ResourceAmountTooHigh, resourceName, warnAbove.String()))
 	} else if errorBelow != nil && errorBelow.MilliValue() > res.MilliValue() {
-		cv.addError(fmt.Sprintf("%s are too low", resourceName))
+		cv.addError(fmt.Sprintf(messages.ResourceAmountTooLow, resourceName, errorBelow.String()))
 	} else if warnBelow != nil && warnBelow.MilliValue() > res.MilliValue() {
-		cv.addWarning(fmt.Sprintf("%s are too low", resourceName))
+		cv.addWarning(fmt.Sprintf(messages.ResourceAmountTooLow, resourceName, warnBelow.String()))
 	} else {
-		cv.addSuccess(fmt.Sprintf("%s are within the expected range", resourceName))
+		cv.addSuccess(fmt.Sprintf(messages.ResourceAmountCorrect, resourceName))
 	}
 }
 
 func (cv *ContainerValidation) validateHealthChecks(conf *conf.HealthChecks) {
 	if conf.ReadinessProbeMissing.IsActionable() {
 		if cv.Container.ReadinessProbe == nil {
-			cv.addFailure("Readiness probe needs to be configured", conf.ReadinessProbeMissing)
+			cv.addFailure(messages.ReadinessProbeNotConfigured, conf.ReadinessProbeMissing)
 		} else {
-			cv.addSuccess("Readiness probe configured")
+			cv.addSuccess(messages.ReadinessProbeConfigured)
 		}
 	}
 
 	if conf.LivenessProbeMissing.IsActionable() {
 		if cv.Container.LivenessProbe == nil {
-			cv.addFailure("Liveness probe needs to be configured", conf.LivenessProbeMissing)
+			cv.addFailure(messages.LivenessProbeNotConfigured, conf.LivenessProbeMissing)
 		} else {
-			cv.addSuccess("Liveness probe configured")
+			cv.addSuccess(messages.LivenessProbeConfigured)
 		}
 	}
 }
@@ -128,9 +129,9 @@ func (cv *ContainerValidation) validateImage(imageConf *conf.Images) {
 	if imageConf.TagNotSpecified.IsActionable() {
 		img := strings.Split(cv.Container.Image, ":")
 		if len(img) == 1 || img[1] == "latest" {
-			cv.addFailure("Image tag should be specified", imageConf.TagNotSpecified)
+			cv.addFailure(messages.ImageTagNotSpecified, imageConf.TagNotSpecified)
 		} else {
-			cv.addSuccess("Image tag specified")
+			cv.addSuccess(messages.ImageTagSpecified)
 		}
 	}
 }
@@ -146,9 +147,9 @@ func (cv *ContainerValidation) validateNetworking(networkConf *conf.Networking) 
 		}
 
 		if hostPortSet {
-			cv.addFailure("Host port is configured, but it shouldn't be", networkConf.HostAliasSet)
+			cv.addFailure(messages.HostPortSet, networkConf.HostAliasSet)
 		} else {
-			cv.addSuccess("Host port is not configured")
+			cv.addSuccess(messages.HostPortNotSet)
 		}
 	}
 }
@@ -161,55 +162,68 @@ func (cv *ContainerValidation) validateSecurity(securityConf *conf.Security) {
 
 	if securityConf.RunAsRootAllowed.IsActionable() {
 		if securityContext.RunAsNonRoot == (*bool)(nil) || !*securityContext.RunAsNonRoot {
-			cv.addFailure("Container is allowed to run as root", securityConf.RunAsRootAllowed)
+			cv.addFailure(messages.RunAsRootEnabled, securityConf.RunAsRootAllowed)
 		} else {
-			cv.addSuccess("Container is not allowed to run as root")
+			cv.addSuccess(messages.RunAsRootDisabled)
 		}
 	}
 
 	if securityConf.RunAsPrivileged.IsActionable() {
 		if securityContext.Privileged == (*bool)(nil) || !*securityContext.Privileged {
-			cv.addSuccess("Container is not running as privileged")
+			cv.addSuccess(messages.RunAsPrivilegedDisabled)
 		} else {
-			cv.addFailure("Container is running as privileged", securityConf.RunAsPrivileged)
+			cv.addFailure(messages.RunAsPrivilegedEnabled, securityConf.RunAsPrivileged)
 		}
 	}
 
 	if securityConf.NotReadOnlyRootFileSystem.IsActionable() {
 		if securityContext.ReadOnlyRootFilesystem == (*bool)(nil) || !*securityContext.ReadOnlyRootFilesystem {
-			cv.addFailure("Container is not running with a read only filesystem", securityConf.NotReadOnlyRootFileSystem)
+			cv.addFailure(messages.WritableFilesystem, securityConf.NotReadOnlyRootFileSystem)
 		} else {
-			cv.addSuccess("Container is running with a read only filesystem")
+			cv.addSuccess(messages.ReadOnlyFilesystem)
 		}
 	}
 
 	if securityConf.PrivilegeEscalationAllowed.IsActionable() {
 		if securityContext.AllowPrivilegeEscalation == (*bool)(nil) || !*securityContext.AllowPrivilegeEscalation {
-			cv.addSuccess("Container does not allow privilege escalation")
+			cv.addSuccess(messages.PrivilegeEscalationDisallowed)
 		} else {
-			cv.addFailure("Container allows privilege escalation", securityConf.PrivilegeEscalationAllowed)
+			cv.addFailure(messages.PrivilegeEscalationAllowed, securityConf.PrivilegeEscalationAllowed)
 		}
 	}
 
-	cv.validateCapabilities(securityConf.Capabilities.Error, conf.SeverityError)
-	cv.validateCapabilities(securityConf.Capabilities.Warning, conf.SeverityWarning)
+	hasSecurityError :=
+		!cv.validateCapabilities(securityConf.Capabilities.Error, conf.SeverityError)
+	hasSecurityWarning :=
+		!cv.validateCapabilities(securityConf.Capabilities.Warning, conf.SeverityWarning)
+	hasSecurityCheck := func(confLists conf.SecurityCapabilityLists) bool {
+		return len(confLists.IfAnyAdded) > 0 ||
+			len(confLists.IfAnyAddedBeyond) > 0 ||
+			len(confLists.IfAnyNotDropped) > 0
+	}
+	if !hasSecurityError && !hasSecurityWarning &&
+		(hasSecurityCheck(securityConf.Capabilities.Error) ||
+			hasSecurityCheck(securityConf.Capabilities.Warning)) {
+		cv.addSuccess(messages.SecurityCapabilitiesOK)
+	}
 }
 
-func (cv *ContainerValidation) validateCapabilities(confLists conf.SecurityCapabilityLists, severity conf.Severity) {
+func (cv *ContainerValidation) validateCapabilities(confLists conf.SecurityCapabilityLists, severity conf.Severity) bool {
 	capabilities := &corev1.Capabilities{}
 	if cv.Container.SecurityContext != nil && cv.Container.SecurityContext.Capabilities != nil {
 		capabilities = cv.Container.SecurityContext.Capabilities
 	}
 
+	everythingOK := true
 	if len(confLists.IfAnyAdded) > 0 {
 		intersectAdds := capIntersection(capabilities.Add, confLists.IfAnyAdded)
 		if len(intersectAdds) > 0 {
 			capsString := commaSeparatedCapabilities(intersectAdds)
-			cv.addFailure(fmt.Sprintf("Security capabilities added from %v list: %v", severity, capsString), severity)
+			cv.addFailure(fmt.Sprintf(messages.HasBadSecurityCapabilities, capsString), severity)
+			everythingOK = false
 		} else if capContains(capabilities.Add, "ALL") {
-			cv.addFailure(fmt.Sprintf("All security capabilities added, violating %v list", severity), severity)
-		} else {
-			cv.addSuccess(fmt.Sprintf("No security capabilities added from %v list", severity))
+			cv.addFailure(fmt.Sprintf(messages.HasBadSecurityCapabilities, "ALL"), severity)
+			everythingOK = false
 		}
 	}
 
@@ -217,24 +231,24 @@ func (cv *ContainerValidation) validateCapabilities(confLists conf.SecurityCapab
 		differentAdds := capDifference(capabilities.Add, confLists.IfAnyAddedBeyond)
 		if len(differentAdds) > 0 {
 			capsString := commaSeparatedCapabilities(differentAdds)
-			cv.addFailure(fmt.Sprintf("Security capabilities added beyond %v list: %v", severity, capsString), severity)
+			cv.addFailure(fmt.Sprintf(messages.HasBadSecurityCapabilities, capsString), severity)
+			everythingOK = false
 		} else if capContains(capabilities.Add, "ALL") {
-			cv.addFailure(fmt.Sprintf("All security capabilities added, going beyond %v list", severity), severity)
-		} else {
-			cv.addSuccess(fmt.Sprintf("No security capabilities added beyond %v list", severity))
+			cv.addFailure(fmt.Sprintf(messages.HasBadSecurityCapabilities, "ALL"), severity)
+			everythingOK = false
 		}
 	}
 
 	if len(confLists.IfAnyNotDropped) > 0 {
 		missingDrops := capDifference(confLists.IfAnyNotDropped, capabilities.Drop)
-
 		if len(missingDrops) > 0 && !capContains(capabilities.Drop, "ALL") {
 			capsString := commaSeparatedCapabilities(missingDrops)
-			cv.addFailure(fmt.Sprintf("Security capabilities not dropped from %v list: %v", severity, capsString), severity)
-		} else {
-			cv.addSuccess(fmt.Sprintf("Required security capabilities dropped from %v list", severity))
+			cv.addFailure(fmt.Sprintf(messages.SecurityCapabilitiesNotDropped, capsString), severity)
+			everythingOK = false
 		}
 	}
+
+	return everythingOK
 }
 
 func commaSeparatedCapabilities(caps []corev1.Capability) string {
