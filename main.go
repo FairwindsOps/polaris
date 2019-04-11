@@ -84,16 +84,23 @@ func startDashboardServer(c conf.Configuration, port int) {
 	http.HandleFunc("/results.json", func(w http.ResponseWriter, r *http.Request) {
 		dashboard.EndpointHandler(w, r, c, k)
 	})
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("public/"))))
 	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "public/favicon.ico")
 	})
+	fileServer := http.FileServer(dashboard.GetAssetBox())
+	http.Handle("/static/", http.StripPrefix("/static/", fileServer))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
 			http.NotFound(w, r)
 			return
 		}
-		dashboard.MainHandler(w, r, c, k)
+		auditData, err := validator.RunAudit(c, k)
+		if err != nil {
+			fmt.Printf("Error getting audit data %v \n", err)
+			http.Error(w, "Error running audit", 500)
+			return
+		}
+		dashboard.MainHandler(w, r, auditData)
 	})
 	portStr := strconv.Itoa(port)
 	glog.Println("Starting Fairwinds dashboard server on port " + portStr)

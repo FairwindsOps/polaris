@@ -17,3 +17,5 @@ fairwinds
 Tiltfile
 main
 .DS_Store
+
+*-packr.go

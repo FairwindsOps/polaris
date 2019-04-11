@@ -17,10 +17,10 @@ package dashboard
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"html/template"
 	"net/http"
 
+	packr "github.com/gobuffalo/packr/v2"
 	conf "github.com/reactiveops/fairwinds/pkg/config"
 	"github.com/reactiveops/fairwinds/pkg/kube"
 	"github.com/reactiveops/fairwinds/pkg/validator"
@@ -29,10 +29,28 @@ import (
 const (
 	// TemplateName references the dashboard template to use
 	TemplateName = "dashboard.gohtml"
-
-	// TemplateFile references the path of the dashboard template to use
-	TemplateFile = "pkg/dashboard/templates/" + TemplateName
 )
+
+var (
+	templateBox = (*packr.Box)(nil)
+	assetBox    = (*packr.Box)(nil)
+)
+
+// GetAssetBox returns a binary-friendly set of assets packaged from disk
+func GetAssetBox() *packr.Box {
+	if assetBox == (*packr.Box)(nil) {
+		assetBox = packr.New("Assets", "../../public")
+	}
+	return assetBox
+}
+
+// GetTemplateBox returns a binary-friendly set of templates for rendering the dash
+func GetTemplateBox() *packr.Box {
+	if templateBox == (*packr.Box)(nil) {
+		templateBox = packr.New("Templates", "templates")
+	}
+	return templateBox
+}
 
 // TemplateData is passed to the dashboard HTML template
 type TemplateData struct {
@@ -41,13 +59,7 @@ type TemplateData struct {
 }
 
 // MainHandler gets template data and renders the dashboard with it.
-func MainHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration, kubeAPI *kube.API) {
-	auditData, err := validator.RunAudit(c, kubeAPI)
-	if err != nil {
-		fmt.Printf("Error getting audit data %v \n", err)
-		http.Error(w, "Error running audit", 500)
-		return
-	}
+func MainHandler(w http.ResponseWriter, r *http.Request, auditData validator.AuditData) {
 	jsonData, err := json.Marshal(auditData)
 	if err != nil {
 		http.Error(w, "Error serializing audit data", 500)
@@ -57,6 +69,12 @@ func MainHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration, k
 		AuditData: auditData,
 		JSON:      template.JS(jsonData),
 	}
+	templateBox := GetTemplateBox()
+	templateFile, err := templateBox.Find(TemplateName)
+	if err != nil {
+		http.Error(w, "Error getting template data", 500)
+		return
+	}
 	tmpl, err := template.New(TemplateName).Funcs(template.FuncMap{
 		"getWarningWidth": getWarningWidth,
 		"getSuccessWidth": getSuccessWidth,
@@ -65,7 +83,7 @@ func MainHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration, k
 		"getGrade":        getGrade,
 		"getScore":        getScore,
 		"getIcon":         getIcon,
-	}).ParseFiles(TemplateFile)
+	}).Parse(string(templateFile))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
