@@ -88,9 +88,9 @@ func (pv *PodValidation) validateHostAlias(networkConf *conf.Networking) {
 		}
 
 		if hostAliasSet {
-			pv.addFailure(messages.HostAliasConfigured, networkConf.HostAliasSet)
+			pv.addFailure(messages.HostAliasFailure, networkConf.HostAliasSet)
 		} else {
-			pv.addSuccess(messages.HostAliasNotConfigured)
+			pv.addSuccess(messages.HostAliasSuccess)
 		}
 	}
 }
@@ -98,9 +98,9 @@ func (pv *PodValidation) validateHostAlias(networkConf *conf.Networking) {
 func (pv *PodValidation) validateHostIPC(networkConf *conf.Networking) {
 	if networkConf.HostIPCSet.IsActionable() {
 		if pv.Pod.HostIPC {
-			pv.addFailure(messages.HostIPCConfigured, networkConf.HostIPCSet)
+			pv.addFailure(messages.HostIPCFailure, networkConf.HostIPCSet)
 		} else {
-			pv.addSuccess(messages.HostIPCNotConfigured)
+			pv.addSuccess(messages.HostIPCSuccess)
 		}
 	}
 }
@@ -108,9 +108,9 @@ func (pv *PodValidation) validateHostIPC(networkConf *conf.Networking) {
 func (pv *PodValidation) validateHostPID(networkConf *conf.Networking) {
 	if networkConf.HostPIDSet.IsActionable() {
 		if pv.Pod.HostPID {
-			pv.addFailure(messages.HostPIDConfigured, networkConf.HostPIDSet)
+			pv.addFailure(messages.HostPIDFailure, networkConf.HostPIDSet)
 		} else {
-			pv.addSuccess(messages.HostPIDNotConfigured)
+			pv.addSuccess(messages.HostPIDSuccess)
 		}
 	}
 }
@@ -118,9 +118,9 @@ func (pv *PodValidation) validateHostPID(networkConf *conf.Networking) {
 func (pv *PodValidation) validateHostNetwork(networkConf *conf.Networking) {
 	if networkConf.HostNetworkSet.IsActionable() {
 		if pv.Pod.HostNetwork {
-			pv.addFailure(messages.HostNetworkConfigured, networkConf.HostNetworkSet)
+			pv.addFailure(messages.HostNetworkFailure, networkConf.HostNetworkSet)
 		} else {
-			pv.addSuccess(messages.HostNetworkNotConfigured)
+			pv.addSuccess(messages.HostNetworkSuccess)
 		}
 	}
 }
