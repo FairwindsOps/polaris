@@ -1,13 +1,3 @@
-<<<<<<< HEAD
-## Build locally
-This package is best built using [packr](https://github.com/gobuffalo/packr), which provides
-a thin wrapper around the go compiler in order to include static HTML/CSS/JS assets.
-```bash
-git clone https://github.com/reactiveops/fairwinds $GOPATH/src/github.com/reactiveops/fairwinds
-go get -u github.com/gobuffalo/packr/v2/packr2
-packr2 build -a -o fairwinds *.go
-./fairwinds -h
-=======
 <p align="center">
   <img src="/public/images/logo.png" alt="Fairwinds Logo" />
 </p>
@@ -27,13 +17,12 @@ To deploy Fairwinds with kubectl:
 
 ```
 kubectl apply -f deploy/all.yaml
->>>>>>> first run at readme updates
 ```
 
 Fairwinds can also be deployed with Helm:
 
 ```
-helm upgrade --install fairwinds deploy/helm/fairwinds/ --namespace fairwinds --recreate-pods
+helm upgrade --install fairwinds deploy/helm/fairwinds/ --namespace fairwinds
 ```
 
 ### Viewing the Dashboard
@@ -54,7 +43,6 @@ The Fairwinds Webhook can run the same checks as the dashboard, but can be deplo
 
 Unfortunately we have not found a way to disply warnings as part of `kubectl` output unless we are rejecting a deployment altogether. That means that any checks with a severity of `warning` will still pass webhook validation, and the only evidence of that warning will either be in the Fairwinds dashboard or the Fairwinds webhook logs.
 
-
 ## CLI Options
 
 * `config`: Specify a location for the Fairwinds config
@@ -64,3 +52,20 @@ Unfortunately we have not found a way to disply warnings as part of `kubectl` ou
 * `webhook-port`: Port for the webhook webserver (default 9876)
 * `disable-webhook-config-installer`: disable the installer in the webhook server, so it won't install webhook configuration resources during bootstrapping
 * `kubeconfig`: Paths to a kubeconfig. Only required if out-of-cluster.
+
+## Configuration
+
+Fairwinds supports a wide range of validations covering a number of Kubernetes best practices. Here's a sample configuration file that includes all currently supported checks. The [default configuration](https://github.com/reactiveops/fairwinds/blob/master/config.yaml) contains a number of those checks. This repository also includes a sample [full configuration file](https://github.com/reactiveops/fairwinds/blob/master/config-full.yaml) that enables all available checks.
+
+Each check can be assigned a `severity`. Only checks with a severity of `error` or `warning` will be validated. The results of these validations are visible on the dashboard. In the case of the validating webhook, only failures with a severity of `error` will result in a change being rejected.
+
+Fairwinds validation checks fall into several different categories:
+
+- [Health Checks](docs/health-checks.md)
+- [Images](docs/images.md)
+- [Networking](docs/networking.md)
+- [Resources](docs/resources.md)
+- [Security](docs/security.md)
+
+## License
+Apache License 2.0
