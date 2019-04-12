@@ -89,22 +89,22 @@ func TestValidateResourcesEmptyContainer(t *testing.T) {
 	expectedWarnings := []*ResultMessage{
 		{
 			Type:    "warning",
-			Message: "CPU Requests are not set",
+			Message: "CPU requests should be set",
 		},
 		{
 			Type:    "warning",
-			Message: "Memory Requests are not set",
+			Message: "Memory requests should be set",
 		},
 	}
 
 	expectedErrors := []*ResultMessage{
 		{
 			Type:    "error",
-			Message: "CPU Limits are not set",
+			Message: "CPU limits should be set",
 		},
 		{
 			Type:    "error",
-			Message: "Memory Limits are not set",
+			Message: "Memory limits should be set",
 		},
 	}
 
@@ -133,22 +133,22 @@ func TestValidateResourcesPartiallyValid(t *testing.T) {
 	expectedWarnings := []*ResultMessage{
 		{
 			Type:    "warning",
-			Message: "CPU Requests are too low",
+			Message: "CPU requests should be higher than 200m",
 		},
 		{
 			Type:    "warning",
-			Message: "CPU Limits are too low",
+			Message: "CPU limits should be higher than 300m",
 		},
 	}
 
 	expectedErrors := []*ResultMessage{
 		{
 			Type:    "error",
-			Message: "Memory Requests are too low",
+			Message: "Memory requests should be higher than 100M",
 		},
 		{
 			Type:    "error",
-			Message: "Memory Limits are too low",
+			Message: "Memory limits should be higher than 200M",
 		},
 	}
 
@@ -235,8 +235,8 @@ func TestValidateHealthChecks(t *testing.T) {
 		},
 	}
 
-	l := &ResultMessage{Type: "warning", Message: "Liveness probe needs to be configured"}
-	r := &ResultMessage{Type: "error", Message: "Readiness probe needs to be configured"}
+	l := &ResultMessage{Type: "warning", Message: "Liveness probe should be configured"}
+	r := &ResultMessage{Type: "error", Message: "Readiness probe should be configured"}
 	f1 := []*ResultMessage{}
 	f2 := []*ResultMessage{r}
 	w1 := []*ResultMessage{l}
@@ -437,22 +437,19 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: standardConf,
 			cv:           emptyCV,
 			expectedMessages: []*ResultMessage{{
-				Message: "Container is allowed to run as root",
+				Message: "Should not be running as root",
 				Type:    "warning",
 			}, {
-				Message: "Container is not running with a read only filesystem",
+				Message: "Filesystem should be read only",
 				Type:    "warning",
 			}, {
-				Message: "Container is not running as privileged",
+				Message: "Not running as privileged",
 				Type:    "success",
 			}, {
-				Message: "Container does not allow privilege escalation",
+				Message: "Privilege escalation not allowed",
 				Type:    "success",
 			}, {
-				Message: "No security capabilities added from error list",
-				Type:    "success",
-			}, {
-				Message: "No security capabilities added beyond warning list",
+				Message: "Security capabilities are within the configured limits",
 				Type:    "success",
 			}},
 		},
@@ -461,22 +458,22 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: standardConf,
 			cv:           badCV,
 			expectedMessages: []*ResultMessage{{
-				Message: "Security capabilities added from error list: SYS_ADMIN, NET_ADMIN",
+				Message: "The following security capabilities should not be added: SYS_ADMIN, NET_ADMIN",
 				Type:    "error",
 			}, {
-				Message: "Container allows privilege escalation",
+				Message: "Privilege escalation should not be allowed",
 				Type:    "error",
 			}, {
-				Message: "Container is running as privileged",
+				Message: "Should not be running as privileged",
 				Type:    "error",
 			}, {
-				Message: "Security capabilities added beyond warning list: AUDIT_CONTROL, SYS_ADMIN, NET_ADMIN",
+				Message: "The following security capabilities should not be added: AUDIT_CONTROL, SYS_ADMIN, NET_ADMIN",
 				Type:    "warning",
 			}, {
-				Message: "Container is allowed to run as root",
+				Message: "Should not be running as root",
 				Type:    "warning",
 			}, {
-				Message: "Container is not running with a read only filesystem",
+				Message: "Filesystem should be read only",
 				Type:    "warning",
 			}},
 		},
@@ -485,22 +482,19 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: standardConf,
 			cv:           goodCV,
 			expectedMessages: []*ResultMessage{{
-				Message: "Container is not allowed to run as root",
+				Message: "Not running as root",
 				Type:    "success",
 			}, {
-				Message: "Container is running with a read only filesystem",
+				Message: "Filesystem is read only",
 				Type:    "success",
 			}, {
-				Message: "Container is not running as privileged",
+				Message: "Not running as privileged",
 				Type:    "success",
 			}, {
-				Message: "Container does not allow privilege escalation",
+				Message: "Privilege escalation not allowed",
 				Type:    "success",
 			}, {
-				Message: "No security capabilities added from error list",
-				Type:    "success",
-			}, {
-				Message: "No security capabilities added beyond warning list",
+				Message: "Security capabilities are within the configured limits",
 				Type:    "success",
 			}},
 		},
@@ -509,25 +503,19 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: strongConf,
 			cv:           goodCV,
 			expectedMessages: []*ResultMessage{{
-				Message: "Security capabilities not dropped from error list: DAC_OVERRIDE, SYS_CHROOT",
+				Message: "The following security capabilities should be dropped: DAC_OVERRIDE, SYS_CHROOT",
 				Type:    "error",
 			}, {
-				Message: "Container is not allowed to run as root",
+				Message: "Not running as root",
 				Type:    "success",
 			}, {
-				Message: "Container is running with a read only filesystem",
+				Message: "Filesystem is read only",
 				Type:    "success",
 			}, {
-				Message: "Container is not running as privileged",
+				Message: "Not running as privileged",
 				Type:    "success",
 			}, {
-				Message: "Container does not allow privilege escalation",
-				Type:    "success",
-			}, {
-				Message: "No security capabilities added from error list",
-				Type:    "success",
-			}, {
-				Message: "No security capabilities added beyond warning list",
+				Message: "Privilege escalation not allowed",
 				Type:    "success",
 			}},
 		},
@@ -536,25 +524,19 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: strongConf,
 			cv:           strongCV,
 			expectedMessages: []*ResultMessage{{
-				Message: "Container is not allowed to run as root",
+				Message: "Not running as root",
 				Type:    "success",
 			}, {
-				Message: "Container is running with a read only filesystem",
+				Message: "Filesystem is read only",
 				Type:    "success",
 			}, {
-				Message: "Container is not running as privileged",
+				Message: "Not running as privileged",
 				Type:    "success",
 			}, {
-				Message: "Container does not allow privilege escalation",
+				Message: "Privilege escalation not allowed",
 				Type:    "success",
 			}, {
-				Message: "No security capabilities added from error list",
-				Type:    "success",
-			}, {
-				Message: "Required security capabilities dropped from error list",
-				Type:    "success",
-			}, {
-				Message: "No security capabilities added beyond warning list",
+				Message: "Security capabilities are within the configured limits",
 				Type:    "success",
 			}},
 		},
