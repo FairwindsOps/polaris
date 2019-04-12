@@ -1,14 +1,39 @@
 version: 2
 
 references:
+  set_environment_variables: &set_environment_variables
+    run:
+      name: Set Environment Variables
+      command: |
+        echo 'export CI_SHA1=$CIRCLE_SHA1' >> ${BASH_ENV}
+        echo 'export CI_BRANCH=$CIRCLE_BRANCH' >> ${BASH_ENV}
+        echo 'export CI_BUILD_NUM=$CIRCLE_BUILD_NUM' >> ${BASH_ENV}
+        echo 'export CI_TAG=$CIRCLE_TAG' >> ${BASH_ENV}
+        echo 'export EXTERNAL_REGISTRY_BASE_DOMAIN=quay.io' >> ${BASH_ENV}
+        echo 'export DOCKERFILE=Dockerfile' >> ${BASH_ENV}
+        echo 'export REPOSITORY_NAME=reactiveops/fairwinds' >> ${BASH_ENV}
+        echo 'export REGISTRY_EMAIL=none' >> ${BASH_ENV}
+        echo 'export DOCKERTAG=${EXTERNAL_REGISTRY_BASE_DOMAIN}/${REPOSITORY_NAME}' >> ${BASH_ENV}
   docker_build_and_push: &docker_build_and_push
     run:
       name: Docker login, build, and push
       command: |
+        touch empty.config
         docker login quay.io -u="reactiveops+circleci" -p="${quay_token}"
-        docker build -f Dockerfile -t quay.io/reactiveops/fairwinds:$DOCKER_BASE_TAG .
-        docker push quay.io/reactiveops/fairwinds:$DOCKER_BASE_TAG
+        docker-pull -f empty.config
+        docker-build -f empty.config
+        docker-push -f empty.config
+
 jobs:
+  build:
+    docker:
+      - image: quay.io/reactiveops/ci-images:v8.0-stretch
+    steps:
+      - checkout
+      - setup_remote_docker
+      - *set_environment_variables
+      - *docker_build_and_push
+
   test:
     working_directory: /go/src/github.com/reactiveops/fairwinds/
     docker:
@@ -22,14 +47,20 @@ jobs:
       - run: go list ./... | grep -v vendor | xargs go vet
       - run: go test ./pkg/... -v -coverprofile cover.out
 
-  build:
+  test-deploy:
     docker:
-      - image: circleci/buildpack-deps:stretch
+      - image: quay.io/reactiveops/ci-images:v8.0-stretch
     steps:
       - checkout
-      - setup_remote_docker
-      - run: echo 'export DOCKER_BASE_TAG=dev-$CIRCLE_SHA1' >> $BASH_ENV
-      - *docker_build_and_push
+      - run:
+          name: Verify helm chart synced with all.yaml
+          command: |
+            diff \
+              <(helm template deploy/helm/fairwinds/ --name fairwinds --namespace fairwinds --set templateOnly=true) \
+              deploy/all.yaml || (echo "
+                Make sure to regenerate deploy/all.yaml based on the helm chart.
+                helm template deploy/helm/fairwinds/ --name fairwinds --namespace fairwinds --set templateOnly=true" &&
+                exit 1)
 
   release:
     docker:
@@ -37,16 +68,19 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - run: echo 'export DOCKER_BASE_TAG=$CIRCLE_TAG' >> $BASH_ENV
-      - *docker_build_and_push
-
+      - *set_environment_variables
+      - *docker_build_and_push #TODO don't rebuild for release
 
 workflows:
   version: 2
   build:
     jobs:
       - test
+      - test-deploy
       - build:
+          requires:
+            - test
+            - test-deploy
           context: org-global
           # Allow using testing tags for testing circle test + build steps
           filters:

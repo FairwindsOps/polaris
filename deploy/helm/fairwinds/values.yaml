@@ -51,16 +51,18 @@ dashboard:
     type: ClusterIP
   image:
     repository: quay.io/reactiveops/fairwinds
-    tag: dev-7263ff7e59b3809bf8ea5e7845261a9da14752c7
+    tag: master
     pullPolicy: Always
 
 webhook:
-  enable: false
+  enable: true
   replicas: 1
   image:
     repository: quay.io/reactiveops/fairwinds
-    tag: dev-7263ff7e59b3809bf8ea5e7845261a9da14752c7
+    tag: master
     pullPolicy: Always
 
 rbac:
   create: true
+
+templateOnly: false
