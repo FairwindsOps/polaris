@@ -50,6 +50,41 @@ func MainHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration, k
 		"getSuccessWidth": func(rs validator.ResultSummary, fullWidth int) uint {
 			return uint(float64(rs.Successes) / float64(rs.Successes+rs.Warnings+rs.Errors) * float64(fullWidth))
 		},
+		"getGrade": func(rs validator.ResultSummary) string {
+			total := (rs.Successes * 2) + rs.Warnings + (rs.Errors * 2)
+			score := uint((float64(rs.Successes*2) / float64(total)) * 100)
+			if score >= 97 {
+				return "A+"
+			} else if score >= 93 {
+				return "A"
+			} else if score >= 90 {
+				return "A-"
+			} else if score >= 87 {
+				return "B+"
+			} else if score >= 83 {
+				return "B"
+			} else if score >= 80 {
+				return "B-"
+			} else if score >= 77 {
+				return "C+"
+			} else if score >= 73 {
+				return "C"
+			} else if score >= 70 {
+				return "C-"
+			} else if score >= 67 {
+				return "D+"
+			} else if score >= 63 {
+				return "D"
+			} else if score >= 60 {
+				return "D-"
+			} else {
+				return "F"
+			}
+		},
+		"getScore": func(rs validator.ResultSummary) uint {
+			total := (rs.Successes * 2) + rs.Warnings + (rs.Errors * 2)
+			return uint((float64(rs.Successes*2) / float64(total)) * 100)
+		},
 		"getIcon": func(rm validator.ResultMessage) string {
 			switch rm.Type {
 			case "success":
