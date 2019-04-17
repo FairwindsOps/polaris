@@ -8,7 +8,7 @@
   <meta name="description" content="">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <link href="https://fonts.googleapis.com/css?family=Lobster" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Muli:300,400,700" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/normalize.css">
   <link rel="stylesheet" href="/static/css/main.css">
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
@@ -27,8 +27,8 @@
     <div class="header-content">
       <img class="logo" src="/static/images/logo.png" alt="Fairwinds" />
       <div class="header-right">
-        <a href="https://reactiveops.com?source=fairwinds">
-          <span class="by-text">by</span>
+        <a href="https://reactiveops.com?source=fairwinds" target="_blank">
+          <span class="oss-text">Open Source Project By</span>
           <img class="ro-logo" src="/static/images/ro-logo.png" alt="ReactiveOps" />
         </a>
       </div>
@@ -36,16 +36,22 @@
   </div>
 
   <div class="dashboard-content">
-    <div class="charts">
-      <div class="cluster-score chart-section">
-        <h3>Overall Score:</h3>
-        <div style="width:510px; height: 400px; left: -100px; position: relative;">
-          <canvas id="clusterScoreChart"></canvas>
+    <div class="namespace">
+      <h3>Cluster Overview</h3>
+      <div class="cluster-overview">
+        <div class="cluster-score">
+          <div class="weather"><i class="fas {{ getWeatherIcon .AuditData.ClusterSummary }}"></i></div>
+          <div class="sailing">{{ getWeatherText .AuditData.ClusterSummary }}</div>
+          <div class="scores">Grade: <strong>{{ getGrade .AuditData.ClusterSummary }}</strong> | Score: <strong>{{ getScore .AuditData.ClusterSummary }}%</strong></div>
         </div>
-      </div>
-      <div class="namespace-score chart-section">
-        <h3>Scores By Namespace:</h3>
-        <canvas id="namespaceScoreChart"></canvas>
+        <div class="result-messages">
+          <ul>
+            <li class="success"><i class="fas fa-check"></i> {{ .AuditData.ClusterSummary.Successes }} checks passed</li>
+            <li class="warning"><i class="fas fa-exclamation"></i> {{ .AuditData.ClusterSummary.Warnings }} checks had warnings</li>
+            <li class="error"><i class="fas fa-times"></i> {{ .AuditData.ClusterSummary.Errors }} checks had errors</li>
+          </ul>
+        </div>
+        <canvas id="clusterScoreChart"></canvas>
       </div>
     </div>
 
@@ -59,7 +65,7 @@
                 <div class="name"><span class="caret-expander"></span>{{ .Type }}: <strong>{{ .Name }}</strong></div>
 
                   {{ range .PodResults}}
-                    <div class="extra">
+                    <div class="result-messages">
                       <h4>Pod Spec:</h4>
                       <ul>
                         {{ range $message := .Messages}}
@@ -68,7 +74,7 @@
                       </ul>
                     </div>
                     {{ range .ContainerResults}}
-                      <div class="extra">
+                      <div class="result-messages">
                         <h4>Container: {{ .Name }}</h4>
                         <ul>
                           {{ range $message := .Messages}}
@@ -96,7 +102,7 @@
   </div>
 
   <div class="footer">
-    &copy; 2019, <a href="https://reactiveops.com?source=fairwinds">ReactiveOps Inc.</a>
+    <a href="https://reactiveops.com?source=fairwinds"  target="_blank">&copy;2019 ReactiveOps Inc.</a>
   </div>
 
   <script src="/static/js/charts.js">

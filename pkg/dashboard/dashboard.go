@@ -1,3 +1,17 @@
+// Copyright 2019 ReactiveOps
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package dashboard
 
 import (
@@ -44,22 +58,13 @@ func MainHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration, k
 		JSON:      template.JS(jsonData),
 	}
 	tmpl, err := template.New(TemplateName).Funcs(template.FuncMap{
-		"getWarningWidth": func(rs validator.ResultSummary, fullWidth int) uint {
-			return uint(float64(rs.Successes+rs.Warnings) / float64(rs.Successes+rs.Warnings+rs.Errors) * float64(fullWidth))
-		},
-		"getSuccessWidth": func(rs validator.ResultSummary, fullWidth int) uint {
-			return uint(float64(rs.Successes) / float64(rs.Successes+rs.Warnings+rs.Errors) * float64(fullWidth))
-		},
-		"getIcon": func(rm validator.ResultMessage) string {
-			switch rm.Type {
-			case "success":
-				return "fas fa-check"
-			case "warning":
-				return "fas fa-exclamation"
-			default:
-				return "fas fa-times"
-			}
-		},
+		"getWarningWidth": getWarningWidth,
+		"getSuccessWidth": getSuccessWidth,
+		"getWeatherIcon":  getWeatherIcon,
+		"getWeatherText":  getWeatherText,
+		"getGrade":        getGrade,
+		"getScore":        getScore,
+		"getIcon":         getIcon,
 	}).ParseFiles(TemplateFile)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

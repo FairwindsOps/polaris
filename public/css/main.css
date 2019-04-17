@@ -1,13 +1,11 @@
 body {
   margin: 0;
-  font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
-  background: #eee;
+  font-family: 'Muli', 'Helvetica', 'Arial', sans-serif;
+  background: #f5f5f5;
 }
 
 .header {
-  background-color: #fff;
-  padding: 10px 20px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  padding: 20px 20px 0;
 }
 
 .header .header-content {
@@ -23,12 +21,11 @@ body {
   width: 280px;
 }
 
-.header span.by-text {
-  font-family: 'Lobster', sans-serif;
+.header span.oss-text {
   color: #23103A;
-  vertical-align: top;
-  display: inline-block;
-  margin-top: 4px;
+  display: block;
+  font-size: 11px;
+  margin-bottom: 3px;
 }
 
 .header a {
@@ -36,7 +33,7 @@ body {
 }
 
 .header .ro-logo {
-  height: 64px;
+  height: 40px;
 }
 
 .dashboard-content {
@@ -45,70 +42,79 @@ body {
 }
 
 .charts {
-  height: 400px;
-}
-
-.chart-section {
-  float: left;
-  margin: 20px;
-  padding: 30px;
-  width: 300px;
-  height: 320px;
-  color: #333;
-  background-color: #fff;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-  border-radius: 5px;
-}
-
-.chart-section.namespace-score {
-  margin-left: 0px;
-  width: 480px;
-}
-
-.chart-section h3 {
-  margin: 0 0 15px;
-  padding: 0 0 15px;
-  font-weight: 300;
-  font-size: 30px;
-  border-bottom: 1px solid #eee;
-}
-
-#clusterScoreChart {
-  width: 260px;
-  height: 260px;
-}
-
-#namespaceScoreChart {
-  width: 520px;
-  height: 260px;
+  height: 405px;
 }
 
 .namespace {
-  margin: 20px;
+  margin: 25px 20px;
   padding: 10px 20px;
   color: #333;
   background-color: #fff;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   border-radius: 5px;
 }
 
 .namespace h3 {
   margin: 0;
   font-weight: 300;
-  font-size: 30px;
-  padding: 20px;
+  font-size: 28px;
+  padding: 15px 20px 20px;
 }
 
 .namespace h3 strong {
   margin: 0;
   font-weight: bold;
-  font-size: 30px;
 }
 
-.cluster-score .status {
-  width: 400px;
-  height: 30px;
-  margin: 30px auto;
+.namespace .cluster-overview {
+  height: 240px;
+}
+
+.namespace .cluster-overview .cluster-score {
+  width: 200px;
+  display: inline-block;
+  margin-left: 20px;
+}
+
+.namespace .cluster-overview .cluster-score .weather {
+  font-size: 110px;
+  font-weight: bold;
+  color: #777;
+}
+
+.namespace .cluster-overview .cluster-score .sailing-message {
+  font-size: 16px;
+  line-height: 28px;
+  margin-left: 7px;
+  font-weight: 300;
+  color: #555;
+}
+
+.namespace .cluster-overview .cluster-score .scores {
+  font-size: 16px;
+  margin-top: 10px;}
+
+#clusterScoreChart {
+  width: 550px;
+  position: relative;
+  top: -254px;
+  left: 120px;
+}
+
+.namespace .cluster-overview .result-messages {
+  margin: 0 20px;
+  display: inline-block;
+  position: relative;
+  left: -100px;
+  top: -52px;
+}
+
+.namespace .cluster-overview .result-messages ul {
+  position: relative;
+  top: 0px;
+  left: 400px;
+  font-size: 20px;
+  line-height: 35px;
 }
 
 .namespace-content {
@@ -128,11 +134,11 @@ body {
   border-top: 1px solid #eee;
 }
 
-.namespace-content .resource-info .name {
+.namespace .resource-info .name {
   cursor: pointer;
 }
 
-.namespace-content .resource-info .caret-expander {
+.namespace .resource-info .caret-expander {
   display: inline-block;
   width: 15px;
   height: 15px;
@@ -143,27 +149,27 @@ body {
   background-position: 2px center;
 }
 
-.namespace-content .resource-info.expanded .caret-expander {
+.namespace .resource-info.expanded .caret-expander {
   background-image: url('../images/caret-bottom.svg');
   background-position: center 2px;
 }
 
-.namespace-content .resource-info .extra {
+.namespace .resource-info .result-messages {
   display: none;
   color: #6a6a6a;
 }
 
-.namespace-content .resource-info.expanded .extra {
+.namespace .resource-info.expanded .result-messages {
   display: block;
 }
 
-.namespace-content .extra h4 {
+.namespace .result-messages h4 {
   font-weight: bold;
   font-size: 15px;
   margin: 15px 25px 6px;
 }
 
-.namespace-content .extra ul {
+.namespace .result-messages ul {
   list-style-type: none;
   font-size: 13px;
   line-height: 20px;
@@ -172,11 +178,11 @@ body {
   color: #6a6a6a;
 }
 
-.namespace-content .extra ul li {
+.namespace .result-messages ul li {
   margin-bottom: 5px;
 }
 
-.namespace-content .extra i {
+.namespace .result-messages i {
   display: inline-block;
   margin-right: 7px;
   text-align: center;
@@ -187,52 +193,52 @@ body {
   bottom: -3px;
 }
 
-.namespace-content .extra .success i {
+.namespace .result-messages .success i {
   color: #8BD2DC;
 }
 
-.namespace-content .extra .warning i {
+.namespace .result-messages .warning i {
   color: #f26c21;
 }
 
-.namespace-content .extra .error i {
+.namespace .result-messages .error i {
   color: #a11f4c;
 }
 
-.namespace-content td.status-bar {
+.namespace td.status-bar {
   vertical-align: top;
   padding-top: 18px;
 }
 
-.namespace-content .status {
+.namespace .status {
   float: right;
   width: 200px;
 }
 
-.namespace-content .status div {
+.namespace .status div {
   height: 15px;
   border-radius: 10px;
 }
 
-.namespace-content .status .passing {
+.namespace .status .passing {
   background-color: #8BD2DC;
   float: left;
 }
 
-.namespace-content .status .warning {
+.namespace .status .warning {
   background-color: #f26c21;
   float: left;
+}
+
+.namespace .status .failing {
+  background-color: #a11f4c;
+  width: 200px;
+  animation: fadeIn 2s;
 }
 
 @keyframes fadeIn {
   0% {opacity: 0;}
   100% {opacity: 1;}
-}
-
-.namespace-content .status .failing {
-  background-color: #a11f4c;
-  width: 200px;
-  animation: fadeIn 2s;
 }
 
 .footer {
@@ -241,6 +247,11 @@ body {
   padding-bottom: 30px;
 }
 
-.footer, .footer a {
+.footer a {
   color: #999;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  text-decoration: underline;
 }
