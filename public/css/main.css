@@ -67,7 +67,7 @@ body {
 }
 
 .namespace .cluster-overview {
-  height: 240px;
+  height: 220px;
 }
 
 .namespace .cluster-overview .cluster-score {
@@ -92,12 +92,13 @@ body {
 
 .namespace .cluster-overview .cluster-score .scores {
   font-size: 16px;
-  margin-top: 10px;}
+  margin-top: 10px;
+}
 
 #clusterScoreChart {
   width: 550px;
   position: relative;
-  top: -254px;
+  top: -247px;
   left: 120px;
 }
 
@@ -106,7 +107,7 @@ body {
   display: inline-block;
   position: relative;
   left: -100px;
-  top: -52px;
+  top: -47px;
 }
 
 .namespace .cluster-overview .result-messages ul {

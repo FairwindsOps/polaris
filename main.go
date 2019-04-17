@@ -61,7 +61,7 @@ func main() {
 
 	c, err := conf.ParseFile(*configPath)
 	if err != nil {
-		glog.Println("Error parsing config at " + *configPath, err)
+		glog.Println("Error parsing config at "+*configPath, err)
 		os.Exit(1)
 	}
 
@@ -84,6 +84,9 @@ func startDashboardServer(c conf.Configuration, port int) {
 		dashboard.EndpointHandler(w, r, c, k)
 	})
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("public/"))))
+	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "public/favicon.ico")
+	})
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
 			http.NotFound(w, r)
