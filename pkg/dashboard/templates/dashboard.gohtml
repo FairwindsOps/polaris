@@ -40,8 +40,9 @@
       <h3>Cluster Overview</h3>
       <div class="cluster-overview">
         <div class="cluster-score">
-          <div class="grade">{{ getGrade .AuditData.ClusterSummary }}</div>
-          <div class="score">Overall Score: <strong>{{ getScore .AuditData.ClusterSummary }}%</strong></div>
+          <div class="weather"><i class="fas {{ getWeatherIcon .AuditData.ClusterSummary }}"></i></div>
+          <div class="sailing">{{ getWeatherText .AuditData.ClusterSummary }}</div>
+          <div class="scores">Grade: <strong>{{ getGrade .AuditData.ClusterSummary }}</strong> | Score: <strong>{{ getScore .AuditData.ClusterSummary }}%</strong></div>
         </div>
         <div class="result-messages">
           <ul>
