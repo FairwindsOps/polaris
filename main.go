@@ -50,7 +50,8 @@ func main() {
 	audit := flag.Bool("audit", false, "Runs a one-time audit.")
 	dashboardPort := flag.Int("dashboard-port", 8080, "Port for the dashboard webserver")
 	webhookPort := flag.Int("webhook-port", 9876, "Port for the webhook webserver")
-	auditDestination := flag.String("audit-destination", "", "Destination URL to send audit results (prints to stdout if unspecified)")
+	auditOutputURL := flag.String("output-url", "", "Destination URL to send audit results")
+	auditOutputFile := flag.String("output-file", "", "Destination file for audit results")
 	configPath := flag.String("config", "config.yaml", "Location of Fairwinds configuration file")
 
 	var disableWebhookConfigInstaller bool
@@ -74,7 +75,7 @@ func main() {
 	} else if *dashboard {
 		startDashboardServer(c, *dashboardPort)
 	} else if *audit {
-		runAudit(c, *auditDestination)
+		runAudit(c, *auditOutputFile, *auditOutputURL)
 	}
 }
 
@@ -164,36 +165,49 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 	}
 }
 
-func runAudit(c conf.Configuration, destination string) {
+func runAudit(c conf.Configuration, outputFile string, outputURL string) {
 	k, _ := kube.CreateKubeAPI()
 	auditData, err := validator.RunAudit(c, k)
 	if err != nil {
 		panic(err)
 	}
 
-	if destination != "" {
+	if outputURL == "" && outputFile == "" {
+		yamlBytes, err := yaml.Marshal(auditData)
+		if err != nil {
+			panic(err)
+		}
+		os.Stdout.Write(yamlBytes)
+	} else {
 		jsonData, err := json.Marshal(auditData)
 		if err != nil {
 			panic(err)
 		}
 
-		req, err := http.NewRequest("POST", destination, bytes.NewBuffer(jsonData))
-		req.Header.Set("Content-Type", "application/json")
-
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		if err != nil {
-			panic(err)
+		if outputFile != "" {
+			err := ioutil.WriteFile(outputFile, []byte(jsonData), 0644)
+			if err != nil {
+				panic(err)
+			}
 		}
-		defer resp.Body.Close()
 
-		body, _ := ioutil.ReadAll(resp.Body)
-		glog.Println(string(body))
-	} else {
-		y, err := yaml.Marshal(auditData)
-		if err != nil {
-			panic(err)
+		if outputURL != "" {
+			req, err := http.NewRequest("POST", outputURL, bytes.NewBuffer(jsonData))
+			req.Header.Set("Content-Type", "application/json")
+
+			client := &http.Client{}
+			resp, err := client.Do(req)
+			if err != nil {
+				panic(err)
+			}
+			defer resp.Body.Close()
+
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				fmt.Println("Error reading audit output URL response")
+			} else {
+				glog.Println(string(body))
+			}
 		}
-		fmt.Println(string(y))
 	}
 }
