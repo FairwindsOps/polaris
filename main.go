@@ -173,11 +173,11 @@ func runAudit(c conf.Configuration, outputFile string, outputURL string) {
 	}
 
 	if outputURL == "" && outputFile == "" {
-		y, err := yaml.Marshal(auditData)
+		yamlBytes, err := yaml.Marshal(auditData)
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println(string(y))
+		os.Stdout.Write(yamlBytes)
 	} else {
 		jsonData, err := json.Marshal(auditData)
 		if err != nil {
@@ -202,8 +202,12 @@ func runAudit(c conf.Configuration, outputFile string, outputURL string) {
 			}
 			defer resp.Body.Close()
 
-			body, _ := ioutil.ReadAll(resp.Body)
-			glog.Println(string(body))
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				fmt.Println("Error reading audit output URL response")
+			} else {
+				glog.Println(string(body))
+			}
 		}
 	}
 }
