@@ -1,8 +1,10 @@
 ## Build locally
-
+This package is best built using [packr](https://github.com/gobuffalo/packr), which provides
+a thin wrapper around the go compiler in order to include static HTML/CSS/JS assets.
 ```bash
 git clone https://github.com/reactiveops/fairwinds $GOPATH/src/github.com/reactiveops/fairwinds
-go build -a -o fairwinds *.go
+go get -u github.com/gobuffalo/packr/v2/packr2
+packr2 build -a -o fairwinds *.go
 ./fairwinds -h
 ```
 
@@ -43,7 +45,7 @@ open http://localhost:8080
 
 ## Run tests
 ```
-go list ./ | grep -v vendor | xargs golint -set_exit_status
-go list ./ | grep -v vendor | xargs go vet
+go list ./... | grep -v vendor | xargs golint -set_exit_status
+go list ./... | grep -v vendor | xargs go vet
 go test ./pkg/... -v -coverprofile cover.out
 ```

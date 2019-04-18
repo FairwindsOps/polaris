@@ -44,3 +44,7 @@
 [[constraint]]
   name = "sigs.k8s.io/controller-runtime"
   version = "0.1.10"
+
+[[constraint]]
+  name = "github.com/gobuffalo/packr"
+  version = "2.2.0"

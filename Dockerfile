@@ -15,5 +15,6 @@ WORKDIR /opt/app
 
 COPY --from=build-env /go/src/github.com/reactiveops/fairwinds/pkg/dashboard/templates/dashboard.gohtml ./pkg/dashboard/templates/dashboard.gohtml
 COPY --from=build-env /go/src/github.com/reactiveops/fairwinds/public ./public
+COPY --from=build-env /go/src/github.com/reactiveops/fairwinds/config.yaml ./config.yaml
 
 ENTRYPOINT ["fairwinds"]
