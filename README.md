@@ -5,7 +5,7 @@
 Fairwinds aims to keep your cluster sailing smoothly. It runs a variety of checks to ensure that Kubernetes deployments are configured using best practices that will avoid potential problems in the future. The project includes two primary parts:
 
 - A dashboard to display the results of these validations on your existing deployments
-- A webhook that can prevent poorly configured deployments from reaching your cluster
+- A beta version of a webhook that can prevent poorly configured deployments from reaching your cluster
 
 ## Dashboard
 
@@ -20,7 +20,7 @@ The Fairwinds Dashboard provides an overview of your current deployments in a cl
 To deploy Fairwinds with kubectl:
 
 ```
-kubectl apply -f deploy/all.yaml
+kubectl apply -f https://raw.githubusercontent.com/reactiveops/fairwinds/master/deploy/all.yaml
 ```
 
 Fairwinds can also be deployed with Helm:
@@ -39,7 +39,11 @@ open http://localhost:8080
 
 ### Using a Binary Release
 
-If you'd prefer to run Fairwinds locally, binary releases are available on the [releases page](https://github.com/reactiveops/fairwinds/releases). With a Fairwinds binary, the
+If you'd prefer to run Fairwinds locally, binary releases are available on the [releases page](https://github.com/reactiveops/fairwinds/releases). When running as a binary, Fairwinds will use your local kubeconfig to connect to a cluster. There are a variety of options available, but the most common usage may be to view the dashboard:
+
+```
+fairwinds --dashboard
+```
 
 ## Webhook
 
