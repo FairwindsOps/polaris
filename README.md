@@ -2,14 +2,14 @@
   <img src="/public/images/logo.png" alt="Fairwinds Logo" />
 </p>
 
-Fairwinds aims to keep your cluster sailing smoothly. It runs a variety of checks to ensure that Kubernetes deployments are configured using best practices that will avoid potential problems in the future. The project includes two primary parts:
+Fairwinds keeps your cluster sailing smoothly. It runs a variety of checks to ensure that Kubernetes deployments are configured using best practices that will avoid potential problems in the future. The project includes two primary parts:
 
 - A dashboard to display the results of these validations on your existing deployments
 - A beta version of a webhook that can prevent poorly configured deployments from reaching your cluster
 
 ## Dashboard
 
-The Fairwinds Dashboard provides an overview of your current deployments in a cluster along with their validation scores. An overall score is provided for a cluster on a 0 - 100 scale. Results for each validation are grouped by namespace and deployment.
+The Fairwinds Dashboard provides an overview of your current deployments in a cluster along with their validation scores. An overall score is provided for a cluster on a 0 - 100 scale. Results are then broken down by namespace and deployment.
 
 <p align="center">
   <img src="/dashboard-screenshot.png" alt="Fairwinds Dashboard" />
@@ -33,10 +33,12 @@ helm upgrade --install fairwinds deploy/helm/fairwinds/ --namespace fairwinds
 ### Viewing the Dashboard
 
 Once the dashboard is deployed, it can be viewed by using kubectl port-forward:
+
 ```
-kubectl port-forward --namespace fairwinds svc/fairwinds-fairwinds-dashboard 8080:80 &
-open http://localhost:8080
+kubectl port-forward --namespace fairwinds svc/fairwinds-fairwinds-dashboard 8080:80
 ```
+
+With the port forwarding in place, you can open http://localhost:8080 in your browser to view the dashboard.
 
 ### Using a Binary Release
 
