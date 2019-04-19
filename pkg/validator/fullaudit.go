@@ -11,6 +11,7 @@ const (
 	FairwindsOutputVersion = "0.0"
 )
 
+// ClusterSummary contains Fairwinds results as well as some high-level stats
 type ClusterSummary struct {
 	Results    ResultSummary
 	Version    string
