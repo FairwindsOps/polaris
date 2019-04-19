@@ -39,7 +39,7 @@ If you'd prefer to run Fairwinds locally, binary releases are available on the [
 
 ## Webhook
 
-The Fairwinds Webhook can run the same checks as the dashboard, but can be deployed and configured separately. When running, the webhook will validate any new or updated deployments in the cluster, and reject any that fail a check with an `error` severity.
+Fairwinds includes experimental support for an optional validating webhook. This accepts the same configuration as the dashboard, and can run the same validations. This webhook will reject any deployments that trigger a validation error. This is indicative of the greater goal of Fairwinds, not just to encourage better configuration through dashboard visibility, but to actually enforce it with this webhook. *Although we are working towards greater stability and better test coverage, we do not currently consider this webhook component production ready.*
 
 Unfortunately we have not found a way to disply warnings as part of `kubectl` output unless we are rejecting a deployment altogether. That means that any checks with a severity of `warning` will still pass webhook validation, and the only evidence of that warning will either be in the Fairwinds dashboard or the Fairwinds webhook logs.
 
