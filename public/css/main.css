@@ -25,7 +25,7 @@ body {
   color: #23103A;
   display: block;
   font-size: 11px;
-  margin-bottom: 3px;
+  margin: 3px 0;
 }
 
 .header a {
@@ -67,7 +67,7 @@ body {
 }
 
 .namespace .cluster-overview {
-  height: 220px;
+  height: 215px;
 }
 
 .namespace .cluster-overview .cluster-score {
@@ -77,9 +77,9 @@ body {
 }
 
 .namespace .cluster-overview .cluster-score .weather {
-  font-size: 110px;
-  font-weight: bold;
-  color: #777;
+    font-size: 90px;
+    color: #444;
+    margin-bottom: 15px;
 }
 
 .namespace .cluster-overview .cluster-score .sailing-message {
@@ -98,7 +98,7 @@ body {
 #clusterScoreChart {
   width: 550px;
   position: relative;
-  top: -247px;
+  top: -242px;
   left: 120px;
 }
 
@@ -107,7 +107,7 @@ body {
   display: inline-block;
   position: relative;
   left: -100px;
-  top: -47px;
+  top: -45px;
 }
 
 .namespace .cluster-overview .result-messages ul {

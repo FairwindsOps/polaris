@@ -11,6 +11,10 @@ Fairwinds aims to keep your cluster sailing smoothly. It runs a variety of check
 
 The Fairwinds Dashboard provides an overview of your current deployments in a cluster along with their validation scores. An overall score is provided for a cluster on a 0 - 100 scale. Results for each validation are grouped by namespace and deployment.
 
+<p align="center">
+  <img src="/dashboard-screenshot.png" alt="Fairwinds Dashboard" />
+</p>
+
 ### Deploying
 
 To deploy Fairwinds with kubectl:

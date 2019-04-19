@@ -13,7 +13,9 @@ key | default | description
 
 ## Background
 
-TODO
+Linux Capabilities allow you to specify privileges for a process at a granular level. The [default list of capabilities](https://github.com/moby/moby/blob/master/oci/defaults.go#L15) included with a container are already fairly minimal, but often can be further restricted.
+
+With Kubernetes configuration, these capabilities can be added or removed by adjusting `securityContext.capabilities`.
 
 ## Further Reading
 
