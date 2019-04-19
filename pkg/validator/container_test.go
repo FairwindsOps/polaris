@@ -88,23 +88,27 @@ func TestValidateResourcesEmptyContainer(t *testing.T) {
 
 	expectedWarnings := []*ResultMessage{
 		{
-			Type:    "warning",
-			Message: "CPU requests should be set",
+			Type:     "warning",
+			Message:  "CPU requests should be set",
+			Category: "Resources",
 		},
 		{
-			Type:    "warning",
-			Message: "Memory requests should be set",
+			Type:     "warning",
+			Message:  "Memory requests should be set",
+			Category: "Resources",
 		},
 	}
 
 	expectedErrors := []*ResultMessage{
 		{
-			Type:    "error",
-			Message: "CPU limits should be set",
+			Type:     "error",
+			Message:  "CPU limits should be set",
+			Category: "Resources",
 		},
 		{
-			Type:    "error",
-			Message: "Memory limits should be set",
+			Type:     "error",
+			Message:  "Memory limits should be set",
+			Category: "Resources",
 		},
 	}
 
@@ -132,23 +136,27 @@ func TestValidateResourcesPartiallyValid(t *testing.T) {
 
 	expectedWarnings := []*ResultMessage{
 		{
-			Type:    "warning",
-			Message: "CPU requests should be higher than 200m",
+			Type:     "warning",
+			Message:  "CPU requests should be higher than 200m",
+			Category: "Resources",
 		},
 		{
-			Type:    "warning",
-			Message: "CPU limits should be higher than 300m",
+			Type:     "warning",
+			Message:  "CPU limits should be higher than 300m",
+			Category: "Resources",
 		},
 	}
 
 	expectedErrors := []*ResultMessage{
 		{
-			Type:    "error",
-			Message: "Memory requests should be higher than 100M",
+			Type:     "error",
+			Message:  "Memory requests should be higher than 100M",
+			Category: "Resources",
 		},
 		{
-			Type:    "error",
-			Message: "Memory limits should be higher than 200M",
+			Type:     "error",
+			Message:  "Memory limits should be higher than 200M",
+			Category: "Resources",
 		},
 	}
 
@@ -235,8 +243,8 @@ func TestValidateHealthChecks(t *testing.T) {
 		},
 	}
 
-	l := &ResultMessage{Type: "warning", Message: "Liveness probe should be configured"}
-	r := &ResultMessage{Type: "error", Message: "Readiness probe should be configured"}
+	l := &ResultMessage{Type: "warning", Message: "Liveness probe should be configured", Category: "Health Checks"}
+	r := &ResultMessage{Type: "error", Message: "Readiness probe should be configured", Category: "Health Checks"}
 	f1 := []*ResultMessage{}
 	f2 := []*ResultMessage{r}
 	w1 := []*ResultMessage{l}
@@ -305,7 +313,7 @@ func TestValidateImage(t *testing.T) {
 		},
 	}
 
-	f := &ResultMessage{Message: "Image tag should be specified", Type: "error"}
+	f := &ResultMessage{Message: "Image tag should be specified", Type: "error", Category: "Images"}
 	f1 := []*ResultMessage{}
 	f2 := []*ResultMessage{f}
 
@@ -437,20 +445,25 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: standardConf,
 			cv:           emptyCV,
 			expectedMessages: []*ResultMessage{{
-				Message: "Should not be running as root",
-				Type:    "warning",
+				Message:  "Should not be running as root",
+				Type:     "warning",
+				Category: "Security",
 			}, {
-				Message: "Filesystem should be read only",
-				Type:    "warning",
+				Message:  "Filesystem should be read only",
+				Type:     "warning",
+				Category: "Security",
 			}, {
-				Message: "Not running as privileged",
-				Type:    "success",
+				Message:  "Not running as privileged",
+				Type:     "success",
+				Category: "Security",
 			}, {
-				Message: "Privilege escalation not allowed",
-				Type:    "success",
+				Message:  "Privilege escalation not allowed",
+				Type:     "success",
+				Category: "Security",
 			}, {
-				Message: "Security capabilities are within the configured limits",
-				Type:    "success",
+				Message:  "Security capabilities are within the configured limits",
+				Type:     "success",
+				Category: "Security",
 			}},
 		},
 		{
@@ -458,23 +471,29 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: standardConf,
 			cv:           badCV,
 			expectedMessages: []*ResultMessage{{
-				Message: "The following security capabilities should not be added: SYS_ADMIN, NET_ADMIN",
-				Type:    "error",
+				Message:  "The following security capabilities should not be added: SYS_ADMIN, NET_ADMIN",
+				Type:     "error",
+				Category: "Security",
 			}, {
-				Message: "Privilege escalation should not be allowed",
-				Type:    "error",
+				Message:  "Privilege escalation should not be allowed",
+				Type:     "error",
+				Category: "Security",
 			}, {
-				Message: "Should not be running as privileged",
-				Type:    "error",
+				Message:  "Should not be running as privileged",
+				Type:     "error",
+				Category: "Security",
 			}, {
-				Message: "The following security capabilities should not be added: AUDIT_CONTROL, SYS_ADMIN, NET_ADMIN",
-				Type:    "warning",
+				Message:  "The following security capabilities should not be added: AUDIT_CONTROL, SYS_ADMIN, NET_ADMIN",
+				Type:     "warning",
+				Category: "Security",
 			}, {
-				Message: "Should not be running as root",
-				Type:    "warning",
+				Message:  "Should not be running as root",
+				Type:     "warning",
+				Category: "Security",
 			}, {
-				Message: "Filesystem should be read only",
-				Type:    "warning",
+				Message:  "Filesystem should be read only",
+				Type:     "warning",
+				Category: "Security",
 			}},
 		},
 		{
@@ -482,20 +501,25 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: standardConf,
 			cv:           goodCV,
 			expectedMessages: []*ResultMessage{{
-				Message: "Not running as root",
-				Type:    "success",
+				Message:  "Not running as root",
+				Type:     "success",
+				Category: "Security",
 			}, {
-				Message: "Filesystem is read only",
-				Type:    "success",
+				Message:  "Filesystem is read only",
+				Type:     "success",
+				Category: "Security",
 			}, {
-				Message: "Not running as privileged",
-				Type:    "success",
+				Message:  "Not running as privileged",
+				Type:     "success",
+				Category: "Security",
 			}, {
-				Message: "Privilege escalation not allowed",
-				Type:    "success",
+				Message:  "Privilege escalation not allowed",
+				Type:     "success",
+				Category: "Security",
 			}, {
-				Message: "Security capabilities are within the configured limits",
-				Type:    "success",
+				Message:  "Security capabilities are within the configured limits",
+				Type:     "success",
+				Category: "Security",
 			}},
 		},
 		{
@@ -503,20 +527,25 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: strongConf,
 			cv:           goodCV,
 			expectedMessages: []*ResultMessage{{
-				Message: "The following security capabilities should be dropped: DAC_OVERRIDE, SYS_CHROOT",
-				Type:    "error",
+				Message:  "The following security capabilities should be dropped: DAC_OVERRIDE, SYS_CHROOT",
+				Type:     "error",
+				Category: "Security",
 			}, {
-				Message: "Not running as root",
-				Type:    "success",
+				Message:  "Not running as root",
+				Type:     "success",
+				Category: "Security",
 			}, {
-				Message: "Filesystem is read only",
-				Type:    "success",
+				Message:  "Filesystem is read only",
+				Type:     "success",
+				Category: "Security",
 			}, {
-				Message: "Not running as privileged",
-				Type:    "success",
+				Message:  "Not running as privileged",
+				Type:     "success",
+				Category: "Security",
 			}, {
-				Message: "Privilege escalation not allowed",
-				Type:    "success",
+				Message:  "Privilege escalation not allowed",
+				Type:     "success",
+				Category: "Security",
 			}},
 		},
 		{
@@ -524,20 +553,25 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: strongConf,
 			cv:           strongCV,
 			expectedMessages: []*ResultMessage{{
-				Message: "Not running as root",
-				Type:    "success",
+				Message:  "Not running as root",
+				Type:     "success",
+				Category: "Security",
 			}, {
-				Message: "Filesystem is read only",
-				Type:    "success",
+				Message:  "Filesystem is read only",
+				Type:     "success",
+				Category: "Security",
 			}, {
-				Message: "Not running as privileged",
-				Type:    "success",
+				Message:  "Not running as privileged",
+				Type:     "success",
+				Category: "Security",
 			}, {
-				Message: "Privilege escalation not allowed",
-				Type:    "success",
+				Message:  "Privilege escalation not allowed",
+				Type:     "success",
+				Category: "Security",
 			}, {
-				Message: "Security capabilities are within the configured limits",
-				Type:    "success",
+				Message:  "Security capabilities are within the configured limits",
+				Type:     "success",
+				Category: "Security",
 			}},
 		},
 	}
