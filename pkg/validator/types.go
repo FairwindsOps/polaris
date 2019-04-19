@@ -68,8 +68,9 @@ type PodResult struct {
 
 // ResultMessage contains a message and a type indicator (success, warning, or error).
 type ResultMessage struct {
-	Message string
-	Type    MessageType
+	Message  string
+	Type     MessageType
+	Category string
 }
 
 // Score represents a percentage of validations that were successful.
