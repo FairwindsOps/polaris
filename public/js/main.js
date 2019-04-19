@@ -8,7 +8,7 @@ if (!Object.values) {
 
 
 $(function () {
-  $('.namespace .resource-info .name').on('click', function (e) {
+  $('.card .resource-info .name').on('click', function (e) {
     console.log('clicked', arguments)
     console.log('parent', $(e.srcElement).parent('.resource-info'));
     $(e.srcElement).parents('.resource-info').toggleClass('expanded');

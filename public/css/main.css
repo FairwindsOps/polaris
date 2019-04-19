@@ -45,16 +45,20 @@ body {
   height: 405px;
 }
 
-.namespace {
+.card {
   margin: 25px 20px;
-  padding: 10px 20px;
+  padding: 20px;
   color: #333;
   background-color: #fff;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   border-radius: 5px;
 }
 
-.namespace h3 {
+.card.namespace {
+  padding: 10px 20px;
+}
+
+.card h3 {
   margin: 0;
   font-weight: 300;
   font-size: 28px;
@@ -66,23 +70,23 @@ body {
   font-weight: bold;
 }
 
-.namespace .cluster-overview {
-  height: 215px;
+.cluster-overview {
+  height: 204px;
 }
 
-.namespace .cluster-overview .cluster-score {
+.cluster-overview .cluster-score {
   width: 200px;
   display: inline-block;
   margin-left: 20px;
 }
 
-.namespace .cluster-overview .cluster-score .weather {
+.cluster-overview .cluster-score .weather {
     font-size: 90px;
     color: #444;
     margin-bottom: 15px;
 }
 
-.namespace .cluster-overview .cluster-score .sailing-message {
+.cluster-overview .cluster-score .sailing-message {
   font-size: 16px;
   line-height: 28px;
   margin-left: 7px;
@@ -90,7 +94,7 @@ body {
   color: #555;
 }
 
-.namespace .cluster-overview .cluster-score .scores {
+.cluster-overview .cluster-score .scores {
   font-size: 16px;
   margin-top: 10px;
 }
@@ -102,7 +106,7 @@ body {
   left: 120px;
 }
 
-.namespace .cluster-overview .result-messages {
+.cluster-overview .result-messages {
   margin: 0 20px;
   display: inline-block;
   position: relative;
@@ -110,7 +114,7 @@ body {
   top: -45px;
 }
 
-.namespace .cluster-overview .result-messages ul {
+.cluster-overview .result-messages ul {
   position: relative;
   top: 0px;
   left: 400px;
@@ -118,28 +122,38 @@ body {
   line-height: 35px;
 }
 
-.namespace-content {
+.card.cluster .expandable-table {
+  margin-top: 20px;
+}
+
+.card.cluster .detail-label {
+  display: inline-block;
+  min-width: 140px;
+  font-weight: bold;
+}
+
+.expandable-table {
   width: 100%;
   border-spacing: 0;
   border-collapse: collapse;
 }
 
-.namespace-content tr {
+.expandable-table tr {
   height: 50px;
 }
 
-.namespace-content td {
+.expandable-table td {
   padding: 15px 20px;
   margin: 0;
   font-size: 18px;
   border-top: 1px solid #eee;
 }
 
-.namespace .resource-info .name {
+.expandable-table .resource-info .name {
   cursor: pointer;
 }
 
-.namespace .resource-info .caret-expander {
+.expandable-table .resource-info .caret-expander {
   display: inline-block;
   width: 15px;
   height: 15px;
@@ -150,18 +164,21 @@ body {
   background-position: 2px center;
 }
 
-.namespace .resource-info.expanded .caret-expander {
+.expandable-table .resource-info.expanded .caret-expander {
   background-image: url('../images/caret-bottom.svg');
   background-position: center 2px;
 }
 
-.namespace .resource-info .result-messages {
+.expandable-table .resource-info .expandable-content {
   display: none;
-  color: #6a6a6a;
 }
 
-.namespace .resource-info.expanded .result-messages {
+.expandable-table .resource-info.expanded .expandable-content {
   display: block;
+}
+
+.namespace .resource-info .result-messages {
+  color: #6a6a6a;
 }
 
 .namespace .result-messages h4 {
@@ -170,7 +187,7 @@ body {
   margin: 15px 25px 6px;
 }
 
-.namespace .result-messages ul {
+ul.message-list {
   list-style-type: none;
   font-size: 13px;
   line-height: 20px;
@@ -179,11 +196,11 @@ body {
   color: #6a6a6a;
 }
 
-.namespace .result-messages ul li {
+ul.message-list li {
   margin-bottom: 5px;
 }
 
-.namespace .result-messages i {
+ul.message-list li i {
   display: inline-block;
   margin-right: 7px;
   text-align: center;
@@ -194,15 +211,15 @@ body {
   bottom: -3px;
 }
 
-.namespace .result-messages .success i {
+.result-messages .success i {
   color: #8BD2DC;
 }
 
-.namespace .result-messages .warning i {
+.result-messages .warning i {
   color: #f26c21;
 }
 
-.namespace .result-messages .error i {
+.result-messages .error i {
   color: #a11f4c;
 }
 
