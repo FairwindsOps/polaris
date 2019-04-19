@@ -57,7 +57,7 @@ security:
   capabilities:
     error:
       ifAnyAdded:
-        - CAP_SYS_ADMIN
+        - SYS_ADMIN
         - ALL
       ifAnyNotDropped:
         - ALL

@@ -1,29 +1,57 @@
-## Build locally
-This package is best built using [packr](https://github.com/gobuffalo/packr), which provides
-a thin wrapper around the go compiler in order to include static HTML/CSS/JS assets.
-```bash
-git clone https://github.com/reactiveops/fairwinds $GOPATH/src/github.com/reactiveops/fairwinds
-go get -u github.com/gobuffalo/packr/v2/packr2
-packr2 build -a -o fairwinds *.go
-./fairwinds -h
+<p align="center">
+  <img src="/public/images/logo.png" alt="Fairwinds Logo" />
+</p>
+
+Fairwinds aims to keep your cluster sailing smoothly. It runs a variety of checks to ensure that Kubernetes deployments are configured using best practices that will avoid potential problems in the future. The project includes two primary parts:
+
+- A dashboard to display the results of these validations on your existing deployments
+- A beta version of a webhook that can prevent poorly configured deployments from reaching your cluster
+
+## Dashboard
+
+The Fairwinds Dashboard provides an overview of your current deployments in a cluster along with their validation scores. An overall score is provided for a cluster on a 0 - 100 scale. Results for each validation are grouped by namespace and deployment.
+
+<p align="center">
+  <img src="/dashboard-screenshot.png" alt="Fairwinds Dashboard" />
+</p>
+
+### Deploying
+
+To deploy Fairwinds with kubectl:
+
+```
+kubectl apply -f https://raw.githubusercontent.com/reactiveops/fairwinds/master/deploy/all.yaml
 ```
 
-## Run on-cluster
+Fairwinds can also be deployed with Helm:
 
-On GKE, you'll need to run the following command first:
 ```
-kubectl create clusterrolebinding cluster-admin-binding \
-  --clusterrole cluster-admin \
-  --user $(gcloud config get-value account)
+helm upgrade --install fairwinds deploy/helm/fairwinds/ --namespace fairwinds
 ```
 
-Then apply the config:
+### Viewing the Dashboard
+
+Once the dashboard is deployed, it can be viewed by using kubectl port-forward:
 ```
-kubectl apply -f deploy/all.yaml
+kubectl port-forward --namespace fairwinds svc/fairwinds-fairwinds-dashboard 8080:80 &
+open http://localhost:8080
 ```
 
+### Using a Binary Release
 
-## Options
+If you'd prefer to run Fairwinds locally, binary releases are available on the [releases page](https://github.com/reactiveops/fairwinds/releases). When running as a binary, Fairwinds will use your local kubeconfig to connect to a cluster. There are a variety of options available, but the most common usage may be to view the dashboard:
+
+```
+fairwinds --dashboard
+```
+
+## Webhook
+
+Fairwinds includes experimental support for an optional validating webhook. This accepts the same configuration as the dashboard, and can run the same validations. This webhook will reject any deployments that trigger a validation error. This is indicative of the greater goal of Fairwinds, not just to encourage better configuration through dashboard visibility, but to actually enforce it with this webhook. *Although we are working towards greater stability and better test coverage, we do not currently consider this webhook component production ready.*
+
+Unfortunately we have not found a way to disply warnings as part of `kubectl` output unless we are rejecting a deployment altogether. That means that any checks with a severity of `warning` will still pass webhook validation, and the only evidence of that warning will either be in the Fairwinds dashboard or the Fairwinds webhook logs.
+
+## CLI Options
 
 * `config`: Specify a location for the Fairwinds config
 * `dashboard`: Runs the webserver for Fairwinds dashboard.
@@ -32,20 +60,20 @@ kubectl apply -f deploy/all.yaml
 * `webhook-port`: Port for the webhook webserver (default 9876)
 * `disable-webhook-config-installer`: disable the installer in the webhook server, so it won't install webhook configuration resources during bootstrapping
 * `kubeconfig`: Paths to a kubeconfig. Only required if out-of-cluster.
-* `master`: The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.
 
-## Helm Deploy Option
+## Configuration
 
-* Create release with Helm:
-```
-helm upgrade --install fairwinds deploy/helm/fairwinds/ --namespace fairwinds --recreate-pods
-kubectl port-forward --namespace fairwinds svc/fairwinds-fairwinds-dashboard 8080:80 &
-open http://localhost:8080
-```
+Fairwinds supports a wide range of validations covering a number of Kubernetes best practices. Here's a sample configuration file that includes all currently supported checks. The [default configuration](https://github.com/reactiveops/fairwinds/blob/master/config.yaml) contains a number of those checks. This repository also includes a sample [full configuration file](https://github.com/reactiveops/fairwinds/blob/master/config-full.yaml) that enables all available checks.
 
-## Run tests
-```
-go list ./... | grep -v vendor | xargs golint -set_exit_status
-go list ./... | grep -v vendor | xargs go vet
-go test ./pkg/... -v -coverprofile cover.out
-```
+Each check can be assigned a `severity`. Only checks with a severity of `error` or `warning` will be validated. The results of these validations are visible on the dashboard. In the case of the validating webhook, only failures with a severity of `error` will result in a change being rejected.
+
+Fairwinds validation checks fall into several different categories:
+
+- [Health Checks](docs/health-checks.md)
+- [Images](docs/images.md)
+- [Networking](docs/networking.md)
+- [Resources](docs/resources.md)
+- [Security](docs/security.md)
+
+## License
+Apache License 2.0

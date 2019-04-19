@@ -14,6 +14,16 @@ Fairwinds is built on top of [controller-runtime](https://github.com/kubernetes-
 
 We label issues with the ["good first issue" tag](https://github.com/reactiveops/fairwinds/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) if we believe they'll be a good starting point for new contributors. If you're interested in working on an issue, please start a conversation on that issue, and we can help answer any questions as they come up.
 
+## Running Tests
+
+The following commands are all required to pass as part of Fairwinds testing:
+
+```
+go list ./ | grep -v vendor | xargs golint -set_exit_status
+go list ./ | grep -v vendor | xargs go vet
+go test ./pkg/... -v -coverprofile cover.out
+```
+
 ## Creating a New Issue
 
 If you've encountered an issue that is not already reported, please create an issue that contains the following:
