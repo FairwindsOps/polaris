@@ -5,9 +5,9 @@ $(function () {
       labels: ["Passing", "Warning", "Error"],
       datasets: [{
         data: [
-          fairwindsAuditData.ClusterSummary.Results.Successes,
-          fairwindsAuditData.ClusterSummary.Results.Warnings,
-          fairwindsAuditData.ClusterSummary.Results.Errors,
+          fairwindsAuditData.ClusterSummary.Results.Totals.Successes,
+          fairwindsAuditData.ClusterSummary.Results.Totals.Warnings,
+          fairwindsAuditData.ClusterSummary.Results.Totals.Errors,
         ],
         backgroundColor: ['#8BD2DC', '#f26c21', '#a11f4c'],
       }]

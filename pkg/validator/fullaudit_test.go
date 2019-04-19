@@ -20,17 +20,30 @@ func TestGetTemplateData(t *testing.T) {
 	}
 
 	sum := ResultSummary{
-		Successes: uint(4),
+		Totals: CountSummary{
+			Successes: uint(4),
+			Warnings:  uint(1),
+			Errors:    uint(1),
+		},
+		ByCategory: CategorySummary{},
+	}
+	sum.ByCategory["Health Checks"] = &CountSummary{
+		Successes: uint(0),
 		Warnings:  uint(1),
 		Errors:    uint(1),
+	}
+	sum.ByCategory["Resources"] = &CountSummary{
+		Successes: uint(4),
+		Warnings:  uint(0),
+		Errors:    uint(0),
 	}
 
 	actualAudit, err := RunAudit(c, k8s)
 	assert.Equal(t, err, nil, "error should be nil")
 
-	assert.EqualValues(t, actualAudit.ClusterSummary.Results, sum)
-	assert.Equal(t, len(actualAudit.NamespacedResults["test"].Results), 1, "should be equal")
-	assert.Equal(t, len(actualAudit.NamespacedResults["test"].Results[0].PodResults), 1, "should be equal")
-	assert.Equal(t, len(actualAudit.NamespacedResults["test"].Results[0].PodResults[0].ContainerResults), 1, "should be equal")
-	assert.Equal(t, len(actualAudit.NamespacedResults["test"].Results[0].PodResults[0].ContainerResults[0].Messages), 6, "should be equal")
+	assert.EqualValues(t, sum, actualAudit.ClusterSummary.Results)
+	assert.Equal(t, 1, len(actualAudit.NamespacedResults["test"].Results), "should be equal")
+	assert.Equal(t, 1, len(actualAudit.NamespacedResults["test"].Results[0].PodResults), "should be equal")
+	assert.Equal(t, 1, len(actualAudit.NamespacedResults["test"].Results[0].PodResults[0].ContainerResults), "should be equal")
+	assert.Equal(t, 6, len(actualAudit.NamespacedResults["test"].Results[0].PodResults[0].ContainerResults[0].Messages), "should be equal")
 }

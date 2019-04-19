@@ -18,12 +18,12 @@ import (
 	"github.com/reactiveops/fairwinds/pkg/validator"
 )
 
-func getWarningWidth(rs validator.ResultSummary, fullWidth int) uint {
-	return uint(float64(rs.Successes+rs.Warnings) / float64(rs.Successes+rs.Warnings+rs.Errors) * float64(fullWidth))
+func getWarningWidth(counts validator.CountSummary, fullWidth int) uint {
+	return uint(float64(counts.Successes+counts.Warnings) / float64(counts.Successes+counts.Warnings+counts.Errors) * float64(fullWidth))
 }
 
-func getSuccessWidth(rs validator.ResultSummary, fullWidth int) uint {
-	return uint(float64(rs.Successes) / float64(rs.Successes+rs.Warnings+rs.Errors) * float64(fullWidth))
+func getSuccessWidth(counts validator.CountSummary, fullWidth int) uint {
+	return uint(float64(counts.Successes) / float64(counts.Successes+counts.Warnings+counts.Errors) * float64(fullWidth))
 }
 
 func getGrade(rs validator.ResultSummary) string {
@@ -58,8 +58,8 @@ func getGrade(rs validator.ResultSummary) string {
 }
 
 func getScore(rs validator.ResultSummary) uint {
-	total := (rs.Successes * 2) + rs.Warnings + (rs.Errors * 2)
-	return uint((float64(rs.Successes*2) / float64(total)) * 100)
+	total := (rs.Totals.Successes * 2) + rs.Totals.Warnings + (rs.Totals.Errors * 2)
+	return uint((float64(rs.Totals.Successes*2) / float64(total)) * 100)
 }
 
 func getWeatherIcon(rs validator.ResultSummary) string {

@@ -31,12 +31,10 @@ type ContainerValidation struct {
 }
 
 // ValidateContainer validates that each pod conforms to the Fairwinds config, returns a ResourceResult.
-func ValidateContainer(cnConf *conf.Configuration, container *corev1.Container) ResourceResult {
+func ValidateContainer(cnConf *conf.Configuration, container *corev1.Container) ContainerResult {
 	cv := ContainerValidation{
-		Container: container,
-		ResourceValidation: &ResourceValidation{
-			Summary: &ResultSummary{},
-		},
+		Container:          container,
+		ResourceValidation: &ResourceValidation{},
 	}
 
 	cv.validateResources(&cnConf.Resources)
@@ -48,16 +46,10 @@ func ValidateContainer(cnConf *conf.Configuration, container *corev1.Container) 
 	cRes := ContainerResult{
 		Name:     container.Name,
 		Messages: cv.messages(),
+		Summary:  cv.summary(),
 	}
 
-	rr := ResourceResult{
-		Name:             container.Name,
-		Type:             "Container",
-		Summary:          cv.Summary,
-		ContainerResults: []ContainerResult{cRes},
-	}
-
-	return rr
+	return cRes
 }
 
 func (cv *ContainerValidation) validateResources(resConf *conf.Resources) {

@@ -103,7 +103,7 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 		return admission.ErrorResponse(http.StatusBadRequest, err)
 	}
 
-	if results.Summary.Errors > 0 {
+	if results.Summary.Totals.Errors > 0 {
 		// TODO: Decide what message we want to return here.
 		allowed, reason = false, "failed validation checks, view details on dashbaord."
 	}

@@ -46,22 +46,52 @@ type ResourceResult struct {
 	PodResults       []PodResult
 }
 
-// ResultSummary provides a high level overview of success, warnings, and errors.
-type ResultSummary struct {
+// CountSummary provides a high level overview of success, warnings, and errors.
+type CountSummary struct {
 	Successes uint
 	Warnings  uint
 	Errors    uint
+}
+
+func (cs *CountSummary) appendCounts(toAppend CountSummary) {
+	cs.Errors += toAppend.Errors
+	cs.Warnings += toAppend.Warnings
+	cs.Successes += toAppend.Successes
+}
+
+// CategorySummary provides a map from category name to a CountSummary
+type CategorySummary map[string]*CountSummary
+
+// ResultSummary provides a high level overview of success, warnings, and errors.
+type ResultSummary struct {
+	Totals     CountSummary
+	ByCategory CategorySummary
+}
+
+func (rs *ResultSummary) appendResults(toAppend ResultSummary) {
+	rs.Totals.appendCounts(toAppend.Totals)
+	for category, summary := range toAppend.ByCategory {
+		if rs.ByCategory == nil {
+			rs.ByCategory = CategorySummary{}
+		}
+		if _, exists := rs.ByCategory[category]; !exists {
+			rs.ByCategory[category] = &CountSummary{}
+		}
+		rs.ByCategory[category].appendCounts(*summary)
+	}
 }
 
 // ContainerResult provides a list of validation messages for each container.
 type ContainerResult struct {
 	Name     string
 	Messages []*ResultMessage
+	Summary  *ResultSummary
 }
 
 // PodResult provides a list of validation messages for each pod.
 type PodResult struct {
 	Name             string
+	Summary          *ResultSummary
 	Messages         []*ResultMessage
 	ContainerResults []ContainerResult
 }
@@ -71,9 +101,4 @@ type ResultMessage struct {
 	Message  string
 	Type     MessageType
 	Category string
-}
-
-// Score represents a percentage of validations that were successful.
-func (rs *ResultSummary) Score() uint {
-	return uint(float64(rs.Successes) / float64(rs.Successes+rs.Warnings+rs.Errors) * 100)
 }

@@ -32,10 +32,8 @@ type PodValidation struct {
 // ValidatePod validates that each pod conforms to the Fairwinds config, returns a ResourceResult.
 func ValidatePod(podConf conf.Configuration, pod *corev1.PodSpec) ResourceResult {
 	pv := PodValidation{
-		Pod: pod,
-		ResourceValidation: &ResourceValidation{
-			Summary: &ResultSummary{},
-		},
+		Pod:                pod,
+		ResourceValidation: &ResourceValidation{},
 	}
 
 	pv.validateSecurity(&podConf.Security)
@@ -51,8 +49,11 @@ func ValidatePod(podConf conf.Configuration, pod *corev1.PodSpec) ResourceResult
 
 	rr := ResourceResult{
 		Type:       "Pod",
-		Summary:    pv.Summary,
+		Summary:    pv.summary(),
 		PodResults: []PodResult{pRes},
+	}
+	for _, cRes := range pRes.ContainerResults {
+		rr.Summary.appendResults(*cRes.Summary)
 	}
 
 	return rr
@@ -60,14 +61,8 @@ func ValidatePod(podConf conf.Configuration, pod *corev1.PodSpec) ResourceResult
 
 func (pv *PodValidation) validateContainers(containers []corev1.Container, pRes *PodResult, podConf *conf.Configuration) {
 	for _, container := range containers {
-		ctrRR := ValidateContainer(podConf, &container)
-		pv.Summary.Successes += ctrRR.Summary.Successes
-		pv.Summary.Warnings += ctrRR.Summary.Warnings
-		pv.Summary.Errors += ctrRR.Summary.Errors
-		pRes.ContainerResults = append(
-			pRes.ContainerResults,
-			ctrRR.ContainerResults[0],
-		)
+		cRes := ValidateContainer(podConf, &container)
+		pRes.ContainerResults = append(pRes.ContainerResults, cRes)
 	}
 }
 

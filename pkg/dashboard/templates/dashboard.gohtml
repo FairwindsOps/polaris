@@ -47,9 +47,9 @@
         </div>
         <div class="result-messages">
           <ul class="message-list">
-            <li class="success"><i class="fas fa-check"></i> {{ .AuditData.ClusterSummary.Results.Successes }} checks passed</li>
-            <li class="warning"><i class="fas fa-exclamation"></i> {{ .AuditData.ClusterSummary.Results.Warnings }} checks had warnings</li>
-            <li class="error"><i class="fas fa-times"></i> {{ .AuditData.ClusterSummary.Results.Errors }} checks had errors</li>
+            <li class="success"><i class="fas fa-check"></i> {{ .AuditData.ClusterSummary.Results.Totals.Successes }} checks passed</li>
+            <li class="warning"><i class="fas fa-exclamation"></i> {{ .AuditData.ClusterSummary.Results.Totals.Warnings }} checks had warnings</li>
+            <li class="error"><i class="fas fa-times"></i> {{ .AuditData.ClusterSummary.Results.Totals.Errors }} checks had errors</li>
           </ul>
         </div>
         <canvas id="clusterScoreChart"></canvas>
@@ -80,7 +80,32 @@
             </div>
           </td>
         </tr>
+        <tr>
+          <td class="resource-info">
+            <div class="name"><span class="caret-expander"></span>Health summary</div>
+            <div class="expandable-content">
+              <ul class="message-list">
+                {{ range $category, $summary := .AuditData.ClusterSummary.Results.ByCategory }}
+                  <li>
+                    <span class="detail-label">{{ $category }}</span>
+                    <span class="detail-value">{{ $summary.Errors }} errors, {{ $summary.Warnings }} warnings</span>
+                    <div class="status-bar">
+                      <div class="status">
+                        <div class="failing">
+                          <div class="warning" style="width: {{ getWarningWidth $summary 280 }}px;">
+                            <div class="passing" style="width: {{ getSuccessWidth $summary 280 }}px;"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                {{ end }}
+              </ul>
+            </div>
+          </td>
+        </tr>
       </table>
+
     </div>
 
     {{ range $namespace, $results := .AuditData.NamespacedResults }}
@@ -116,8 +141,8 @@
               <td class="status-bar">
                 <div class="status">
                   <div class="failing">
-                    <div class="warning" style="width: {{ getWarningWidth .Summary 200 }}px;">
-                      <div class="passing" style="width: {{ getSuccessWidth .Summary 200 }}px;"></div>
+                    <div class="warning" style="width: {{ getWarningWidth .Summary.Totals 200 }}px;">
+                      <div class="passing" style="width: {{ getSuccessWidth .Summary.Totals 200 }}px;"></div>
                     </div>
                   </div>
                 </div>
