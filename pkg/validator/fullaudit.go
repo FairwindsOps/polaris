@@ -3,7 +3,7 @@ package validator
 import (
 	conf "github.com/reactiveops/fairwinds/pkg/config"
 	"github.com/reactiveops/fairwinds/pkg/kube"
-	k8smeta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -56,7 +56,7 @@ func RunAudit(config conf.Configuration, kubeAPI *kube.API) (AuditData, error) {
 		return AuditData{}, err
 	}
 
-	listOpts := k8smeta.ListOptions{}
+	listOpts := metav1.ListOptions{}
 	nodes, err := kubeAPI.Clientset.CoreV1().Nodes().List(listOpts)
 	if err != nil {
 		return AuditData{}, err
