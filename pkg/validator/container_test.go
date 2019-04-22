@@ -340,6 +340,126 @@ func TestValidateImage(t *testing.T) {
 	}
 }
 
+func TestValidateNetworking(t *testing.T) {
+	// Test setup.
+	emptyConf := conf.Networking{}
+	standardConf := conf.Networking{
+		HostPortSet: conf.SeverityWarning,
+	}
+	strongConf := conf.Networking{
+		HostPortSet: conf.SeverityError,
+	}
+
+	emptyCV := ContainerValidation{
+		Container: &corev1.Container{Name: ""},
+		ResourceValidation: &ResourceValidation{
+			Summary: &ResultSummary{},
+		},
+	}
+
+	badCV := ContainerValidation{
+		Container: &corev1.Container{
+			Ports: []corev1.ContainerPort{{
+				ContainerPort: 3000,
+				HostPort:      443,
+			}},
+		},
+		ResourceValidation: &ResourceValidation{
+			Summary: &ResultSummary{},
+		},
+	}
+
+	goodCV := ContainerValidation{
+		Container: &corev1.Container{
+			Ports: []corev1.ContainerPort{{
+				ContainerPort: 3000,
+			}},
+		},
+		ResourceValidation: &ResourceValidation{
+			Summary: &ResultSummary{},
+		},
+	}
+
+	var testCases = []struct {
+		name             string
+		networkConf      conf.Networking
+		cv               ContainerValidation
+		expectedMessages []*ResultMessage
+	}{
+		{
+			name:             "empty ports + empty validation config",
+			networkConf:      emptyConf,
+			cv:               emptyCV,
+			expectedMessages: []*ResultMessage{},
+		},
+		{
+			name:        "empty ports + standard validation config",
+			networkConf: standardConf,
+			cv:          emptyCV,
+			expectedMessages: []*ResultMessage{{
+				Message:  "Host port is not configured",
+				Type:     "success",
+				Category: "Networking",
+			}},
+		},
+		{
+			name:        "empty ports + strong validation config",
+			networkConf: standardConf,
+			cv:          emptyCV,
+			expectedMessages: []*ResultMessage{{
+				Message:  "Host port is not configured",
+				Type:     "success",
+				Category: "Networking",
+			}},
+		},
+		{
+			name:             "host ports + empty validation config",
+			networkConf:      emptyConf,
+			cv:               badCV,
+			expectedMessages: []*ResultMessage{},
+		},
+		{
+			name:        "host ports + standard validation config",
+			networkConf: standardConf,
+			cv:          badCV,
+			expectedMessages: []*ResultMessage{{
+				Message:  "Host port should not be configured",
+				Type:     "warning",
+				Category: "Networking",
+			}},
+		},
+		{
+			name:        "no host ports + standard validation config",
+			networkConf: standardConf,
+			cv:          goodCV,
+			expectedMessages: []*ResultMessage{{
+				Message:  "Host port is not configured",
+				Type:     "success",
+				Category: "Networking",
+			}},
+		},
+		{
+			name:        "host ports + strong validation config",
+			networkConf: strongConf,
+			cv:          badCV,
+			expectedMessages: []*ResultMessage{{
+				Message:  "Host port should not be configured",
+				Type:     "error",
+				Category: "Networking",
+			}},
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.cv = resetCV(tt.cv)
+			tt.cv.validateNetworking(&tt.networkConf)
+			assert.Len(t, tt.cv.messages(), len(tt.expectedMessages))
+			assert.ElementsMatch(t, tt.cv.messages(), tt.expectedMessages)
+		})
+	}
+}
+
 func TestValidateSecurity(t *testing.T) {
 	trueVar := true
 	falseVar := false

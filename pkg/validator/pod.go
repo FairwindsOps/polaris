@@ -38,6 +38,7 @@ func ValidatePod(podConf conf.Configuration, pod *corev1.PodSpec) ResourceResult
 		},
 	}
 
+	pv.validateSecurity(&podConf.Security)
 	pv.validateNetworking(&podConf.Networking)
 
 	pRes := PodResult{
@@ -70,56 +71,29 @@ func (pv *PodValidation) validateContainers(containers []corev1.Container, pRes 
 	}
 }
 
-func (pv *PodValidation) validateNetworking(networkConf *conf.Networking) {
-	pv.validateHostAlias(networkConf)
-	pv.validateHostIPC(networkConf)
-	pv.validateHostPID(networkConf)
-	pv.validateHostNetwork(networkConf)
-}
+func (pv *PodValidation) validateSecurity(securityConf *conf.Security) {
+	category := messages.CategorySecurity
 
-func (pv *PodValidation) validateHostAlias(networkConf *conf.Networking) {
-	category := messages.CategoryNetworking
-	if networkConf.HostAliasSet.IsActionable() {
-		hostAliasSet := false
-		for _, alias := range pv.Pod.HostAliases {
-			if alias.IP != "" && len(alias.Hostnames) == 0 {
-				hostAliasSet = true
-				break
-			}
-		}
-
-		if hostAliasSet {
-			pv.addFailure(messages.HostAliasFailure, networkConf.HostAliasSet, category)
-		} else {
-			pv.addSuccess(messages.HostAliasSuccess, category)
-		}
-	}
-}
-
-func (pv *PodValidation) validateHostIPC(networkConf *conf.Networking) {
-	category := messages.CategoryNetworking
-	if networkConf.HostIPCSet.IsActionable() {
+	if securityConf.HostIPCSet.IsActionable() {
 		if pv.Pod.HostIPC {
-			pv.addFailure(messages.HostIPCFailure, networkConf.HostIPCSet, category)
+			pv.addFailure(messages.HostIPCFailure, securityConf.HostIPCSet, category)
 		} else {
 			pv.addSuccess(messages.HostIPCSuccess, category)
 		}
 	}
-}
 
-func (pv *PodValidation) validateHostPID(networkConf *conf.Networking) {
-	category := messages.CategoryNetworking
-	if networkConf.HostPIDSet.IsActionable() {
+	if securityConf.HostPIDSet.IsActionable() {
 		if pv.Pod.HostPID {
-			pv.addFailure(messages.HostPIDFailure, networkConf.HostPIDSet, category)
+			pv.addFailure(messages.HostPIDFailure, securityConf.HostPIDSet, category)
 		} else {
 			pv.addSuccess(messages.HostPIDSuccess, category)
 		}
 	}
 }
 
-func (pv *PodValidation) validateHostNetwork(networkConf *conf.Networking) {
+func (pv *PodValidation) validateNetworking(networkConf *conf.Networking) {
 	category := messages.CategoryNetworking
+
 	if networkConf.HostNetworkSet.IsActionable() {
 		if pv.Pod.HostNetwork {
 			pv.addFailure(messages.HostNetworkFailure, networkConf.HostNetworkSet, category)

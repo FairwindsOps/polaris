@@ -24,11 +24,12 @@ import (
 
 func TestValidatePod(t *testing.T) {
 	c := conf.Configuration{
+		Security: conf.Security{
+			HostIPCSet: conf.SeverityError,
+			HostPIDSet: conf.SeverityError,
+		},
 		Networking: conf.Networking{
-			HostAliasSet:   conf.SeverityError,
-			HostIPCSet:     conf.SeverityError,
 			HostNetworkSet: conf.SeverityWarning,
-			HostPIDSet:     conf.SeverityError,
 			HostPortSet:    conf.SeverityError,
 		},
 	}
@@ -38,15 +39,14 @@ func TestValidatePod(t *testing.T) {
 	pod := test.MockPod()
 
 	expectedSum := ResultSummary{
-		Successes: uint(9),
+		Successes: uint(8),
 		Warnings:  uint(0),
 		Errors:    uint(0),
 	}
 
 	expectedMessages := []*ResultMessage{
-		{Message: "Host alias is not configured", Type: "success", Category: "Networking"},
-		{Message: "Host IPC is not configured", Type: "success", Category: "Networking"},
-		{Message: "Host PID is not configured", Type: "success", Category: "Networking"},
+		{Message: "Host IPC is not configured", Type: "success", Category: "Security"},
+		{Message: "Host PID is not configured", Type: "success", Category: "Security"},
 		{Message: "Host network is not configured", Type: "success", Category: "Networking"},
 	}
 

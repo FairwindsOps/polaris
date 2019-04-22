@@ -152,7 +152,7 @@ func (cv *ContainerValidation) validateNetworking(networkConf *conf.Networking) 
 		}
 
 		if hostPortSet {
-			cv.addFailure(messages.HostPortFailure, networkConf.HostAliasSet, category)
+			cv.addFailure(messages.HostPortFailure, networkConf.HostPortSet, category)
 		} else {
 			cv.addSuccess(messages.HostPortSuccess, category)
 		}

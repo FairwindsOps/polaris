@@ -44,12 +44,11 @@ healthChecks:
   readinessProbeMissing: warning
   livenessProbeMissing: warning
 networking:
-  hostAliasSet: error
-  hostIPCSet: error
   hostNetworkSet: error
-  hostPIDSet: error
   hostPortSet: error
 security:
+  hostIPCSet: error
+  hostPIDSet: error
   runAsRootAllowed: warning
   runAsPrivileged: error
   notReadOnlyRootFileSystem: warning

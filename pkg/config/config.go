@@ -80,15 +80,14 @@ type ErrorWarningLists struct {
 
 // Networking contains the config for networking validations.
 type Networking struct {
-	HostAliasSet   Severity `json:"hostAliasSet"`
-	HostIPCSet     Severity `json:"hostIPCSet"`
 	HostNetworkSet Severity `json:"hostNetworkSet"`
-	HostPIDSet     Severity `json:"hostPIDSet"`
 	HostPortSet    Severity `json:"hostPortSet"`
 }
 
 // Security contains the config for security validations.
 type Security struct {
+	HostIPCSet                 Severity             `json:"hostIPCSet"`
+	HostPIDSet                 Severity             `json:"hostPIDSet"`
 	RunAsRootAllowed           Severity             `json:"runAsRootAllowed"`
 	RunAsPrivileged            Severity             `json:"RunAsPrivileged"`
 	NotReadOnlyRootFileSystem  Severity             `json:"notReadOnlyRootFileSystem"`
