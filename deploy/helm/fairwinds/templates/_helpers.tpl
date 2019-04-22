@@ -30,3 +30,29 @@ Create chart name and version as used by the chart label.
 {{- define "fairwinds.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
+
+{{/*
+Standard labels
+*/}}
+{{- define "fairwinds.labels" -}}
+{{- if .Values.templateOnly -}}
+app: {{ include "fairwinds.name" . }}
+{{- else -}}
+app.kubernetes.io/name: {{ include "fairwinds.name" . }}
+helm.sh/chart: {{ include "fairwinds.chart" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Standard selector
+*/}}
+{{- define "fairwinds.selectors" -}}
+{{- if .Values.templateOnly -}}
+app: {{ include "fairwinds.name" . }}
+{{- else -}}
+app.kubernetes.io/name: {{ include "fairwinds.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end -}}
+{{- end -}}

@@ -20,6 +20,7 @@ The Fairwinds Dashboard provides an overview of your current deployments in a cl
 To deploy Fairwinds with kubectl:
 
 ```
+kubectl create namespace fairwinds
 kubectl apply -f https://raw.githubusercontent.com/reactiveops/fairwinds/master/deploy/all.yaml
 ```
 
