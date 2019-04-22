@@ -19,8 +19,8 @@ We label issues with the ["good first issue" tag](https://github.com/reactiveops
 The following commands are all required to pass as part of Fairwinds testing:
 
 ```
-go list ./ | grep -v vendor | xargs golint -set_exit_status
-go list ./ | grep -v vendor | xargs go vet
+go list ./... | grep -v vendor | xargs golint -set_exit_status
+go list ./... | grep -v vendor | xargs go vet
 go test ./pkg/... -v -coverprofile cover.out
 ```
 
