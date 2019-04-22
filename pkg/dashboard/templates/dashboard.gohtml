@@ -21,7 +21,6 @@
     window.fairwindsAuditData = {{ .JSON }};
   </script>
   <script type="text/javascript" src="/static/js/main.js"></script>
-
 </head>
 
 <body>
@@ -38,47 +37,74 @@
   </div>
 
   <div class="dashboard-content">
-    <div class="namespace">
+    <div class="card cluster">
       <h3>Cluster Overview</h3>
       <div class="cluster-overview">
         <div class="cluster-score">
-          <div class="weather"><i class="fas {{ getWeatherIcon .AuditData.ClusterSummary }}"></i></div>
-          <div class="sailing">{{ getWeatherText .AuditData.ClusterSummary }}</div>
-          <div class="scores">Grade: <strong>{{ getGrade .AuditData.ClusterSummary }}</strong> | Score: <strong>{{ getScore .AuditData.ClusterSummary }}%</strong></div>
+          <div class="weather"><i class="fas {{ getWeatherIcon .AuditData.ClusterSummary.Results }}"></i></div>
+          <div class="sailing">{{ getWeatherText .AuditData.ClusterSummary.Results }}</div>
+          <div class="scores">Grade: <strong>{{ getGrade .AuditData.ClusterSummary.Results }}</strong> | Score: <strong>{{ getScore .AuditData.ClusterSummary.Results }}%</strong></div>
         </div>
         <div class="result-messages">
-          <ul>
-            <li class="success"><i class="fas fa-check"></i> {{ .AuditData.ClusterSummary.Successes }} checks passed</li>
-            <li class="warning"><i class="fas fa-exclamation"></i> {{ .AuditData.ClusterSummary.Warnings }} checks had warnings</li>
-            <li class="error"><i class="fas fa-times"></i> {{ .AuditData.ClusterSummary.Errors }} checks had errors</li>
+          <ul class="message-list">
+            <li class="success"><i class="fas fa-check"></i> {{ .AuditData.ClusterSummary.Results.Successes }} checks passed</li>
+            <li class="warning"><i class="fas fa-exclamation"></i> {{ .AuditData.ClusterSummary.Results.Warnings }} checks had warnings</li>
+            <li class="error"><i class="fas fa-times"></i> {{ .AuditData.ClusterSummary.Results.Errors }} checks had errors</li>
           </ul>
         </div>
         <canvas id="clusterScoreChart"></canvas>
       </div>
+      <table class="expandable-table" cellspacing="0">
+        <tr>
+          <td class="resource-info">
+            <div class="name"><span class="caret-expander"></span>Cluster details</div>
+            <div class="expandable-content">
+              <ul class="message-list">
+                <li>
+                  <span class="detail-label">Kubernetes Version:</span>
+                  <span class="detail-value">{{ .AuditData.ClusterSummary.Version }}</span>
+                </li>
+                <li>
+                  <span class="detail-label">Nodes:</span>
+                  <span class="detail-value">{{ .AuditData.ClusterSummary.Nodes }}</span>
+                </li>
+                <li>
+                  <span class="detail-label">Pods:</span>
+                  <span class="detail-value">{{ .AuditData.ClusterSummary.Pods }}</span>
+                </li>
+                <li>
+                  <span class="detail-label">Namespaces:</span>
+                  <span class="detail-value">{{ .AuditData.ClusterSummary.Namespaces }}</span>
+                </li>
+              </ul>
+            </div>
+          </td>
+        </tr>
+      </table>
     </div>
 
     {{ range $namespace, $results := .AuditData.NamespacedResults }}
-      <div class="namespace">
+      <div class="card namespace">
         <h3>Namespace: <strong>{{ $namespace }}</strong></h3>
-        <table class="namespace-content" cellspacing="0">
+        <table class="expandable-table" cellspacing="0">
           {{ range $results.Results }}
             <tr>
               <td class="resource-info">
                 <div class="name"><span class="caret-expander"></span>{{ .Type }}: <strong>{{ .Name }}</strong></div>
 
                   {{ range .PodResults}}
-                    <div class="result-messages">
+                    <div class="result-messages expandable-content">
                       <h4>Pod Spec:</h4>
-                      <ul>
+                      <ul class="message-list">
                         {{ range $message := .Messages}}
                           <li class="{{ .Type }}"><i class="{{ getIcon $message }}"></i> {{ .Message }}</li>
                         {{ end }}
                       </ul>
                     </div>
                     {{ range .ContainerResults}}
-                      <div class="result-messages">
+                      <div class="result-messages expandable-content">
                         <h4>Container: {{ .Name }}</h4>
-                        <ul>
+                        <ul class="message-list">
                           {{ range $message := .Messages}}
                             <li class="{{ .Type }}"><i class="{{ getIcon $message }}"></i> {{ .Message }}</li>
                           {{ end }}

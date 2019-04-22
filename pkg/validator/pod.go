@@ -78,6 +78,7 @@ func (pv *PodValidation) validateNetworking(networkConf *conf.Networking) {
 }
 
 func (pv *PodValidation) validateHostAlias(networkConf *conf.Networking) {
+	category := messages.CategoryNetworking
 	if networkConf.HostAliasSet.IsActionable() {
 		hostAliasSet := false
 		for _, alias := range pv.Pod.HostAliases {
@@ -88,39 +89,42 @@ func (pv *PodValidation) validateHostAlias(networkConf *conf.Networking) {
 		}
 
 		if hostAliasSet {
-			pv.addFailure(messages.HostAliasFailure, networkConf.HostAliasSet)
+			pv.addFailure(messages.HostAliasFailure, networkConf.HostAliasSet, category)
 		} else {
-			pv.addSuccess(messages.HostAliasSuccess)
+			pv.addSuccess(messages.HostAliasSuccess, category)
 		}
 	}
 }
 
 func (pv *PodValidation) validateHostIPC(networkConf *conf.Networking) {
+	category := messages.CategoryNetworking
 	if networkConf.HostIPCSet.IsActionable() {
 		if pv.Pod.HostIPC {
-			pv.addFailure(messages.HostIPCFailure, networkConf.HostIPCSet)
+			pv.addFailure(messages.HostIPCFailure, networkConf.HostIPCSet, category)
 		} else {
-			pv.addSuccess(messages.HostIPCSuccess)
+			pv.addSuccess(messages.HostIPCSuccess, category)
 		}
 	}
 }
 
 func (pv *PodValidation) validateHostPID(networkConf *conf.Networking) {
+	category := messages.CategoryNetworking
 	if networkConf.HostPIDSet.IsActionable() {
 		if pv.Pod.HostPID {
-			pv.addFailure(messages.HostPIDFailure, networkConf.HostPIDSet)
+			pv.addFailure(messages.HostPIDFailure, networkConf.HostPIDSet, category)
 		} else {
-			pv.addSuccess(messages.HostPIDSuccess)
+			pv.addSuccess(messages.HostPIDSuccess, category)
 		}
 	}
 }
 
 func (pv *PodValidation) validateHostNetwork(networkConf *conf.Networking) {
+	category := messages.CategoryNetworking
 	if networkConf.HostNetworkSet.IsActionable() {
 		if pv.Pod.HostNetwork {
-			pv.addFailure(messages.HostNetworkFailure, networkConf.HostNetworkSet)
+			pv.addFailure(messages.HostNetworkFailure, networkConf.HostNetworkSet, category)
 		} else {
-			pv.addSuccess(messages.HostNetworkSuccess)
+			pv.addSuccess(messages.HostNetworkSuccess, category)
 		}
 	}
 }

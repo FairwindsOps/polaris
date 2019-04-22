@@ -186,7 +186,7 @@ func runAudit(c conf.Configuration, outputFile string, outputURL string) {
 		}
 		os.Stdout.Write(yamlBytes)
 	} else {
-		jsonData, err := json.Marshal(auditData)
+		jsonData, err := json.MarshalIndent(auditData, "", "  ")
 		if err != nil {
 			panic(err)
 		}

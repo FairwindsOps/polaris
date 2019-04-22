@@ -36,37 +36,40 @@ func (rv *ResourceValidation) messages() []*ResultMessage {
 	return messages
 }
 
-func (rv *ResourceValidation) addFailure(message string, severity conf.Severity) {
+func (rv *ResourceValidation) addFailure(message string, severity conf.Severity, category string) {
 	if severity == conf.SeverityError {
-		rv.addError(message)
+		rv.addError(message, category)
 	} else if severity == conf.SeverityWarning {
-		rv.addWarning(message)
+		rv.addWarning(message, category)
 	} else {
 		errMsg := fmt.Sprintf("Invalid severity: %s", severity)
 		log.Error(errors.New(errMsg), errMsg)
 	}
 }
 
-func (rv *ResourceValidation) addError(message string) {
+func (rv *ResourceValidation) addError(message string, category string) {
 	rv.Summary.Errors++
 	rv.Errors = append(rv.Errors, &ResultMessage{
-		Message: message,
-		Type:    MessageTypeError,
+		Message:  message,
+		Type:     MessageTypeError,
+		Category: category,
 	})
 }
 
-func (rv *ResourceValidation) addWarning(message string) {
+func (rv *ResourceValidation) addWarning(message string, category string) {
 	rv.Summary.Warnings++
 	rv.Warnings = append(rv.Warnings, &ResultMessage{
-		Message: message,
-		Type:    MessageTypeWarning,
+		Message:  message,
+		Type:     MessageTypeWarning,
+		Category: category,
 	})
 }
 
-func (rv *ResourceValidation) addSuccess(message string) {
+func (rv *ResourceValidation) addSuccess(message string, category string) {
 	rv.Summary.Successes++
 	rv.Successes = append(rv.Successes, &ResultMessage{
-		Message: message,
-		Type:    MessageTypeSuccess,
+		Message:  message,
+		Type:     MessageTypeSuccess,
+		Category: category,
 	})
 }

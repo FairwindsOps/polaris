@@ -1,6 +1,17 @@
 package messages
 
 const (
+	// CategoryHealthChecks category
+	CategoryHealthChecks = "Health Checks"
+	// CategorySecurity category
+	CategorySecurity = "Security"
+	// CategoryNetworking category
+	CategoryNetworking = "Networking"
+	// CategoryResources category
+	CategoryResources = "Resources"
+	// CategoryImages category
+	CategoryImages = "Images"
+
 	// CPURequestsLabel label
 	CPURequestsLabel = "CPU requests"
 	// CPULimitsLabel label

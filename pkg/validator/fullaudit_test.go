@@ -28,7 +28,7 @@ func TestGetTemplateData(t *testing.T) {
 	actualAudit, err := RunAudit(c, k8s)
 	assert.Equal(t, err, nil, "error should be nil")
 
-	assert.EqualValues(t, actualAudit.ClusterSummary, sum)
+	assert.EqualValues(t, actualAudit.ClusterSummary.Results, sum)
 	assert.Equal(t, len(actualAudit.NamespacedResults["test"].Results), 1, "should be equal")
 	assert.Equal(t, len(actualAudit.NamespacedResults["test"].Results[0].PodResults), 1, "should be equal")
 	assert.Equal(t, len(actualAudit.NamespacedResults["test"].Results[0].PodResults[0].ContainerResults), 1, "should be equal")

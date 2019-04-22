@@ -3,12 +3,28 @@ package validator
 import (
 	conf "github.com/reactiveops/fairwinds/pkg/config"
 	"github.com/reactiveops/fairwinds/pkg/kube"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+const (
+	// FairwindsOutputVersion is the version of the current output structure
+	FairwindsOutputVersion = "0.0"
+)
+
+// ClusterSummary contains Fairwinds results as well as some high-level stats
+type ClusterSummary struct {
+	Results    ResultSummary
+	Version    string
+	Nodes      int
+	Pods       int
+	Namespaces int
+}
 
 // AuditData contains all the data from a full Fairwinds audit
 type AuditData struct {
-	ClusterSummary    ResultSummary
-	NamespacedResults NamespacedResults
+	FairwindsOutputVersion string
+	ClusterSummary         ClusterSummary
+	NamespacedResults      NamespacedResults
 }
 
 // RunAudit runs a full Fairwinds audit and returns an AuditData object
@@ -35,11 +51,41 @@ func RunAudit(config conf.Configuration, kubeAPI *kube.API) (AuditData, error) {
 		}
 	}
 
+	kubeVersion, err := kubeAPI.Clientset.Discovery().ServerVersion()
+	if err != nil {
+		return AuditData{}, err
+	}
+
+	listOpts := metav1.ListOptions{}
+	nodes, err := kubeAPI.Clientset.CoreV1().Nodes().List(listOpts)
+	if err != nil {
+		return AuditData{}, err
+	}
+	namespaces, err := kubeAPI.Clientset.CoreV1().Namespaces().List(listOpts)
+	if err != nil {
+		return AuditData{}, err
+	}
+	numPods := 0
+	for _, ns := range namespaces.Items {
+		pods, err := kubeAPI.Clientset.CoreV1().Pods(ns.Name).List(listOpts)
+		if err != nil {
+			return AuditData{}, err
+		}
+		numPods += len(pods.Items)
+	}
+
 	auditData := AuditData{
-		ClusterSummary: ResultSummary{
-			Errors:  clusterErrors,
-			Warnings:  clusterWarnings,
-			Successes: clusterSuccesses,
+		FairwindsOutputVersion: FairwindsOutputVersion,
+		ClusterSummary: ClusterSummary{
+			Version:    kubeVersion.Major + "." + kubeVersion.Minor,
+			Nodes:      len(nodes.Items),
+			Pods:       numPods,
+			Namespaces: len(namespaces.Items),
+			Results: ResultSummary{
+				Errors:    clusterErrors,
+				Warnings:  clusterWarnings,
+				Successes: clusterSuccesses,
+			},
 		},
 		NamespacedResults: nsResults,
 	}
