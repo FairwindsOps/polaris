@@ -4,10 +4,7 @@ kind: ClusterRoleBinding
 metadata:
   name: {{ include "fairwinds.fullname" . }}
   labels:
-    app.kubernetes.io/name: {{ include "fairwinds.name" . }}
-    helm.sh/chart: {{ include "fairwinds.chart" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    {{- include "fairwinds.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole

@@ -3,35 +3,31 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   annotations:
-    checksum/config: '{{ include (print $.Template.BasePath "/fairwinds.configmap.yaml") . | sha256sum }}'
+    checksum/config: '{{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}'
   name: {{ include "fairwinds.fullname" . }}-webhook
+  namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: {{ include "fairwinds.name" . }}
-    helm.sh/chart: {{ include "fairwinds.chart" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    {{- include "fairwinds.labels" . | nindent 4 }}
     component: webhook
 spec:
   replicas: {{ .Values.webhook.replicas }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "fairwinds.name" . }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
+      {{- include "fairwinds.selectors" . | nindent 6 }}
       component: webhook
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ include "fairwinds.name" . }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
+        {{- include "fairwinds.selectors" . | nindent 8 }}
         component: webhook
     spec:
       volumes:
-      - configMap:
-          name:  {{ include "fairwinds.name" . }}
-        name:  {{ include "fairwinds.name" . }}
-      - name: certs
+      - name: config
+        configMap:
+          name: {{ include "fairwinds.fullname" . }}
+      - name: secret
         secret:
-          secretName:  {{ include "fairwinds.name" . }}
+          secretName: {{ include "fairwinds.fullname" . }}
       containers:
       - command:
         - fairwinds
@@ -51,7 +47,7 @@ spec:
           periodSeconds: 5
         readinessProbe:
           tcpSocket:
-            port: 8080
+            port: 9876
           initialDelaySeconds: 15
           periodSeconds: 20
         resources:
@@ -62,11 +58,12 @@ spec:
             cpu: 100m
             memory: 128Mi
         volumeMounts:
-        - mountPath: /tmp/cert/
-          name: certs
-        - mountPath: /opt/app/config.yml
-          name:  {{ include "fairwinds.name" . }}
+        - name: config
+          mountPath: /opt/app/config.yaml
+          subPath: config.yaml
           readOnly: true
-          subPath: config.yml
+        - name: secret
+          mountPath: /tmp/cert/
+          readOnly: true
       serviceAccountName:  {{ include "fairwinds.name" . }}
 {{- end -}}

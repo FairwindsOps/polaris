@@ -1,63 +1,11 @@
 ---
-kind: Service
-apiVersion: v1
-metadata:
-  name: fairwinds-dash
-spec:
-  selector:
-    app: fairwinds
-  ports:
-  - name: dashboard
-    protocol: TCP
-    port: 80
-    targetPort: 8080
----
+# Source: fairwinds/templates/namespace.yaml
 apiVersion: v1
 kind: Namespace
 metadata:
   name: fairwinds
-  labels:
-    app: fairwinds
 ---
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: fairwinds
-  namespace: fairwinds
-  labels:
-    app: fairwinds
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  name: fairwinds
-  labels:
-    app: fairwinds
-rules:
-  - apiGroups:
-    - ''
-    - 'apps'
-    - 'admissionregistration.k8s.io'
-    resources:
-      - '*'
-    verbs:
-      - '*'
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: fairwinds
-  labels:
-    app: fairwinds
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: fairwinds
-subjects:
-  - kind: ServiceAccount
-    name: fairwinds
-    namespace: fairwinds
----
+# Source: fairwinds/templates/secret.yaml
 apiVersion: v1
 kind: Secret
 metadata:
@@ -65,7 +13,10 @@ metadata:
   namespace: fairwinds
   labels:
     app: fairwinds
+type: Opaque
+data:
 ---
+# Source: fairwinds/templates/configmap.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -74,7 +25,7 @@ metadata:
   labels:
     app: fairwinds
 data:
-  config.yaml: |
+  config.yaml:  |
     resources:
       cpuRequestsMissing: error
       cpuLimitsMissing: error
@@ -99,8 +50,8 @@ data:
       capabilities:
         error:
           ifAnyAdded:
-            - CAP_SYS_ADMIN
-            - CAP_NET_ADMIN
+            - SYS_ADMIN
+            - NET_ADMIN
             - ALL
         warning:
           ifAnyAddedBeyond:
@@ -118,68 +69,197 @@ data:
             - SYS_CHROOT
             - KILL
             - AUDIT_WRITE
+  
 ---
-apiVersion: extensions/v1beta1
-kind: Deployment
+# Source: fairwinds/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
 metadata:
   name: fairwinds
   namespace: fairwinds
   labels:
     app: fairwinds
+
+---
+# Source: fairwinds/templates/clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: fairwinds
+  labels:
+    app: fairwinds
+rules:
+  - apiGroups:
+    - ''
+    - 'apps'
+    - 'admissionregistration.k8s.io'
+    resources:
+      - '*'
+    verbs:
+      - '*'
+---
+# Source: fairwinds/templates/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: fairwinds
+  labels:
+    app: fairwinds
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: fairwinds
+subjects:
+  - kind: ServiceAccount
+    name: fairwinds
+    namespace: fairwinds
+---
+# Source: fairwinds/templates/dashboard.service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: fairwinds-dashboard
+  namespace: fairwinds
+  labels:
+    app: fairwinds
+spec:
+  ports:
+  - name: dashboard
+    port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: fairwinds
+    component: dashboard
+  type: ClusterIP
+---
+# Source: fairwinds/templates/dashboard.deployment.yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    checksum/config: 'af539094a198a41b47151133fbf9c53309b0b621234185a651af15723f2c92ab'
+  name: fairwinds-dashboard
+  namespace: fairwinds
+  labels:
+    app: fairwinds
+    component: dashboard
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: fairwinds
+      component: dashboard
   template:
     metadata:
       labels:
         app: fairwinds
+        component: dashboard
     spec:
-      serviceAccountName: fairwinds
-      containers:
-      - name: webhook
-        image: quay.io/reactiveops/fairwinds
-        command: ["fairwinds", "--webhook"]
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 9876
-        resources:
-          limits:
-            cpu: 100m
-            memory: 128Mi
-          requests:
-            cpu: 100m
-            memory: 128Mi
-        volumeMounts:
-        - name: certs
-          mountPath: /tmp/cert/
-        - name: fairwinds
-          mountPath: /opt/app/config.yaml
-          subPath: config.yaml
-          readOnly: true
-      - name: dashboard
-        image: quay.io/reactiveops/fairwinds
-        command: ["fairwinds", "--dashboard"]
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 8080
-        resources:
-          limits:
-            cpu: 100m
-            memory: 128Mi
-          requests:
-            cpu: 100m
-            memory: 128Mi
-        volumeMounts:
-        - name: fairwinds
-          mountPath: /opt/app/config.yaml
-          subPath: config.yaml
-          readOnly: true
       volumes:
-      - name: fairwinds
+      - name: config
         configMap:
           name: fairwinds
-      - name: certs
+      containers:
+      - command:
+        - fairwinds
+        - --dashboard
+        image: 'quay.io/reactiveops/fairwinds:master'
+        imagePullPolicy: 'Always'
+        name: dashboard
+        ports:
+        - containerPort: 8080
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        volumeMounts:
+        - name: config
+          mountPath: /opt/app/config.yaml
+          subPath: config.yaml
+          readOnly: true
+      serviceAccountName: fairwinds
+---
+# Source: fairwinds/templates/webhook.deployment.yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    checksum/config: 'af539094a198a41b47151133fbf9c53309b0b621234185a651af15723f2c92ab'
+  name: fairwinds-webhook
+  namespace: fairwinds
+  labels:
+    app: fairwinds
+    component: webhook
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fairwinds
+      component: webhook
+  template:
+    metadata:
+      labels:
+        app: fairwinds
+        component: webhook
+    spec:
+      volumes:
+      - name: config
+        configMap:
+          name: fairwinds
+      - name: secret
         secret:
           secretName: fairwinds
+      containers:
+      - command:
+        - fairwinds
+        - --webhook
+        image: 'quay.io/reactiveops/fairwinds:master'
+        imagePullPolicy: 'Always'
+        name: webhook
+        ports:
+        - containerPort: 9876
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - ps -ef | grep fairwinds
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        readinessProbe:
+          tcpSocket:
+            port: 9876
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        volumeMounts:
+        - name: config
+          mountPath: /opt/app/config.yaml
+          subPath: config.yaml
+          readOnly: true
+        - name: secret
+          mountPath: /tmp/cert/
+          readOnly: true
+      serviceAccountName:  fairwinds

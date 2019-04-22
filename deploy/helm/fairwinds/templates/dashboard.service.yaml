@@ -3,11 +3,9 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "fairwinds.fullname" . }}-dashboard
+  namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: {{ include "fairwinds.name" . }}
-    helm.sh/chart: {{ include "fairwinds.chart" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    {{- include "fairwinds.labels" . | nindent 4 }}
 spec:
   ports:
   - name: dashboard
@@ -15,7 +13,7 @@ spec:
     protocol: TCP
     targetPort: 8080
   selector:
-    app.kubernetes.io/name: {{ .Release.Name }}
+    {{- include "fairwinds.selectors" . | nindent 4 }}
     component: dashboard
   type: {{ .Values.dashboard.service.type }}
 {{- end -}}
