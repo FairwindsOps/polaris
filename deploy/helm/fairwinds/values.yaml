@@ -11,16 +11,15 @@ config: |
     readinessProbeMissing: warning
     livenessProbeMissing: warning
   networking:
-    hostAliasSet: error
-    hostIPCSet: error
-    hostNetworkSet: error
-    hostPIDSet: error
-    hostPortSet: error
+    hostNetworkSet: warning
+    hostPortSet: warning
   security:
-    runAsRootAllowed: warning
-    runAsPrivileged: error
+    hostIPCSet: error
+    hostPIDSet: error
     notReadOnlyRootFileSystem: warning
     privilegeEscalationAllowed: error
+    runAsRootAllowed: warning
+    runAsPrivileged: error
     capabilities:
       error:
         ifAnyAdded:

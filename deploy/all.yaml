@@ -37,16 +37,15 @@ data:
       readinessProbeMissing: warning
       livenessProbeMissing: warning
     networking:
-      hostAliasSet: error
-      hostIPCSet: error
-      hostNetworkSet: error
-      hostPIDSet: error
-      hostPortSet: error
+      hostNetworkSet: warning
+      hostPortSet: warning
     security:
-      runAsRootAllowed: warning
-      runAsPrivileged: error
+      hostIPCSet: error
+      hostPIDSet: error
       notReadOnlyRootFileSystem: warning
       privilegeEscalationAllowed: error
+      runAsRootAllowed: warning
+      runAsPrivileged: error
       capabilities:
         error:
           ifAnyAdded:
@@ -138,7 +137,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   annotations:
-    checksum/config: 'af539094a198a41b47151133fbf9c53309b0b621234185a651af15723f2c92ab'
+    checksum/config: '5702aca235561630172c22b6b900f5cebd4e82fae60389df18a3537ff82e2f09'
   name: fairwinds-dashboard
   namespace: fairwinds
   labels:
@@ -200,7 +199,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   annotations:
-    checksum/config: 'af539094a198a41b47151133fbf9c53309b0b621234185a651af15723f2c92ab'
+    checksum/config: '5702aca235561630172c22b6b900f5cebd4e82fae60389df18a3537ff82e2f09'
   name: fairwinds-webhook
   namespace: fairwinds
   labels:

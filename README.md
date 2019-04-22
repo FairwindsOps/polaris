@@ -54,16 +54,6 @@ Fairwinds includes experimental support for an optional validating webhook. This
 
 Unfortunately we have not found a way to disply warnings as part of `kubectl` output unless we are rejecting a deployment altogether. That means that any checks with a severity of `warning` will still pass webhook validation, and the only evidence of that warning will either be in the Fairwinds dashboard or the Fairwinds webhook logs.
 
-## CLI Options
-
-* `config`: Specify a location for the Fairwinds config
-* `dashboard`: Runs the webserver for Fairwinds dashboard.
-* `dashboard-port`: Port for the dashboard webserver (default 8080)
-* `webhook`: Runs the webhook webserver.
-* `webhook-port`: Port for the webhook webserver (default 9876)
-* `disable-webhook-config-installer`: disable the installer in the webhook server, so it won't install webhook configuration resources during bootstrapping
-* `kubeconfig`: Paths to a kubeconfig. Only required if out-of-cluster.
-
 ## Configuration
 
 Fairwinds supports a wide range of validations covering a number of Kubernetes best practices. Here's a sample configuration file that includes all currently supported checks. The [default configuration](https://github.com/reactiveops/fairwinds/blob/master/config.yaml) contains a number of those checks. This repository also includes a sample [full configuration file](https://github.com/reactiveops/fairwinds/blob/master/config-full.yaml) that enables all available checks.
@@ -77,6 +67,16 @@ Fairwinds validation checks fall into several different categories:
 - [Networking](docs/networking.md)
 - [Resources](docs/resources.md)
 - [Security](docs/security.md)
+
+## CLI Options
+
+* `config`: Specify a location for the Fairwinds config
+* `dashboard`: Runs the webserver for Fairwinds dashboard.
+* `dashboard-port`: Port for the dashboard webserver (default 8080)
+* `webhook`: Runs the webhook webserver.
+* `webhook-port`: Port for the webhook webserver (default 9876)
+* `disable-webhook-config-installer`: disable the installer in the webhook server, so it won't install webhook configuration resources during bootstrapping
+* `kubeconfig`: Paths to a kubeconfig. Only required if out-of-cluster.
 
 ## License
 Apache License 2.0
