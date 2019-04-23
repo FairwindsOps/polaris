@@ -191,13 +191,6 @@ func runAudit(c conf.Configuration, outputFile string, outputURL string) {
 			panic(err)
 		}
 
-		if outputFile != "" {
-			err := ioutil.WriteFile(outputFile, []byte(jsonData), 0644)
-			if err != nil {
-				panic(err)
-			}
-		}
-
 		if outputURL != "" {
 			req, err := http.NewRequest("POST", outputURL, bytes.NewBuffer(jsonData))
 			req.Header.Set("Content-Type", "application/json")
@@ -214,6 +207,13 @@ func runAudit(c conf.Configuration, outputFile string, outputURL string) {
 				fmt.Println("Error reading audit output URL response")
 			} else {
 				glog.Println(string(body))
+			}
+		}
+
+		if outputFile != "" {
+			err := ioutil.WriteFile(outputFile, []byte(jsonData), 0644)
+			if err != nil {
+				panic(err)
 			}
 		}
 	}
