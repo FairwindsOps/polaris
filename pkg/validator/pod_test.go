@@ -39,7 +39,25 @@ func TestValidatePod(t *testing.T) {
 	pod := test.MockPod()
 
 	expectedSum := ResultSummary{
-		Successes: uint(8),
+		Totals: CountSummary{
+			Successes: uint(8),
+			Warnings:  uint(0),
+			Errors:    uint(0),
+		},
+		ByCategory: make(map[string]*CountSummary),
+	}
+	expectedSum.ByCategory["Networking"] = &CountSummary{
+		Successes: uint(2),
+		Warnings:  uint(0),
+		Errors:    uint(0),
+	}
+	expectedSum.ByCategory["Resources"] = &CountSummary{
+		Successes: uint(4),
+		Warnings:  uint(0),
+		Errors:    uint(0),
+	}
+	expectedSum.ByCategory["Security"] = &CountSummary{
+		Successes: uint(2),
 		Warnings:  uint(0),
 		Errors:    uint(0),
 	}

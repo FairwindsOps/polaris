@@ -40,14 +40,12 @@ func RunAudit(config conf.Configuration, kubeAPI *kube.API) (AuditData, error) {
 		return AuditData{}, err
 	}
 
-	var clusterSuccesses, clusterErrors, clusterWarnings uint
+	clusterResults := ResultSummary{}
 
 	// Aggregate all summary counts to get a clusterwide count.
 	for _, nsRes := range nsResults {
 		for _, rr := range nsRes.Results {
-			clusterErrors += rr.Summary.Errors
-			clusterWarnings += rr.Summary.Warnings
-			clusterSuccesses += rr.Summary.Successes
+			clusterResults.appendResults(*rr.Summary)
 		}
 	}
 
@@ -81,11 +79,7 @@ func RunAudit(config conf.Configuration, kubeAPI *kube.API) (AuditData, error) {
 			Nodes:      len(nodes.Items),
 			Pods:       numPods,
 			Namespaces: len(namespaces.Items),
-			Results: ResultSummary{
-				Errors:    clusterErrors,
-				Warnings:  clusterWarnings,
-				Successes: clusterSuccesses,
-			},
+			Results:    clusterResults,
 		},
 		NamespacedResults: nsResults,
 	}

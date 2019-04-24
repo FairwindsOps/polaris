@@ -22,7 +22,6 @@ import (
 
 // ResourceValidation contains methods shared by PodValidation and ContainerValidation
 type ResourceValidation struct {
-	Summary   *ResultSummary
 	Errors    []*ResultMessage
 	Warnings  []*ResultMessage
 	Successes []*ResultMessage
@@ -34,6 +33,43 @@ func (rv *ResourceValidation) messages() []*ResultMessage {
 	messages = append(messages, rv.Warnings...)
 	messages = append(messages, rv.Successes...)
 	return messages
+}
+
+func (rv *ResourceValidation) summary() *ResultSummary {
+	counts := CountSummary{
+		Errors:    uint(len(rv.Errors)),
+		Warnings:  uint(len(rv.Warnings)),
+		Successes: uint(len(rv.Successes)),
+	}
+	byCategory := CategorySummary{}
+	for _, msg := range rv.messages() {
+		if _, ok := byCategory[msg.Category]; !ok {
+			byCategory[msg.Category] = &CountSummary{}
+		}
+		if msg.Type == MessageTypeError {
+			byCategory[msg.Category].Errors++
+		} else if msg.Type == MessageTypeWarning {
+			byCategory[msg.Category].Warnings++
+		} else if msg.Type == MessageTypeSuccess {
+			byCategory[msg.Category].Successes++
+		}
+	}
+	return &ResultSummary{
+		Totals:     counts,
+		ByCategory: byCategory,
+	}
+}
+
+func (rv *ResourceValidation) addMessage(message ResultMessage) {
+	if message.Type == MessageTypeError {
+		rv.Errors = append(rv.Errors, &message)
+	} else if message.Type == MessageTypeWarning {
+		rv.Warnings = append(rv.Warnings, &message)
+	} else if message.Type == MessageTypeSuccess {
+		rv.Successes = append(rv.Successes, &message)
+	} else {
+		panic("Bad message type")
+	}
 }
 
 func (rv *ResourceValidation) addFailure(message string, severity conf.Severity, category string) {
@@ -48,7 +84,6 @@ func (rv *ResourceValidation) addFailure(message string, severity conf.Severity,
 }
 
 func (rv *ResourceValidation) addError(message string, category string) {
-	rv.Summary.Errors++
 	rv.Errors = append(rv.Errors, &ResultMessage{
 		Message:  message,
 		Type:     MessageTypeError,
@@ -57,7 +92,6 @@ func (rv *ResourceValidation) addError(message string, category string) {
 }
 
 func (rv *ResourceValidation) addWarning(message string, category string) {
-	rv.Summary.Warnings++
 	rv.Warnings = append(rv.Warnings, &ResultMessage{
 		Message:  message,
 		Type:     MessageTypeWarning,
@@ -66,7 +100,6 @@ func (rv *ResourceValidation) addWarning(message string, category string) {
 }
 
 func (rv *ResourceValidation) addSuccess(message string, category string) {
-	rv.Summary.Successes++
 	rv.Successes = append(rv.Successes, &ResultMessage{
 		Message:  message,
 		Type:     MessageTypeSuccess,

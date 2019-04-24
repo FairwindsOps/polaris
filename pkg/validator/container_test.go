@@ -69,10 +69,8 @@ func TestValidateResourcesEmptyConfig(t *testing.T) {
 	}
 
 	cv := ContainerValidation{
-		Container: &container,
-		ResourceValidation: &ResourceValidation{
-			Summary: &ResultSummary{},
-		},
+		Container:          &container,
+		ResourceValidation: &ResourceValidation{},
 	}
 
 	expected := conf.Resources{}
@@ -195,10 +193,8 @@ func TestValidateResourcesFullyValid(t *testing.T) {
 
 func testValidateResources(t *testing.T, container *corev1.Container, resourceConf *string, expectedErrors *[]*ResultMessage, expectedWarnings *[]*ResultMessage) {
 	cv := ContainerValidation{
-		Container: container,
-		ResourceValidation: &ResourceValidation{
-			Summary: &ResultSummary{},
-		},
+		Container:          container,
+		ResourceValidation: &ResourceValidation{},
 	}
 
 	parsedConf, err := conf.Parse([]byte(*resourceConf))
@@ -227,10 +223,8 @@ func TestValidateHealthChecks(t *testing.T) {
 
 	probe := corev1.Probe{}
 	cv1 := ContainerValidation{
-		Container: &corev1.Container{Name: ""},
-		ResourceValidation: &ResourceValidation{
-			Summary: &ResultSummary{},
-		},
+		Container:          &corev1.Container{Name: ""},
+		ResourceValidation: &ResourceValidation{},
 	}
 	cv2 := ContainerValidation{
 		Container: &corev1.Container{
@@ -238,9 +232,7 @@ func TestValidateHealthChecks(t *testing.T) {
 			LivenessProbe:  &probe,
 			ReadinessProbe: &probe,
 		},
-		ResourceValidation: &ResourceValidation{
-			Summary: &ResultSummary{},
-		},
+		ResourceValidation: &ResourceValidation{},
 	}
 
 	l := &ResultMessage{Type: "warning", Message: "Liveness probe should be configured", Category: "Health Checks"}
@@ -286,31 +278,23 @@ func TestValidateImage(t *testing.T) {
 	i3 := conf.Images{TagNotSpecified: conf.SeverityError}
 
 	cv1 := ContainerValidation{
-		Container: &corev1.Container{Name: ""},
-		ResourceValidation: &ResourceValidation{
-			Summary: &ResultSummary{},
-		},
+		Container:          &corev1.Container{Name: ""},
+		ResourceValidation: &ResourceValidation{},
 	}
 
 	cv2 := ContainerValidation{
-		Container: &corev1.Container{Name: "", Image: "test:tag"},
-		ResourceValidation: &ResourceValidation{
-			Summary: &ResultSummary{},
-		},
+		Container:          &corev1.Container{Name: "", Image: "test:tag"},
+		ResourceValidation: &ResourceValidation{},
 	}
 
 	cv3 := ContainerValidation{
-		Container: &corev1.Container{Name: "", Image: "test:latest"},
-		ResourceValidation: &ResourceValidation{
-			Summary: &ResultSummary{},
-		},
+		Container:          &corev1.Container{Name: "", Image: "test:latest"},
+		ResourceValidation: &ResourceValidation{},
 	}
 
 	cv4 := ContainerValidation{
-		Container: &corev1.Container{Name: "", Image: "test"},
-		ResourceValidation: &ResourceValidation{
-			Summary: &ResultSummary{},
-		},
+		Container:          &corev1.Container{Name: "", Image: "test"},
+		ResourceValidation: &ResourceValidation{},
 	}
 
 	f := &ResultMessage{Message: "Image tag should be specified", Type: "error", Category: "Images"}
@@ -351,10 +335,8 @@ func TestValidateNetworking(t *testing.T) {
 	}
 
 	emptyCV := ContainerValidation{
-		Container: &corev1.Container{Name: ""},
-		ResourceValidation: &ResourceValidation{
-			Summary: &ResultSummary{},
-		},
+		Container:          &corev1.Container{Name: ""},
+		ResourceValidation: &ResourceValidation{},
 	}
 
 	badCV := ContainerValidation{
@@ -364,9 +346,7 @@ func TestValidateNetworking(t *testing.T) {
 				HostPort:      443,
 			}},
 		},
-		ResourceValidation: &ResourceValidation{
-			Summary: &ResultSummary{},
-		},
+		ResourceValidation: &ResourceValidation{},
 	}
 
 	goodCV := ContainerValidation{
@@ -375,9 +355,7 @@ func TestValidateNetworking(t *testing.T) {
 				ContainerPort: 3000,
 			}},
 		},
-		ResourceValidation: &ResourceValidation{
-			Summary: &ResultSummary{},
-		},
+		ResourceValidation: &ResourceValidation{},
 	}
 
 	var testCases = []struct {
@@ -497,10 +475,8 @@ func TestValidateSecurity(t *testing.T) {
 	}
 
 	emptyCV := ContainerValidation{
-		Container: &corev1.Container{Name: ""},
-		ResourceValidation: &ResourceValidation{
-			Summary: &ResultSummary{},
-		},
+		Container:          &corev1.Container{Name: ""},
+		ResourceValidation: &ResourceValidation{},
 	}
 
 	badCV := ContainerValidation{
@@ -513,9 +489,7 @@ func TestValidateSecurity(t *testing.T) {
 				Add: []corev1.Capability{"AUDIT_CONTROL", "SYS_ADMIN", "NET_ADMIN"},
 			},
 		}},
-		ResourceValidation: &ResourceValidation{
-			Summary: &ResultSummary{},
-		},
+		ResourceValidation: &ResourceValidation{},
 	}
 
 	goodCV := ContainerValidation{
@@ -528,9 +502,7 @@ func TestValidateSecurity(t *testing.T) {
 				Drop: []corev1.Capability{"NET_BIND_SERVICE", "FOWNER"},
 			},
 		}},
-		ResourceValidation: &ResourceValidation{
-			Summary: &ResultSummary{},
-		},
+		ResourceValidation: &ResourceValidation{},
 	}
 
 	strongCV := ContainerValidation{
@@ -543,9 +515,7 @@ func TestValidateSecurity(t *testing.T) {
 				Drop: []corev1.Capability{"ALL"},
 			},
 		}},
-		ResourceValidation: &ResourceValidation{
-			Summary: &ResultSummary{},
-		},
+		ResourceValidation: &ResourceValidation{},
 	}
 
 	var testCases = []struct {

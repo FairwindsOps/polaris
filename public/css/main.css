@@ -99,6 +99,10 @@ body {
   margin-top: 10px;
 }
 
+.cluster .expandable-table ul.message-list {
+  margin: 10px 26px;
+}
+
 #clusterScoreChart {
   width: 550px;
   position: relative;
@@ -223,35 +227,40 @@ ul.message-list li i {
   color: #a11f4c;
 }
 
-.namespace td.status-bar {
+.namespace .status-bar {
   vertical-align: top;
   padding-top: 18px;
 }
-
-.namespace .status {
+.namespace .status-bar .status {
   float: right;
+  animation: fadeIn 2s;
+}
+
+.cluster .status {
+  width: 280px;
+}
+.namespace .status {
   width: 200px;
 }
 
-.namespace .status div {
+.status div {
   height: 15px;
   border-radius: 10px;
 }
 
-.namespace .status .passing {
+.status .passing {
   background-color: #8BD2DC;
   float: left;
 }
 
-.namespace .status .warning {
+.status .warning {
   background-color: #f26c21;
   float: left;
 }
 
-.namespace .status .failing {
+.status .failing {
   background-color: #a11f4c;
-  width: 200px;
-  animation: fadeIn 2s;
+  width: 100%;
 }
 
 @keyframes fadeIn {
