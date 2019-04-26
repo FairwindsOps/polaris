@@ -6,7 +6,7 @@ Enjoy Fairwinds and smooth sailing!
 
 ## To view the dashboard execute these commands:
 
-kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ include "fairwinds.name" . }}-dashboard 8080:80 &
+kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ include "fairwinds.fullname" . }}-dashboard 8080:80 &
 open http://localhost:8080
 
 {{- end }}
