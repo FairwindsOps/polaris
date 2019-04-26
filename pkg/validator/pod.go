@@ -18,10 +18,7 @@ import (
 	conf "github.com/reactiveops/fairwinds/pkg/config"
 	"github.com/reactiveops/fairwinds/pkg/validator/messages"
 	corev1 "k8s.io/api/core/v1"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
-
-var log = logf.Log.WithName("Fairwinds Validator")
 
 // PodValidation tracks validation failures associated with a Pod.
 type PodValidation struct {

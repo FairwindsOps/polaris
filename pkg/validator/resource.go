@@ -15,9 +15,8 @@
 package validator
 
 import (
-	"errors"
-	"fmt"
 	conf "github.com/reactiveops/fairwinds/pkg/config"
+	"github.com/sirupsen/logrus"
 )
 
 // ResourceValidation contains methods shared by PodValidation and ContainerValidation
@@ -78,8 +77,7 @@ func (rv *ResourceValidation) addFailure(message string, severity conf.Severity,
 	} else if severity == conf.SeverityWarning {
 		rv.addWarning(message, category)
 	} else {
-		errMsg := fmt.Sprintf("Invalid severity: %s", severity)
-		log.Error(errors.New(errMsg), errMsg)
+		logrus.Errorf("Invalid severity: %s", severity)
 	}
 }
 

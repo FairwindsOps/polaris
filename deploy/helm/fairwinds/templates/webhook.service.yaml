@@ -1,0 +1,19 @@
+{{- if .Values.webhook.enable -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "fairwinds.fullname" . }}-dashboard
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "fairwinds.labels" . | nindent 4 }}
+spec:
+  ports:
+  - name: dashboard
+    port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    {{- include "fairwinds.selectors" . | nindent 4 }}
+    component: dashboard
+  type: ClusterIP
+{{- end -}}

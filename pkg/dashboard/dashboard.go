@@ -18,13 +18,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"html/template"
-	"log"
 	"net/http"
 
 	packr "github.com/gobuffalo/packr/v2"
 	conf "github.com/reactiveops/fairwinds/pkg/config"
 	"github.com/reactiveops/fairwinds/pkg/kube"
 	"github.com/reactiveops/fairwinds/pkg/validator"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -77,7 +77,7 @@ func MainHandler(w http.ResponseWriter, r *http.Request, auditData validator.Aud
 	templateFile, err := templateBox.Find(TemplateName)
 
 	if err != nil {
-		log.Printf("Error getting template data %v\n", err)
+		logrus.Printf("Error getting template data %v", err)
 		http.Error(w, "Error getting template data", 500)
 		return
 	}

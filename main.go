@@ -20,29 +20,24 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	glog "log"
 	"net/http"
 	"os"
-	"strconv"
 
 	conf "github.com/reactiveops/fairwinds/pkg/config"
 	"github.com/reactiveops/fairwinds/pkg/dashboard"
 	"github.com/reactiveops/fairwinds/pkg/kube"
 	"github.com/reactiveops/fairwinds/pkg/validator"
 	fwebhook "github.com/reactiveops/fairwinds/pkg/webhook"
+	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
 	apitypes "k8s.io/apimachinery/pkg/types"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
-
-var log = logf.Log.WithName("fairwinds")
 
 func main() {
 	dashboard := flag.Bool("dashboard", false, "Runs the webserver for Fairwinds dashboard.")
@@ -53,16 +48,22 @@ func main() {
 	auditOutputURL := flag.String("output-url", "", "Destination URL to send audit results")
 	auditOutputFile := flag.String("output-file", "", "Destination file for audit results")
 	configPath := flag.String("config", "config.yaml", "Location of Fairwinds configuration file")
-
-	var disableWebhookConfigInstaller bool
-	flag.BoolVar(&disableWebhookConfigInstaller, "disable-webhook-config-installer", false,
+	logLevel := flag.String("log-level", logrus.InfoLevel.String(), "Logrus log level")
+	disableWebhookConfigInstaller := flag.Bool("disable-webhook-config-installer", false,
 		"disable the installer in the webhook server, so it won't install webhook configuration resources during bootstrapping")
 
 	flag.Parse()
 
+	parsedLevel, err := logrus.ParseLevel(*logLevel)
+	if err != nil {
+		logrus.Errorf("log-level flag has invalid value %s", *logLevel)
+	} else {
+		logrus.SetLevel(parsedLevel)
+	}
+
 	c, err := conf.ParseFile(*configPath)
 	if err != nil {
-		glog.Println("Error parsing config at "+*configPath, err)
+		logrus.Errorf("Error parsing config at %s: %v", *configPath, err)
 		os.Exit(1)
 	}
 
@@ -71,7 +72,7 @@ func main() {
 	}
 
 	if *webhook {
-		startWebhookServer(c, disableWebhookConfigInstaller, *webhookPort)
+		startWebhookServer(c, *disableWebhookConfigInstaller, *webhookPort)
 	} else if *dashboard {
 		startDashboardServer(c, *dashboardPort)
 	} else if *audit {
@@ -96,38 +97,40 @@ func startDashboardServer(c conf.Configuration, port int) {
 		}
 		auditData, err := validator.RunAudit(c, k)
 		if err != nil {
-			fmt.Printf("Error getting audit data %v \n", err)
+			logrus.Errorf("Error getting audit data: %v", err)
 			http.Error(w, "Error running audit", 500)
 			return
 		}
 		dashboard.MainHandler(w, r, auditData)
 	})
-	portStr := strconv.Itoa(port)
-	glog.Println("Starting Fairwinds dashboard server on port " + portStr)
-	glog.Fatal(http.ListenAndServe(":"+portStr, nil))
+
+	logrus.Infof("Starting Fairwinds dashboard server on port %d", port)
+	logrus.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
 }
 
 func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool, port int) {
-	logf.SetLogger(logf.ZapLogger(false))
-	entryLog := log.WithName("entrypoint")
-
-	// Setup a Manager
-	entryLog.Info("setting up manager")
+	logrus.Debug("Setting up controller manager")
 	mgr, err := manager.New(config.GetConfigOrDie(), manager.Options{})
 	if err != nil {
-		entryLog.Error(err, "unable to set up overall controller manager")
+		logrus.Errorf("Unable to set up overall controller manager: %v", err)
 		os.Exit(1)
 	}
 
 	fairwindsResourceName := "fairwinds"
-	fairwindsNamespaceBytes, _ := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace")
-	fairwindsNamespace := string(fairwindsNamespaceBytes)
-	if fairwindsNamespace == "" {
-		fmt.Printf("could not determine current namespace, creating resources in %s namespace\n", fairwindsResourceName)
-		fairwindsNamespace = fairwindsResourceName
+	fairwindsNamespaceBytes, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace")
+
+	if err != nil {
+		// Not exiting here as we have fallback options
+		logrus.Debugf("Error reading namespace information: %v", err)
 	}
 
-	entryLog.Info("setting up webhook server")
+	fairwindsNamespace := string(fairwindsNamespaceBytes)
+	if fairwindsNamespace == "" {
+		fairwindsNamespace = fairwindsResourceName
+		logrus.Debugf("Could not determine current namespace, creating resources in %s namespace", fairwindsNamespace)
+	}
+
+	logrus.Info("Setting up webhook server")
 	as, err := webhook.NewServer(fairwindsResourceName, mgr, webhook.ServerOptions{
 		Port:                          int32(port),
 		CertDir:                       "/tmp/cert",
@@ -150,24 +153,24 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 			},
 		},
 	})
+
 	if err != nil {
-		entryLog.Error(err, "unable to create a new webhook server")
+		logrus.Errorf("Error setting up webhook server: %v", err)
 		os.Exit(1)
-	} else {
-		glog.Println("Fairwinds webhook server listening on port " + strconv.Itoa(port))
 	}
 
-	p := fwebhook.NewWebhook("pod", mgr, fwebhook.Validator{Config: c}, &corev1.Pod{})
+	logrus.Infof("Fairwinds webhook server listening on port %d", port)
+
 	d := fwebhook.NewWebhook("deploy", mgr, fwebhook.Validator{Config: c}, &appsv1.Deployment{})
-	entryLog.Info("registering webhooks to the webhook server")
-	if err = as.Register(p, d); err != nil {
-		entryLog.Error(err, "unable to register webhooks in the admission server")
+	logrus.Debug("Registering webhooks to the webhook server")
+	if err = as.Register(d); err != nil {
+		logrus.Debugf("Unable to register webhooks in the admission server: %v", err)
 		os.Exit(1)
 	}
 
-	entryLog.Info("starting manager")
+	logrus.Debug("Starting webhook manager")
 	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
-		entryLog.Error(err, "unable to run manager")
+		logrus.Errorf("Error starting manager: %v", err)
 		os.Exit(1)
 	}
 }
@@ -175,45 +178,63 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 func runAudit(c conf.Configuration, outputFile string, outputURL string) {
 	k, _ := kube.CreateKubeAPI()
 	auditData, err := validator.RunAudit(c, k)
+
 	if err != nil {
 		panic(err)
 	}
 
 	if outputURL == "" && outputFile == "" {
 		yamlBytes, err := yaml.Marshal(auditData)
+
 		if err != nil {
-			panic(err)
+			logrus.Errorf("Error marshalling YAML: %v", err)
+			os.Exit(1)
 		}
+
 		os.Stdout.Write(yamlBytes)
+
 	} else {
 		jsonData, err := json.MarshalIndent(auditData, "", "  ")
+
 		if err != nil {
-			panic(err)
+			logrus.Errorf("Error marshalling JSON: %v", err)
+			os.Exit(1)
 		}
 
 		if outputURL != "" {
 			req, err := http.NewRequest("POST", outputURL, bytes.NewBuffer(jsonData))
-			req.Header.Set("Content-Type", "application/json")
 
+			if err != nil {
+				logrus.Errorf("Error building request for output: %v", err)
+				os.Exit(1)
+			}
+
+			req.Header.Set("Content-Type", "application/json")
 			client := &http.Client{}
 			resp, err := client.Do(req)
+
 			if err != nil {
-				panic(err)
+				logrus.Errorf("Error making request for output: %v", err)
+				os.Exit(1)
 			}
+
 			defer resp.Body.Close()
 
 			body, err := ioutil.ReadAll(resp.Body)
+
 			if err != nil {
-				fmt.Println("Error reading audit output URL response")
-			} else {
-				glog.Println(string(body))
+				logrus.Errorf("Error reading response: %v", err)
+				os.Exit(1)
 			}
+
+			logrus.Infof("Received response: %v", body)
 		}
 
 		if outputFile != "" {
 			err := ioutil.WriteFile(outputFile, []byte(jsonData), 0644)
 			if err != nil {
-				panic(err)
+				logrus.Errorf("Error writing output to file: %v", err)
+				os.Exit(1)
 			}
 		}
 	}

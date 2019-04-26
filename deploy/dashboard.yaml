@@ -1,4 +1,10 @@
 ---
+# Source: fairwinds/templates/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fairwinds
+---
 # Source: fairwinds/templates/configmap.yaml
 apiVersion: v1
 kind: ConfigMap
@@ -115,12 +121,6 @@ spec:
     component: dashboard
   type: ClusterIP
 ---
-# Source: fairwinds/templates/namespace.yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: fairwinds
----
 # Source: fairwinds/templates/dashboard.deployment.yaml
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -187,4 +187,7 @@ spec:
 
 ---
 # Source: fairwinds/templates/webhook.deployment.yaml
+
+---
+# Source: fairwinds/templates/webhook.service.yaml
 
