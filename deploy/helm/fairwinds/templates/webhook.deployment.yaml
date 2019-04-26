@@ -65,5 +65,5 @@ spec:
         - name: secret
           mountPath: /tmp/cert/
           readOnly: true
-      serviceAccountName:  {{ include "fairwinds.name" . }}
+      serviceAccountName:  {{ include "fairwinds.fullname" . }}
 {{- end -}}

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="/public/images/logo.png" alt="Fairwinds Logo" />
+  <img src="/pkg/dashboard/assets/images/logo.png" alt="Fairwinds Logo" />
 </p>
 
 Fairwinds keeps your cluster sailing smoothly. It runs a variety of checks to ensure that Kubernetes deployments are configured using best practices that will avoid potential problems in the future. The project includes two primary parts:
@@ -20,8 +20,7 @@ The Fairwinds Dashboard provides an overview of your current deployments in a cl
 To deploy Fairwinds with kubectl:
 
 ```
-kubectl create namespace fairwinds
-kubectl apply -f https://raw.githubusercontent.com/reactiveops/fairwinds/master/deploy/all.yaml
+kubectl apply -f https://raw.githubusercontent.com/reactiveops/fairwinds/master/deploy/dashboard.yaml
 ```
 
 Fairwinds can also be deployed with Helm:
@@ -35,7 +34,7 @@ helm upgrade --install fairwinds deploy/helm/fairwinds/ --namespace fairwinds
 Once the dashboard is deployed, it can be viewed by using kubectl port-forward:
 
 ```
-kubectl port-forward --namespace fairwinds svc/fairwinds-fairwinds-dashboard 8080:80
+kubectl port-forward --namespace fairwinds svc/fairwinds-dashboard 8080:80
 ```
 
 With the port forwarding in place, you can open http://localhost:8080 in your browser to view the dashboard.
@@ -53,6 +52,21 @@ fairwinds --dashboard
 Fairwinds includes experimental support for an optional validating webhook. This accepts the same configuration as the dashboard, and can run the same validations. This webhook will reject any deployments that trigger a validation error. This is indicative of the greater goal of Fairwinds, not just to encourage better configuration through dashboard visibility, but to actually enforce it with this webhook. *Although we are working towards greater stability and better test coverage, we do not currently consider this webhook component production ready.*
 
 Unfortunately we have not found a way to disply warnings as part of `kubectl` output unless we are rejecting a deployment altogether. That means that any checks with a severity of `warning` will still pass webhook validation, and the only evidence of that warning will either be in the Fairwinds dashboard or the Fairwinds webhook logs.
+
+### Deploying
+
+The Fairwinds webhook can be deployed with kubectl:
+
+```
+kubectl apply -f https://raw.githubusercontent.com/reactiveops/fairwinds/master/deploy/webhook.yaml
+```
+
+Alternatively, the webhook can be enabled with Helm by setting `webhook.enable` to true:
+
+```
+helm upgrade --install fairwinds deploy/helm/fairwinds/ --namespace fairwinds --set webhook.enable=true
+```
+
 
 ## Configuration
 

@@ -1,0 +1,190 @@
+---
+# Source: fairwinds/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fairwinds
+  namespace: fairwinds
+  labels:
+    app: fairwinds
+data:
+  config.yaml:  |
+    resources:
+      cpuRequestsMissing: error
+      cpuLimitsMissing: error
+      memoryRequestsMissing: error
+      memoryLimitsMissing: error
+    images:
+      tagNotSpecified: error
+    healthChecks:
+      readinessProbeMissing: warning
+      livenessProbeMissing: warning
+    networking:
+      hostNetworkSet: warning
+      hostPortSet: warning
+    security:
+      hostIPCSet: error
+      hostPIDSet: error
+      notReadOnlyRootFileSystem: warning
+      privilegeEscalationAllowed: error
+      runAsRootAllowed: warning
+      runAsPrivileged: error
+      capabilities:
+        error:
+          ifAnyAdded:
+            - SYS_ADMIN
+            - NET_ADMIN
+            - ALL
+        warning:
+          ifAnyAddedBeyond:
+            - CHOWN
+            - DAC_OVERRIDE
+            - FSETID
+            - FOWNER
+            - MKNOD
+            - NET_RAW
+            - SETGID
+            - SETUID
+            - SETFCAP
+            - SETPCAP
+            - NET_BIND_SERVICE
+            - SYS_CHROOT
+            - KILL
+            - AUDIT_WRITE
+  
+---
+# Source: fairwinds/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: fairwinds
+  namespace: fairwinds
+  labels:
+    app: fairwinds
+
+---
+# Source: fairwinds/templates/clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: fairwinds
+  labels:
+    app: fairwinds
+rules:
+  - apiGroups:
+    - ''
+    - 'apps'
+    - 'admissionregistration.k8s.io'
+    resources:
+      - '*'
+    verbs:
+      - '*'
+---
+# Source: fairwinds/templates/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: fairwinds
+  labels:
+    app: fairwinds
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: fairwinds
+subjects:
+  - kind: ServiceAccount
+    name: fairwinds
+    namespace: fairwinds
+---
+# Source: fairwinds/templates/dashboard.service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: fairwinds-dashboard
+  namespace: fairwinds
+  labels:
+    app: fairwinds
+spec:
+  ports:
+  - name: dashboard
+    port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: fairwinds
+    component: dashboard
+  type: ClusterIP
+---
+# Source: fairwinds/templates/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fairwinds
+---
+# Source: fairwinds/templates/dashboard.deployment.yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    checksum/config: '5702aca235561630172c22b6b900f5cebd4e82fae60389df18a3537ff82e2f09'
+  name: fairwinds-dashboard
+  namespace: fairwinds
+  labels:
+    app: fairwinds
+    component: dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fairwinds
+      component: dashboard
+  template:
+    metadata:
+      labels:
+        app: fairwinds
+        component: dashboard
+    spec:
+      volumes:
+      - name: config
+        configMap:
+          name: fairwinds
+      containers:
+      - command:
+        - fairwinds
+        - --dashboard
+        image: 'quay.io/reactiveops/fairwinds:master'
+        imagePullPolicy: 'Always'
+        name: dashboard
+        ports:
+        - containerPort: 8080
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        volumeMounts:
+        - name: config
+          mountPath: /opt/app/config.yaml
+          subPath: config.yaml
+          readOnly: true
+      serviceAccountName: fairwinds
+---
+# Source: fairwinds/templates/secret.yaml
+
+---
+# Source: fairwinds/templates/webhook.deployment.yaml
+
