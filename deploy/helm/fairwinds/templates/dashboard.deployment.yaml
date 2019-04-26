@@ -58,5 +58,5 @@ spec:
           mountPath: /opt/app/config.yaml
           subPath: config.yaml
           readOnly: true
-      serviceAccountName: {{ include "fairwinds.name" . }}
+      serviceAccountName: {{ include "fairwinds.fullname" . }}
 {{- end -}}
