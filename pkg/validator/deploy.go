@@ -20,13 +20,12 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 )
 
-// ValidateDeploy validates a single deployment, returns a ResourceResult.
-func ValidateDeploy(conf conf.Configuration, deploy *appsv1.Deployment) ResourceResult {
+// ValidateDeploy validates a single deployment, returns a PodResult.
+func ValidateDeploy(conf conf.Configuration, deploy *appsv1.Deployment) PodResult {
 	pod := deploy.Spec.Template.Spec
-	resResult := ValidatePod(conf, &pod)
-	resResult.Name = deploy.Name
-	resResult.Type = "Deployment"
-	return resResult
+	podResult := ValidatePod(conf, &pod)
+	podResult.Name = deploy.Name
+	return podResult
 }
 
 // ValidateDeploys validates that each deployment conforms to the Fairwinds config,
@@ -39,31 +38,31 @@ func ValidateDeploys(config conf.Configuration, k8sAPI *kube.API) (NamespacedRes
 	}
 
 	for _, deploy := range deploys.Items {
-		resResult := ValidateDeploy(config, &deploy)
-		nsResults = addResult(resResult, nsResults, deploy.Namespace)
+		podResult := ValidateDeploy(config, &deploy)
+		nsResults = addResult(podResult, nsResults, deploy.Namespace)
 	}
 
 	return nsResults, nil
 }
 
-func addResult(resResult ResourceResult, nsResults NamespacedResults, nsName string) NamespacedResults {
-	nsResult := &NamespacedResult{}
+func addResult(podResult PodResult, nsResults NamespacedResults, nsName string) NamespacedResults {
+	nsResult := &NamespaceResult{}
 
 	// If there is already data stored for this namespace name,
 	// then append to the ResourceResults to the existing data.
 	switch nsResults[nsName] {
 	case nil:
-		nsResult = &NamespacedResult{
-			Summary: &ResultSummary{},
-			Results: []ResourceResult{},
+		nsResult = &NamespaceResult{
+			Summary:    &ResultSummary{},
+			PodResults: []PodResult{},
 		}
 		nsResults[nsName] = nsResult
 	default:
 		nsResult = nsResults[nsName]
 	}
 
-	nsResult.Results = append(nsResult.Results, resResult)
-	nsResult.Summary.appendResults(*resResult.Summary)
+	nsResult.PodResults = append(nsResult.PodResults, podResult)
+	nsResult.Summary.appendResults(*podResult.Summary)
 
 	return nsResults
 }

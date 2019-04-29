@@ -27,7 +27,7 @@ type PodValidation struct {
 }
 
 // ValidatePod validates that each pod conforms to the Fairwinds config, returns a ResourceResult.
-func ValidatePod(podConf conf.Configuration, pod *corev1.PodSpec) ResourceResult {
+func ValidatePod(podConf conf.Configuration, pod *corev1.PodSpec) PodResult {
 	pv := PodValidation{
 		Pod:                pod,
 		ResourceValidation: &ResourceValidation{},
@@ -39,21 +39,17 @@ func ValidatePod(podConf conf.Configuration, pod *corev1.PodSpec) ResourceResult
 	pRes := PodResult{
 		Messages:         pv.messages(),
 		ContainerResults: []ContainerResult{},
+		Summary:          pv.summary(),
 	}
 
 	pv.validateContainers(pod.InitContainers, &pRes, &podConf)
 	pv.validateContainers(pod.Containers, &pRes, &podConf)
 
-	rr := ResourceResult{
-		Type:       "Pod",
-		Summary:    pv.summary(),
-		PodResults: []PodResult{pRes},
-	}
 	for _, cRes := range pRes.ContainerResults {
-		rr.Summary.appendResults(*cRes.Summary)
+		pRes.Summary.appendResults(*cRes.Summary)
 	}
 
-	return rr
+	return pRes
 }
 
 func (pv *PodValidation) validateContainers(containers []corev1.Container, pRes *PodResult, podConf *conf.Configuration) {

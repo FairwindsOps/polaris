@@ -44,8 +44,8 @@ func RunAudit(config conf.Configuration, kubeAPI *kube.API) (AuditData, error) {
 
 	// Aggregate all summary counts to get a clusterwide count.
 	for _, nsRes := range nsResults {
-		for _, rr := range nsRes.Results {
-			clusterResults.appendResults(*rr.Summary)
+		for _, pr := range nsRes.PodResults {
+			clusterResults.appendResults(*pr.Summary)
 		}
 	}
 

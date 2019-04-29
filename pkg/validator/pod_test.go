@@ -68,10 +68,9 @@ func TestValidatePod(t *testing.T) {
 		{Message: "Host network is not configured", Type: "success", Category: "Networking"},
 	}
 
-	actualRR := ValidatePod(c, &pod.Spec)
+	actualPodResult := ValidatePod(c, &pod.Spec)
 
-	assert.Equal(t, actualRR.Type, "Pod", "should be equal")
-	assert.Equal(t, len(actualRR.ContainerResults), 0, "should be equal")
-	assert.EqualValues(t, actualRR.Summary, &expectedSum)
-	assert.EqualValues(t, actualRR.PodResults[0].Messages, expectedMessages)
+	assert.Equal(t, len(actualPodResult.ContainerResults), 1, "should be equal")
+	assert.EqualValues(t, actualPodResult.Summary, &expectedSum)
+	assert.EqualValues(t, actualPodResult.Messages, expectedMessages)
 }

@@ -42,8 +42,8 @@ func TestGetTemplateData(t *testing.T) {
 	assert.Equal(t, err, nil, "error should be nil")
 
 	assert.EqualValues(t, sum, actualAudit.ClusterSummary.Results)
-	assert.Equal(t, 1, len(actualAudit.NamespacedResults["test"].Results), "should be equal")
-	assert.Equal(t, 1, len(actualAudit.NamespacedResults["test"].Results[0].PodResults), "should be equal")
-	assert.Equal(t, 1, len(actualAudit.NamespacedResults["test"].Results[0].PodResults[0].ContainerResults), "should be equal")
-	assert.Equal(t, 6, len(actualAudit.NamespacedResults["test"].Results[0].PodResults[0].ContainerResults[0].Messages), "should be equal")
+	assert.Equal(t, 1, len(actualAudit.NamespacedResults["test"].PodResults), "should be equal")
+	assert.Equal(t, 1, len(actualAudit.NamespacedResults["test"].PodResults), "should be equal")
+	assert.Equal(t, 1, len(actualAudit.NamespacedResults["test"].PodResults[0].ContainerResults), "should be equal")
+	assert.Equal(t, 6, len(actualAudit.NamespacedResults["test"].PodResults[0].ContainerResults[0].Messages), "should be equal")
 }

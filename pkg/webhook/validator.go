@@ -85,7 +85,7 @@ func NewWebhook(name string, mgr manager.Manager, validator Validator, apiType r
 // Handle for Validator to run validation checks.
 func (v *Validator) Handle(ctx context.Context, req types.Request) types.Response {
 	var err error
-	var results validator.ResourceResult
+	var podResult validator.PodResult
 
 	allowed := true
 	reason := ""
@@ -94,11 +94,11 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 	case "Deployment":
 		deploy := appsv1.Deployment{}
 		err = v.decoder.Decode(req, &deploy)
-		results = validator.ValidateDeploy(v.Config, &deploy)
+		podResult = validator.ValidateDeploy(v.Config, &deploy)
 	case "Pod":
 		pod := corev1.Pod{}
 		err = v.decoder.Decode(req, &pod)
-		results = validator.ValidatePod(v.Config, &pod.Spec)
+		podResult = validator.ValidatePod(v.Config, &pod.Spec)
 	}
 
 	if err != nil {
@@ -106,37 +106,29 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 		return admission.ErrorResponse(http.StatusBadRequest, err)
 	}
 
-	if results.Summary.Totals.Errors > 0 {
+	if podResult.Summary.Totals.Errors > 0 {
 		allowed = false
-		logrus.Infof("Errors %v", results.Summary.Totals.Errors)
+		logrus.Infof("%d validation errors found when validating %s", podResult.Summary.Totals.Errors, podResult.Name)
 
-		reason = getFailureReason(results.PodResults)
+		reason = getFailureReason(podResult)
 	}
 
 	return admission.ValidationResponse(allowed, reason)
 }
 
-func getFailureReason(podResults []validator.PodResult) string {
+func getFailureReason(podResult validator.PodResult) string {
 	reason := "\nFairwinds prevented this deployment due to configuration problems:\n"
 
-	for _, podResult := range podResults {
-		logrus.Infof("podResult %v", podResult)
-		for _, message := range podResult.Messages {
-			logrus.Infof("message %v", message)
-			if message.Type == validator.MessageTypeError {
-				logrus.Infof("error %v", fmt.Sprintf("- Pod: %s\n", message.Message))
-				reason += fmt.Sprintf("- Pod: %s\n", message.Message)
-			}
+	for _, message := range podResult.Messages {
+		if message.Type == validator.MessageTypeError {
+			reason += fmt.Sprintf("- Pod: %s\n", message.Message)
 		}
+	}
 
-		for _, containerResult := range podResult.ContainerResults {
-			logrus.Infof("containerResult %v", containerResult)
-			for _, message := range containerResult.Messages {
-				logrus.Infof("message %v", message)
-				if message.Type == validator.MessageTypeError {
-					logrus.Infof("error %v", fmt.Sprintf("- Container %s: %s\n", containerResult.Name, message.Message))
-					reason += fmt.Sprintf("- Container %s: %s\n", containerResult.Name, message.Message)
-				}
+	for _, containerResult := range podResult.ContainerResults {
+		for _, message := range containerResult.Messages {
+			if message.Type == validator.MessageTypeError {
+				reason += fmt.Sprintf("- Container %s: %s\n", containerResult.Name, message.Message)
 			}
 		}
 	}

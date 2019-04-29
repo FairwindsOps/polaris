@@ -37,6 +37,9 @@ spec:
         name: webhook
         ports:
         - containerPort: 9876
+        # These are fairly useless readiness/liveness probes for now
+        # Follow this issue for potential improvements:
+        # https://github.com/kubernetes-sigs/controller-runtime/issues/356
         livenessProbe:
           exec:
             command:
@@ -46,10 +49,13 @@ spec:
           initialDelaySeconds: 5
           periodSeconds: 5
         readinessProbe:
-          tcpSocket:
-            port: 9876
-          initialDelaySeconds: 15
-          periodSeconds: 20
+          exec:
+            command:
+            - sh
+            - -c
+            - ps -ef | grep fairwinds
+          initialDelaySeconds: 5
+          periodSeconds: 5
         resources:
           limits:
             cpu: 100m
