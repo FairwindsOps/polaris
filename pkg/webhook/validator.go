@@ -22,6 +22,7 @@ import (
 
 	conf "github.com/reactiveops/fairwinds/pkg/config"
 	validator "github.com/reactiveops/fairwinds/pkg/validator"
+	"github.com/sirupsen/logrus"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -74,8 +75,7 @@ func NewWebhook(name string, mgr manager.Manager, validator Validator, apiType r
 		Handlers(&validator).
 		Build()
 	if err != nil {
-		fmt.Printf("Unable to setup validating webhook: %s\n", name)
-		fmt.Printf("Error: %v\n", err)
+		logrus.Errorf("Error building webhook: %v", err)
 		os.Exit(1)
 	}
 
@@ -85,27 +85,53 @@ func NewWebhook(name string, mgr manager.Manager, validator Validator, apiType r
 // Handle for Validator to run validation checks.
 func (v *Validator) Handle(ctx context.Context, req types.Request) types.Response {
 	var err error
-	var allowed bool
-	var reason string
-	var results validator.ResourceResult
+	var podResult validator.PodResult
+
+	allowed := true
+	reason := ""
 
 	switch req.AdmissionRequest.Kind.Kind {
 	case "Deployment":
 		deploy := appsv1.Deployment{}
 		err = v.decoder.Decode(req, &deploy)
-		results = validator.ValidateDeploy(v.Config, &deploy)
+		podResult = validator.ValidateDeploy(v.Config, &deploy)
 	case "Pod":
 		pod := corev1.Pod{}
 		err = v.decoder.Decode(req, &pod)
-		results = validator.ValidatePod(v.Config, &pod.Spec)
+		podResult = validator.ValidatePod(v.Config, &pod.Spec)
 	}
+
 	if err != nil {
+		logrus.Errorf("Error validating request: %v", err)
 		return admission.ErrorResponse(http.StatusBadRequest, err)
 	}
 
-	if results.Summary.Totals.Errors > 0 {
-		// TODO: Decide what message we want to return here.
-		allowed, reason = false, "failed validation checks, view details on dashbaord."
+	if podResult.Summary.Totals.Errors > 0 {
+		allowed = false
+		logrus.Infof("%d validation errors found when validating %s", podResult.Summary.Totals.Errors, podResult.Name)
+
+		reason = getFailureReason(podResult)
 	}
+
 	return admission.ValidationResponse(allowed, reason)
+}
+
+func getFailureReason(podResult validator.PodResult) string {
+	reason := "\nFairwinds prevented this deployment due to configuration problems:\n"
+
+	for _, message := range podResult.Messages {
+		if message.Type == validator.MessageTypeError {
+			reason += fmt.Sprintf("- Pod: %s\n", message.Message)
+		}
+	}
+
+	for _, containerResult := range podResult.ContainerResults {
+		for _, message := range containerResult.Messages {
+			if message.Type == validator.MessageTypeError {
+				reason += fmt.Sprintf("- Container %s: %s\n", containerResult.Name, message.Message)
+			}
+		}
+	}
+
+	return reason
 }

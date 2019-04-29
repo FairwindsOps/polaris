@@ -5,17 +5,6 @@ kind: Namespace
 metadata:
   name: fairwinds
 ---
-# Source: fairwinds/templates/secret.yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: fairwinds
-  namespace: fairwinds
-  labels:
-    app: fairwinds
-type: Opaque
-data:
----
 # Source: fairwinds/templates/configmap.yaml
 apiVersion: v1
 kind: ConfigMap
@@ -194,71 +183,11 @@ spec:
           readOnly: true
       serviceAccountName: fairwinds
 ---
+# Source: fairwinds/templates/secret.yaml
+
+---
 # Source: fairwinds/templates/webhook.deployment.yaml
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  annotations:
-    checksum/config: '5702aca235561630172c22b6b900f5cebd4e82fae60389df18a3537ff82e2f09'
-  name: fairwinds-webhook
-  namespace: fairwinds
-  labels:
-    app: fairwinds
-    component: webhook
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: fairwinds
-      component: webhook
-  template:
-    metadata:
-      labels:
-        app: fairwinds
-        component: webhook
-    spec:
-      volumes:
-      - name: config
-        configMap:
-          name: fairwinds
-      - name: secret
-        secret:
-          secretName: fairwinds
-      containers:
-      - command:
-        - fairwinds
-        - --webhook
-        image: 'quay.io/reactiveops/fairwinds:master'
-        imagePullPolicy: 'Always'
-        name: webhook
-        ports:
-        - containerPort: 9876
-        livenessProbe:
-          exec:
-            command:
-            - sh
-            - -c
-            - ps -ef | grep fairwinds
-          initialDelaySeconds: 5
-          periodSeconds: 5
-        readinessProbe:
-          tcpSocket:
-            port: 9876
-          initialDelaySeconds: 15
-          periodSeconds: 20
-        resources:
-          limits:
-            cpu: 100m
-            memory: 128Mi
-          requests:
-            cpu: 100m
-            memory: 128Mi
-        volumeMounts:
-        - name: config
-          mountPath: /opt/app/config.yaml
-          subPath: config.yaml
-          readOnly: true
-        - name: secret
-          mountPath: /tmp/cert/
-          readOnly: true
-      serviceAccountName:  fairwinds
+
+---
+# Source: fairwinds/templates/webhook.service.yaml
+

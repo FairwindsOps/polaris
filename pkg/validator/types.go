@@ -28,22 +28,14 @@ const (
 	MessageTypeError MessageType = "error"
 )
 
-// NamespacedResult groups resource results by namespace.
-type NamespacedResult struct {
-	Summary *ResultSummary
-	Results []ResourceResult
-}
-
 // NamespacedResults is a mapping of namespace name to the validation results.
-type NamespacedResults map[string]*NamespacedResult
+type NamespacedResults map[string]*NamespaceResult
 
-// ResourceResult groups container results by parent resource.
-type ResourceResult struct {
-	Name             string
-	Type             string
-	Summary          *ResultSummary
-	ContainerResults []ContainerResult
-	PodResults       []PodResult
+// NamespaceResult groups container results by parent resource.
+type NamespaceResult struct {
+	Name       string
+	Summary    *ResultSummary
+	PodResults []PodResult
 }
 
 // CountSummary provides a high level overview of success, warnings, and errors.

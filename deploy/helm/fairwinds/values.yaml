@@ -54,7 +54,7 @@ dashboard:
     pullPolicy: Always
 
 webhook:
-  enable: true
+  enable: false
   replicas: 1
   image:
     repository: quay.io/reactiveops/fairwinds

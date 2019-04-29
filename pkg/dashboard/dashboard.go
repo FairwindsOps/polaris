@@ -24,6 +24,7 @@ import (
 	conf "github.com/reactiveops/fairwinds/pkg/config"
 	"github.com/reactiveops/fairwinds/pkg/kube"
 	"github.com/reactiveops/fairwinds/pkg/validator"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -39,7 +40,7 @@ var (
 // GetAssetBox returns a binary-friendly set of assets packaged from disk
 func GetAssetBox() *packr.Box {
 	if assetBox == (*packr.Box)(nil) {
-		assetBox = packr.New("Assets", "../../public")
+		assetBox = packr.New("Assets", "assets")
 	}
 	return assetBox
 }
@@ -61,20 +62,26 @@ type TemplateData struct {
 // MainHandler gets template data and renders the dashboard with it.
 func MainHandler(w http.ResponseWriter, r *http.Request, auditData validator.AuditData) {
 	jsonData, err := json.Marshal(auditData)
+
 	if err != nil {
 		http.Error(w, "Error serializing audit data", 500)
 		return
 	}
+
 	templateData := TemplateData{
 		AuditData: auditData,
 		JSON:      template.JS(jsonData),
 	}
+
 	templateBox := GetTemplateBox()
 	templateFile, err := templateBox.Find(TemplateName)
+
 	if err != nil {
+		logrus.Printf("Error getting template data %v", err)
 		http.Error(w, "Error getting template data", 500)
 		return
 	}
+
 	tmpl, err := template.New(TemplateName).Funcs(template.FuncMap{
 		"getWarningWidth": getWarningWidth,
 		"getSuccessWidth": getSuccessWidth,
@@ -84,6 +91,7 @@ func MainHandler(w http.ResponseWriter, r *http.Request, auditData validator.Aud
 		"getScore":        getScore,
 		"getIcon":         getIcon,
 	}).Parse(string(templateFile))
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -91,11 +99,13 @@ func MainHandler(w http.ResponseWriter, r *http.Request, auditData validator.Aud
 
 	buf := &bytes.Buffer{}
 	err = template.Must(tmpl.Clone()).Execute(buf, templateData)
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-	} else {
-		buf.WriteTo(w)
+		return
 	}
+
+	buf.WriteTo(w)
 }
 
 // EndpointHandler gets template data and renders json with it.

@@ -53,13 +53,21 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Verify helm chart synced with all.yaml
+          name: Verify helm chart synced with dashboard.yaml
           command: |
             diff \
               <(helm template deploy/helm/fairwinds/ --name fairwinds --namespace fairwinds --set templateOnly=true) \
-              deploy/all.yaml || (echo "
-                Make sure to regenerate deploy/all.yaml based on the helm chart.
-                helm template deploy/helm/fairwinds/ --name fairwinds --namespace fairwinds --set templateOnly=true" &&
+              deploy/dashboard.yaml || (echo "
+                Make sure to regenerate k8s deploy config with make helm-to-k8s" &&
+                exit 1)
+
+      - run:
+          name: Verify helm chart synced with webhook.yaml
+          command: |
+            diff \
+              <(helm template deploy/helm/fairwinds/ --name fairwinds --namespace fairwinds --set templateOnly=true --set webhook.enable=true --set dashboard.enable=false) \
+              deploy/webhook.yaml || (echo "
+                Make sure to regenerate k8s deploy config with make helm-to-k8s" &&
                 exit 1)
 
   release:
