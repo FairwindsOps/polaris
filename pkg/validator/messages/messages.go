@@ -47,6 +47,10 @@ const (
 	ImageTagFailure = "Image tag should be specified"
 	// ImageTagSuccess message
 	ImageTagSuccess = "Image tag is specified"
+	// ImagePullPolicyFailure message
+	ImagePullPolicyFailure = "Image pull policy should be \"Always\""
+	// ImagePullPolicySuccess message
+	ImagePullPolicySuccess = "Image pull policy is \"Always\""
 	// HostPortFailure message
 	HostPortFailure = "Host port should not be configured"
 	// HostPortSuccess message
