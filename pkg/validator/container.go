@@ -122,6 +122,14 @@ func (cv *ContainerValidation) validateHealthChecks(conf *conf.HealthChecks) {
 
 func (cv *ContainerValidation) validateImage(imageConf *conf.Images) {
 	category := messages.CategoryImages
+	if imageConf.PullPolicyNotAlways.IsActionable() {
+		if cv.Container.ImagePullPolicy != corev1.PullAlways {
+			cv.addFailure(messages.ImagePullPolicyFailure, imageConf.PullPolicyNotAlways, category)
+		} else {
+			cv.addSuccess(messages.ImagePullPolicySuccess, category)
+		}
+	}
+
 	if imageConf.TagNotSpecified.IsActionable() {
 		img := strings.Split(cv.Container.Image, ":")
 		if len(img) == 1 || img[1] == "latest" {

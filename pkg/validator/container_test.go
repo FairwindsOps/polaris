@@ -271,35 +271,32 @@ func TestValidateHealthChecks(t *testing.T) {
 }
 
 func TestValidateImage(t *testing.T) {
-
-	// Test setup.
-	i1 := conf.Images{}
-	i2 := conf.Images{TagNotSpecified: conf.SeverityIgnore}
-	i3 := conf.Images{TagNotSpecified: conf.SeverityError}
-
-	cv1 := ContainerValidation{
-		Container:          &corev1.Container{Name: ""},
-		ResourceValidation: &ResourceValidation{},
+	emptyConf := conf.Images{}
+	standardConf := conf.Images{
+		TagNotSpecified:     conf.SeverityError,
+		PullPolicyNotAlways: conf.SeverityIgnore,
+	}
+	strongConf := conf.Images{
+		TagNotSpecified:     conf.SeverityError,
+		PullPolicyNotAlways: conf.SeverityError,
 	}
 
-	cv2 := ContainerValidation{
-		Container:          &corev1.Container{Name: "", Image: "test:tag"},
+	emptyCV := ContainerValidation{
+		Container:          &corev1.Container{},
 		ResourceValidation: &ResourceValidation{},
 	}
-
-	cv3 := ContainerValidation{
-		Container:          &corev1.Container{Name: "", Image: "test:latest"},
+	badCV := ContainerValidation{
+		Container:          &corev1.Container{Image: "test"},
 		ResourceValidation: &ResourceValidation{},
 	}
-
-	cv4 := ContainerValidation{
-		Container:          &corev1.Container{Name: "", Image: "test"},
+	lessBadCV := ContainerValidation{
+		Container:          &corev1.Container{Image: "test:latest", ImagePullPolicy: ""},
 		ResourceValidation: &ResourceValidation{},
 	}
-
-	f := &ResultMessage{Message: "Image tag should be specified", Type: "error", Category: "Images"}
-	f1 := []*ResultMessage{}
-	f2 := []*ResultMessage{f}
+	goodCV := ContainerValidation{
+		Container:          &corev1.Container{Image: "test:0.1.0", ImagePullPolicy: "Always"},
+		ResourceValidation: &ResourceValidation{},
+	}
 
 	var testCases = []struct {
 		name     string
@@ -307,16 +304,67 @@ func TestValidateImage(t *testing.T) {
 		cv       ContainerValidation
 		expected []*ResultMessage
 	}{
-		{name: "image not configured", image: i1, cv: cv1, expected: f1},
-		{name: "image not required", image: i2, cv: cv1, expected: f1},
-		{name: "image tag required and configured", image: i3, cv: cv2, expected: f1},
-		{name: "image tag required, but not configured", image: i3, cv: cv1, expected: f2},
-		{name: "image tag required, but is latest", image: i3, cv: cv3, expected: f2},
-		{name: "image tag required, but is empty", image: i3, cv: cv4, expected: f2},
+		{
+			name:     "emptyConf + emptyCV",
+			image:    emptyConf,
+			cv:       emptyCV,
+			expected: []*ResultMessage{},
+		},
+		{
+			name:  "standardConf + emptyCV",
+			image: standardConf,
+			cv:    emptyCV,
+			expected: []*ResultMessage{{
+				Message:  "Image tag should be specified",
+				Type:     "error",
+				Category: "Images",
+			}},
+		},
+		{
+			name:  "standardConf + badCV",
+			image: standardConf,
+			cv:    badCV,
+			expected: []*ResultMessage{{
+				Message:  "Image tag should be specified",
+				Type:     "error",
+				Category: "Images",
+			}},
+		},
+		{
+			name:  "standardConf + lessBadCV",
+			image: standardConf,
+			cv:    lessBadCV,
+			expected: []*ResultMessage{{
+				Message:  "Image tag should be specified",
+				Type:     "error",
+				Category: "Images",
+			}},
+		},
+		{
+			name:  "strongConf + badCV",
+			image: strongConf,
+			cv:    badCV,
+			expected: []*ResultMessage{{
+				Message:  "Image pull policy should be \"Always\"",
+				Type:     "error",
+				Category: "Images",
+			}, {
+				Message:  "Image tag should be specified",
+				Type:     "error",
+				Category: "Images",
+			}},
+		},
+		{
+			name:     "strongConf + goodCV",
+			image:    strongConf,
+			cv:       goodCV,
+			expected: []*ResultMessage{},
+		},
 	}
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
+			tt.cv = resetCV(tt.cv)
 			tt.cv.validateImage(&tt.image)
 			assert.Len(t, tt.cv.Errors, len(tt.expected))
 			assert.ElementsMatch(t, tt.cv.Errors, tt.expected)

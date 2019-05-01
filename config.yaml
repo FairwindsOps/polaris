@@ -5,6 +5,7 @@ resources:
   memoryLimitsMissing: error
 images:
   tagNotSpecified: error
+  pullPolicyNotAlways: ignore
 healthChecks:
   readinessProbeMissing: warning
   livenessProbeMissing: warning

@@ -26,7 +26,7 @@
 <body>
   <div class="header">
     <div class="header-content">
-      <img class="logo" src="/static/images/logo.png" alt="Fairwinds" />
+      <img class="logo" src="/static/images/polaris-logo.png" alt="Polaris" />
       <div class="header-right">
         <a href="https://reactiveops.com?source=fairwinds" target="_blank">
           <span class="oss-text">Open Source Project By</span>
@@ -112,10 +112,9 @@
       <div class="card namespace">
         <h3>Namespace: <strong>{{ $namespace }}</strong></h3>
         <table class="expandable-table" cellspacing="0">
-          {{ range $results.Results }}
             <tr>
               <td class="resource-info">
-                <div class="name"><span class="caret-expander"></span>{{ .Type }}: <strong>{{ .Name }}</strong></div>
+                <div class="name"><span class="caret-expander"></span>Deployment: <strong>{{ .Name }}</strong></div>
 
                   {{ range .PodResults}}
                     <div class="result-messages expandable-content">
@@ -148,7 +147,6 @@
                 </div>
               </td>
             </tr>
-          {{ end }} {{/* end range .Results */}}
         </table>
       </div>
     {{ end }} {{/* end range .AuditData.NamespacedResults */}}

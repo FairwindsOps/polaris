@@ -14,6 +14,7 @@ body {
 }
 
 .header .header-right {
+  padding: 15px;
   float: right;
 }
 
@@ -53,6 +54,11 @@ body {
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   border-radius: 5px;
 }
+
+.card.cluster {
+  margin-top: 15px;
+}
+
 
 .card.namespace {
   padding: 10px 20px;
