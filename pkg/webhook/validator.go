@@ -94,7 +94,8 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 	case "Deployment":
 		deploy := appsv1.Deployment{}
 		err = v.decoder.Decode(req, &deploy)
-		podResult = validator.ValidateDeploy(v.Config, &deploy)
+		deployResult := validator.ValidateDeployment(v.Config, &deploy)
+		podResult = deployResult.PodResult
 	case "Pod":
 		pod := corev1.Pod{}
 		err = v.decoder.Decode(req, &pod)
