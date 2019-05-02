@@ -33,9 +33,8 @@ type k8sResource struct {
 func CreateResourceProvider(directory string) (*ResourceProvider, error) {
 	if directory != "" {
 		return CreateResourceProviderFromDirectory(directory)
-	} else {
-		return CreateResourceProviderFromCluster()
 	}
+	return CreateResourceProviderFromCluster()
 }
 
 // CreateResourceProviderFromDirectory returns a new ResourceProvider using the YAML files in a directory
