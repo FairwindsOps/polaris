@@ -3,7 +3,6 @@ package validator
 import (
 	conf "github.com/reactiveops/fairwinds/pkg/config"
 	"github.com/reactiveops/fairwinds/pkg/kube"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -28,14 +27,14 @@ type AuditData struct {
 }
 
 // RunAudit runs a full Fairwinds audit and returns an AuditData object
-func RunAudit(config conf.Configuration, kubeAPI *kube.API) (AuditData, error) {
+func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider) (AuditData, error) {
 	// TODO: Validate StatefulSets, DaemonSets, Cron jobs
 	// in addition to deployments
 
 	// TODO: Once we are validating more than deployments,
 	// we will need to merge the namespaceResults that get returned
 	// from each validation.
-	nsResults, err := ValidateDeployments(config, kubeAPI)
+	nsResults, err := ValidateDeployments(config, kubeResources)
 	if err != nil {
 		return AuditData{}, err
 	}
@@ -49,36 +48,18 @@ func RunAudit(config conf.Configuration, kubeAPI *kube.API) (AuditData, error) {
 		}
 	}
 
-	kubeVersion, err := kubeAPI.Clientset.Discovery().ServerVersion()
-	if err != nil {
-		return AuditData{}, err
-	}
-
-	listOpts := metav1.ListOptions{}
-	nodes, err := kubeAPI.Clientset.CoreV1().Nodes().List(listOpts)
-	if err != nil {
-		return AuditData{}, err
-	}
-	namespaces, err := kubeAPI.Clientset.CoreV1().Namespaces().List(listOpts)
-	if err != nil {
-		return AuditData{}, err
-	}
 	numPods := 0
-	for _, ns := range namespaces.Items {
-		pods, err := kubeAPI.Clientset.CoreV1().Pods(ns.Name).List(listOpts)
-		if err != nil {
-			return AuditData{}, err
-		}
-		numPods += len(pods.Items)
+	for _, pods := range kubeResources.Pods {
+		numPods += len(pods)
 	}
 
 	auditData := AuditData{
 		FairwindsOutputVersion: FairwindsOutputVersion,
 		ClusterSummary: ClusterSummary{
-			Version:    kubeVersion.Major + "." + kubeVersion.Minor,
-			Nodes:      len(nodes.Items),
+			Version:    kubeResources.ServerVersion,
+			Nodes:      len(kubeResources.Nodes),
 			Pods:       numPods,
-			Namespaces: len(namespaces.Items),
+			Namespaces: len(kubeResources.Namespaces),
 			Results:    clusterResults,
 		},
 		NamespacedResults: nsResults,

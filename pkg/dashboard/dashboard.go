@@ -133,8 +133,8 @@ func MainHandler(w http.ResponseWriter, r *http.Request, auditData validator.Aud
 }
 
 // EndpointHandler gets template data and renders json with it.
-func EndpointHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration, kubeAPI *kube.API) {
-	templateData, err := validator.RunAudit(c, kubeAPI)
+func EndpointHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration, kubeResources *kube.ResourceProvider) {
+	templateData, err := validator.RunAudit(c, kubeResources)
 	if err != nil {
 		http.Error(w, "Error Fetching Deployments", 500)
 		return

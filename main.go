@@ -81,7 +81,7 @@ func main() {
 }
 
 func startDashboardServer(c conf.Configuration, port int) {
-	k, _ := kube.CreateKubeAPI()
+	k, _ := kube.CreateKubeResourceProvider()
 	http.HandleFunc("/results.json", func(w http.ResponseWriter, r *http.Request) {
 		dashboard.EndpointHandler(w, r, c, k)
 	})
@@ -176,7 +176,7 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 }
 
 func runAudit(c conf.Configuration, outputFile string, outputURL string) {
-	k, _ := kube.CreateKubeAPI()
+	k, _ := kube.CreateKubeResourceProvider()
 	auditData, err := validator.RunAudit(c, k)
 
 	if err != nil {
