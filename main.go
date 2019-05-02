@@ -75,10 +75,10 @@ func main() {
 	if *webhook {
 		startWebhookServer(c, *disableWebhookConfigInstaller, *webhookPort)
 	} else if *dashboard {
-		k, _ := kube.CreateKubeResourceProvider(*auditDirectory)
+		k, _ := kube.CreateResourceProvider(*auditDirectory)
 		startDashboardServer(c, k, *dashboardPort)
 	} else if *audit {
-		k, _ := kube.CreateKubeResourceProvider(*auditDirectory)
+		k, _ := kube.CreateResourceProvider(*auditDirectory)
 		runAudit(c, k, *auditOutputFile, *auditOutputURL)
 	}
 }
