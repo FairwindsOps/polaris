@@ -6,7 +6,7 @@ import (
 )
 
 func TestGetResourcesFromDirectory(t *testing.T) {
-	resources, err := CreateKubeResourceProviderFromDirectory("./test_files")
+	resources, err := CreateResourceProviderFromDirectory("./test_files")
 
 	assert.Equal(t, nil, err, "Error should be nil")
 

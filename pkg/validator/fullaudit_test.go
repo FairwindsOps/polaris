@@ -12,7 +12,7 @@ import (
 func TestGetTemplateData(t *testing.T) {
 	k8s := test.SetupTestAPI()
 	k8s = test.SetupAddDeploys(k8s, "test")
-	resources, err := kube.CreateKubeResourceProviderFromAPI(k8s)
+	resources, err := kube.CreateResourceProviderFromAPI(k8s)
 	assert.Equal(t, err, nil, "error should be nil")
 
 	c := conf.Configuration{

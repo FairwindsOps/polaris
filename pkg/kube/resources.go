@@ -16,10 +16,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 )
 
-type KubeAPI struct {
-	API kubernetes.Interface
-}
-
 // ResourceProvider contains k8s resources to be audited
 type ResourceProvider struct {
 	ServerVersion string
@@ -33,16 +29,17 @@ type k8sResource struct {
 	Kind string `yaml:"kind"`
 }
 
-// CreateKubeResourceProvider returns a new ResourceProvider object to interact with k8s resources
-func CreateKubeResourceProvider(directory string) (*ResourceProvider, error) {
+// CreateResourceProvider returns a new ResourceProvider object to interact with k8s resources
+func CreateResourceProvider(directory string) (*ResourceProvider, error) {
 	if directory != "" {
-		return CreateKubeResourceProviderFromDirectory(directory)
+		return CreateResourceProviderFromDirectory(directory)
 	} else {
-		return CreateKubeResourceProviderFromCluster()
+		return CreateResourceProviderFromCluster()
 	}
 }
 
-func CreateKubeResourceProviderFromDirectory(directory string) (*ResourceProvider, error) {
+// CreateResourceProviderFromDirectory returns a new ResourceProvider using the YAML files in a directory
+func CreateResourceProviderFromDirectory(directory string) (*ResourceProvider, error) {
 	resources := ResourceProvider{
 		ServerVersion: "unknown",
 		Nodes:         []corev1.Node{},
@@ -105,35 +102,38 @@ func CreateKubeResourceProviderFromDirectory(directory string) (*ResourceProvide
 	return &resources, nil
 }
 
-func CreateKubeResourceProviderFromCluster() (*ResourceProvider, error) {
-	kube, err := createKubeAPI()
+// CreateResourceProviderFromCluster creates a new ResourceProvider using live data from a cluster
+func CreateResourceProviderFromCluster() (*ResourceProvider, error) {
+	kubeConf := config.GetConfigOrDie()
+	api, err := kubernetes.NewForConfig(kubeConf)
 	if err != nil {
 		return nil, err
 	}
-	return CreateKubeResourceProviderFromAPI(kube)
+	return CreateResourceProviderFromAPI(api)
 }
 
-func CreateKubeResourceProviderFromAPI(kube *KubeAPI) (*ResourceProvider, error) {
+// CreateResourceProviderFromAPI creates a new ResourceProvider from an existing k8s interface
+func CreateResourceProviderFromAPI(kube kubernetes.Interface) (*ResourceProvider, error) {
 	listOpts := metav1.ListOptions{}
-	serverVersion, err := kube.API.Discovery().ServerVersion()
+	serverVersion, err := kube.Discovery().ServerVersion()
 	if err != nil {
 		return nil, err
 	}
-	deploys, err := kube.API.AppsV1().Deployments("").List(listOpts)
+	deploys, err := kube.AppsV1().Deployments("").List(listOpts)
 	if err != nil {
 		return nil, err
 	}
-	nodes, err := kube.API.CoreV1().Nodes().List(listOpts)
+	nodes, err := kube.CoreV1().Nodes().List(listOpts)
 	if err != nil {
 		return nil, err
 	}
-	namespaces, err := kube.API.CoreV1().Namespaces().List(listOpts)
+	namespaces, err := kube.CoreV1().Namespaces().List(listOpts)
 	if err != nil {
 		return nil, err
 	}
 	podsByNamespace := map[string][]corev1.Pod{}
 	for _, ns := range namespaces.Items {
-		pods, err := kube.API.CoreV1().Pods(ns.Name).List(listOpts)
+		pods, err := kube.CoreV1().Pods(ns.Name).List(listOpts)
 		if err != nil {
 			return nil, err
 		}
@@ -147,12 +147,4 @@ func CreateKubeResourceProviderFromAPI(kube *KubeAPI) (*ResourceProvider, error)
 		Pods:          podsByNamespace,
 	}
 	return &api, nil
-}
-
-func createKubeAPI() (*KubeAPI, error) {
-	kubeConf := config.GetConfigOrDie()
-	api, err := kubernetes.NewForConfig(kubeConf)
-	return &KubeAPI{
-		API: api,
-	}, err
 }
