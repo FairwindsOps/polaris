@@ -21,11 +21,12 @@ import (
 )
 
 // ValidateDeployment validates a single deployment, returns a PodResult.
-func ValidateDeployment(conf conf.Configuration, deploy *appsv1.Deployment) DeploymentResult {
+func ValidateDeployment(conf conf.Configuration, deploy *appsv1.Deployment) ControllerResult {
 	pod := deploy.Spec.Template.Spec
 	podResult := ValidatePod(conf, &pod)
-	return DeploymentResult{
+	return ControllerResult{
 		Name:      deploy.Name,
+		Type:      "Deployment",
 		PodResult: podResult,
 	}
 }
@@ -47,7 +48,7 @@ func ValidateDeployments(config conf.Configuration, k8sAPI *kube.API) (Namespace
 	return nsResults, nil
 }
 
-func addResult(deploymentResult DeploymentResult, nsResults NamespacedResults, nsName string) NamespacedResults {
+func addResult(deploymentResult ControllerResult, nsResults NamespacedResults, nsName string) NamespacedResults {
 	nsResult := &NamespaceResult{}
 
 	// If there is already data stored for this namespace name,
@@ -56,7 +57,7 @@ func addResult(deploymentResult DeploymentResult, nsResults NamespacedResults, n
 	case nil:
 		nsResult = &NamespaceResult{
 			Summary:           &ResultSummary{},
-			DeploymentResults: []DeploymentResult{},
+			DeploymentResults: []ControllerResult{},
 		}
 		nsResults[nsName] = nsResult
 	default:

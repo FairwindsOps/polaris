@@ -35,7 +35,7 @@ type NamespacedResults map[string]*NamespaceResult
 type NamespaceResult struct {
 	Name              string
 	Summary           *ResultSummary
-	DeploymentResults []DeploymentResult
+	DeploymentResults []ControllerResult
 }
 
 // CountSummary provides a high level overview of success, warnings, and errors.
@@ -73,9 +73,10 @@ func (rs *ResultSummary) appendResults(toAppend ResultSummary) {
 	}
 }
 
-// DeploymentResult provides a wrapper around a PodResult
-type DeploymentResult struct {
+// ControllerResult provides a wrapper around a PodResult
+type ControllerResult struct {
 	Name      string
+	Type      string
 	PodResult PodResult
 }
 
