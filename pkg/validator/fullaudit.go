@@ -12,11 +12,12 @@ const (
 
 // ClusterSummary contains Fairwinds results as well as some high-level stats
 type ClusterSummary struct {
-	Results    ResultSummary
-	Version    string
-	Nodes      int
-	Pods       int
-	Namespaces int
+	Results     ResultSummary
+	Version     string
+	Nodes       int
+	Pods        int
+	Namespaces  int
+	Deployments int
 }
 
 // AuditData contains all the data from a full Fairwinds audit
@@ -56,11 +57,12 @@ func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider) (
 	auditData := AuditData{
 		FairwindsOutputVersion: FairwindsOutputVersion,
 		ClusterSummary: ClusterSummary{
-			Version:    kubeResources.ServerVersion,
-			Nodes:      len(kubeResources.Nodes),
-			Pods:       numPods,
-			Namespaces: len(kubeResources.Namespaces),
-			Results:    clusterResults,
+			Version:     kubeResources.ServerVersion,
+			Nodes:       len(kubeResources.Nodes),
+			Pods:        numPods,
+			Namespaces:  len(kubeResources.Namespaces),
+			Deployments: len(kubeResources.Deployments),
+			Results:     clusterResults,
 		},
 		NamespacedResults: nsResults,
 	}

@@ -43,6 +43,7 @@ func main() {
 	dashboard := flag.Bool("dashboard", false, "Runs the webserver for Fairwinds dashboard.")
 	webhook := flag.Bool("webhook", false, "Runs the webhook webserver.")
 	audit := flag.Bool("audit", false, "Runs a one-time audit.")
+	auditDirectory := flag.String("audit-directory", "", "If specified, audits YAML files instead of a cluster")
 	dashboardPort := flag.Int("dashboard-port", 8080, "Port for the dashboard webserver")
 	webhookPort := flag.Int("webhook-port", 9876, "Port for the webhook webserver")
 	auditOutputURL := flag.String("output-url", "", "Destination URL to send audit results")
@@ -74,14 +75,15 @@ func main() {
 	if *webhook {
 		startWebhookServer(c, *disableWebhookConfigInstaller, *webhookPort)
 	} else if *dashboard {
-		startDashboardServer(c, *dashboardPort)
+		k, _ := kube.CreateKubeResourceProvider(*auditDirectory)
+		startDashboardServer(c, k, *dashboardPort)
 	} else if *audit {
-		runAudit(c, *auditOutputFile, *auditOutputURL)
+		k, _ := kube.CreateKubeResourceProvider(*auditDirectory)
+		runAudit(c, k, *auditOutputFile, *auditOutputURL)
 	}
 }
 
-func startDashboardServer(c conf.Configuration, port int) {
-	k, _ := kube.CreateKubeResourceProvider()
+func startDashboardServer(c conf.Configuration, k *kube.ResourceProvider, port int) {
 	http.HandleFunc("/results.json", func(w http.ResponseWriter, r *http.Request) {
 		dashboard.EndpointHandler(w, r, c, k)
 	})
@@ -175,8 +177,7 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 	}
 }
 
-func runAudit(c conf.Configuration, outputFile string, outputURL string) {
-	k, _ := kube.CreateKubeResourceProvider()
+func runAudit(c conf.Configuration, k *kube.ResourceProvider, outputFile string, outputURL string) {
 	auditData, err := validator.RunAudit(c, k)
 
 	if err != nil {
