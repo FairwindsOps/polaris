@@ -35,7 +35,7 @@ func RunAudit(config conf.Configuration, kubeAPI *kube.API) (AuditData, error) {
 	// TODO: Once we are validating more than deployments,
 	// we will need to merge the namespaceResults that get returned
 	// from each validation.
-	nsResults, err := ValidateDeploys(config, kubeAPI)
+	nsResults, err := ValidateDeployments(config, kubeAPI)
 	if err != nil {
 		return AuditData{}, err
 	}
@@ -44,8 +44,8 @@ func RunAudit(config conf.Configuration, kubeAPI *kube.API) (AuditData, error) {
 
 	// Aggregate all summary counts to get a clusterwide count.
 	for _, nsRes := range nsResults {
-		for _, pr := range nsRes.PodResults {
-			clusterResults.appendResults(*pr.Summary)
+		for _, dr := range nsRes.DeploymentResults {
+			clusterResults.appendResults(*dr.PodResult.Summary)
 		}
 	}
 

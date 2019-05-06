@@ -20,17 +20,20 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 )
 
-// ValidateDeploy validates a single deployment, returns a PodResult.
-func ValidateDeploy(conf conf.Configuration, deploy *appsv1.Deployment) PodResult {
+// ValidateDeployment validates a single deployment, returns a PodResult.
+func ValidateDeployment(conf conf.Configuration, deploy *appsv1.Deployment) ControllerResult {
 	pod := deploy.Spec.Template.Spec
 	podResult := ValidatePod(conf, &pod)
-	podResult.Name = deploy.Name
-	return podResult
+	return ControllerResult{
+		Name:      deploy.Name,
+		Type:      "Deployment",
+		PodResult: podResult,
+	}
 }
 
-// ValidateDeploys validates that each deployment conforms to the Fairwinds config,
+// ValidateDeployments validates that each deployment conforms to the Fairwinds config,
 // returns a list of ResourceResults organized by namespace.
-func ValidateDeploys(config conf.Configuration, k8sAPI *kube.API) (NamespacedResults, error) {
+func ValidateDeployments(config conf.Configuration, k8sAPI *kube.API) (NamespacedResults, error) {
 	nsResults := NamespacedResults{}
 	deploys, err := k8sAPI.GetDeploys()
 	if err != nil {
@@ -38,14 +41,14 @@ func ValidateDeploys(config conf.Configuration, k8sAPI *kube.API) (NamespacedRes
 	}
 
 	for _, deploy := range deploys.Items {
-		podResult := ValidateDeploy(config, &deploy)
-		nsResults = addResult(podResult, nsResults, deploy.Namespace)
+		deploymentResult := ValidateDeployment(config, &deploy)
+		nsResults = addResult(deploymentResult, nsResults, deploy.Namespace)
 	}
 
 	return nsResults, nil
 }
 
-func addResult(podResult PodResult, nsResults NamespacedResults, nsName string) NamespacedResults {
+func addResult(deploymentResult ControllerResult, nsResults NamespacedResults, nsName string) NamespacedResults {
 	nsResult := &NamespaceResult{}
 
 	// If there is already data stored for this namespace name,
@@ -53,16 +56,16 @@ func addResult(podResult PodResult, nsResults NamespacedResults, nsName string) 
 	switch nsResults[nsName] {
 	case nil:
 		nsResult = &NamespaceResult{
-			Summary:    &ResultSummary{},
-			PodResults: []PodResult{},
+			Summary:           &ResultSummary{},
+			DeploymentResults: []ControllerResult{},
 		}
 		nsResults[nsName] = nsResult
 	default:
 		nsResult = nsResults[nsName]
 	}
 
-	nsResult.PodResults = append(nsResult.PodResults, podResult)
-	nsResult.Summary.appendResults(*podResult.Summary)
+	nsResult.DeploymentResults = append(nsResult.DeploymentResults, deploymentResult)
+	nsResult.Summary.appendResults(*deploymentResult.PodResult.Summary)
 
 	return nsResults
 }

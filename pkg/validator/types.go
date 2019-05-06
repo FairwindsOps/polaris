@@ -33,9 +33,9 @@ type NamespacedResults map[string]*NamespaceResult
 
 // NamespaceResult groups container results by parent resource.
 type NamespaceResult struct {
-	Name       string
-	Summary    *ResultSummary
-	PodResults []PodResult
+	Name              string
+	Summary           *ResultSummary
+	DeploymentResults []ControllerResult
 }
 
 // CountSummary provides a high level overview of success, warnings, and errors.
@@ -71,6 +71,13 @@ func (rs *ResultSummary) appendResults(toAppend ResultSummary) {
 		}
 		rs.ByCategory[category].appendCounts(*summary)
 	}
+}
+
+// ControllerResult provides a wrapper around a PodResult
+type ControllerResult struct {
+	Name      string
+	Type      string
+	PodResult PodResult
 }
 
 // ContainerResult provides a list of validation messages for each container.
