@@ -1,163 +1,117 @@
-<!doctype html>
-<html>
-
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <title>Fairwinds</title>
-  <meta name="description" content="">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <link rel="icon" type="image/png" href="/static/favicon-32x32.png" sizes="32x32" />
-  <link rel="icon" type="image/png" href="/static/favicon-16x16.png" sizes="16x16" />
-  <link href="https://fonts.googleapis.com/css?family=Muli:300,400,700" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/normalize.css">
-  <link rel="stylesheet" href="/static/css/main.css">
-  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-
-  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
-  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/cash/3.0.0-beta.3/cash.min.js"></script>
-  <script>
-    window.fairwindsAuditData = {{ .JSON }};
-  </script>
-  <script type="text/javascript" src="/static/js/main.js"></script>
-</head>
-
-<body>
-  <div class="header">
-    <div class="header-content">
-      <img class="logo" src="/static/images/polaris-logo.png" alt="Polaris" />
-      <div class="header-right">
-        <a href="https://reactiveops.com?source=fairwinds" target="_blank">
-          <span class="oss-text">Open Source Project By</span>
-          <img class="ro-logo" src="/static/images/ro-logo.png" alt="ReactiveOps" />
-        </a>
+{{define "dashboard"}}
+  <div class="card cluster">
+    <h3>Cluster Overview</h3>
+    <div class="cluster-overview">
+      <div class="cluster-score">
+        <div class="weather"><i class="fas {{ getWeatherIcon .AuditData.ClusterSummary.Results }}"></i></div>
+        <div class="sailing">{{ getWeatherText .AuditData.ClusterSummary.Results }}</div>
+        <div class="scores">Grade: <strong>{{ getGrade .AuditData.ClusterSummary.Results }}</strong> | Score: <strong>{{ getScore .AuditData.ClusterSummary.Results }}%</strong></div>
       </div>
+      <div class="result-messages">
+        <ul class="message-list">
+          <li class="success"><i class="fas fa-check"></i> {{ .AuditData.ClusterSummary.Results.Totals.Successes }} checks passed</li>
+          <li class="warning"><i class="fas fa-exclamation"></i> {{ .AuditData.ClusterSummary.Results.Totals.Warnings }} checks had warnings</li>
+          <li class="error"><i class="fas fa-times"></i> {{ .AuditData.ClusterSummary.Results.Totals.Errors }} checks had errors</li>
+        </ul>
+      </div>
+      <canvas id="clusterScoreChart"></canvas>
     </div>
-  </div>
-
-  <div class="dashboard-content">
-    <div class="card cluster">
-      <h3>Cluster Overview</h3>
-      <div class="cluster-overview">
-        <div class="cluster-score">
-          <div class="weather"><i class="fas {{ getWeatherIcon .AuditData.ClusterSummary.Results }}"></i></div>
-          <div class="sailing">{{ getWeatherText .AuditData.ClusterSummary.Results }}</div>
-          <div class="scores">Grade: <strong>{{ getGrade .AuditData.ClusterSummary.Results }}</strong> | Score: <strong>{{ getScore .AuditData.ClusterSummary.Results }}%</strong></div>
-        </div>
-        <div class="result-messages">
-          <ul class="message-list">
-            <li class="success"><i class="fas fa-check"></i> {{ .AuditData.ClusterSummary.Results.Totals.Successes }} checks passed</li>
-            <li class="warning"><i class="fas fa-exclamation"></i> {{ .AuditData.ClusterSummary.Results.Totals.Warnings }} checks had warnings</li>
-            <li class="error"><i class="fas fa-times"></i> {{ .AuditData.ClusterSummary.Results.Totals.Errors }} checks had errors</li>
-          </ul>
-        </div>
-        <canvas id="clusterScoreChart"></canvas>
-      </div>
-      <table class="expandable-table" cellspacing="0">
-        <tr>
-          <td class="resource-info">
-            <div class="name"><span class="caret-expander"></span>Cluster details</div>
-            <div class="expandable-content">
-              <ul class="message-list">
+    <table class="expandable-table" cellspacing="0">
+      <tr>
+        <td class="resource-info">
+          <div class="name"><span class="caret-expander"></span>Cluster details</div>
+          <div class="expandable-content">
+            <ul class="message-list">
+              <li>
+                <span class="detail-label">Kubernetes Version:</span>
+                <span class="detail-value">{{ .AuditData.ClusterSummary.Version }}</span>
+              </li>
+              <li>
+                <span class="detail-label">Nodes:</span>
+                <span class="detail-value">{{ .AuditData.ClusterSummary.Nodes }}</span>
+              </li>
+              <li>
+                <span class="detail-label">Pods:</span>
+                <span class="detail-value">{{ .AuditData.ClusterSummary.Pods }}</span>
+              </li>
+              <li>
+                <span class="detail-label">Namespaces:</span>
+                <span class="detail-value">{{ .AuditData.ClusterSummary.Namespaces }}</span>
+              </li>
+            </ul>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td class="resource-info">
+          <div class="name"><span class="caret-expander"></span>Health summary</div>
+          <div class="expandable-content">
+            <ul class="message-list">
+              {{ range $category, $summary := .AuditData.ClusterSummary.Results.ByCategory }}
                 <li>
-                  <span class="detail-label">Kubernetes Version:</span>
-                  <span class="detail-value">{{ .AuditData.ClusterSummary.Version }}</span>
-                </li>
-                <li>
-                  <span class="detail-label">Nodes:</span>
-                  <span class="detail-value">{{ .AuditData.ClusterSummary.Nodes }}</span>
-                </li>
-                <li>
-                  <span class="detail-label">Pods:</span>
-                  <span class="detail-value">{{ .AuditData.ClusterSummary.Pods }}</span>
-                </li>
-                <li>
-                  <span class="detail-label">Namespaces:</span>
-                  <span class="detail-value">{{ .AuditData.ClusterSummary.Namespaces }}</span>
-                </li>
-              </ul>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td class="resource-info">
-            <div class="name"><span class="caret-expander"></span>Health summary</div>
-            <div class="expandable-content">
-              <ul class="message-list">
-                {{ range $category, $summary := .AuditData.ClusterSummary.Results.ByCategory }}
-                  <li>
-                    <span class="detail-label">{{ $category }}</span>
-                    <span class="detail-value">{{ $summary.Errors }} errors, {{ $summary.Warnings }} warnings</span>
-                    <div class="status-bar">
-                      <div class="status">
-                        <div class="failing">
-                          <div class="warning" style="width: {{ getWarningWidth $summary 280 }}px;">
-                            <div class="passing" style="width: {{ getSuccessWidth $summary 280 }}px;"></div>
-                          </div>
+                  <span class="detail-label">{{ $category }}</span>
+                  <span class="detail-value">{{ $summary.Errors }} errors, {{ $summary.Warnings }} warnings</span>
+                  <div class="status-bar">
+                    <div class="status">
+                      <div class="failing">
+                        <div class="warning" style="width: {{ getWarningWidth $summary 280 }}px;">
+                          <div class="passing" style="width: {{ getSuccessWidth $summary 280 }}px;"></div>
                         </div>
                       </div>
                     </div>
-                  </li>
-                {{ end }}
-              </ul>
-            </div>
-          </td>
-        </tr>
-      </table>
+                  </div>
+                </li>
+              {{ end }}
+            </ul>
+          </div>
+        </td>
+      </tr>
+    </table>
 
-    </div>
+  </div>
 
-    {{ range $namespace, $nsResult := .AuditData.NamespacedResults }}
-      <div class="card namespace">
-        <h3>Namespace: <strong>{{ $namespace }}</strong></h3>
-        <table class="expandable-table" cellspacing="0">
-          {{ range .DeploymentResults }}
-            <tr>
-              <td class="resource-info">
-                  <div class="name"><span class="caret-expander"></span>Deployment: <strong>{{ .Name }}</strong></div>
+  {{ range $namespace, $nsResult := .AuditData.NamespacedResults }}
+    <div class="card namespace">
+      <h3>Namespace: <strong>{{ $namespace }}</strong></h3>
+      <table class="expandable-table" cellspacing="0">
+        {{ range .DeploymentResults }}
+          <tr>
+            <td class="resource-info">
+                <div class="name"><span class="caret-expander"></span>Deployment: <strong>{{ .Name }}</strong></div>
+                  <div class="result-messages expandable-content">
+                    <h4>Pod Spec:</h4>
+                    <ul class="message-list">
+                      {{ range $message := .PodResult.Messages}}
+                        <li class="{{ .Type }}"><i class="{{ getIcon $message }}"></i> {{ .Message }}</li>
+                      {{ end }}
+                    </ul>
+                  </div>
+                  {{ range .PodResult.ContainerResults}}
                     <div class="result-messages expandable-content">
-                      <h4>Pod Spec:</h4>
+                      <h4>Container: {{ .Name }}</h4>
                       <ul class="message-list">
-                        {{ range $message := .PodResult.Messages}}
+                        {{ range $message := .Messages}}
                           <li class="{{ .Type }}"><i class="{{ getIcon $message }}"></i> {{ .Message }}</li>
                         {{ end }}
                       </ul>
                     </div>
-                    {{ range .PodResult.ContainerResults}}
-                      <div class="result-messages expandable-content">
-                        <h4>Container: {{ .Name }}</h4>
-                        <ul class="message-list">
-                          {{ range $message := .Messages}}
-                            <li class="{{ .Type }}"><i class="{{ getIcon $message }}"></i> {{ .Message }}</li>
-                          {{ end }}
-                        </ul>
-                      </div>
-                    {{ end }} {{/* end range .PodResult.ContainerResults */}}
-                  </div>
-              </td>
-              <td class="status-bar">
-                <div class="status">
-                  <div class="failing">
-                    <div class="warning" style="width: {{ getWarningWidth .PodResult.Summary.Totals 200 }}px;">
-                      <div class="passing" style="width: {{ getSuccessWidth .PodResult.Summary.Totals 200 }}px;"></div>
-                    </div>
+                  {{ end }} {{/* end range .PodResult.ContainerResults */}}
+                </div>
+            </td>
+            <td class="status-bar">
+              <div class="status">
+                <div class="failing">
+                  <div class="warning" style="width: {{ getWarningWidth .PodResult.Summary.Totals 200 }}px;">
+                    <div class="passing" style="width: {{ getSuccessWidth .PodResult.Summary.Totals 200 }}px;"></div>
                   </div>
                 </div>
-              </td>
-            </tr>
-          {{ end }} {{/* end range .DeploymentResults */}}
-        </table>
-      </div>
-    {{ end }} {{/* end range .AuditData.NamespacedResults */}}
-  </div>
-
-  <div class="footer">
-    <a href="https://reactiveops.com?source=fairwinds"  target="_blank">&copy;2019 ReactiveOps Inc.</a>
-  </div>
-
+              </div>
+            </td>
+          </tr>
+        {{ end }} {{/* end range .DeploymentResults */}}
+      </table>
+    </div>
+  {{ end }} {{/* end range .AuditData.NamespacedResults */}}
   <script src="/static/js/charts.js">
   </script>
-</body>
-
-</html>
+{{end}}

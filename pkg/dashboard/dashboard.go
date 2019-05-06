@@ -28,8 +28,16 @@ import (
 )
 
 const (
-	// TemplateName references the dashboard template to use
-	TemplateName = "dashboard.gohtml"
+	// MainTemplateName is the main template
+	MainTemplateName = "main.gohtml"
+	// HeaderTemplateName contains the navbar
+	HeaderTemplateName = "header.gohtml"
+	// PreambleTemplateName contains an empty preamble that can be overridden
+	PreambleTemplateName = "preamble.gohtml"
+	// DashboardTemplateName contains the content of the dashboard
+	DashboardTemplateName = "dashboard.gohtml"
+	// FooterTemplateName contains the footer
+	FooterTemplateName = "footer.gohtml"
 )
 
 var (
@@ -59,6 +67,40 @@ type TemplateData struct {
 	JSON      template.JS
 }
 
+// GetBaseTemplate puts together the dashboard template. Individual pieces can be overridden before rendering.
+func GetBaseTemplate(name string) (*template.Template, error) {
+	tmpl := template.New(name).Funcs(template.FuncMap{
+		"getWarningWidth": getWarningWidth,
+		"getSuccessWidth": getSuccessWidth,
+		"getWeatherIcon":  getWeatherIcon,
+		"getWeatherText":  getWeatherText,
+		"getGrade":        getGrade,
+		"getScore":        getScore,
+		"getIcon":         getIcon,
+	})
+
+	templateBox := GetTemplateBox()
+	templateFileNames := []string{
+		DashboardTemplateName,
+		HeaderTemplateName,
+		PreambleTemplateName,
+		FooterTemplateName,
+		MainTemplateName,
+	}
+	for _, fname := range templateFileNames {
+		templateFile, err := templateBox.Find(fname)
+		if err != nil {
+			return nil, err
+		}
+
+		tmpl, err = tmpl.Parse(string(templateFile))
+		if err != nil {
+			return nil, err
+		}
+	}
+	return tmpl, nil
+}
+
 // MainHandler gets template data and renders the dashboard with it.
 func MainHandler(w http.ResponseWriter, r *http.Request, auditData validator.AuditData) {
 	jsonData, err := json.Marshal(auditData)
@@ -72,33 +114,15 @@ func MainHandler(w http.ResponseWriter, r *http.Request, auditData validator.Aud
 		AuditData: auditData,
 		JSON:      template.JS(jsonData),
 	}
-
-	templateBox := GetTemplateBox()
-	templateFile, err := templateBox.Find(TemplateName)
-
+	tmpl, err := GetBaseTemplate("main")
 	if err != nil {
 		logrus.Printf("Error getting template data %v", err)
 		http.Error(w, "Error getting template data", 500)
 		return
 	}
 
-	tmpl, err := template.New(TemplateName).Funcs(template.FuncMap{
-		"getWarningWidth": getWarningWidth,
-		"getSuccessWidth": getSuccessWidth,
-		"getWeatherIcon":  getWeatherIcon,
-		"getWeatherText":  getWeatherText,
-		"getGrade":        getGrade,
-		"getScore":        getScore,
-		"getIcon":         getIcon,
-	}).Parse(string(templateFile))
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
 	buf := &bytes.Buffer{}
-	err = template.Must(tmpl.Clone()).Execute(buf, templateData)
+	err = tmpl.ExecuteTemplate(buf, "main", templateData)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
