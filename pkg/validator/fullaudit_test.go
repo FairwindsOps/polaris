@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	conf "github.com/reactiveops/fairwinds/pkg/config"
+	"github.com/reactiveops/fairwinds/pkg/kube"
 	"github.com/reactiveops/fairwinds/test"
 	"github.com/stretchr/testify/assert"
 )
@@ -11,6 +12,8 @@ import (
 func TestGetTemplateData(t *testing.T) {
 	k8s := test.SetupTestAPI()
 	k8s = test.SetupAddDeploys(k8s, "test")
+	resources, err := kube.CreateResourceProviderFromAPI(k8s)
+	assert.Equal(t, err, nil, "error should be nil")
 
 	c := conf.Configuration{
 		HealthChecks: conf.HealthChecks{
@@ -38,7 +41,7 @@ func TestGetTemplateData(t *testing.T) {
 		Errors:    uint(0),
 	}
 
-	actualAudit, err := RunAudit(c, k8s)
+	actualAudit, err := RunAudit(c, resources)
 	assert.Equal(t, err, nil, "error should be nil")
 
 	assert.EqualValues(t, sum, actualAudit.ClusterSummary.Results)

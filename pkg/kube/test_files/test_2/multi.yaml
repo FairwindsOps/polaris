@@ -1,0 +1,53 @@
+---
+# Source: fairwinds/templates/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fairwinds
+---
+# Source: fairwinds/templates/dashboard.deployment.yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    checksum/config: '5702aca235561630172c22b6b900f5cebd4e82fae60389df18a3537ff82e2f09'
+  name: fairwinds-dashboard
+  namespace: fairwinds
+  labels:
+    app: fairwinds
+    component: dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fairwinds
+      component: dashboard
+  template:
+    metadata:
+      labels:
+        app: fairwinds
+        component: dashboard
+    spec:
+      containers:
+      - command:
+        - fairwinds
+        - --dashboard
+        image: 'quay.io/reactiveops/fairwinds:master'
+        imagePullPolicy: 'Always'
+        name: dashboard
+---
+# Source: fairwinds/templates/secret.yaml
+
+---
+# Source: fairwinds/templates/webhook.deployment.yaml
+
+---
+# Source: fairwinds/templates/webhook.service.yaml
+---
+# Source: fairwinds/templates/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fairwinds-2
+---
+

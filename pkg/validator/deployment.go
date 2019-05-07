@@ -33,14 +33,10 @@ func ValidateDeployment(conf conf.Configuration, deploy *appsv1.Deployment) Cont
 
 // ValidateDeployments validates that each deployment conforms to the Fairwinds config,
 // returns a list of ResourceResults organized by namespace.
-func ValidateDeployments(config conf.Configuration, k8sAPI *kube.API) (NamespacedResults, error) {
+func ValidateDeployments(config conf.Configuration, kubeResources *kube.ResourceProvider) (NamespacedResults, error) {
 	nsResults := NamespacedResults{}
-	deploys, err := k8sAPI.GetDeploys()
-	if err != nil {
-		return nsResults, err
-	}
 
-	for _, deploy := range deploys.Items {
+	for _, deploy := range kubeResources.Deployments {
 		deploymentResult := ValidateDeployment(config, &deploy)
 		nsResults = addResult(deploymentResult, nsResults, deploy.Namespace)
 	}
