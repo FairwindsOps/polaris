@@ -84,6 +84,9 @@ func main() {
 }
 
 func startDashboardServer(c conf.Configuration, k *kube.ResourceProvider, port int) {
+	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("OK"))
+	})
 	http.HandleFunc("/results.json", func(w http.ResponseWriter, r *http.Request) {
 		dashboard.EndpointHandler(w, r, c, k)
 	})
