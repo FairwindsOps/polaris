@@ -5,8 +5,10 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
+	"github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,7 +24,7 @@ type ResourceProvider struct {
 	Nodes         []corev1.Node
 	Deployments   []appsv1.Deployment
 	Namespaces    []corev1.Namespace
-	Pods          map[string][]corev1.Pod
+	Pods          []corev1.Pod
 }
 
 type k8sResource struct {
@@ -32,36 +34,32 @@ type k8sResource struct {
 // CreateResourceProvider returns a new ResourceProvider object to interact with k8s resources
 func CreateResourceProvider(directory string) (*ResourceProvider, error) {
 	if directory != "" {
-		return CreateResourceProviderFromDirectory(directory)
+		return CreateResourceProviderFromPath(directory)
 	}
 	return CreateResourceProviderFromCluster()
 }
 
-// CreateResourceProviderFromDirectory returns a new ResourceProvider using the YAML files in a directory
-func CreateResourceProviderFromDirectory(directory string) (*ResourceProvider, error) {
+// CreateResourceProviderFromPath returns a new ResourceProvider using the YAML files in a directory
+func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error) {
 	resources := ResourceProvider{
 		ServerVersion: "unknown",
 		Nodes:         []corev1.Node{},
 		Deployments:   []appsv1.Deployment{},
 		Namespaces:    []corev1.Namespace{},
-		Pods:          map[string][]corev1.Pod{},
+		Pods:          []corev1.Pod{},
 	}
-	visitFile := func(path string, f os.FileInfo, err error) error {
-		if !strings.HasSuffix(path, ".yml") && !strings.HasSuffix(path, ".yaml") {
-			return nil
-		}
-		contents, err := ioutil.ReadFile(path)
-		if err != nil {
-			return err
-		}
-		decoder := k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(contents), 1000)
+
+	addYaml := func(contents string) error {
+		contentBytes := []byte(contents)
+		decoder := k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(contentBytes), 1000)
 		resource := k8sResource{}
-		err = decoder.Decode(&resource)
+		err := decoder.Decode(&resource)
 		if err != nil {
 			// TODO: should we panic if the YAML is bad?
+			logrus.Errorf("Invalid YAML: %s", string(contents))
 			return nil
 		}
-		decoder = k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(contents), 1000)
+		decoder = k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(contentBytes), 1000)
 		if resource.Kind == "Deployment" {
 			dep := appsv1.Deployment{}
 			err = decoder.Decode(&dep)
@@ -82,18 +80,29 @@ func CreateResourceProviderFromDirectory(directory string) (*ResourceProvider, e
 			if err != nil {
 				return err
 			}
-			namespace := pod.ObjectMeta.Namespace
-			if namespace == "" {
-				namespace = "default"
-			}
-			podGroup, exists := resources.Pods[namespace]
-			if !exists {
-				podGroup = []corev1.Pod{}
-			}
-			resources.Pods[namespace] = append(podGroup, pod)
+			resources.Pods = append(resources.Pods, pod)
 		}
 		return nil
 	}
+
+	visitFile := func(path string, f os.FileInfo, err error) error {
+		if !strings.HasSuffix(path, ".yml") && !strings.HasSuffix(path, ".yaml") {
+			return nil
+		}
+		contents, err := ioutil.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		specs := regexp.MustCompile("\n-+\n").Split(string(contents), -1)
+		for _, spec := range specs {
+			err = addYaml(spec)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
 	err := filepath.Walk(directory, visitFile)
 	if err != nil {
 		return nil, err
@@ -130,20 +139,20 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface) (*ResourceProvider
 	if err != nil {
 		return nil, err
 	}
-	podsByNamespace := map[string][]corev1.Pod{}
+	allPods := []corev1.Pod{}
 	for _, ns := range namespaces.Items {
 		pods, err := kube.CoreV1().Pods(ns.Name).List(listOpts)
 		if err != nil {
 			return nil, err
 		}
-		podsByNamespace[ns.Name] = pods.Items
+		allPods = append(allPods, pods.Items...)
 	}
 	api := ResourceProvider{
 		ServerVersion: serverVersion.Major + "." + serverVersion.Minor,
 		Deployments:   deploys.Items,
 		Nodes:         nodes.Items,
 		Namespaces:    namespaces.Items,
-		Pods:          podsByNamespace,
+		Pods:          allPods,
 	}
 	return &api, nil
 }

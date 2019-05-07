@@ -43,7 +43,7 @@ func main() {
 	dashboard := flag.Bool("dashboard", false, "Runs the webserver for Fairwinds dashboard.")
 	webhook := flag.Bool("webhook", false, "Runs the webhook webserver.")
 	audit := flag.Bool("audit", false, "Runs a one-time audit.")
-	auditDirectory := flag.String("audit-directory", "", "If specified, audits YAML files instead of a cluster")
+	auditPath := flag.String("audit-path", "", "If specified, audits one or more YAML files instead of a cluster")
 	dashboardPort := flag.Int("dashboard-port", 8080, "Port for the dashboard webserver")
 	webhookPort := flag.Int("webhook-port", 9876, "Port for the webhook webserver")
 	auditOutputURL := flag.String("output-url", "", "Destination URL to send audit results")
@@ -75,10 +75,10 @@ func main() {
 	if *webhook {
 		startWebhookServer(c, *disableWebhookConfigInstaller, *webhookPort)
 	} else if *dashboard {
-		k, _ := kube.CreateResourceProvider(*auditDirectory)
+		k, _ := kube.CreateResourceProvider(*auditPath)
 		startDashboardServer(c, k, *dashboardPort)
 	} else if *audit {
-		k, _ := kube.CreateResourceProvider(*auditDirectory)
+		k, _ := kube.CreateResourceProvider(*auditPath)
 		runAudit(c, k, *auditOutputFile, *auditOutputURL)
 	}
 }

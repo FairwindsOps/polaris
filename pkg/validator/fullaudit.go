@@ -49,17 +49,12 @@ func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider) (
 		}
 	}
 
-	numPods := 0
-	for _, pods := range kubeResources.Pods {
-		numPods += len(pods)
-	}
-
 	auditData := AuditData{
 		FairwindsOutputVersion: FairwindsOutputVersion,
 		ClusterSummary: ClusterSummary{
 			Version:     kubeResources.ServerVersion,
 			Nodes:       len(kubeResources.Nodes),
-			Pods:        numPods,
+			Pods:        len(kubeResources.Pods),
 			Namespaces:  len(kubeResources.Namespaces),
 			Deployments: len(kubeResources.Deployments),
 			Results:     clusterResults,

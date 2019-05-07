@@ -36,7 +36,7 @@ func ValidateDeployment(conf conf.Configuration, deploy *appsv1.Deployment) Cont
 func ValidateDeployments(config conf.Configuration, kubeResources *kube.ResourceProvider) (NamespacedResults, error) {
 	nsResults := NamespacedResults{}
 
-	for _, deploy := range deploys.Items {
+	for _, deploy := range kubeResources.Deployments {
 		deploymentResult := ValidateDeployment(config, &deploy)
 		nsResults = addResult(deploymentResult, nsResults, deploy.Namespace)
 	}
