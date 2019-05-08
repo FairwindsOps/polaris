@@ -16,6 +16,7 @@ package dashboard
 
 import (
 	"github.com/reactiveops/fairwinds/pkg/validator"
+	"strings"
 )
 
 func getWarningWidth(counts validator.CountSummary, fullWidth int) uint {
@@ -24,6 +25,10 @@ func getWarningWidth(counts validator.CountSummary, fullWidth int) uint {
 
 func getSuccessWidth(counts validator.CountSummary, fullWidth int) uint {
 	return uint(float64(counts.Successes) / float64(counts.Successes+counts.Warnings+counts.Errors) * float64(fullWidth))
+}
+
+func getCategoryLink(category string) string {
+	return strings.Replace(strings.ToLower(category), " ", "-", -1)
 }
 
 func getGrade(rs validator.ResultSummary) string {

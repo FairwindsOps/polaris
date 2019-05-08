@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+
+<head>
+  {{ template "head" . }}
+  <link rel="stylesheet" href="/static/css/check-details.css">
+</head>
+
+<body>
+  {{ template "navbar" . }}
+  <div class="main-content">
+    <div class="card">
+      {{ template "details" . }}
+    </div>
+  </div>
+</body>
+</html>

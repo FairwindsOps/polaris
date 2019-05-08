@@ -22,7 +22,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 
+	"github.com/gorilla/mux"
 	conf "github.com/reactiveops/fairwinds/pkg/config"
 	"github.com/reactiveops/fairwinds/pkg/dashboard"
 	"github.com/reactiveops/fairwinds/pkg/kube"
@@ -84,18 +86,24 @@ func main() {
 }
 
 func startDashboardServer(c conf.Configuration, k *kube.ResourceProvider, port int) {
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	router := mux.NewRouter()
+	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
-	http.HandleFunc("/results.json", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/results.json", func(w http.ResponseWriter, r *http.Request) {
 		dashboard.EndpointHandler(w, r, c, k)
 	})
-	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "public/favicon.ico")
 	})
+	router.HandleFunc("/details/{category}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		category := vars["category"]
+		category = strings.Replace(category, ".md", "", -1)
+		dashboard.DetailsHandler(w, r, category)
+	})
 	fileServer := http.FileServer(dashboard.GetAssetBox())
-	http.Handle("/static/", http.StripPrefix("/static/", fileServer))
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
 			http.NotFound(w, r)
 			return
@@ -108,6 +116,8 @@ func startDashboardServer(c conf.Configuration, k *kube.ResourceProvider, port i
 		}
 		dashboard.MainHandler(w, r, auditData)
 	})
+	http.Handle("/static/", http.StripPrefix("/static/", fileServer))
+	http.Handle("/", router)
 
 	logrus.Infof("Starting Fairwinds dashboard server on port %d", port)
 	logrus.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
