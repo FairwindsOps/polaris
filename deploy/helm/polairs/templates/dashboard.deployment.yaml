@@ -4,30 +4,30 @@ kind: Deployment
 metadata:
   annotations:
     checksum/config: '{{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}'
-  name: {{ include "fairwinds.fullname" . }}-dashboard
+  name: {{ include "polaris.fullname" . }}-dashboard
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "fairwinds.labels" . | nindent 4 }}
+    {{- include "polaris.labels" . | nindent 4 }}
     component: dashboard
 spec:
   replicas: {{.Values.dashboard.replicas}}
   selector:
     matchLabels:
-      {{- include "fairwinds.selectors" . | nindent 6 }}
+      {{- include "polaris.selectors" . | nindent 6 }}
       component: dashboard
   template:
     metadata:
       labels:
-        {{- include "fairwinds.selectors" . | nindent 8 }}
+        {{- include "polaris.selectors" . | nindent 8 }}
         component: dashboard
     spec:
       volumes:
       - name: config
         configMap:
-          name: {{ include "fairwinds.fullname" . }}
+          name: {{ include "polaris.fullname" . }}
       containers:
       - command:
-        - fairwinds
+        - polaris
         - --dashboard
         image: '{{.Values.webhook.image.repository}}:{{.Values.webhook.image.tag}}'
         imagePullPolicy: '{{.Values.webhook.image.pullPolicy}}'
@@ -58,5 +58,5 @@ spec:
           mountPath: /opt/app/config.yaml
           subPath: config.yaml
           readOnly: true
-      serviceAccountName: {{ include "fairwinds.fullname" . }}
+      serviceAccountName: {{ include "polaris.fullname" . }}
 {{- end -}}

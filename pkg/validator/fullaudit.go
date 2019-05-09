@@ -1,16 +1,16 @@
 package validator
 
 import (
-	conf "github.com/reactiveops/fairwinds/pkg/config"
-	"github.com/reactiveops/fairwinds/pkg/kube"
+	conf "github.com/reactiveops/polaris/pkg/config"
+	"github.com/reactiveops/polaris/pkg/kube"
 )
 
 const (
-	// FairwindsOutputVersion is the version of the current output structure
-	FairwindsOutputVersion = "0.0"
+	// PolarisOutputVersion is the version of the current output structure
+	PolarisOutputVersion = "0.0"
 )
 
-// ClusterSummary contains Fairwinds results as well as some high-level stats
+// ClusterSummary contains Polaris results as well as some high-level stats
 type ClusterSummary struct {
 	Results     ResultSummary
 	Version     string
@@ -20,14 +20,14 @@ type ClusterSummary struct {
 	Deployments int
 }
 
-// AuditData contains all the data from a full Fairwinds audit
+// AuditData contains all the data from a full Polaris audit
 type AuditData struct {
-	FairwindsOutputVersion string
-	ClusterSummary         ClusterSummary
-	NamespacedResults      NamespacedResults
+	PolarisOutputVersion string
+	ClusterSummary       ClusterSummary
+	NamespacedResults    NamespacedResults
 }
 
-// RunAudit runs a full Fairwinds audit and returns an AuditData object
+// RunAudit runs a full Polaris audit and returns an AuditData object
 func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider) (AuditData, error) {
 	// TODO: Validate StatefulSets, DaemonSets, Cron jobs
 	// in addition to deployments
@@ -50,7 +50,7 @@ func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider) (
 	}
 
 	auditData := AuditData{
-		FairwindsOutputVersion: FairwindsOutputVersion,
+		PolarisOutputVersion: PolarisOutputVersion,
 		ClusterSummary: ClusterSummary{
 			Version:     kubeResources.ServerVersion,
 			Nodes:       len(kubeResources.Nodes),

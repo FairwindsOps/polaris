@@ -18,8 +18,8 @@ import (
 	"fmt"
 	"strings"
 
-	conf "github.com/reactiveops/fairwinds/pkg/config"
-	"github.com/reactiveops/fairwinds/pkg/validator/messages"
+	conf "github.com/reactiveops/polaris/pkg/config"
+	"github.com/reactiveops/polaris/pkg/validator/messages"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
@@ -30,7 +30,7 @@ type ContainerValidation struct {
 	Container *corev1.Container
 }
 
-// ValidateContainer validates that each pod conforms to the Fairwinds config, returns a ResourceResult.
+// ValidateContainer validates that each pod conforms to the Polaris config, returns a ResourceResult.
 func ValidateContainer(cnConf *conf.Configuration, container *corev1.Container) ContainerResult {
 	cv := ContainerValidation{
 		Container:          container,

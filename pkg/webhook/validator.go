@@ -20,8 +20,8 @@ import (
 	"net/http"
 	"os"
 
-	conf "github.com/reactiveops/fairwinds/pkg/config"
-	validator "github.com/reactiveops/fairwinds/pkg/validator"
+	conf "github.com/reactiveops/polaris/pkg/config"
+	validator "github.com/reactiveops/polaris/pkg/validator"
 	"github.com/sirupsen/logrus"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -118,7 +118,7 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 }
 
 func getFailureReason(podResult validator.PodResult) string {
-	reason := "\nFairwinds prevented this deployment due to configuration problems:\n"
+	reason := "\nPolaris prevented this deployment due to configuration problems:\n"
 
 	for _, message := range podResult.Messages {
 		if message.Type == validator.MessageTypeError {

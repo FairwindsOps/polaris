@@ -38,6 +38,6 @@ func TestGetMultipleResourceFromSingleFile(t *testing.T) {
 	assert.Equal(t, "dashboard", resources.Deployments[0].Spec.Template.Spec.Containers[0].Name)
 
 	assert.Equal(t, 2, len(resources.Namespaces), "Should have a namespace")
-	assert.Equal(t, "fairwinds", resources.Namespaces[0].ObjectMeta.Name)
-	assert.Equal(t, "fairwinds-2", resources.Namespaces[1].ObjectMeta.Name)
+	assert.Equal(t, "polaris", resources.Namespaces[0].ObjectMeta.Name)
+	assert.Equal(t, "polaris-2", resources.Namespaces[1].ObjectMeta.Name)
 }

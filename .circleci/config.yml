@@ -11,7 +11,7 @@ references:
         echo 'export CI_TAG=$CIRCLE_TAG' >> ${BASH_ENV}
         echo 'export EXTERNAL_REGISTRY_BASE_DOMAIN=quay.io' >> ${BASH_ENV}
         echo 'export DOCKERFILE=Dockerfile' >> ${BASH_ENV}
-        echo 'export REPOSITORY_NAME=reactiveops/fairwinds' >> ${BASH_ENV}
+        echo 'export REPOSITORY_NAME=reactiveops/polaris' >> ${BASH_ENV}
         echo 'export REGISTRY_EMAIL=none' >> ${BASH_ENV}
         echo 'export DOCKERTAG=${EXTERNAL_REGISTRY_BASE_DOMAIN}/${REPOSITORY_NAME}' >> ${BASH_ENV}
   docker_build_and_push: &docker_build_and_push
@@ -35,7 +35,7 @@ jobs:
       - *docker_build_and_push
 
   test:
-    working_directory: /go/src/github.com/reactiveops/fairwinds/
+    working_directory: /go/src/github.com/reactiveops/polaris/
     docker:
       - image: circleci/golang:1.11
 
@@ -56,7 +56,7 @@ jobs:
           name: Verify helm chart synced with dashboard.yaml
           command: |
             diff \
-              <(helm template deploy/helm/fairwinds/ --name fairwinds --namespace fairwinds --set templateOnly=true) \
+              <(helm template deploy/helm/polaris/ --name polaris --namespace polaris --set templateOnly=true) \
               deploy/dashboard.yaml || (echo "
                 Make sure to regenerate k8s deploy config with make helm-to-k8s" &&
                 exit 1)
@@ -65,7 +65,7 @@ jobs:
           name: Verify helm chart synced with webhook.yaml
           command: |
             diff \
-              <(helm template deploy/helm/fairwinds/ --name fairwinds --namespace fairwinds --set templateOnly=true --set webhook.enable=true --set dashboard.enable=false) \
+              <(helm template deploy/helm/polaris/ --name polaris --namespace polaris --set templateOnly=true --set webhook.enable=true --set dashboard.enable=false) \
               deploy/webhook.yaml || (echo "
                 Make sure to regenerate k8s deploy config with make helm-to-k8s" &&
                 exit 1)

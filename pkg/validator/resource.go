@@ -15,7 +15,7 @@
 package validator
 
 import (
-	conf "github.com/reactiveops/fairwinds/pkg/config"
+	conf "github.com/reactiveops/polaris/pkg/config"
 	"github.com/sirupsen/logrus"
 )
 

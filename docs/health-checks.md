@@ -1,6 +1,6 @@
 # Health Checks
 
-Fairwinds supports validating the presence of readiness and liveness probes in pods.
+Polaris supports validating the presence of readiness and liveness probes in pods.
 
 key | default | description
 ----|---------|------------

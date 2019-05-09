@@ -1,6 +1,6 @@
 # Resources
 
-Fairwinds supports a number of checks related to CPU and Memory requests and limits.
+Polaris supports a number of checks related to CPU and Memory requests and limits.
 
 ## Presence Checks
 
@@ -15,7 +15,7 @@ key | default | description
 
 ## Range Checks
 
-Fairwinds can also verify that those values fall within a certain range. These checks are not enabled by default, and as such do not have default values. The `cpuRequestRanges`, `cpuLimitRanges`, `memoryRequestRanges`, and `memoryLimitRanges` all support the following attributes:
+Polaris can also verify that those values fall within a certain range. These checks are not enabled by default, and as such do not have default values. The `cpuRequestRanges`, `cpuLimitRanges`, `memoryRequestRanges`, and `memoryLimitRanges` all support the following attributes:
 
 key | description
 ----|------------

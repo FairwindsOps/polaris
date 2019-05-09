@@ -25,11 +25,11 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	conf "github.com/reactiveops/fairwinds/pkg/config"
-	"github.com/reactiveops/fairwinds/pkg/dashboard"
-	"github.com/reactiveops/fairwinds/pkg/kube"
-	"github.com/reactiveops/fairwinds/pkg/validator"
-	fwebhook "github.com/reactiveops/fairwinds/pkg/webhook"
+	conf "github.com/reactiveops/polaris/pkg/config"
+	"github.com/reactiveops/polaris/pkg/dashboard"
+	"github.com/reactiveops/polaris/pkg/kube"
+	"github.com/reactiveops/polaris/pkg/validator"
+	fwebhook "github.com/reactiveops/polaris/pkg/webhook"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 	appsv1 "k8s.io/api/apps/v1"
@@ -42,7 +42,7 @@ import (
 )
 
 func main() {
-	dashboard := flag.Bool("dashboard", false, "Runs the webserver for Fairwinds dashboard.")
+	dashboard := flag.Bool("dashboard", false, "Runs the webserver for Polaris dashboard.")
 	webhook := flag.Bool("webhook", false, "Runs the webhook webserver.")
 	audit := flag.Bool("audit", false, "Runs a one-time audit.")
 	auditPath := flag.String("audit-path", "", "If specified, audits one or more YAML files instead of a cluster")
@@ -50,7 +50,7 @@ func main() {
 	webhookPort := flag.Int("webhook-port", 9876, "Port for the webhook webserver")
 	auditOutputURL := flag.String("output-url", "", "Destination URL to send audit results")
 	auditOutputFile := flag.String("output-file", "", "Destination file for audit results")
-	configPath := flag.String("config", "config.yaml", "Location of Fairwinds configuration file")
+	configPath := flag.String("config", "config.yaml", "Location of Polaris configuration file")
 	logLevel := flag.String("log-level", logrus.InfoLevel.String(), "Logrus log level")
 	disableWebhookConfigInstaller := flag.Bool("disable-webhook-config-installer", false,
 		"disable the installer in the webhook server, so it won't install webhook configuration resources during bootstrapping")
@@ -119,7 +119,7 @@ func startDashboardServer(c conf.Configuration, k *kube.ResourceProvider, port i
 	http.Handle("/static/", http.StripPrefix("/static/", fileServer))
 	http.Handle("/", router)
 
-	logrus.Infof("Starting Fairwinds dashboard server on port %d", port)
+	logrus.Infof("Starting Polaris dashboard server on port %d", port)
 	logrus.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
 }
 
@@ -131,39 +131,39 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 		os.Exit(1)
 	}
 
-	fairwindsResourceName := "fairwinds"
-	fairwindsNamespaceBytes, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace")
+	polarisResourceName := "polaris"
+	polarisNamespaceBytes, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace")
 
 	if err != nil {
 		// Not exiting here as we have fallback options
 		logrus.Debugf("Error reading namespace information: %v", err)
 	}
 
-	fairwindsNamespace := string(fairwindsNamespaceBytes)
-	if fairwindsNamespace == "" {
-		fairwindsNamespace = fairwindsResourceName
-		logrus.Debugf("Could not determine current namespace, creating resources in %s namespace", fairwindsNamespace)
+	polarisNamespace := string(polarisNamespaceBytes)
+	if polarisNamespace == "" {
+		polarisNamespace = polarisResourceName
+		logrus.Debugf("Could not determine current namespace, creating resources in %s namespace", polarisNamespace)
 	}
 
 	logrus.Info("Setting up webhook server")
-	as, err := webhook.NewServer(fairwindsResourceName, mgr, webhook.ServerOptions{
+	as, err := webhook.NewServer(polarisResourceName, mgr, webhook.ServerOptions{
 		Port:                          int32(port),
 		CertDir:                       "/tmp/cert",
 		DisableWebhookConfigInstaller: &disableWebhookConfigInstaller,
 		BootstrapOptions: &webhook.BootstrapOptions{
-			ValidatingWebhookConfigName: fairwindsResourceName,
+			ValidatingWebhookConfigName: polarisResourceName,
 			Secret: &apitypes.NamespacedName{
-				Namespace: fairwindsNamespace,
-				Name:      fairwindsResourceName,
+				Namespace: polarisNamespace,
+				Name:      polarisResourceName,
 			},
 
 			Service: &webhook.Service{
-				Namespace: fairwindsNamespace,
-				Name:      fairwindsResourceName,
+				Namespace: polarisNamespace,
+				Name:      polarisResourceName,
 
 				// Selectors should select the pods that runs this webhook server.
 				Selectors: map[string]string{
-					"app": fairwindsResourceName,
+					"app": polarisResourceName,
 				},
 			},
 		},
@@ -174,7 +174,7 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 		os.Exit(1)
 	}
 
-	logrus.Infof("Fairwinds webhook server listening on port %d", port)
+	logrus.Infof("Polaris webhook server listening on port %d", port)
 
 	d := fwebhook.NewWebhook("deploy", mgr, fwebhook.Validator{Config: c}, &appsv1.Deployment{})
 	logrus.Debug("Registering webhooks to the webhook server")

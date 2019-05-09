@@ -15,8 +15,8 @@
 package validator
 
 import (
-	conf "github.com/reactiveops/fairwinds/pkg/config"
-	"github.com/reactiveops/fairwinds/pkg/kube"
+	conf "github.com/reactiveops/polaris/pkg/config"
+	"github.com/reactiveops/polaris/pkg/kube"
 	appsv1 "k8s.io/api/apps/v1"
 )
 
@@ -31,7 +31,7 @@ func ValidateDeployment(conf conf.Configuration, deploy *appsv1.Deployment) Cont
 	}
 }
 
-// ValidateDeployments validates that each deployment conforms to the Fairwinds config,
+// ValidateDeployments validates that each deployment conforms to the Polaris config,
 // returns a list of ResourceResults organized by namespace.
 func ValidateDeployments(config conf.Configuration, kubeResources *kube.ResourceProvider) (NamespacedResults, error) {
 	nsResults := NamespacedResults{}

@@ -1,6 +1,6 @@
 # Security
 
-Fairwinds supports a number of checks related to security.
+Polaris supports a number of checks related to security.
 
 key | default | description
 ----|---------|------------
@@ -19,7 +19,7 @@ Additional validations are available to ensure pods are running with a limited s
 
 Securing workloads in Kubernetes is an important part of overall cluster security. The overall goal should be to ensure that containers are running with as minimal privileges as possible. This includes avoiding privilege escalation, not running containers with a root user, and using read only file systems wherever possible.
 
-Much of this configuration can be found in the `securityContext` attribute for both Kubernetes pods and containers. Where configuration is available at both a pod and container level, Fairwinds validates both.
+Much of this configuration can be found in the `securityContext` attribute for both Kubernetes pods and containers. Where configuration is available at both a pod and container level, Polaris validates both.
 
 ## Further Reading
 - [Kubernetes Docs: Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)

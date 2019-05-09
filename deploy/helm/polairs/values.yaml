@@ -49,7 +49,7 @@ dashboard:
   service:
     type: ClusterIP
   image:
-    repository: quay.io/reactiveops/fairwinds
+    repository: quay.io/reactiveops/polaris
     tag: master
     pullPolicy: Always
 
@@ -57,7 +57,7 @@ webhook:
   enable: false
   replicas: 1
   image:
-    repository: quay.io/reactiveops/fairwinds
+    repository: quay.io/reactiveops/polaris
     tag: master
     pullPolicy: Always
 

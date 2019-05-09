@@ -1,29 +1,29 @@
 ---
-# Source: fairwinds/templates/namespace.yaml
+# Source: polaris/templates/namespace.yaml
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: fairwinds
+  name: polaris
 ---
-# Source: fairwinds/templates/secret.yaml
+# Source: polaris/templates/secret.yaml
 apiVersion: v1
 kind: Secret
 metadata:
-  name: fairwinds
-  namespace: fairwinds
+  name: polaris
+  namespace: polaris
   labels:
-    app: fairwinds
+    app: polaris
 type: Opaque
 data:
 ---
-# Source: fairwinds/templates/configmap.yaml
+# Source: polaris/templates/configmap.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: fairwinds
-  namespace: fairwinds
+  name: polaris
+  namespace: polaris
   labels:
-    app: fairwinds
+    app: polaris
 data:
   config.yaml:  |
     resources:
@@ -70,23 +70,23 @@ data:
             - AUDIT_WRITE
   
 ---
-# Source: fairwinds/templates/serviceaccount.yaml
+# Source: polaris/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: fairwinds
-  namespace: fairwinds
+  name: polaris
+  namespace: polaris
   labels:
-    app: fairwinds
+    app: polaris
 
 ---
-# Source: fairwinds/templates/clusterrole.yaml
+# Source: polaris/templates/clusterrole.yaml
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
-  name: fairwinds
+  name: polaris
   labels:
-    app: fairwinds
+    app: polaris
 rules:
   - apiGroups:
     - ''
@@ -97,30 +97,30 @@ rules:
     verbs:
       - '*'
 ---
-# Source: fairwinds/templates/clusterrolebinding.yaml
+# Source: polaris/templates/clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
-  name: fairwinds
+  name: polaris
   labels:
-    app: fairwinds
+    app: polaris
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: fairwinds
+  name: polaris
 subjects:
   - kind: ServiceAccount
-    name: fairwinds
-    namespace: fairwinds
+    name: polaris
+    namespace: polaris
 ---
-# Source: fairwinds/templates/dashboard.service.yaml
+# Source: polaris/templates/dashboard.service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: fairwinds-dashboard
-  namespace: fairwinds
+  name: polaris-dashboard
+  namespace: polaris
   labels:
-    app: fairwinds
+    app: polaris
 spec:
   ports:
   - name: dashboard
@@ -128,18 +128,18 @@ spec:
     protocol: TCP
     targetPort: 8080
   selector:
-    app: fairwinds
+    app: polaris
     component: dashboard
   type: ClusterIP
 ---
-# Source: fairwinds/templates/webhook.service.yaml
+# Source: polaris/templates/webhook.service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: fairwinds-dashboard
-  namespace: fairwinds
+  name: polaris-dashboard
+  namespace: polaris
   labels:
-    app: fairwinds
+    app: polaris
 spec:
   ports:
   - name: dashboard
@@ -147,45 +147,45 @@ spec:
     protocol: TCP
     targetPort: 8080
   selector:
-    app: fairwinds
+    app: polaris
     component: dashboard
   type: ClusterIP
 ---
-# Source: fairwinds/templates/webhook.deployment.yaml
+# Source: polaris/templates/webhook.deployment.yaml
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   annotations:
     checksum/config: '5702aca235561630172c22b6b900f5cebd4e82fae60389df18a3537ff82e2f09'
-  name: fairwinds-webhook
-  namespace: fairwinds
+  name: polaris-webhook
+  namespace: polaris
   labels:
-    app: fairwinds
+    app: polaris
     component: webhook
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: fairwinds
+      app: polaris
       component: webhook
   template:
     metadata:
       labels:
-        app: fairwinds
+        app: polaris
         component: webhook
     spec:
       volumes:
       - name: config
         configMap:
-          name: fairwinds
+          name: polaris
       - name: secret
         secret:
-          secretName: fairwinds
+          secretName: polaris
       containers:
       - command:
-        - fairwinds
+        - polaris
         - --webhook
-        image: 'quay.io/reactiveops/fairwinds:master'
+        image: 'quay.io/reactiveops/polaris:master'
         imagePullPolicy: 'Always'
         name: webhook
         ports:
@@ -198,7 +198,7 @@ spec:
             command:
             - sh
             - -c
-            - ps -ef | grep fairwinds
+            - ps -ef | grep polaris
           initialDelaySeconds: 5
           periodSeconds: 5
         readinessProbe:
@@ -206,7 +206,7 @@ spec:
             command:
             - sh
             - -c
-            - ps -ef | grep fairwinds
+            - ps -ef | grep polaris
           initialDelaySeconds: 5
           periodSeconds: 5
         resources:
@@ -224,7 +224,7 @@ spec:
         - name: secret
           mountPath: /tmp/cert/
           readOnly: true
-      serviceAccountName:  fairwinds
+      serviceAccountName:  polaris
 ---
-# Source: fairwinds/templates/dashboard.deployment.yaml
+# Source: polaris/templates/dashboard.deployment.yaml
 
