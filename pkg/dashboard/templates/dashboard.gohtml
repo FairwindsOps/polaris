@@ -9,9 +9,9 @@
       </div>
       <div class="result-messages">
         <ul class="message-list">
-          <li class="success"><i class="fas fa-check"></i> {{ .AuditData.ClusterSummary.Results.Totals.Successes }} checks passed</li>
-          <li class="warning"><i class="fas fa-exclamation"></i> {{ .AuditData.ClusterSummary.Results.Totals.Warnings }} checks had warnings</li>
-          <li class="error"><i class="fas fa-times"></i> {{ .AuditData.ClusterSummary.Results.Totals.Errors }} checks had errors</li>
+          <li class="success"><i class="message-icon fas fa-check"></i> {{ .AuditData.ClusterSummary.Results.Totals.Successes }} checks passed</li>
+          <li class="warning"><i class="message-icon fas fa-exclamation"></i> {{ .AuditData.ClusterSummary.Results.Totals.Warnings }} checks had warnings</li>
+          <li class="error"><i class="message-icon fas fa-times"></i> {{ .AuditData.ClusterSummary.Results.Totals.Errors }} checks had errors</li>
         </ul>
       </div>
       <canvas id="clusterScoreChart"></canvas>
@@ -82,7 +82,13 @@
                     <h4>Pod Spec:</h4>
                     <ul class="message-list">
                       {{ range $message := .PodResult.Messages}}
-                        <li class="{{ .Type }}"><i class="{{ getIcon $message }}"></i> {{ .Message }}</li>
+                        <li class="{{ .Type }}">
+                          <i class="message-icon {{ getIcon $message }}"></i>
+                          <a class="more-info" href="/details/{{ getCategoryLink .Category }}">
+                            <i class="far fa-question-circle"></i>
+                          </a>
+                          <span class="message">{{ .Message }}</span>
+                        </li>
                       {{ end }}
                     </ul>
                   </div>
@@ -91,7 +97,13 @@
                       <h4>Container: {{ .Name }}</h4>
                       <ul class="message-list">
                         {{ range $message := .Messages}}
-                          <li class="{{ .Type }}"><i class="{{ getIcon $message }}"></i> {{ .Message }}</li>
+                          <li class="{{ .Type }}">
+                            <i class="message-icon {{ getIcon $message }}"></i>
+                            <a class="more-info" href="/details/{{ getCategoryLink .Category }}">
+                              <i class="far fa-question-circle"></i>
+                            </a>
+                            <span class="message">{{ .Message }}</span>
+                          </li>
                         {{ end }}
                       </ul>
                     </div>

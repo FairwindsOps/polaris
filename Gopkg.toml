@@ -48,3 +48,11 @@
 [[constraint]]
   name = "github.com/gobuffalo/packr"
   version = "2.2.0"
+
+[[constraint]]
+  name = "github.com/gorilla/mux"
+  version = "1.7.1"
+
+[[constraint]]
+  revision = "772775880e1fbf39a7804149ed11c0f714ec89fe"
+  name = "gitlab.com/golang-commonmark/markdown"

@@ -25,24 +25,30 @@ import (
 	"github.com/reactiveops/fairwinds/pkg/kube"
 	"github.com/reactiveops/fairwinds/pkg/validator"
 	"github.com/sirupsen/logrus"
+	"gitlab.com/golang-commonmark/markdown"
 )
 
 const (
 	// MainTemplateName is the main template
 	MainTemplateName = "main.gohtml"
-	// HeaderTemplateName contains the navbar
-	HeaderTemplateName = "header.gohtml"
+	// HeadTemplateName contains styles and meta info
+	HeadTemplateName = "head.gohtml"
+	// NavbarTemplateName contains the navbar
+	NavbarTemplateName = "navbar.gohtml"
 	// PreambleTemplateName contains an empty preamble that can be overridden
 	PreambleTemplateName = "preamble.gohtml"
 	// DashboardTemplateName contains the content of the dashboard
 	DashboardTemplateName = "dashboard.gohtml"
 	// FooterTemplateName contains the footer
 	FooterTemplateName = "footer.gohtml"
+	// CheckDetailsTemplateName is a page for rendering details about a given check
+	CheckDetailsTemplateName = "check-details.gohtml"
 )
 
 var (
 	templateBox = (*packr.Box)(nil)
 	assetBox    = (*packr.Box)(nil)
+	markdownBox = (*packr.Box)(nil)
 )
 
 // GetAssetBox returns a binary-friendly set of assets packaged from disk
@@ -61,6 +67,14 @@ func GetTemplateBox() *packr.Box {
 	return templateBox
 }
 
+// GetMarkdownBox returns a binary-friendly set of markdown files with error details
+func GetMarkdownBox() *packr.Box {
+	if markdownBox == (*packr.Box)(nil) {
+		markdownBox = packr.New("Markdown", "../../docs")
+	}
+	return markdownBox
+}
+
 // TemplateData is passed to the dashboard HTML template
 type TemplateData struct {
 	AuditData validator.AuditData
@@ -77,16 +91,22 @@ func GetBaseTemplate(name string) (*template.Template, error) {
 		"getGrade":        getGrade,
 		"getScore":        getScore,
 		"getIcon":         getIcon,
+		"getCategoryLink": getCategoryLink,
 	})
 
-	templateBox := GetTemplateBox()
 	templateFileNames := []string{
 		DashboardTemplateName,
-		HeaderTemplateName,
+		HeadTemplateName,
+		NavbarTemplateName,
 		PreambleTemplateName,
 		FooterTemplateName,
 		MainTemplateName,
 	}
+	return parseTemplateFiles(tmpl, templateFileNames)
+}
+
+func parseTemplateFiles(tmpl *template.Template, templateFileNames []string) (*template.Template, error) {
+	templateBox := GetTemplateBox()
 	for _, fname := range templateFileNames {
 		templateFile, err := templateBox.Find(fname)
 		if err != nil {
@@ -99,6 +119,16 @@ func GetBaseTemplate(name string) (*template.Template, error) {
 		}
 	}
 	return tmpl, nil
+}
+
+func writeTemplate(tmpl *template.Template, data *TemplateData, w http.ResponseWriter) {
+	buf := &bytes.Buffer{}
+	err := tmpl.Execute(buf, data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	buf.WriteTo(w)
 }
 
 // MainHandler gets template data and renders the dashboard with it.
@@ -120,27 +150,46 @@ func MainHandler(w http.ResponseWriter, r *http.Request, auditData validator.Aud
 		http.Error(w, "Error getting template data", 500)
 		return
 	}
-
-	buf := &bytes.Buffer{}
-	err = tmpl.ExecuteTemplate(buf, "main", templateData)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	buf.WriteTo(w)
+	writeTemplate(tmpl, &templateData, w)
 }
 
 // EndpointHandler gets template data and renders json with it.
 func EndpointHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration, kubeResources *kube.ResourceProvider) {
 	templateData, err := validator.RunAudit(c, kubeResources)
 	if err != nil {
-		http.Error(w, "Error Fetching Deployments", 500)
+		http.Error(w, "Error Fetching Deployments", http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(templateData)
+}
+
+// DetailsHandler returns details for a given error type
+func DetailsHandler(w http.ResponseWriter, r *http.Request, category string) {
+	box := GetMarkdownBox()
+	contents, err := box.Find(category + ".md")
+	if err != nil {
+		http.Error(w, "Error details not found for category "+category, http.StatusNotFound)
+		return
+	}
+	md := markdown.New(markdown.XHTMLOutput(true))
+	detailsHTML := "{{ define \"details\" }}" + md.RenderToString(contents) + "{{ end }}"
+
+	templateFileNames := []string{
+		HeadTemplateName,
+		NavbarTemplateName,
+		CheckDetailsTemplateName,
+		FooterTemplateName,
+	}
+	tmpl := template.New("check-details")
+	tmpl, err = parseTemplateFiles(tmpl, templateFileNames)
+	if err != nil {
+		logrus.Printf("Error getting template data %v", err)
+		http.Error(w, "Error getting template data", 500)
+		return
+	}
+	tmpl.Parse(detailsHTML)
+	writeTemplate(tmpl, nil, w)
 }

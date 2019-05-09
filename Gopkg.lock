@@ -81,7 +81,7 @@
 
 [[projects]]
   name = "github.com/gobuffalo/packr"
-  packages = [".","v2","v2/file","v2/file/resolver","v2/file/resolver/encoding/hex","v2/jam/parser","v2/plog"]
+  packages = ["v2","v2/file","v2/file/resolver","v2/file/resolver/encoding/hex","v2/jam/parser","v2/plog"]
   revision = "cda4ac25577350dac682c8715dc6659327232596"
   version = "v2.2.0"
 
@@ -123,6 +123,12 @@
   name = "github.com/googleapis/gnostic"
   packages = ["OpenAPIv2","compiler","extensions"]
   revision = "0c5108395e2debce0d731cf0287ddf7242066aba"
+
+[[projects]]
+  name = "github.com/gorilla/mux"
+  packages = ["."]
+  revision = "c5c6c98bc25355028a63748a498942a6398ccd22"
+  version = "v1.7.1"
 
 [[projects]]
   name = "github.com/gregjones/httpcache"
@@ -272,6 +278,35 @@
   version = "v1.3.0"
 
 [[projects]]
+  branch = "master"
+  name = "gitlab.com/golang-commonmark/html"
+  packages = ["."]
+  revision = "cfaf75183c4a5f0e44e3d51ece1065accafdd2b3"
+
+[[projects]]
+  branch = "master"
+  name = "gitlab.com/golang-commonmark/linkify"
+  packages = ["."]
+  revision = "c22b7bdb117955ff2cc0e3724083d35e3419d71e"
+
+[[projects]]
+  name = "gitlab.com/golang-commonmark/markdown"
+  packages = ["."]
+  revision = "772775880e1fbf39a7804149ed11c0f714ec89fe"
+
+[[projects]]
+  branch = "master"
+  name = "gitlab.com/golang-commonmark/mdurl"
+  packages = ["."]
+  revision = "e5bce34c34f29ecf232fec34f3982e55533ec14e"
+
+[[projects]]
+  branch = "master"
+  name = "gitlab.com/golang-commonmark/puny"
+  packages = ["."]
+  revision = "2cd490539afe7c6fc0eda6c59ef88fa93a00ea0d"
+
+[[projects]]
   name = "go.uber.org/atomic"
   packages = ["."]
   revision = "4e336646b2ef9fc6e47be8e21594178f98e5ebcf"
@@ -389,6 +424,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "23f3629786ef5c144dfcbf51c3ef27cafa7f200acfdc9779a234a6419e6aeb6a"
+  inputs-digest = "0413cf32305d8e92a5f65d059d93e2bf151b8755f5a24088ef26ea12a148cd68"
   solver-name = "gps-cdcl"
   solver-version = 1

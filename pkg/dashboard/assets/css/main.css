@@ -2,48 +2,45 @@ body {
   margin: 0;
   font-family: 'Muli', 'Helvetica', 'Arial', sans-serif;
   background: #f5f5f5;
+  line-height: 1.3rem;
 }
 
-.header {
+.navbar {
   padding: 20px 20px 0;
 }
 
-.header .header-content {
+.navbar .navbar-content {
   margin: 0 auto;
   width: 900px;
 }
 
-.header .header-right {
+.navbar .navbar-right {
   padding: 15px;
   float: right;
 }
 
-.header .logo {
+.navbar .logo {
   width: 280px;
 }
 
-.header span.oss-text {
+.navbar span.oss-text {
   color: #23103A;
   display: block;
   font-size: 11px;
   margin: 3px 0;
 }
 
-.header a {
+.navbar a {
   text-decoration: none;
 }
 
-.header .ro-logo {
+.navbar .ro-logo {
   height: 40px;
 }
 
-.dashboard-content {
+.main-content {
   width: 960px;
   margin: 0 auto;
-}
-
-.charts {
-  height: 405px;
 }
 
 .card {
@@ -53,225 +50,6 @@ body {
   background-color: #fff;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   border-radius: 5px;
-}
-
-.card.cluster {
-  margin-top: 15px;
-}
-
-
-.card.namespace {
-  padding: 10px 20px;
-}
-
-.card h3 {
-  margin: 0;
-  font-weight: 300;
-  font-size: 28px;
-  padding: 15px 20px 20px;
-}
-
-.namespace h3 strong {
-  margin: 0;
-  font-weight: bold;
-}
-
-.cluster-overview {
-  height: 204px;
-}
-
-.cluster-overview .cluster-score {
-  width: 200px;
-  display: inline-block;
-  margin-left: 20px;
-}
-
-.cluster-overview .cluster-score .weather {
-    font-size: 90px;
-    color: #444;
-    margin-bottom: 15px;
-}
-
-.cluster-overview .cluster-score .sailing-message {
-  font-size: 16px;
-  line-height: 28px;
-  margin-left: 7px;
-  font-weight: 300;
-  color: #555;
-}
-
-.cluster-overview .cluster-score .scores {
-  font-size: 16px;
-  margin-top: 10px;
-}
-
-.cluster .expandable-table ul.message-list {
-  margin: 10px 26px;
-}
-
-#clusterScoreChart {
-  width: 550px;
-  position: relative;
-  top: -242px;
-  left: 120px;
-}
-
-.cluster-overview .result-messages {
-  margin: 0 20px;
-  display: inline-block;
-  position: relative;
-  left: -100px;
-  top: -45px;
-}
-
-.cluster-overview .result-messages ul {
-  position: relative;
-  top: 0px;
-  left: 400px;
-  font-size: 20px;
-  line-height: 35px;
-}
-
-.card.cluster .expandable-table {
-  margin-top: 20px;
-}
-
-.card.cluster .detail-label {
-  display: inline-block;
-  min-width: 140px;
-  font-weight: bold;
-}
-
-.expandable-table {
-  width: 100%;
-  border-spacing: 0;
-  border-collapse: collapse;
-}
-
-.expandable-table tr {
-  height: 50px;
-}
-
-.expandable-table td {
-  padding: 15px 20px;
-  margin: 0;
-  font-size: 18px;
-  border-top: 1px solid #eee;
-}
-
-.expandable-table .resource-info .name {
-  cursor: pointer;
-}
-
-.expandable-table .resource-info .caret-expander {
-  display: inline-block;
-  width: 15px;
-  height: 15px;
-  margin-right: 10px;
-  background-image: url('../images/caret-right.svg');
-  background-size: 13px auto;
-  background-repeat: no-repeat;
-  background-position: 2px center;
-}
-
-.expandable-table .resource-info.expanded .caret-expander {
-  background-image: url('../images/caret-bottom.svg');
-  background-position: center 2px;
-}
-
-.expandable-table .resource-info .expandable-content {
-  display: none;
-}
-
-.expandable-table .resource-info.expanded .expandable-content {
-  display: block;
-}
-
-.namespace .resource-info .result-messages {
-  color: #6a6a6a;
-}
-
-.namespace .result-messages h4 {
-  font-weight: bold;
-  font-size: 15px;
-  margin: 15px 25px 6px;
-}
-
-ul.message-list {
-  list-style-type: none;
-  font-size: 13px;
-  line-height: 20px;
-  margin: 5px 35px;
-  padding: 0;
-  color: #6a6a6a;
-}
-
-ul.message-list li {
-  margin-bottom: 5px;
-}
-
-ul.message-list li i {
-  display: inline-block;
-  margin-right: 7px;
-  text-align: center;
-  width: 20px;
-  font-size: 17px;
-  font-weight: bold;
-  position: relative;
-  bottom: -3px;
-}
-
-.result-messages .success i {
-  color: #8BD2DC;
-}
-
-.result-messages .warning i {
-  color: #f26c21;
-}
-
-.result-messages .error i {
-  color: #a11f4c;
-}
-
-.namespace .status-bar {
-  vertical-align: top;
-  padding-top: 18px;
-}
-.namespace .status-bar .status {
-  float: right;
-  animation: fadeIn 2s;
-}
-
-.cluster .status {
-  width: 280px;
-}
-.namespace .status {
-  width: 200px;
-}
-
-.status div {
-  height: 15px;
-  border-radius: 10px;
-}
-
-.status .passing {
-  background-color: #8BD2DC;
-  float: left;
-}
-
-.status .warning {
-  background-color: #f26c21;
-  float: left;
-}
-
-.status .failing {
-  background-color: #a11f4c;
-  width: 100%;
-}
-
-@keyframes fadeIn {
-  0% {opacity: 0;}
-  100% {opacity: 1;}
 }
 
 .footer {
@@ -288,3 +66,4 @@ ul.message-list li i {
 .footer a:hover {
   text-decoration: underline;
 }
+
