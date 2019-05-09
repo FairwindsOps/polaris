@@ -156,7 +156,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   annotations:
-    checksum/config: '5702aca235561630172c22b6b900f5cebd4e82fae60389df18a3537ff82e2f09'
+    checksum/config: '0d7a7837e74d9179b13cade94ee8f6c11b32920f3c6223fc623da850cd399b42'
   name: polaris-webhook
   namespace: polaris
   labels:
