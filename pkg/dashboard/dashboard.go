@@ -21,9 +21,9 @@ import (
 	"net/http"
 
 	packr "github.com/gobuffalo/packr/v2"
-	conf "github.com/reactiveops/fairwinds/pkg/config"
-	"github.com/reactiveops/fairwinds/pkg/kube"
-	"github.com/reactiveops/fairwinds/pkg/validator"
+	conf "github.com/reactiveops/polaris/pkg/config"
+	"github.com/reactiveops/polaris/pkg/kube"
+	"github.com/reactiveops/polaris/pkg/validator"
 	"github.com/sirupsen/logrus"
 	"gitlab.com/golang-commonmark/markdown"
 )

@@ -2,10 +2,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "fairwinds.fullname" . }}-dashboard
+  name: {{ include "polaris.fullname" . }}-dashboard
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "fairwinds.labels" . | nindent 4 }}
+    {{- include "polaris.labels" . | nindent 4 }}
 spec:
   ports:
   - name: dashboard
@@ -13,7 +13,7 @@ spec:
     protocol: TCP
     targetPort: 8080
   selector:
-    {{- include "fairwinds.selectors" . | nindent 4 }}
+    {{- include "polaris.selectors" . | nindent 4 }}
     component: dashboard
   type: ClusterIP
 {{- end -}}

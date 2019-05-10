@@ -17,7 +17,7 @@ package validator
 import (
 	"testing"
 
-	conf "github.com/reactiveops/fairwinds/pkg/config"
+	conf "github.com/reactiveops/polaris/pkg/config"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"

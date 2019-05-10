@@ -1,6 +1,6 @@
 # Networking
 
-Fairwinds supports a number of checks related to pod networking.
+Polaris supports a number of checks related to pod networking.
 
 key | default | description
 ----|---------|------------

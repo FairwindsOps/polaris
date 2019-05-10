@@ -4,9 +4,9 @@
 *.dll
 *.so
 *.dylib
-fairwinds
+polaris
 
-!deploy/helm/fairwinds
+!deploy/helm/polaris
 
 # Test binary, build with `go test -c`
 *.test

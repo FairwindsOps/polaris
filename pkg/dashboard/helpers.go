@@ -15,7 +15,7 @@
 package dashboard
 
 import (
-	"github.com/reactiveops/fairwinds/pkg/validator"
+	"github.com/reactiveops/polaris/pkg/validator"
 	"strings"
 )
 

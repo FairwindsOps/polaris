@@ -4,33 +4,33 @@ kind: Deployment
 metadata:
   annotations:
     checksum/config: '{{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}'
-  name: {{ include "fairwinds.fullname" . }}-webhook
+  name: {{ include "polaris.fullname" . }}-webhook
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "fairwinds.labels" . | nindent 4 }}
+    {{- include "polaris.labels" . | nindent 4 }}
     component: webhook
 spec:
   replicas: {{ .Values.webhook.replicas }}
   selector:
     matchLabels:
-      {{- include "fairwinds.selectors" . | nindent 6 }}
+      {{- include "polaris.selectors" . | nindent 6 }}
       component: webhook
   template:
     metadata:
       labels:
-        {{- include "fairwinds.selectors" . | nindent 8 }}
+        {{- include "polaris.selectors" . | nindent 8 }}
         component: webhook
     spec:
       volumes:
       - name: config
         configMap:
-          name: {{ include "fairwinds.fullname" . }}
+          name: {{ include "polaris.fullname" . }}
       - name: secret
         secret:
-          secretName: {{ include "fairwinds.fullname" . }}
+          secretName: {{ include "polaris.fullname" . }}
       containers:
       - command:
-        - fairwinds
+        - polaris
         - --webhook
         image: '{{.Values.webhook.image.repository}}:{{.Values.webhook.image.tag}}'
         imagePullPolicy: '{{.Values.webhook.image.pullPolicy}}'
@@ -45,7 +45,7 @@ spec:
             command:
             - sh
             - -c
-            - ps -ef | grep fairwinds
+            - ps -ef | grep polaris
           initialDelaySeconds: 5
           periodSeconds: 5
         readinessProbe:
@@ -53,7 +53,7 @@ spec:
             command:
             - sh
             - -c
-            - ps -ef | grep fairwinds
+            - ps -ef | grep polaris
           initialDelaySeconds: 5
           periodSeconds: 5
         resources:
@@ -71,5 +71,5 @@ spec:
         - name: secret
           mountPath: /tmp/cert/
           readOnly: true
-      serviceAccountName:  {{ include "fairwinds.fullname" . }}
+      serviceAccountName:  {{ include "polaris.fullname" . }}
 {{- end -}}

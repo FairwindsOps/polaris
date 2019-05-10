@@ -2,7 +2,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "fairwinds.name" -}}
+{{- define "polaris.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
@@ -11,7 +11,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "fairwinds.fullname" -}}
+{{- define "polaris.fullname" -}}
 {{- if .Values.fullnameOverride -}}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
@@ -27,19 +27,19 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "fairwinds.chart" -}}
+{{- define "polaris.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
 Standard labels
 */}}
-{{- define "fairwinds.labels" -}}
+{{- define "polaris.labels" -}}
 {{- if .Values.templateOnly -}}
-app: {{ include "fairwinds.name" . }}
+app: {{ include "polaris.name" . }}
 {{- else -}}
-app.kubernetes.io/name: {{ include "fairwinds.name" . }}
-helm.sh/chart: {{ include "fairwinds.chart" . }}
+app.kubernetes.io/name: {{ include "polaris.name" . }}
+helm.sh/chart: {{ include "polaris.chart" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end -}}
@@ -48,11 +48,11 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Standard selector
 */}}
-{{- define "fairwinds.selectors" -}}
+{{- define "polaris.selectors" -}}
 {{- if .Values.templateOnly -}}
-app: {{ include "fairwinds.name" . }}
+app: {{ include "polaris.name" . }}
 {{- else -}}
-app.kubernetes.io/name: {{ include "fairwinds.name" . }}
+app.kubernetes.io/name: {{ include "polaris.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 {{- end -}}

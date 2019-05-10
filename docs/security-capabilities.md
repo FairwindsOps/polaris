@@ -1,6 +1,6 @@
 # Security Capabilities
 
-Fairwinds supports a number of checks to ensure pods are running with a limited set of capabilities. Under `security.capabilities`, there are `error` and `warning` sections indicating the severity of failures for the following checks.
+Polaris supports a number of checks to ensure pods are running with a limited set of capabilities. Under `security.capabilities`, there are `error` and `warning` sections indicating the severity of failures for the following checks.
 
 key | default | description
 ----|---------|------------

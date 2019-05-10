@@ -15,8 +15,8 @@
 package validator
 
 import (
-	conf "github.com/reactiveops/fairwinds/pkg/config"
-	"github.com/reactiveops/fairwinds/pkg/validator/messages"
+	conf "github.com/reactiveops/polaris/pkg/config"
+	"github.com/reactiveops/polaris/pkg/validator/messages"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -26,7 +26,7 @@ type PodValidation struct {
 	Pod *corev1.PodSpec
 }
 
-// ValidatePod validates that each pod conforms to the Fairwinds config, returns a ResourceResult.
+// ValidatePod validates that each pod conforms to the Polaris config, returns a ResourceResult.
 func ValidatePod(podConf conf.Configuration, pod *corev1.PodSpec) PodResult {
 	pv := PodValidation{
 		Pod:                pod,
