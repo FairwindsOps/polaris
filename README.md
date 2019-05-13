@@ -1,6 +1,24 @@
-<p align="center">
+<div align="center">
   <img src="/pkg/dashboard/assets/images/polaris-logo.png" alt="Polaris Logo" />
-</p>
+  <br>
+  
+  [![Version][version-image]][version-link] [![CircleCI][circleci-image]][circleci-link] [![Go Report Card][goreport-image]][goreport-link] [![Coverage][coverage-image]][coverage-link]
+</div>
+
+[version-image]: https://img.shields.io/static/v1.svg?label=Version&message=0.1.0&color=239922
+[version-link]: https://github.com/reactiveops/polaris
+[coverage-image]: https://img.shields.io/static/v1.svg?label=Coverage&message=79%25&color=239922
+[coverage-link]: https://github.com/reactiveops/polaris
+
+<!-- TODO: uncomment once project is public
+[circleci-image]: https://circleci.com/gh/reactiveops/polaris.svg?style=svg
+[goreport-image]: https://goreportcard.com/badge/github.com/reactiveops/polaris
+-->
+[circleci-link]: https://circleci.com/gh/reactiveops/polaris.svg
+[goreport-link]: https://goreportcard.com/report/github.com/reactiveops/polaris
+
+[circleci-image]: https://img.shields.io/static/v1.svg?label=Build&message=Passing&color=239922
+[goreport-image]: https://img.shields.io/static/v1.svg?label=go+report&message=A&color=239922
 
 Polaris keeps your cluster sailing smoothly. It runs a variety of checks to ensure that Kubernetes deployments are configured using best practices that will avoid potential problems in the future. The project includes two primary parts:
 
