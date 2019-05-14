@@ -107,58 +107,41 @@
   margin-right: 3px;
 }
 
-.card.category h3 strong {
-  font-weight: 800;
+.category .name {
+  font-weight: bold;
 }
 
-.category-list {
-  list-style-type: none;
-  margin: 10px 20px;
-  padding: 0;
-}
-
-.category-list .category-head {
-  margin: 20px 0 0;
-}
-
-.category-list .category-name {
-  font-size: 20px;
+.category .category-score {
+  font-size: 13px;
+  margin-left: 5px;
   font-weight: 200;
 }
 
-.category-list .category-results {
-  font-size: 13px;
-  float: right;
+.category .category-score strong {
+  font-weight: bold;
 }
 
-.category-list .category-info {
-  font-size: 13px;
+
+.category .category-info {
+  font-size: 14px;
   line-height: 21px;
-  color: #777;
-  margin: 0;
+  margin-left: 25px;
 }
 
-.category-list .category-info a {
+.category .category-info a {
   font-weight: bold;
   color: #777;
   text-decoration: none;
 }
 
-.category-list .category-info a:hover {
+.category .category-info a:hover {
   color: #23103A;
 }
 
-.category-list .status {
-  margin: 5px 0;
-  width: 840px;
+.category .status {
+  width: 200px;
   animation: fadeIn 2s;
 }
-
-.category-list .status div {
-  height: 5px;
-  border-radius: 3px;
-}
-
 
 .expandable-table {
   width: 100%;
@@ -170,7 +153,7 @@
   height: 50px;
 }
 
-.expandable-table td {
+.expandable-table .resource-info {
   padding: 15px 20px;
   margin: 0;
   font-size: 18px;
@@ -256,17 +239,17 @@ a.more-info {
   text-decoration: none;
 }
 
-.namespace .status-bar {
-  vertical-align: top;
-  padding-top: 21px;
+.card .status-bar {
+  padding-top: 7px;
+  float: right;
 }
 
-.namespace .status-bar .status {
+.card .status-bar .status {
   float: right;
   animation: fadeIn 2s;
 }
 
-.namespace .status {
+.card .status {
   width: 200px;
 }
 
