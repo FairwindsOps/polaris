@@ -35,6 +35,8 @@ const (
 	ResourceAmountTooLowFailure = "%s should be higher than %s"
 	// ResourceAmountSuccess message
 	ResourceAmountSuccess = "%s are within the expected range"
+	// ResourcePresentSuccess message
+	ResourcePresentSuccess = "%s are set"
 	// ReadinessProbeFailure message
 	ReadinessProbeFailure = "Readiness probe should be configured"
 	// ReadinessProbeSuccess message
@@ -56,9 +58,9 @@ const (
 	// HostPortSuccess message
 	HostPortSuccess = "Host port is not configured"
 	// RunAsRootFailure message
-	RunAsRootFailure = "Should not be running as root"
+	RunAsRootFailure = "Should not be allowed to run as root"
 	// RunAsRootSuccess message
-	RunAsRootSuccess = "Not running as root"
+	RunAsRootSuccess = "Is not allowed to run as root"
 	// RunAsPrivilegedFailure message
 	RunAsPrivilegedFailure = "Should not be running as privileged"
 	// RunAsPrivilegedSuccess message

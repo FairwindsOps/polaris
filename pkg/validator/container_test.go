@@ -583,7 +583,7 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: standardConf,
 			cv:           emptyCV,
 			expectedMessages: []*ResultMessage{{
-				Message:  "Should not be running as root",
+				Message:  "Should not be allowed to run as root",
 				Type:     "warning",
 				Category: "Security",
 			}, {
@@ -625,7 +625,7 @@ func TestValidateSecurity(t *testing.T) {
 				Type:     "warning",
 				Category: "Security",
 			}, {
-				Message:  "Should not be running as root",
+				Message:  "Should not be allowed to run as root",
 				Type:     "warning",
 				Category: "Security",
 			}, {
@@ -639,7 +639,7 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: standardConf,
 			cv:           goodCV,
 			expectedMessages: []*ResultMessage{{
-				Message:  "Not running as root",
+				Message:  "Is not allowed to run as root",
 				Type:     "success",
 				Category: "Security",
 			}, {
@@ -669,7 +669,7 @@ func TestValidateSecurity(t *testing.T) {
 				Type:     "error",
 				Category: "Security",
 			}, {
-				Message:  "Not running as root",
+				Message:  "Is not allowed to run as root",
 				Type:     "success",
 				Category: "Security",
 			}, {
@@ -691,7 +691,7 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: strongConf,
 			cv:           strongCV,
 			expectedMessages: []*ResultMessage{{
-				Message:  "Not running as root",
+				Message:  "Is not allowed to run as root",
 				Type:     "success",
 				Category: "Security",
 			}, {
