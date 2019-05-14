@@ -53,6 +53,13 @@ spec:
           requests:
             cpu: 100m
             memory: 128Mi
+        securityContext:
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          capabilities:
+            drop:
+              - ALL
         volumeMounts:
         - name: config
           mountPath: /opt/app/config.yaml

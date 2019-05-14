@@ -8,10 +8,10 @@ To simplify ensure that these values have been set, the following attributes are
 
 key | default | description
 ----|---------|------------
-`resources.cpuRequestsMissing` | `warning` | Fails when `resources.requests.cpu` attribute is not configured.
-`resources.memoryRequestsMissing` | `warning` | Fails when `resources.requests.memory` attribute is not configured.
-`resources.cpuLimitsMissing` | `warning` | Fails when `resources.limits.cpu` attribute is not configured.
-`resources.memoryLimitsMissing` | `warning` | Fails when `resources.limits.memory` attribute is not configured.
+`resources.cpuRequestsMissing` | `error` | Fails when `resources.requests.cpu` attribute is not configured.
+`resources.memoryRequestsMissing` | `error` | Fails when `resources.requests.memory` attribute is not configured.
+`resources.cpuLimitsMissing` | `error` | Fails when `resources.limits.cpu` attribute is not configured.
+`resources.memoryLimitsMissing` | `error` | Fails when `resources.limits.memory` attribute is not configured.
 
 ## Range Checks
 

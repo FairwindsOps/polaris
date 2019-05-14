@@ -97,7 +97,11 @@ func (cv *ContainerValidation) validateResourceRange(resourceName string, rangeC
 	} else if warnBelow != nil && warnBelow.MilliValue() > res.MilliValue() {
 		cv.addWarning(fmt.Sprintf(messages.ResourceAmountTooLowFailure, resourceName, warnBelow.String()), category)
 	} else {
-		cv.addSuccess(fmt.Sprintf(messages.ResourceAmountSuccess, resourceName), category)
+		if warnAbove != nil || warnBelow != nil || errorAbove != nil || errorBelow != nil {
+			cv.addSuccess(fmt.Sprintf(messages.ResourceAmountSuccess, resourceName), category)
+		} else {
+			cv.addSuccess(fmt.Sprintf(messages.ResourcePresentSuccess, resourceName), category)
+		}
 	}
 }
 

@@ -9,8 +9,8 @@ FROM alpine:3.9
 WORKDIR /usr/local/bin
 RUN apk --no-cache add ca-certificates
 
-RUN addgroup -S polaris && adduser -S -G polaris polaris
-USER polaris
+RUN addgroup -S polaris && adduser -u 1200 -S polaris -G polaris
+USER 1200
 COPY --from=build-env /go/src/github.com/reactiveops/polaris/polaris .
 
 WORKDIR /opt/app
