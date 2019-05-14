@@ -1,12 +1,46 @@
-th, td {
-  padding: 4px 8px;
-  vertical-align: top;
-}
-
 body {
-  font-family: "Helvetica", "Arial", sans-serif
+  font-family: "Muli", "Helvetica", "Arial", sans-serif;
+  font-size: 14px;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: "Muli", "Helvetica", "Arial", sans-serif
+  font-family: "Muli", "Helvetica", "Arial", sans-serif;
+}
+
+.card.details h1 {
+  margin: 0 0 20px;
+}
+
+.card.details h2 {
+  margin: 30px 0 10px;
+}
+
+.card.details a {
+  color: #23103a;
+}
+
+.card.details a:hover {
+  color: #657;
+}
+
+.card.details ul {
+  padding: 0 15px;
+}
+
+.card.details li {
+  margin: 5px 0;
+}
+
+.card.details table {
+  border-spacing: 0;
+  width: 100%;
+}
+
+.card.details th, .card.details td {
+  padding: 4px 12px;
+  vertical-align: top;
+}
+
+.card.details td {
+  border-top: 1px dotted #ddd;
 }

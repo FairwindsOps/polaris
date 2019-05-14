@@ -20,5 +20,4 @@ With Kubernetes configuration, these capabilities can be added or removed by adj
 ## Further Reading
 
 - [Kubernetes Docs: Set capabilities for a Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-capabilities-for-a-container)
-
 - [Linux Programmer's Manual: Capabilities](http://man7.org/linux/man-pages/man7/capabilities.7.html)
