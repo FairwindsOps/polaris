@@ -161,8 +161,8 @@ func EndpointHandler(w http.ResponseWriter, r *http.Request, c conf.Configuratio
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(templateData)
 }
 
