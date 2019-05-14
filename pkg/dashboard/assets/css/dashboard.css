@@ -1,20 +1,19 @@
-.charts {
-  height: 405px;
-}
-
 .card.cluster {
   margin-top: 15px;
+  padding: 40px;
+  position: relative;
 }
 
 .card h3 {
   margin: 0;
   font-weight: 300;
   font-size: 28px;
-  padding: 15px 20px 30px;
+  padding: 20px 20px;
 }
 
 .card.cluster h3 {
-  padding-bottom: 20px;
+  padding: 0px;
+  padding-bottom: 10px;
 }
 
 .card.namespace h3 strong {
@@ -22,13 +21,38 @@
 }
 
 .cluster-overview {
-  height: 204px;
+  position: relative;
+  top: -60px;
+  margin-bottom: -60px;
 }
 
-.cluster-overview .cluster-score {
-  width: 200px;
+.cluster-overview .graph {
   display: inline-block;
-  margin-left: 20px;
+  width: 35%;
+  margin-left: -10px;
+  margin-right: 10px;
+}
+
+.cluster-overview .cluster-score,
+.cluster-overview .result-messages {
+  display: inline-block;
+  width: 32%;
+  vertical-align: top;
+  padding-top: 65px;
+}
+
+.cluster-overview .result-messages {
+  padding-top: 90px;
+}
+
+.cluster-overview .graph canvas {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cluster-overview .score-description {
+  font-size: 11px;
+  line-height: 1.3em;
 }
 
 .cluster-overview .cluster-score .weather {
@@ -42,7 +66,7 @@
   line-height: 28px;
   font-weight: 200;
   color: #555;
-  margin-bottom: 25px;
+  margin-bottom: 11px;
 }
 
 .cluster-overview .cluster-score .scores {
@@ -65,28 +89,31 @@
   margin: 10px 26px;
 }
 
-#clusterScoreChart {
-  width: 550px;
-  position: relative;
-  top: -270px;
-  left: 120px;
-}
-
-.cluster-overview .result-messages {
-  margin: 0 20px;
-  display: inline-block;
-  position: relative;
-  left: -100px;
-  top: -80px;
-  font-weight: 200;
-}
-
 .cluster-overview .result-messages ul {
-  position: relative;
-  top: 0px;
-  left: 400px;
   font-size: 20px;
   line-height: 35px;
+}
+
+.cluster-overview-footer {
+  position: absolute;
+  bottom: 0px;
+  right: 10px;
+  left: 40px;
+}
+
+.cluster-overview-footer p {
+  display: inline-block;
+  font-size: 11px;
+  color: #777;
+  width: 48%;
+}
+
+.cluster-overview-footer p.kubernetes-overview {
+  text-align: right;
+}
+
+.cluster-overview-footer p.kubernetes-overview .kubernetes-stat {
+  margin-left: 15px;
 }
 
 .kubernetes-overview ul {
@@ -99,8 +126,6 @@
 .kubernetes-overview li {
   display: inline-block;
   margin: 20px 0 0 10px;
-  font-size: 11px;
-  color: #777;
 }
 
 .kubernetes-overview li span {
@@ -205,6 +230,10 @@ ul.message-list {
   margin: 5px 35px;
   padding: 0;
   color: #6a6a6a;
+}
+
+.cluster-overview ul.message-list {
+  margin: 0px;
 }
 
 ul.message-list li {
