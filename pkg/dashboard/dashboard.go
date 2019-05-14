@@ -92,6 +92,7 @@ func GetBaseTemplate(name string) (*template.Template, error) {
 		"getScore":        getScore,
 		"getIcon":         getIcon,
 		"getCategoryLink": getCategoryLink,
+		"getCategoryInfo": getCategoryInfo,
 	})
 
 	templateFileNames := []string{

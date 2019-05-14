@@ -16,5 +16,4 @@ Related to that, relying on cached versions of a Docker image can become a secur
 ## Further Reading
 
 - [What's Wrong With The Docker :latest Tag?](https://vsupalov.com/docker-latest-tag/)
-
 - [Kubernetes’ AlwaysPullImages Admission Control — the Importance, Implementation, and Security Vulnerability in its Absence](https://medium.com/@trstringer/kubernetes-alwayspullimages-admission-control-the-importance-implementation-and-security-d83ff3815840)

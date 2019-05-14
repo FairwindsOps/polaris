@@ -10,11 +10,11 @@
   margin: 0;
   font-weight: 300;
   font-size: 28px;
-  padding: 15px 20px 20px;
+  padding: 15px 20px 30px;
 }
 
-.card.namespace h3 {
-  padding-bottom: 30px;
+.card.cluster h3 {
+  padding-bottom: 20px;
 }
 
 .card.namespace h3 strong {
@@ -130,12 +130,12 @@
 
 .category .category-info a {
   font-weight: bold;
-  color: #777;
+  color: #23103a;
   text-decoration: none;
 }
 
 .category .category-info a:hover {
-  color: #23103A;
+  text-decoration: underline;
 }
 
 .category .status {
@@ -235,9 +235,15 @@ ul.message-list li i.message-icon {
 }
 
 a.more-info {
-  color: #6a6a6a;
+  color: #bbb;
+  font-size: 12px;
   text-decoration: none;
 }
+
+a.more-info:hover {
+  color: #555;
+}
+
 
 .card .status-bar {
   padding-top: 7px;

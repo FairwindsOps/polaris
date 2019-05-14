@@ -1,10 +1,10 @@
 ---
 config: |
   resources:
-    cpuRequestsMissing: error
-    cpuLimitsMissing: error
-    memoryRequestsMissing: error
-    memoryLimitsMissing: error
+    cpuRequestsMissing: warning
+    cpuLimitsMissing: warning
+    memoryRequestsMissing: warning
+    memoryLimitsMissing: warning
   images:
     tagNotSpecified: error
   healthChecks:
