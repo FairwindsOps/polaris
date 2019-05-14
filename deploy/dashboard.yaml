@@ -84,7 +84,8 @@ rules:
     resources:
       - '*'
     verbs:
-      - '*'
+      - 'read'
+      - 'list'
 ---
 # Source: polaris/templates/clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1beta1
