@@ -14,6 +14,7 @@ $(function () {
     },
     options: {
       responsive: false,
+      cutoutPercentage: 60,
       legend: {
         display: false,
       },

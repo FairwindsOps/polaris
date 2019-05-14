@@ -6,10 +6,6 @@
   margin-top: 15px;
 }
 
-.card.namespace {
-  padding: 10px 20px;
-}
-
 .card h3 {
   margin: 0;
   font-weight: 300;
@@ -17,8 +13,11 @@
   padding: 15px 20px 20px;
 }
 
-.namespace h3 strong {
-  margin: 0;
+.card.namespace h3 {
+  padding-bottom: 30px;
+}
+
+.card.namespace h3 strong {
   font-weight: bold;
 }
 
@@ -33,22 +32,33 @@
 }
 
 .cluster-overview .cluster-score .weather {
-    font-size: 90px;
+    font-size: 80px;
     color: #444;
-    margin-bottom: 15px;
+    margin: 10px 0 5px;
 }
 
-.cluster-overview .cluster-score .sailing-message {
+.cluster-overview .cluster-score .sailing {
   font-size: 16px;
   line-height: 28px;
-  margin-left: 7px;
-  font-weight: 300;
+  font-weight: 200;
   color: #555;
+  margin-bottom: 25px;
 }
 
 .cluster-overview .cluster-score .scores {
   font-size: 16px;
-  margin-top: 10px;
+  margin-top: 15px;
+}
+
+.cluster-overview .cluster-score .scores span {
+  width: 70px;
+  display: inline-block;
+  color: #555;
+  font-weight: 200;
+}
+
+.cluster-overview .cluster-score .scores strong {
+  font-size: 24px;
 }
 
 .cluster .expandable-table ul.message-list {
@@ -58,7 +68,7 @@
 #clusterScoreChart {
   width: 550px;
   position: relative;
-  top: -227px;
+  top: -270px;
   left: 120px;
 }
 
@@ -67,7 +77,8 @@
   display: inline-block;
   position: relative;
   left: -100px;
-  top: -45px;
+  top: -80px;
+  font-weight: 200;
 }
 
 .cluster-overview .result-messages ul {
@@ -78,15 +89,76 @@
   line-height: 35px;
 }
 
-.card.cluster .expandable-table {
-  margin-top: 20px;
+.kubernetes-overview ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0 10px;
+  text-align: right;
 }
 
-.card.cluster .detail-label {
+.kubernetes-overview li {
   display: inline-block;
-  min-width: 140px;
-  font-weight: bold;
+  margin: 20px 0 0 10px;
+  font-size: 11px;
+  color: #777;
 }
+
+.kubernetes-overview li span {
+  margin-right: 3px;
+}
+
+.card.category h3 strong {
+  font-weight: 800;
+}
+
+.category-list {
+  list-style-type: none;
+  margin: 10px 20px;
+  padding: 0;
+}
+
+.category-list .category-head {
+  margin: 20px 0 0;
+}
+
+.category-list .category-name {
+  font-size: 20px;
+  font-weight: 200;
+}
+
+.category-list .category-results {
+  font-size: 13px;
+  float: right;
+}
+
+.category-list .category-info {
+  font-size: 13px;
+  line-height: 21px;
+  color: #777;
+  margin: 0;
+}
+
+.category-list .category-info a {
+  font-weight: bold;
+  color: #777;
+  text-decoration: none;
+}
+
+.category-list .category-info a:hover {
+  color: #23103A;
+}
+
+.category-list .status {
+  margin: 5px 0;
+  width: 840px;
+  animation: fadeIn 2s;
+}
+
+.category-list .status div {
+  height: 5px;
+  border-radius: 3px;
+}
+
 
 .expandable-table {
   width: 100%;
@@ -186,23 +258,21 @@ a.more-info {
 
 .namespace .status-bar {
   vertical-align: top;
-  padding-top: 18px;
+  padding-top: 21px;
 }
+
 .namespace .status-bar .status {
   float: right;
   animation: fadeIn 2s;
 }
 
-.cluster .status {
-  width: 280px;
-}
 .namespace .status {
   width: 200px;
 }
 
 .status div {
-  height: 15px;
-  border-radius: 10px;
+  height: 12px;
+  border-radius: 5px;
 }
 
 .status .passing {
@@ -224,4 +294,3 @@ a.more-info {
   0% {opacity: 0;}
   100% {opacity: 1;}
 }
-

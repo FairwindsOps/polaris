@@ -3,9 +3,10 @@
     <h3>Cluster Overview</h3>
     <div class="cluster-overview">
       <div class="cluster-score">
-        <div class="weather"><i class="fas {{ getWeatherIcon .AuditData.ClusterSummary.Results }}"></i></div>
-        <div class="sailing">{{ getWeatherText .AuditData.ClusterSummary.Results }}</div>
-        <div class="scores">Grade: <strong>{{ getGrade .AuditData.ClusterSummary.Results }}</strong> | Score: <strong>{{ getScore .AuditData.ClusterSummary.Results }}%</strong></div>
+        <div class="weather"><i class="fas {{ getWeatherIcon .AuditData.ClusterSummary.Results.Totals }}"></i></div>
+        <div class="sailing">{{ getWeatherText .AuditData.ClusterSummary.Results.Totals }}</div>
+        <div class="scores"><span>Grade: </span><strong>{{ getGrade .AuditData.ClusterSummary.Results.Totals }}</strong></div>
+        <div class="scores"><span>Score: </span><strong>{{ getScore .AuditData.ClusterSummary.Results.Totals }}%</strong></div>
       </div>
       <div class="result-messages">
         <ul class="message-list">
@@ -16,58 +17,50 @@
       </div>
       <canvas id="clusterScoreChart"></canvas>
     </div>
-    <table class="expandable-table" cellspacing="0">
-      <tr>
-        <td class="resource-info">
-          <div class="name"><span class="caret-expander"></span>Cluster details</div>
-          <div class="expandable-content">
-            <ul class="message-list">
-              <li>
-                <span class="detail-label">Kubernetes Version:</span>
-                <span class="detail-value">{{ .AuditData.ClusterSummary.Version }}</span>
-              </li>
-              <li>
-                <span class="detail-label">Nodes:</span>
-                <span class="detail-value">{{ .AuditData.ClusterSummary.Nodes }}</span>
-              </li>
-              <li>
-                <span class="detail-label">Pods:</span>
-                <span class="detail-value">{{ .AuditData.ClusterSummary.Pods }}</span>
-              </li>
-              <li>
-                <span class="detail-label">Namespaces:</span>
-                <span class="detail-value">{{ .AuditData.ClusterSummary.Namespaces }}</span>
-              </li>
-            </ul>
-          </div>
-        </td>
-      </tr>
-      <tr>
-        <td class="resource-info">
-          <div class="name"><span class="caret-expander"></span>Health summary</div>
-          <div class="expandable-content">
-            <ul class="message-list">
-              {{ range $category, $summary := .AuditData.ClusterSummary.Results.ByCategory }}
-                <li>
-                  <span class="detail-label">{{ $category }}</span>
-                  <span class="detail-value">{{ $summary.Errors }} errors, {{ $summary.Warnings }} warnings</span>
-                  <div class="status-bar">
-                    <div class="status">
-                      <div class="failing">
-                        <div class="warning" style="width: {{ getWarningWidth $summary 280 }}px;">
-                          <div class="passing" style="width: {{ getSuccessWidth $summary 280 }}px;"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </li>
-              {{ end }}
-            </ul>
-          </div>
-        </td>
-      </tr>
-    </table>
+    <div class="kubernetes-overview">
+      <ul>
+        <li>
+          <span>Kubernetes Version:</span>
+          <strong>{{.AuditData.ClusterSummary.Version}}</strong>
+        </li>
+        <li>
+          <span>Nodes:</span>
+          <strong>{{.AuditData.ClusterSummary.Nodes}}</strong>
+        </li>
+        <li>
+          <span>Pods:</span>
+          <strong>{{.AuditData.ClusterSummary.Pods}}</strong>
+        </li>
+        <li>
+          <span>Namespaces:</span>
+          <strong>{{.AuditData.ClusterSummary.Namespaces}}</strong>
+        </li>
+      </ul>
+    </div>
+  </div>
 
+  <div class="card category">
+    <h3>Results by <strong>Category</strong></h3>
+    <ul class="category-list">
+      {{ range $category, $summary := .AuditData.ClusterSummary.Results.ByCategory }}
+        <li>
+          <div class="category-head">
+            <span class="category-name">{{ $category }}</span>
+            <span class="category-results">Score: <strong>{{ getScore $summary }}%</strong></span>
+          </div>
+          <div class="status-bar">
+            <div class="status">
+              <div class="failing">
+                <div class="warning" style="width: {{ getWarningWidth $summary 840 }}px;">
+                    <div class="passing" style="width: {{ getSuccessWidth $summary 840 }}px;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="category-info">Properly configured health checks can ensure the long term availability and reliability of your application running in Kubernetes. Polaris validates that health checks are configured for each pod running in your cluster. Refer to the <a href="#">Polaris Docs</a> for more information</p>
+        </li>
+      {{ end }}
+    </ul>
   </div>
 
   {{ range $namespace, $nsResult := .AuditData.NamespacedResults }}

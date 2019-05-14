@@ -31,8 +31,8 @@ func getCategoryLink(category string) string {
 	return strings.Replace(strings.ToLower(category), " ", "-", -1)
 }
 
-func getGrade(rs validator.ResultSummary) string {
-	score := getScore(rs)
+func getGrade(counts validator.CountSummary) string {
+	score := getScore(counts)
 	if score >= 97 {
 		return "A+"
 	} else if score >= 93 {
@@ -62,13 +62,13 @@ func getGrade(rs validator.ResultSummary) string {
 	}
 }
 
-func getScore(rs validator.ResultSummary) uint {
-	total := (rs.Totals.Successes * 2) + rs.Totals.Warnings + (rs.Totals.Errors * 2)
-	return uint((float64(rs.Totals.Successes*2) / float64(total)) * 100)
+func getScore(counts validator.CountSummary) uint {
+	total := (counts.Successes * 2) + counts.Warnings + (counts.Errors * 2)
+	return uint((float64(counts.Successes*2) / float64(total)) * 100)
 }
 
-func getWeatherIcon(rs validator.ResultSummary) string {
-	score := getScore(rs)
+func getWeatherIcon(counts validator.CountSummary) string {
+	score := getScore(counts)
 	if score >= 90 {
 		return "fa-sun"
 	} else if score >= 80 {
@@ -82,8 +82,8 @@ func getWeatherIcon(rs validator.ResultSummary) string {
 	}
 }
 
-func getWeatherText(rs validator.ResultSummary) string {
-	score := getScore(rs)
+func getWeatherText(counts validator.CountSummary) string {
+	score := getScore(counts)
 	if score >= 90 {
 		return "Smooth sailing"
 	} else if score >= 80 {
