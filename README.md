@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="/pkg/dashboard/assets/images/logo.png" alt="Polaris Logo" />
+  <img src="/pkg/dashboard/assets/images/polaris-logo.png" alt="Polaris Logo" />
 </p>
 
 Polaris keeps your cluster sailing smoothly. It runs a variety of checks to ensure that Kubernetes deployments are configured using best practices that will avoid potential problems in the future. The project includes two primary parts:
