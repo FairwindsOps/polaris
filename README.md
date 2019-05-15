@@ -94,3 +94,13 @@ Polaris validation checks fall into several different categories:
 
 ## License
 Apache License 2.0
+
+## Contributing
+PRs welcome! Check out the [Contributing Guidlines](CONTRIBUTING.md),
+[Code of Conduct](CODE_OF_CONDUCT.md), and [Roadmap](ROADMAP.md) for more information.
+
+## Further Information
+A history of changes to this project can be viewed in the [Changelog](CHANGELOG.md)
+
+If you'd like to learn more about Polaris, or if you'd like to speak with
+a Kubernetes expert, you can contact `info@reactiveops.com` or [visit our website](https://reactiveops.com)
