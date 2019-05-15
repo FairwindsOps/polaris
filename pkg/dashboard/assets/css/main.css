@@ -15,19 +15,19 @@ body {
 }
 
 .navbar .navbar-right {
-  padding: 15px;
+  padding: 0px 15px;
   float: right;
 }
 
 .navbar .logo {
-  width: 280px;
+  width: 250px;
 }
 
 .navbar span.oss-text {
   color: #23103A;
   display: block;
   font-size: 11px;
-  margin: 3px 0;
+  margin-bottom: 3px;
 }
 
 .navbar a {
@@ -35,7 +35,7 @@ body {
 }
 
 .navbar .ro-logo {
-  height: 40px;
+  height: 50px;
 }
 
 .main-content {
