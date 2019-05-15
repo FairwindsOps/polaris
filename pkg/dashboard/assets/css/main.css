@@ -6,16 +6,18 @@ body {
 }
 
 .navbar {
-  padding: 20px 20px 0;
+  padding-top: 20px;
+}
+.navbar, .main-content {
+  width: 960px;
+  margin: auto;
 }
 
 .navbar .navbar-content {
-  margin: 0 auto;
-  width: 900px;
+  padding: 0px 20px;
 }
 
 .navbar .navbar-right {
-  padding: 0px 15px;
   float: right;
 }
 
@@ -36,11 +38,6 @@ body {
 
 .navbar .ro-logo {
   height: 50px;
-}
-
-.main-content {
-  width: 960px;
-  margin: 0 auto;
 }
 
 .card {
