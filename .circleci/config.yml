@@ -45,9 +45,6 @@ jobs:
       - run: go get -u github.com/golang/lint/golint
       - run: go list ./... | grep -v vendor | xargs golint -set_exit_status
       - run: go list ./... | grep -v vendor | xargs go vet
-      - run: go test ./pkg/... -v -coverprofile ./test/cover.out
-      - run: ./test/calculate-coverage.sh
-      - run: git diff --exit-code README.md
 
   test-deploy:
     docker:

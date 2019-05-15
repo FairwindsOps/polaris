@@ -2,13 +2,11 @@
   <img src="/pkg/dashboard/assets/images/polaris-logo.png" alt="Polaris Logo" />
   <br>
   
-  [![Version][version-image]][version-link] [![CircleCI][circleci-image]][circleci-link] [![Go Report Card][goreport-image]][goreport-link] [![Coverage][coverage-image]][coverage-link]
+  [![Version][version-image]][version-link] [![CircleCI][circleci-image]][circleci-link] [![Go Report Card][goreport-image]][goreport-link]
 </div>
 
 [version-image]: https://img.shields.io/static/v1.svg?label=Version&message=0.1.0&color=239922
 [version-link]: https://github.com/reactiveops/polaris
-[coverage-image]: https://img.shields.io/static/v1.svg?label=Coverage&message=79%25&color=239922
-[coverage-link]: https://github.com/reactiveops/polaris
 
 <!-- TODO: uncomment once project is public
 [circleci-image]: https://circleci.com/gh/reactiveops/polaris.svg?style=svg
