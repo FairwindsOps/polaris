@@ -37,7 +37,5 @@ Having these values appropriately configured ensures that:
 ## Further Reading
 
 - [Kubernetes Docs: Managing Compute Resources for Containers](https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/)
-
 - [Kubernetes best practices: Resource requests and limits](https://cloud.google.com/blog/products/gcp/kubernetes-best-practices-resource-requests-and-limits)
-
 - [Vertical Pod Autoscaler (can automatically set resource requests and limits)](https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler)

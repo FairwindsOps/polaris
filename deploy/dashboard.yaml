@@ -16,10 +16,10 @@ metadata:
 data:
   config.yaml:  |
     resources:
-      cpuRequestsMissing: error
-      cpuLimitsMissing: error
-      memoryRequestsMissing: error
-      memoryLimitsMissing: error
+      cpuRequestsMissing: warning
+      cpuLimitsMissing: warning
+      memoryRequestsMissing: warning
+      memoryLimitsMissing: warning
     images:
       tagNotSpecified: error
     healthChecks:
@@ -126,7 +126,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   annotations:
-    checksum/config: '0d7a7837e74d9179b13cade94ee8f6c11b32920f3c6223fc623da850cd399b42'
+    checksum/config: '6ec4a4dc87403cae67c01438398a5f1d4ef836ffeaf26a33b685c066b940495a'
   name: polaris-dashboard
   namespace: polaris
   labels:

@@ -6,19 +6,18 @@
   margin-top: 15px;
 }
 
-.card.namespace {
-  padding: 10px 20px;
-}
-
 .card h3 {
   margin: 0;
   font-weight: 300;
   font-size: 28px;
-  padding: 15px 20px 20px;
+  padding: 15px 20px 30px;
 }
 
-.namespace h3 strong {
-  margin: 0;
+.card.cluster h3 {
+  padding-bottom: 20px;
+}
+
+.card.namespace h3 strong {
   font-weight: bold;
 }
 
@@ -33,22 +32,33 @@
 }
 
 .cluster-overview .cluster-score .weather {
-    font-size: 90px;
+    font-size: 80px;
     color: #444;
-    margin-bottom: 15px;
+    margin: 10px 0 5px;
 }
 
-.cluster-overview .cluster-score .sailing-message {
+.cluster-overview .cluster-score .sailing {
   font-size: 16px;
   line-height: 28px;
-  margin-left: 7px;
-  font-weight: 300;
+  font-weight: 200;
   color: #555;
+  margin-bottom: 25px;
 }
 
 .cluster-overview .cluster-score .scores {
   font-size: 16px;
-  margin-top: 10px;
+  margin-top: 15px;
+}
+
+.cluster-overview .cluster-score .scores span {
+  width: 70px;
+  display: inline-block;
+  color: #555;
+  font-weight: 200;
+}
+
+.cluster-overview .cluster-score .scores strong {
+  font-size: 24px;
 }
 
 .cluster .expandable-table ul.message-list {
@@ -58,7 +68,7 @@
 #clusterScoreChart {
   width: 550px;
   position: relative;
-  top: -227px;
+  top: -270px;
   left: 120px;
 }
 
@@ -67,7 +77,8 @@
   display: inline-block;
   position: relative;
   left: -100px;
-  top: -45px;
+  top: -80px;
+  font-weight: 200;
 }
 
 .cluster-overview .result-messages ul {
@@ -78,14 +89,58 @@
   line-height: 35px;
 }
 
-.card.cluster .expandable-table {
-  margin-top: 20px;
+.kubernetes-overview ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0 10px;
+  text-align: right;
 }
 
-.card.cluster .detail-label {
+.kubernetes-overview li {
   display: inline-block;
-  min-width: 140px;
+  margin: 20px 0 0 10px;
+  font-size: 11px;
+  color: #777;
+}
+
+.kubernetes-overview li span {
+  margin-right: 3px;
+}
+
+.category .name {
   font-weight: bold;
+}
+
+.category .category-score {
+  font-size: 13px;
+  margin-left: 5px;
+  font-weight: 200;
+}
+
+.category .category-score strong {
+  font-weight: bold;
+}
+
+
+.category .category-info {
+  font-size: 14px;
+  line-height: 21px;
+  margin-left: 25px;
+}
+
+.category .category-info a {
+  font-weight: bold;
+  color: #23103a;
+  text-decoration: none;
+}
+
+.category .category-info a:hover {
+  text-decoration: underline;
+}
+
+.category .status {
+  width: 200px;
+  animation: fadeIn 2s;
 }
 
 .expandable-table {
@@ -98,7 +153,7 @@
   height: 50px;
 }
 
-.expandable-table td {
+.expandable-table .resource-info {
   padding: 15px 20px;
   margin: 0;
   font-size: 18px;
@@ -180,29 +235,33 @@ ul.message-list li i.message-icon {
 }
 
 a.more-info {
-  color: #6a6a6a;
+  color: #bbb;
+  font-size: 12px;
   text-decoration: none;
 }
 
-.namespace .status-bar {
-  vertical-align: top;
-  padding-top: 18px;
+a.more-info:hover {
+  color: #555;
 }
-.namespace .status-bar .status {
+
+
+.card .status-bar {
+  padding-top: 7px;
+  float: right;
+}
+
+.card .status-bar .status {
   float: right;
   animation: fadeIn 2s;
 }
 
-.cluster .status {
-  width: 280px;
-}
-.namespace .status {
+.card .status {
   width: 200px;
 }
 
 .status div {
-  height: 15px;
-  border-radius: 10px;
+  height: 12px;
+  border-radius: 5px;
 }
 
 .status .passing {
@@ -224,4 +283,3 @@ a.more-info {
   0% {opacity: 0;}
   100% {opacity: 1;}
 }
-

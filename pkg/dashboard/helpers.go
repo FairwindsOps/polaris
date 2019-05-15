@@ -15,6 +15,7 @@
 package dashboard
 
 import (
+	"fmt"
 	"github.com/reactiveops/polaris/pkg/validator"
 	"strings"
 )
@@ -27,12 +28,8 @@ func getSuccessWidth(counts validator.CountSummary, fullWidth int) uint {
 	return uint(float64(counts.Successes) / float64(counts.Successes+counts.Warnings+counts.Errors) * float64(fullWidth))
 }
 
-func getCategoryLink(category string) string {
-	return strings.Replace(strings.ToLower(category), " ", "-", -1)
-}
-
-func getGrade(rs validator.ResultSummary) string {
-	score := getScore(rs)
+func getGrade(counts validator.CountSummary) string {
+	score := getScore(counts)
 	if score >= 97 {
 		return "A+"
 	} else if score >= 93 {
@@ -62,13 +59,13 @@ func getGrade(rs validator.ResultSummary) string {
 	}
 }
 
-func getScore(rs validator.ResultSummary) uint {
-	total := (rs.Totals.Successes * 2) + rs.Totals.Warnings + (rs.Totals.Errors * 2)
-	return uint((float64(rs.Totals.Successes*2) / float64(total)) * 100)
+func getScore(counts validator.CountSummary) uint {
+	total := (counts.Successes * 2) + counts.Warnings + (counts.Errors * 2)
+	return uint((float64(counts.Successes*2) / float64(total)) * 100)
 }
 
-func getWeatherIcon(rs validator.ResultSummary) string {
-	score := getScore(rs)
+func getWeatherIcon(counts validator.CountSummary) string {
+	score := getScore(counts)
 	if score >= 90 {
 		return "fa-sun"
 	} else if score >= 80 {
@@ -82,8 +79,8 @@ func getWeatherIcon(rs validator.ResultSummary) string {
 	}
 }
 
-func getWeatherText(rs validator.ResultSummary) string {
-	score := getScore(rs)
+func getWeatherText(counts validator.CountSummary) string {
+	score := getScore(counts)
 	if score >= 90 {
 		return "Smooth sailing"
 	} else if score >= 80 {
@@ -105,5 +102,56 @@ func getIcon(rm validator.ResultMessage) string {
 		return "fas fa-exclamation"
 	default:
 		return "fas fa-times"
+	}
+}
+
+func getCategoryLink(category string) string {
+	return strings.Replace(strings.ToLower(category), " ", "-", -1)
+}
+
+func getCategoryInfo(category string) string {
+	switch category {
+	case "Health Checks":
+		return fmt.Sprintf(`
+			Properly configured health checks can ensure the long term availability
+			and reliability of your application running in Kubernetes. Polaris
+			validates that health checks are configured for each pod running in
+			your cluster.
+		`)
+	case "Images":
+		return fmt.Sprintf(`
+			Images are the backbone of any Kubernetes cluster, containing the applications
+			that run in each container. Polaris validates that images are configured with
+			specific tags instead of just pulling the latest image on each run. This is
+			important for the stability and security of your workloads.
+		`)
+	case "Networking":
+		return fmt.Sprintf(`
+			Networking configuration in Kubernetes can be quite powerful. Polaris
+			validates that pods are not configured to have access to sensitive host
+			networking configuration. There are certain use cases such as a container
+			overlay network like Calico, where this level of access is required, but
+			the majority of workloads running on Kubernetes should not need this.
+		`)
+	case "Resources":
+		return fmt.Sprintf(`
+			Configuring resource requests and limits for workloads running in Kubernetes
+			helps ensure that every container will have access to all the resources it
+			needs. These are also a crucial part of cluster autoscaling logic, as new
+			nodes are only spun up when there is insufficient capacity on existing
+			infrastructure for new pod(s). By default, Polaris validates that resource
+			requests and limits are set, it also includes optional functionality to ensure
+			these requests and limits fall within specified ranges.
+		`)
+	case "Security":
+		return fmt.Sprintf(`
+			Kubernetes provides a great deal of configurability when it comes to the
+			security of your workloads. A key principle here involves limiting the level
+			of access any individual workload has. Polaris has validations for a number of
+			best practices, mostly focused on ensuring that unnecessary access has not
+			been granted to an application workload.
+		`)
+	default:
+		return ""
 	}
 }
