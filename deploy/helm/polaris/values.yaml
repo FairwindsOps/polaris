@@ -50,7 +50,7 @@ dashboard:
     type: ClusterIP
   image:
     repository: quay.io/reactiveops/polaris
-    tag: master
+    tag: 0.1.0
     pullPolicy: Always
 
 webhook:
@@ -58,7 +58,7 @@ webhook:
   replicas: 1
   image:
     repository: quay.io/reactiveops/polaris
-    tag: master
+    tag: 0.1.0
     pullPolicy: Always
 
 rbac:

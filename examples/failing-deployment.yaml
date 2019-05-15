@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: polaris-failing-deployment
+  labels:
+    app: polaris-failing-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: polaris-failing-deployment
+  template:
+    metadata:
+      labels:
+        app: polaris-failing-deployment
+    spec:
+      containers:
+      - name: this-will-fail
+        image: 'alpine'
+        command: [ "/bin/sh", "-c", "--" ]
+        args: [ "while true; do sleep 30; done;" ]
+        securityContext:
+          privileged: true
+          allowPrivilegeEscalation: true
+          readOnlyRootFilesystem: false
+          runAsNonRoot: false
+          capabilities:
+            add:
+              - ALL

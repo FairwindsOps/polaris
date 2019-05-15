@@ -1,0 +1,49 @@
+{{- if and .Values.dashboard.enable .Values.rbac.create -}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "polaris.fullname" . }}-dashboard
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "polaris.labels" . | nindent 4 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: {{ include "polaris.fullname" . }}-dashboard
+  labels:
+    {{- include "polaris.labels" . | nindent 4 }}
+rules:
+  - apiGroups:
+      - 'apps'
+      - 'extensions'
+    resources:
+      - 'deployments'
+    verbs:
+      - 'get'
+      - 'list'
+  - apiGroups:
+      - ''
+    resources:
+      - 'nodes'
+      - 'namespaces'
+      - 'pods'
+    verbs:
+      - 'get'
+      - 'list'
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "polaris.fullname" . }}-dashboard
+  labels:
+    {{- include "polaris.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "polaris.fullname" . }}-dashboard
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "polaris.fullname" . }}-dashboard
+    namespace: {{ .Release.Namespace }}
+{{- end -}}

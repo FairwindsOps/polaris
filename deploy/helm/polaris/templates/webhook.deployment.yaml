@@ -1,5 +1,5 @@
 {{- if .Values.webhook.enable -}}
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
@@ -21,62 +21,68 @@ spec:
         {{- include "polaris.selectors" . | nindent 8 }}
         component: webhook
     spec:
-      volumes:
-      - name: config
-        configMap:
-          name: {{ include "polaris.fullname" . }}
-      - name: secret
-        secret:
-          secretName: {{ include "polaris.fullname" . }}
       containers:
-      - command:
-        - polaris
-        - --webhook
-        image: '{{.Values.webhook.image.repository}}:{{.Values.webhook.image.tag}}'
-        imagePullPolicy: '{{.Values.webhook.image.pullPolicy}}'
-        name: webhook
-        ports:
-        - containerPort: 9876
-        # These are fairly useless readiness/liveness probes for now
-        # Follow this issue for potential improvements:
-        # https://github.com/kubernetes-sigs/controller-runtime/issues/356
-        livenessProbe:
-          exec:
-            command:
-            - sh
-            - -c
-            - ps -ef | grep polaris
-          initialDelaySeconds: 5
-          periodSeconds: 5
-        readinessProbe:
-          exec:
-            command:
-            - sh
-            - -c
-            - ps -ef | grep polaris
-          initialDelaySeconds: 5
-          periodSeconds: 5
-        resources:
-          limits:
-            cpu: 100m
-            memory: 128Mi
-          requests:
-            cpu: 100m
-            memory: 128Mi
-        securityContext:
-          privileged: false
-          readOnlyRootFilesystem: true
-          runAsNonRoot: true
-          capabilities:
-            drop:
-              - ALL
-        volumeMounts:
+        - name: webhook
+          command:
+            - polaris
+            - --webhook
+          image: '{{.Values.webhook.image.repository}}:{{.Values.webhook.image.tag}}'
+          imagePullPolicy: '{{.Values.webhook.image.pullPolicy}}'
+          ports:
+            - containerPort: 9876
+          # These are fairly useless readiness/liveness probes for now
+          # Follow this issue for potential improvements:
+          # https://github.com/kubernetes-sigs/controller-runtime/issues/356
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - ps -ef | grep polaris
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - ps -ef | grep polaris
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: config
+              mountPath: /opt/app/config.yaml
+              subPath: config.yaml
+              readOnly: true
+            - name: secret
+              mountPath: /opt/cert/
+              readOnly: true
+            - name: cr-logs
+              mountPath: /tmp/
+              readOnly: false
+      serviceAccountName:  {{ include "polaris.fullname" . }}-webhook
+      volumes:
         - name: config
-          mountPath: /opt/app/config.yaml
-          subPath: config.yaml
-          readOnly: true
+          configMap:
+            name: {{ include "polaris.fullname" . }}
         - name: secret
-          mountPath: /tmp/cert/
-          readOnly: true
-      serviceAccountName:  {{ include "polaris.fullname" . }}
+          secret:
+            secretName: polaris-webhook
+        - name: cr-logs
+          emptyDir: {}
 {{- end -}}
