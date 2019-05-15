@@ -94,7 +94,7 @@ func startDashboardServer(c conf.Configuration, k *kube.ResourceProvider, port i
 		dashboard.EndpointHandler(w, r, c, k)
 	})
 	router.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "public/favicon.ico")
+		http.ServeFile(w, r, "pkg/dashboard/assets/favicon-32x32.png")
 	})
 	router.HandleFunc("/details/{category}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
