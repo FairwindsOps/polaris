@@ -3,10 +3,15 @@
     <h3>Cluster Overview</h3>
     <div class="cluster-overview">
       <div class="cluster-score">
-        <div class="weather"><i class="fas {{ getWeatherIcon .AuditData.ClusterSummary.Results.Totals }}"></i></div>
-        <div class="sailing">{{ getWeatherText .AuditData.ClusterSummary.Results.Totals }}</div>
-        <div class="scores"><span>Grade: </span><strong>{{ getGrade .AuditData.ClusterSummary.Results.Totals }}</strong></div>
-        <div class="scores"><span>Score: </span><strong>{{ getScore .AuditData.ClusterSummary.Results.Totals }}%</strong></div>
+        <div class="score-details">
+          <div class="weather"><i class="fas {{ getWeatherIcon .AuditData.ClusterSummary.Results.Totals }}"></i></div>
+          <div class="sailing">{{ getWeatherText .AuditData.ClusterSummary.Results.Totals }}</div>
+          <div class="scores"><span>Grade: </span><strong>{{ getGrade .AuditData.ClusterSummary.Results.Totals }}</strong></div>
+          <div class="scores"><span>Score: </span><strong>{{ getScore .AuditData.ClusterSummary.Results.Totals }}%</strong></div>
+        </div>
+      </div>
+      <div class="graph">
+        <canvas width="275" height="275" id="clusterScoreChart"></canvas>
       </div>
       <div class="result-messages">
         <ul class="message-list">
@@ -15,27 +20,29 @@
           <li class="error"><i class="message-icon fas fa-times"></i> {{ .AuditData.ClusterSummary.Results.Totals.Errors }} checks had errors</li>
         </ul>
       </div>
-      <canvas id="clusterScoreChart"></canvas>
     </div>
-    <div class="kubernetes-overview">
-      <ul>
-        <li>
-          <span>Kubernetes Version:</span>
-          <strong>{{.AuditData.ClusterSummary.Version}}</strong>
-        </li>
-        <li>
-          <span>Nodes:</span>
-          <strong>{{.AuditData.ClusterSummary.Nodes}}</strong>
-        </li>
-        <li>
-          <span>Pods:</span>
-          <strong>{{.AuditData.ClusterSummary.Pods}}</strong>
-        </li>
-        <li>
-          <span>Namespaces:</span>
-          <strong>{{.AuditData.ClusterSummary.Namespaces}}</strong>
-        </li>
-      </ul>
+    <div class="cluster-overview-footer">
+      <p class="score-description">
+        Score is the percentage of passing checks. Warnings get half the weight of errors.
+      </p>
+      <p class="kubernetes-overview">
+          <span class="kubernetes-stat">
+            <span>Kubernetes Version:</span>
+            <strong>{{.AuditData.ClusterSummary.Version}}</strong>
+          </span>
+          <span class="kubernetes-stat">
+            <span>Nodes:</span>
+            <strong>{{.AuditData.ClusterSummary.Nodes}}</strong>
+          </span>
+          <span class="kubernetes-stat">
+            <span>Pods:</span>
+            <strong>{{.AuditData.ClusterSummary.Pods}}</strong>
+          </span>
+          <span class="kubernetes-stat">
+            <span>Namespaces:</span>
+            <strong>{{.AuditData.ClusterSummary.Namespaces}}</strong>
+          </span>
+      </p>
     </div>
   </div>
 
