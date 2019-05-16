@@ -1,4 +1,4 @@
 apiVersion: v1
 description: Validation of best practices in your Kubernetes clusters
 name: polaris
-version: 1.0.0
+version: 0.1.0
