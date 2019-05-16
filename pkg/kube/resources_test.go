@@ -1,6 +1,7 @@
 package kube
 
 import (
+	"github.com/reactiveops/polaris/test"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -40,4 +41,17 @@ func TestGetMultipleResourceFromSingleFile(t *testing.T) {
 	assert.Equal(t, 2, len(resources.Namespaces), "Should have a namespace")
 	assert.Equal(t, "polaris", resources.Namespaces[0].ObjectMeta.Name)
 	assert.Equal(t, "polaris-2", resources.Namespaces[1].ObjectMeta.Name)
+}
+
+func TestGetResourceFromAPI(t *testing.T) {
+	k8s := test.SetupTestAPI()
+	k8s = test.SetupAddDeploys(k8s, "test")
+	resources, err := CreateResourceProviderFromAPI(k8s)
+	assert.Equal(t, nil, err, "Error should be nil")
+
+	assert.Equal(t, 0, len(resources.Nodes), "Should not have any nodes")
+	assert.Equal(t, 1, len(resources.Deployments), "Should have a deployment")
+	assert.Equal(t, 0, len(resources.Pods), "Should have a pod")
+
+	assert.Equal(t, "", resources.Deployments[0].ObjectMeta.Name)
 }
