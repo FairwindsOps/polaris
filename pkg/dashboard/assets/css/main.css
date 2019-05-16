@@ -6,28 +6,30 @@ body {
 }
 
 .navbar {
-  padding: 20px 20px 0;
+  padding-top: 20px;
+}
+.navbar, .main-content {
+  width: 960px;
+  margin: auto;
 }
 
 .navbar .navbar-content {
-  margin: 0 auto;
-  width: 900px;
+  padding: 0px 20px;
 }
 
 .navbar .navbar-right {
-  padding: 15px;
   float: right;
 }
 
 .navbar .logo {
-  width: 280px;
+  width: 250px;
 }
 
 .navbar span.oss-text {
   color: #23103A;
   display: block;
   font-size: 11px;
-  margin: 3px 0;
+  margin-bottom: 3px;
 }
 
 .navbar a {
@@ -35,12 +37,7 @@ body {
 }
 
 .navbar .ro-logo {
-  height: 40px;
-}
-
-.main-content {
-  width: 960px;
-  margin: 0 auto;
+  height: 50px;
 }
 
 .card {
