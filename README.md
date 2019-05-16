@@ -1,7 +1,7 @@
 <div align="center">
   <img src="/pkg/dashboard/assets/images/polaris-logo.png" alt="Polaris Logo" />
   <br>
-  
+
   [![Version][version-image]][version-link] [![CircleCI][circleci-image]][circleci-link] [![Go Report Card][goreport-image]][goreport-link]
 </div>
 
@@ -14,18 +14,20 @@
 [circleci-image]: https://circleci.com/gh/reactiveops/polaris.svg?style=svg
 [goreport-image]: https://goreportcard.com/badge/github.com/reactiveops/polaris
 
-Polaris keeps your cluster sailing smoothly. It runs a variety of checks to ensure that Kubernetes deployments are configured using best practices that will avoid potential problems in the future. The project includes two primary parts:
+Polaris helps keep your cluster healthy. It runs a variety of checks to ensure that Kubernetes deployments are configured using best practices that will avoid potential problems in the future. The project includes two primary components:
 
-- A dashboard to display the results of these validations on your existing deployments
-- A beta version of a webhook that can prevent poorly configured deployments from reaching your cluster
+- A dashboard that provides an overview of how well current deployments are configured within a cluster.
+- An experimental validating webhook that can prevent any future deployments that do not live up to a configured standard.
 
 ## Dashboard
 
-The Polaris Dashboard provides an overview of your current deployments in a cluster along with their validation scores. An overall score is provided for a cluster on a 0 - 100 scale. Results are then broken down by namespace and deployment.
+The Polaris dashboard is a way to get a simple visual overview of the current state of your Kubernetes deployments as well as a roadmap for what can be improved. The dashboard provides a cluster wide overview as well as breaking out results by category, namespace, and deployment.
 
 <p align="center">
   <img src="/dashboard-screenshot.png" alt="Polaris Dashboard" />
 </p>
+
+Our default standards in Polaris are rather high, so don’t be surprised if your score is lower than you might expect. A key goal for Polaris was to set a high standard and aim for great configuration by default. If the defaults we’ve included are too strict, it’s easy to adjust the configuration as part of the deployment configuration to better suit your workloads.
 
 ### Deploying
 
@@ -53,7 +55,14 @@ With the port forwarding in place, you can open http://localhost:8080 in your br
 
 ### Using a Binary Release
 
-If you'd prefer to run Polaris locally, binary releases are available on the [releases page](https://github.com/reactiveops/polaris/releases). When running as a binary, Polaris will use your local kubeconfig to connect to a cluster. There are a variety of options available, but the most common usage may be to view the dashboard:
+If you'd prefer to run Polaris locally, binary releases are available on the [releases page](https://github.com/reactiveops/polaris/releases) or can be installed with [Homebrew](https://brew.sh/):
+
+```
+brew tap reactiveops/tap
+brew install reactiveops/tap/polaris
+```
+
+When running as a binary, Polaris will use your local kubeconfig to connect to a cluster. There are a variety of options available, but the most common usage will likely be to view the dashboard:
 
 ```
 polaris --dashboard
@@ -63,7 +72,7 @@ polaris --dashboard
 
 Polaris includes experimental support for an optional validating webhook. This accepts the same configuration as the dashboard, and can run the same validations. This webhook will reject any deployments that trigger a validation error. This is indicative of the greater goal of Polaris, not just to encourage better configuration through dashboard visibility, but to actually enforce it with this webhook. *Although we are working towards greater stability and better test coverage, we do not currently consider this webhook component production ready.*
 
-Unfortunately we have not found a way to disply warnings as part of `kubectl` output unless we are rejecting a deployment altogether. That means that any checks with a severity of `warning` will still pass webhook validation, and the only evidence of that warning will either be in the Polaris dashboard or the Polaris webhook logs.
+Unfortunately we have not found a way to display warnings as part of `kubectl` output unless we are rejecting a deployment altogether. That means that any checks with a severity of `warning` will still pass webhook validation, and the only evidence of that warning will either be in the Polaris dashboard or the Polaris webhook logs.
 
 ### Deploying
 
@@ -78,7 +87,6 @@ Alternatively, the webhook can be enabled with Helm by setting `webhook.enable` 
 ```
 helm upgrade --install polaris deploy/helm/polaris/ --namespace polaris --set webhook.enable=true
 ```
-
 
 ## Configuration
 
@@ -104,9 +112,6 @@ Polaris validation checks fall into several different categories:
 * `disable-webhook-config-installer`: disable the installer in the webhook server, so it won't install webhook configuration resources during bootstrapping
 * `kubeconfig`: Paths to a kubeconfig. Only required if out-of-cluster.
 
-## License
-Apache License 2.0
-
 ## Contributing
 PRs welcome! Check out the [Contributing Guidlines](CONTRIBUTING.md),
 [Code of Conduct](CODE_OF_CONDUCT.md), and [Roadmap](ROADMAP.md) for more information.
@@ -116,3 +121,6 @@ A history of changes to this project can be viewed in the [Changelog](CHANGELOG.
 
 If you'd like to learn more about Polaris, or if you'd like to speak with
 a Kubernetes expert, you can contact `info@reactiveops.com` or [visit our website](https://reactiveops.com)
+
+## License
+Apache License 2.0
