@@ -8,15 +8,11 @@
 [version-image]: https://img.shields.io/static/v1.svg?label=Version&message=0.1.0&color=239922
 [version-link]: https://github.com/reactiveops/polaris
 
-<!-- TODO: uncomment once project is public
-[circleci-image]: https://circleci.com/gh/reactiveops/polaris.svg?style=svg
-[goreport-image]: https://goreportcard.com/badge/github.com/reactiveops/polaris
--->
 [circleci-link]: https://circleci.com/gh/reactiveops/polaris.svg
 [goreport-link]: https://goreportcard.com/report/github.com/reactiveops/polaris
 
-[circleci-image]: https://img.shields.io/static/v1.svg?label=Build&message=Passing&color=239922
-[goreport-image]: https://img.shields.io/static/v1.svg?label=go+report&message=A&color=239922
+[circleci-image]: https://circleci.com/gh/reactiveops/polaris.svg?style=svg
+[goreport-image]: https://goreportcard.com/badge/github.com/reactiveops/polaris
 
 Polaris keeps your cluster sailing smoothly. It runs a variety of checks to ensure that Kubernetes deployments are configured using best practices that will avoid potential problems in the future. The project includes two primary parts:
 
