@@ -42,6 +42,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
+const (
+	// Version represents the current release version of Polaris
+	Version = "0.1.0"
+)
+
 func main() {
 	dashboard := flag.Bool("dashboard", false, "Runs the webserver for Polaris dashboard.")
 	webhook := flag.Bool("webhook", false, "Runs the webhook webserver.")
@@ -53,10 +58,16 @@ func main() {
 	auditOutputFile := flag.String("output-file", "", "Destination file for audit results")
 	configPath := flag.String("config", "config.yaml", "Location of Polaris configuration file")
 	logLevel := flag.String("log-level", logrus.InfoLevel.String(), "Logrus log level")
+	version := flag.Bool("version", false, "Prints the version of Polaris")
 	disableWebhookConfigInstaller := flag.Bool("disable-webhook-config-installer", false,
 		"disable the installer in the webhook server, so it won't install webhook configuration resources during bootstrapping")
 
 	flag.Parse()
+
+	if *version {
+		fmt.Printf("Polaris version %s\n", Version)
+		os.Exit(0)
+	}
 
 	parsedLevel, err := logrus.ParseLevel(*logLevel)
 	if err != nil {
