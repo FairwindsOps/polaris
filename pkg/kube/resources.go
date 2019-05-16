@@ -64,6 +64,7 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 			dep := appsv1.Deployment{}
 			err = decoder.Decode(&dep)
 			if err != nil {
+				logrus.Errorf("Error parsing deployment %v", err)
 				return err
 			}
 			resources.Deployments = append(resources.Deployments, dep)
@@ -71,6 +72,7 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 			ns := corev1.Namespace{}
 			err = decoder.Decode(&ns)
 			if err != nil {
+				logrus.Errorf("Error parsing namespace %v", err)
 				return err
 			}
 			resources.Namespaces = append(resources.Namespaces, ns)
@@ -78,6 +80,7 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 			pod := corev1.Pod{}
 			err = decoder.Decode(&pod)
 			if err != nil {
+				logrus.Errorf("Error parsing pod %v", err)
 				return err
 			}
 			resources.Pods = append(resources.Pods, pod)
@@ -91,12 +94,14 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 		}
 		contents, err := ioutil.ReadFile(path)
 		if err != nil {
+			logrus.Errorf("Error reading file %v", path)
 			return err
 		}
 		specs := regexp.MustCompile("\n-+\n").Split(string(contents), -1)
 		for _, spec := range specs {
 			err = addYaml(spec)
 			if err != nil {
+				logrus.Errorf("Error parsing YAML %v", err)
 				return err
 			}
 		}
@@ -115,6 +120,7 @@ func CreateResourceProviderFromCluster() (*ResourceProvider, error) {
 	kubeConf := config.GetConfigOrDie()
 	api, err := kubernetes.NewForConfig(kubeConf)
 	if err != nil {
+		logrus.Errorf("Error creating Kubernetes client %v", err)
 		return nil, err
 	}
 	return CreateResourceProviderFromAPI(api)
@@ -125,34 +131,35 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface) (*ResourceProvider
 	listOpts := metav1.ListOptions{}
 	serverVersion, err := kube.Discovery().ServerVersion()
 	if err != nil {
+		logrus.Errorf("Error fetching Kubernetes API version %v", err)
 		return nil, err
 	}
 	deploys, err := kube.AppsV1().Deployments("").List(listOpts)
 	if err != nil {
+		logrus.Errorf("Error fetching Kubernetes Deployments %v", err)
 		return nil, err
 	}
 	nodes, err := kube.CoreV1().Nodes().List(listOpts)
 	if err != nil {
+		logrus.Errorf("Error fetching Kubernetes Nodes %v", err)
 		return nil, err
 	}
 	namespaces, err := kube.CoreV1().Namespaces().List(listOpts)
 	if err != nil {
+		logrus.Errorf("Error fetching Kubernetes Namespaces %v", err)
 		return nil, err
 	}
-	allPods := []corev1.Pod{}
-	for _, ns := range namespaces.Items {
-		pods, err := kube.CoreV1().Pods(ns.Name).List(listOpts)
-		if err != nil {
-			return nil, err
-		}
-		allPods = append(allPods, pods.Items...)
+	pods, err := kube.CoreV1().Pods("").List(listOpts)
+	if err != nil {
+		logrus.Errorf("Error fetching Kubernetes Pods %v", err)
+		return nil, err
 	}
 	api := ResourceProvider{
 		ServerVersion: serverVersion.Major + "." + serverVersion.Minor,
 		Deployments:   deploys.Items,
 		Nodes:         nodes.Items,
 		Namespaces:    namespaces.Items,
-		Pods:          allPods,
+		Pods:          pods.Items,
 	}
 	return &api, nil
 }
