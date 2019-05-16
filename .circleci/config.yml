@@ -30,6 +30,13 @@ references:
         docker tag $REPO:dev-$CIRCLE_SHA1 $REPO:$CIRCLE_TAG
         docker push $REPO:$CIRCLE_TAG
 
+  update_coverage: &update_coverage
+    run:
+      name: Update Coverage
+      command: |
+        go test ./pkg/... -coverprofile=coverage.txt -covermode=count
+        bash <(curl -s https://codecov.io/bash)
+
 jobs:
   build:
     docker:
@@ -50,6 +57,7 @@ jobs:
       - run: go get -u golang.org/x/lint/golint
       - run: go list ./... | grep -v vendor | xargs golint -set_exit_status
       - run: go list ./... | grep -v vendor | xargs go vet
+      - *update_coverage
 
   test-deploy:
     docker:
