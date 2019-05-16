@@ -89,10 +89,18 @@ func main() {
 	if *webhook {
 		startWebhookServer(c, *disableWebhookConfigInstaller, *webhookPort)
 	} else if *dashboard {
-		k, _ := kube.CreateResourceProvider(*auditPath)
+		k, err := kube.CreateResourceProvider(*auditPath)
+		if err != nil {
+			logrus.Errorf("Error fetching Kubernetes resources %v", err)
+			os.Exit(1)
+		}
 		startDashboardServer(c, k, *dashboardPort)
 	} else if *audit {
-		k, _ := kube.CreateResourceProvider(*auditPath)
+		k, err := kube.CreateResourceProvider(*auditPath)
+		if err != nil {
+			logrus.Errorf("Error fetching Kubernetes resources %v", err)
+			os.Exit(1)
+		}
 		runAudit(c, k, *auditOutputFile, *auditOutputURL)
 	}
 }
