@@ -1,5 +1,5 @@
 {{- if .Values.dashboard.enable -}}
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
@@ -39,12 +39,12 @@ spec:
             path: /health
             port: 8080
           initialDelaySeconds: 5
-          periodSeconds: 5
+          periodSeconds: 20
         readinessProbe:
           httpGet:
             path: /health
             port: 8080
-          initialDelaySeconds: 15
+          initialDelaySeconds: 5
           periodSeconds: 20
         resources:
           limits:
@@ -54,6 +54,7 @@ spec:
             cpu: 100m
             memory: 128Mi
         securityContext:
+          allowPrivilegeEscalation: false
           privileged: false
           readOnlyRootFilesystem: true
           runAsNonRoot: true
@@ -65,5 +66,5 @@ spec:
           mountPath: /opt/app/config.yaml
           subPath: config.yaml
           readOnly: true
-      serviceAccountName: {{ include "polaris.fullname" . }}
+      serviceAccountName: {{ include "polaris.fullname" . }}-dashboard
 {{- end -}}

@@ -1,5 +1,5 @@
 ---
-# Source: polaris/templates/namespace.yaml
+# Source: polaris/templates/0-namespace.yaml
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -59,47 +59,53 @@ data:
             - AUDIT_WRITE
   
 ---
-# Source: polaris/templates/serviceaccount.yaml
+# Source: polaris/templates/dashboard.rbac.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: polaris
+  name: polaris-dashboard
   namespace: polaris
   labels:
     app: polaris
-
 ---
-# Source: polaris/templates/clusterrole.yaml
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
-  name: polaris
+  name: polaris-dashboard
   labels:
     app: polaris
 rules:
   - apiGroups:
-    - ''
-    - 'apps'
-    - 'admissionregistration.k8s.io'
+      - 'apps'
+      - 'extensions'
     resources:
-      - '*'
+      - 'deployments'
     verbs:
-      - '*'
+      - 'get'
+      - 'list'
+  - apiGroups:
+      - ''
+    resources:
+      - 'nodes'
+      - 'namespaces'
+      - 'pods'
+    verbs:
+      - 'get'
+      - 'list'
 ---
-# Source: polaris/templates/clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
-  name: polaris
+  name: polaris-dashboard
   labels:
     app: polaris
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: polaris
+  name: polaris-dashboard
 subjects:
   - kind: ServiceAccount
-    name: polaris
+    name: polaris-dashboard
     namespace: polaris
 ---
 # Source: polaris/templates/dashboard.service.yaml
@@ -122,7 +128,7 @@ spec:
   type: ClusterIP
 ---
 # Source: polaris/templates/dashboard.deployment.yaml
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
@@ -152,7 +158,7 @@ spec:
       - command:
         - polaris
         - --dashboard
-        image: 'quay.io/reactiveops/polaris:master'
+        image: 'quay.io/reactiveops/polaris:0.1.0'
         imagePullPolicy: 'Always'
         name: dashboard
         ports:
@@ -162,12 +168,12 @@ spec:
             path: /health
             port: 8080
           initialDelaySeconds: 5
-          periodSeconds: 5
+          periodSeconds: 20
         readinessProbe:
           httpGet:
             path: /health
             port: 8080
-          initialDelaySeconds: 15
+          initialDelaySeconds: 5
           periodSeconds: 20
         resources:
           limits:
@@ -177,6 +183,7 @@ spec:
             cpu: 100m
             memory: 128Mi
         securityContext:
+          allowPrivilegeEscalation: false
           privileged: false
           readOnlyRootFilesystem: true
           runAsNonRoot: true
@@ -188,12 +195,15 @@ spec:
           mountPath: /opt/app/config.yaml
           subPath: config.yaml
           readOnly: true
-      serviceAccountName: polaris
----
-# Source: polaris/templates/secret.yaml
-
+      serviceAccountName: polaris-dashboard
 ---
 # Source: polaris/templates/webhook.deployment.yaml
+
+---
+# Source: polaris/templates/webhook.rbac.yaml
+
+---
+# Source: polaris/templates/webhook.secret.yaml
 
 ---
 # Source: polaris/templates/webhook.service.yaml

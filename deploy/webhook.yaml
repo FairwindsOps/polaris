@@ -1,20 +1,21 @@
 ---
-# Source: polaris/templates/namespace.yaml
+# Source: polaris/templates/0-namespace.yaml
 apiVersion: v1
 kind: Namespace
 metadata:
   name: polaris
 ---
-# Source: polaris/templates/secret.yaml
+# Source: polaris/templates/webhook.secret.yaml
 apiVersion: v1
 kind: Secret
 metadata:
-  name: polaris
+  name: polaris-webhook
   namespace: polaris
   labels:
     app: polaris
 type: Opaque
-data:
+stringData:
+  cert.pem: ''
 ---
 # Source: polaris/templates/configmap.yaml
 apiVersion: v1
@@ -70,89 +71,115 @@ data:
             - AUDIT_WRITE
   
 ---
-# Source: polaris/templates/serviceaccount.yaml
+# Source: polaris/templates/webhook.rbac.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: polaris
+  name: polaris-webhook
   namespace: polaris
   labels:
     app: polaris
-
 ---
-# Source: polaris/templates/clusterrole.yaml
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
-  name: polaris
+  name: polaris-webhook
   labels:
     app: polaris
 rules:
   - apiGroups:
-    - ''
-    - 'apps'
-    - 'admissionregistration.k8s.io'
+      - 'apps'
+      - 'extensions'
     resources:
-      - '*'
+      - 'deployments'
+    verbs:
+      - 'get'
+      - 'list'
+  # required by controller-runtime code doing a cluster wide lookup
+  # when it seems namespace would suffice
+  - apiGroups:
+      - ''
+    resources:
+      - 'secrets'
+      - 'services'
+    verbs:
+      - 'get'
+      - 'list'
+      - 'watch'
+  - apiGroups:
+      - 'admissionregistration.k8s.io'
+    resources:
+      - 'validatingwebhookconfigurations'
     verbs:
       - '*'
 ---
-# Source: polaris/templates/clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
-  name: polaris
+  name: polaris-webhook
   labels:
     app: polaris
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: polaris
+  name: polaris-webhook
 subjects:
   - kind: ServiceAccount
-    name: polaris
+    name: polaris-webhook
     namespace: polaris
 ---
-# Source: polaris/templates/dashboard.service.yaml
-apiVersion: v1
-kind: Service
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: Role
 metadata:
-  name: polaris-dashboard
-  namespace: polaris
+  name: polaris-webhook
   labels:
     app: polaris
-spec:
-  ports:
-  - name: dashboard
-    port: 80
-    protocol: TCP
-    targetPort: 8080
-  selector:
+rules:
+  # required for current controller-runtime bootstrap method
+  - apiGroups:
+      - ''
+    resources:
+      - 'secrets'
+      - 'services'
+    verbs:
+      - '*'
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: polaris-webhook
+  labels:
     app: polaris
-    component: dashboard
-  type: ClusterIP
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: polaris-webhook
+subjects:
+  - kind: ServiceAccount
+    name: polaris-webhook
+    namespace: polaris
 ---
 # Source: polaris/templates/webhook.service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: polaris-dashboard
+  name: polaris-webhook
   namespace: polaris
   labels:
     app: polaris
 spec:
   ports:
-  - name: dashboard
-    port: 80
+  - name: webhook
+    port: 443
     protocol: TCP
-    targetPort: 8080
+    targetPort: 9876
   selector:
     app: polaris
-    component: dashboard
+    component: webhook
   type: ClusterIP
 ---
 # Source: polaris/templates/webhook.deployment.yaml
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
@@ -174,64 +201,76 @@ spec:
         app: polaris
         component: webhook
     spec:
-      volumes:
-      - name: config
-        configMap:
-          name: polaris
-      - name: secret
-        secret:
-          secretName: polaris
       containers:
-      - command:
-        - polaris
-        - --webhook
-        image: 'quay.io/reactiveops/polaris:master'
-        imagePullPolicy: 'Always'
-        name: webhook
-        ports:
-        - containerPort: 9876
-        # These are fairly useless readiness/liveness probes for now
-        # Follow this issue for potential improvements:
-        # https://github.com/kubernetes-sigs/controller-runtime/issues/356
-        livenessProbe:
-          exec:
-            command:
-            - sh
-            - -c
-            - ps -ef | grep polaris
-          initialDelaySeconds: 5
-          periodSeconds: 5
-        readinessProbe:
-          exec:
-            command:
-            - sh
-            - -c
-            - ps -ef | grep polaris
-          initialDelaySeconds: 5
-          periodSeconds: 5
-        resources:
-          limits:
-            cpu: 100m
-            memory: 128Mi
-          requests:
-            cpu: 100m
-            memory: 128Mi
-        securityContext:
-          privileged: false
-          readOnlyRootFilesystem: true
-          runAsNonRoot: true
-          capabilities:
-            drop:
-              - ALL
-        volumeMounts:
+        - name: webhook
+          command:
+            - polaris
+            - --webhook
+          image: 'quay.io/reactiveops/polaris:0.1.0'
+          imagePullPolicy: 'Always'
+          ports:
+            - containerPort: 9876
+          # These are fairly useless readiness/liveness probes for now
+          # Follow this issue for potential improvements:
+          # https://github.com/kubernetes-sigs/controller-runtime/issues/356
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - ps -ef | grep polaris
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - ps -ef | grep polaris
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: config
+              mountPath: /opt/app/config.yaml
+              subPath: config.yaml
+              readOnly: true
+            - name: secret
+              mountPath: /opt/cert/
+              readOnly: true
+            - name: cr-logs
+              mountPath: /tmp/
+              readOnly: false
+      serviceAccountName:  polaris-webhook
+      volumes:
         - name: config
-          mountPath: /opt/app/config.yaml
-          subPath: config.yaml
-          readOnly: true
+          configMap:
+            name: polaris
         - name: secret
-          mountPath: /tmp/cert/
-          readOnly: true
-      serviceAccountName:  polaris
+          secret:
+            secretName: polaris-webhook
+        - name: cr-logs
+          emptyDir: {}
 ---
 # Source: polaris/templates/dashboard.deployment.yaml
+
+---
+# Source: polaris/templates/dashboard.rbac.yaml
+
+---
+# Source: polaris/templates/dashboard.service.yaml
 

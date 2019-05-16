@@ -33,6 +33,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 	appsv1 "k8s.io/api/apps/v1"
+	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	apitypes "k8s.io/apimachinery/pkg/types"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
@@ -131,7 +132,8 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 		os.Exit(1)
 	}
 
-	polarisResourceName := "polaris"
+	polarisAppName := "polaris"
+	polarisResourceName := "polaris-webhook"
 	polarisNamespaceBytes, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace")
 
 	if err != nil {
@@ -148,7 +150,7 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 	logrus.Info("Setting up webhook server")
 	as, err := webhook.NewServer(polarisResourceName, mgr, webhook.ServerOptions{
 		Port:                          int32(port),
-		CertDir:                       "/tmp/cert",
+		CertDir:                       "/opt/cert",
 		DisableWebhookConfigInstaller: &disableWebhookConfigInstaller,
 		BootstrapOptions: &webhook.BootstrapOptions{
 			ValidatingWebhookConfigName: polarisResourceName,
@@ -163,7 +165,8 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 
 				// Selectors should select the pods that runs this webhook server.
 				Selectors: map[string]string{
-					"app": polarisResourceName,
+					"app":       polarisAppName,
+					"component": "webhook",
 				},
 			},
 		},
@@ -176,9 +179,10 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 
 	logrus.Infof("Polaris webhook server listening on port %d", port)
 
-	d := fwebhook.NewWebhook("deploy", mgr, fwebhook.Validator{Config: c}, &appsv1.Deployment{})
+	d1 := fwebhook.NewWebhook("deployments", mgr, fwebhook.Validator{Config: c}, &appsv1.Deployment{})
+	d2 := fwebhook.NewWebhook("deployments-ext", mgr, fwebhook.Validator{Config: c}, &extensionsv1beta1.Deployment{})
 	logrus.Debug("Registering webhooks to the webhook server")
-	if err = as.Register(d); err != nil {
+	if err = as.Register(d1, d2); err != nil {
 		logrus.Debugf("Unable to register webhooks in the admission server: %v", err)
 		os.Exit(1)
 	}
