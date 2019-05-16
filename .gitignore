@@ -19,3 +19,4 @@ main
 .DS_Store
 
 *-packr.go
+dist

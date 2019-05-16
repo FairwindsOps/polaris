@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: polaris-passing-deployment
+  labels:
+    app: polaris-passing-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: polaris-passing-deployment
+  template:
+    metadata:
+      labels:
+        app: polaris-passing-deployment
+    spec:
+      containers:
+        - command:
+            - polaris
+            - --dashboard
+          image: 'quay.io/reactiveops/polaris:0.1.0'
+          imagePullPolicy: 'Always'
+          name: dashboard
+          ports:
+            - containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 20
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
