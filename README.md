@@ -8,11 +8,11 @@
 [version-image]: https://img.shields.io/static/v1.svg?label=Version&message=0.1.0&color=239922
 [version-link]: https://github.com/reactiveops/polaris
 
-[circleci-link]: https://circleci.com/gh/reactiveops/polaris.svg
+[goreport-image]: https://goreportcard.com/badge/github.com/reactiveops/polaris
 [goreport-link]: https://goreportcard.com/report/github.com/reactiveops/polaris
 
 [circleci-image]: https://circleci.com/gh/reactiveops/polaris.svg?style=svg
-[goreport-image]: https://goreportcard.com/badge/github.com/reactiveops/polaris
+[circleci-link]: https://circleci.com/gh/reactiveops/polaris.svg
 
 Polaris helps keep your cluster healthy. It runs a variety of checks to ensure that Kubernetes deployments are configured using best practices that will avoid potential problems in the future. The project includes two primary components:
 
