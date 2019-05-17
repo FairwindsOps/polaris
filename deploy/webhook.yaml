@@ -208,6 +208,8 @@ spec:
           command:
             - polaris
             - --webhook
+            - --config
+            - /opt/app/config.yaml
           image: 'quay.io/reactiveops/polaris:0.1.1'
           imagePullPolicy: 'Always'
           ports:

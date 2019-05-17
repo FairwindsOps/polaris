@@ -29,6 +29,8 @@ spec:
       - command:
         - polaris
         - --dashboard
+        - --config
+        - /opt/app/config.yaml
         image: '{{.Values.dashboard.image.repository}}:{{.Values.dashboard.image.tag}}'
         imagePullPolicy: '{{.Values.dashboard.image.pullPolicy}}'
         name: dashboard
