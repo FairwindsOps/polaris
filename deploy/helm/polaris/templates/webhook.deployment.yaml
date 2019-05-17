@@ -26,6 +26,8 @@ spec:
           command:
             - polaris
             - --webhook
+            - --config
+            - /opt/app/config.yaml
           image: '{{.Values.webhook.image.repository}}:{{.Values.webhook.image.tag}}'
           imagePullPolicy: '{{.Values.webhook.image.pullPolicy}}'
           ports:
