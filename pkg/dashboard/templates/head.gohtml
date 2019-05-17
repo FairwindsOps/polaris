@@ -7,8 +7,15 @@
 
   <link rel="icon" type="image/png" href="/static/favicon-32x32.png" sizes="32x32" />
   <link rel="icon" type="image/png" href="/static/favicon-16x16.png" sizes="16x16" />
-  <link href="https://fonts.googleapis.com/css?family=Muli:300,400,700" rel="stylesheet">
+  <link href="/static/css/Muli.css" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/normalize.css">
   <link rel="stylesheet" href="/static/css/main.css">
-  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+  <link rel="stylesheet" href="/static/css/fontawesome-5.7.2.css">
+  <link rel="stylesheet" href="/static/css/dashboard.css">
+  <script type="text/javascript" src="/static/js/Chart-2.7.2.min.js"></script>
+  <script type="text/javascript" src="/static/js/cash-4.1.2.min.js"></script>
+  <script>
+    window.polarisAuditData = {{ .JSON }};
+  </script>
+  <script type="text/javascript" src="/static/js/main.js"></script>
 {{ end }}
