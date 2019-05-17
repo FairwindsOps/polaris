@@ -20,6 +20,7 @@ import (
 	"io"
 	"io/ioutil"
 
+	packr "github.com/gobuffalo/packr/v2"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/yaml"
@@ -110,7 +111,14 @@ type SecurityCapabilityLists struct {
 
 // ParseFile parses config from a file.
 func ParseFile(path string) (Configuration, error) {
-	rawBytes, err := ioutil.ReadFile(path)
+	configBox := packr.New("Config", "../../examples")
+	var rawBytes []byte
+	var err error
+	if path == "" {
+		rawBytes, err = configBox.Find("config.yaml")
+	} else {
+		rawBytes, err = ioutil.ReadFile(path)
+	}
 	if err != nil {
 		return Configuration{}, err
 	}

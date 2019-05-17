@@ -92,6 +92,8 @@ jobs:
       - *set_environment_variables
       - *docker_tag_release
       - *install_goreleaser
+      - run: go get -u github.com/gobuffalo/packr/v2/packr2
+      - run: packr2
       - run: goreleaser
 
 workflows:

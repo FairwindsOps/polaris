@@ -15,6 +15,4 @@ COPY --from=build-env /go/src/github.com/reactiveops/polaris/polaris .
 
 WORKDIR /opt/app
 
-COPY --from=build-env /go/src/github.com/reactiveops/polaris/config.yaml ./config.yaml
-
 CMD ["polaris"]
