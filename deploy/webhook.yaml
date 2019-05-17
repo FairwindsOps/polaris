@@ -210,7 +210,7 @@ spec:
             - --webhook
             - --config
             - /opt/app/config.yaml
-          image: 'quay.io/reactiveops/polaris:0.1.2'
+          image: 'quay.io/reactiveops/polaris:0.1.3'
           imagePullPolicy: 'Always'
           ports:
             - containerPort: 9876
