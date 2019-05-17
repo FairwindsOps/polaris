@@ -158,7 +158,7 @@ spec:
       - command:
         - polaris
         - --dashboard
-        image: 'quay.io/reactiveops/polaris:0.1.0'
+        image: 'quay.io/reactiveops/polaris:0.1.1'
         imagePullPolicy: 'Always'
         name: dashboard
         ports:
