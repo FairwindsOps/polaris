@@ -1,6 +1,7 @@
 builds:
 - env:
   - CGO_ENABLED=0
+  binary: polaris
 archive:
   replacements:
     darwin: Darwin

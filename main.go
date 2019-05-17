@@ -56,7 +56,7 @@ func main() {
 	webhookPort := flag.Int("webhook-port", 9876, "Port for the webhook webserver")
 	auditOutputURL := flag.String("output-url", "", "Destination URL to send audit results")
 	auditOutputFile := flag.String("output-file", "", "Destination file for audit results")
-	configPath := flag.String("config", "config.yaml", "Location of Polaris configuration file")
+	configPath := flag.String("config", "", "Location of Polaris configuration file")
 	logLevel := flag.String("log-level", logrus.InfoLevel.String(), "Logrus log level")
 	version := flag.Bool("version", false, "Prints the version of Polaris")
 	disableWebhookConfigInstaller := flag.Bool("disable-webhook-config-installer", false,
