@@ -89,28 +89,24 @@ func main() {
 	if *webhook {
 		startWebhookServer(c, *disableWebhookConfigInstaller, *webhookPort)
 	} else if *dashboard {
-		k, err := kube.CreateResourceProvider(*auditPath)
-		if err != nil {
-			logrus.Errorf("Error fetching Kubernetes resources %v", err)
-			os.Exit(1)
-		}
-		startDashboardServer(c, k, *dashboardPort)
+		startDashboardServer(c, *dashboardPort)
 	} else if *audit {
-		k, err := kube.CreateResourceProvider(*auditPath)
-		if err != nil {
-			logrus.Errorf("Error fetching Kubernetes resources %v", err)
-			os.Exit(1)
-		}
-		runAudit(c, k, *auditOutputFile, *auditOutputURL)
+		runAudit(c, *auditPath, *auditOutputFile, *auditOutputURL)
 	}
 }
 
-func startDashboardServer(c conf.Configuration, k *kube.ResourceProvider, port int) {
+func startDashboardServer(c conf.Configuration, port int) {
 	router := mux.NewRouter()
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
 	router.HandleFunc("/results.json", func(w http.ResponseWriter, r *http.Request) {
+		k, err := kube.CreateResourceProvider("")
+		if err != nil {
+			logrus.Errorf("Error fetching Kubernetes resources %v", err)
+			http.Error(w, "Error fetching Kubernetes resources", http.StatusInternalServerError)
+			return
+		}
 		dashboard.EndpointHandler(w, r, c, k)
 	})
 	router.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
@@ -126,6 +122,12 @@ func startDashboardServer(c conf.Configuration, k *kube.ResourceProvider, port i
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
 			http.NotFound(w, r)
+			return
+		}
+		k, err := kube.CreateResourceProvider("")
+		if err != nil {
+			logrus.Errorf("Error fetching Kubernetes resources %v", err)
+			http.Error(w, "Error fetching Kubernetes resources", http.StatusInternalServerError)
 			return
 		}
 		auditData, err := validator.RunAudit(c, k)
@@ -213,7 +215,12 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 	}
 }
 
-func runAudit(c conf.Configuration, k *kube.ResourceProvider, outputFile string, outputURL string) {
+func runAudit(c conf.Configuration, auditPath string, outputFile string, outputURL string) {
+	k, err := kube.CreateResourceProvider(auditPath)
+	if err != nil {
+		logrus.Errorf("Error fetching Kubernetes resources %v", err)
+		os.Exit(1)
+	}
 	auditData, err := validator.RunAudit(c, k)
 
 	if err != nil {
