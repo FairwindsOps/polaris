@@ -29,8 +29,8 @@ spec:
       - command:
         - polaris
         - --dashboard
-        image: '{{.Values.webhook.image.repository}}:{{.Values.webhook.image.tag}}'
-        imagePullPolicy: '{{.Values.webhook.image.pullPolicy}}'
+        image: '{{.Values.dashboard.image.repository}}:{{.Values.dashboard.image.tag}}'
+        imagePullPolicy: '{{.Values.dashboard.image.pullPolicy}}'
         name: dashboard
         ports:
         - containerPort: 8080
