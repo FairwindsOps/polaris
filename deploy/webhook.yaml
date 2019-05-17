@@ -132,6 +132,7 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: Role
 metadata:
   name: polaris-webhook
+  namespace: polaris
   labels:
     app: polaris
 rules:
@@ -148,6 +149,7 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
 metadata:
   name: polaris-webhook
+  namespace: polaris
   labels:
     app: polaris
 roleRef:
