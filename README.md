@@ -113,7 +113,7 @@ Polaris validation checks fall into several different categories:
 * `kubeconfig`: Paths to a kubeconfig. Only required if out-of-cluster.
 
 ## Contributing
-PRs welcome! Check out the [Contributing Guidlines](CONTRIBUTING.md),
+PRs welcome! Check out the [Contributing Guidelines](CONTRIBUTING.md),
 [Code of Conduct](CODE_OF_CONDUCT.md), and [Roadmap](ROADMAP.md) for more information.
 
 ## Further Information
