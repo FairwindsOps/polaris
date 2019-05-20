@@ -5,7 +5,7 @@
   [![Version][version-image]][version-link] [![CircleCI][circleci-image]][circleci-link] [![Go Report Card][goreport-image]][goreport-link]
 </div>
 
-[version-image]: https://img.shields.io/static/v1.svg?label=Version&message=0.1.3&color=239922
+[version-image]: https://img.shields.io/static/v1.svg?label=Version&message=0.1.4&color=239922
 [version-link]: https://github.com/reactiveops/polaris
 
 [goreport-image]: https://goreportcard.com/badge/github.com/reactiveops/polaris
