@@ -27,14 +27,16 @@ import (
 // ContainerValidation tracks validation failures associated with a Container.
 type ContainerValidation struct {
 	*ResourceValidation
-	Container *corev1.Container
+	Container       *corev1.Container
+	IsInitContainer bool
 }
 
 // ValidateContainer validates that each pod conforms to the Polaris config, returns a ResourceResult.
-func ValidateContainer(cnConf *conf.Configuration, container *corev1.Container) ContainerResult {
+func ValidateContainer(cnConf *conf.Configuration, container *corev1.Container, isInit bool) ContainerResult {
 	cv := ContainerValidation{
 		Container:          container,
 		ResourceValidation: &ResourceValidation{},
+		IsInitContainer:    isInit,
 	}
 
 	cv.validateResources(&cnConf.Resources)
@@ -107,7 +109,9 @@ func (cv *ContainerValidation) validateResourceRange(resourceName string, rangeC
 
 func (cv *ContainerValidation) validateHealthChecks(conf *conf.HealthChecks) {
 	category := messages.CategoryHealthChecks
-	if conf.ReadinessProbeMissing.IsActionable() {
+
+	// Don't validate readiness probes on init containers
+	if !cv.IsInitContainer && conf.ReadinessProbeMissing.IsActionable() {
 		if cv.Container.ReadinessProbe == nil {
 			cv.addFailure(messages.ReadinessProbeFailure, conf.ReadinessProbeMissing, category)
 		} else {
