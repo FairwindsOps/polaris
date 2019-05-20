@@ -74,3 +74,38 @@ func TestDescendLessOrEqual(t *testing.T) {
 		t.Errorf("expected %v but got %v", expected, ary)
 	}
 }
+
+func TestAscendLessThan(t *testing.T) {
+	tree := New()
+	tree.InsertNoReplace(Int(4))
+	tree.InsertNoReplace(Int(6))
+	tree.InsertNoReplace(Int(1))
+	tree.InsertNoReplace(Int(3))
+	var ary []Item
+	tree.AscendLessThan(Int(10), func(i Item) bool {
+		ary = append(ary, i)
+		return true
+	})
+	expected := []Item{Int(1), Int(3), Int(4), Int(6)}
+	if !reflect.DeepEqual(ary, expected) {
+		t.Errorf("expected %v but got %v", expected, ary)
+	}
+	ary = nil
+	tree.AscendLessThan(Int(4), func(i Item) bool {
+		ary = append(ary, i)
+		return true
+	})
+	expected = []Item{Int(1), Int(3)}
+	if !reflect.DeepEqual(ary, expected) {
+		t.Errorf("expected %v but got %v", expected, ary)
+	}
+	ary = nil
+	tree.AscendLessThan(Int(5), func(i Item) bool {
+		ary = append(ary, i)
+		return true
+	})
+	expected = []Item{Int(1), Int(3), Int(4)}
+	if !reflect.DeepEqual(ary, expected) {
+		t.Errorf("expected %v but got %v", expected, ary)
+	}
+}

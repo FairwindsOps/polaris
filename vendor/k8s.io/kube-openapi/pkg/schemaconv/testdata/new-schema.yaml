@@ -229,7 +229,7 @@ types:
         scalar: string
     - name: data
       type:
-        namedType: io.k8s.apimachinery.pkg.runtime.RawExtension
+        namedType: __untyped_atomic_
     - name: kind
       type:
         scalar: string
@@ -753,7 +753,7 @@ types:
         scalar: string
     - name: data
       type:
-        namedType: io.k8s.apimachinery.pkg.runtime.RawExtension
+        namedType: __untyped_atomic_
     - name: kind
       type:
         scalar: string
@@ -929,6 +929,11 @@ types:
     - name: type
       type:
         scalar: string
+    unions:
+    - discriminator: type
+      fields:
+      - fieldName: rollingUpdate
+        discriminatedBy: RollingUpdate
 - name: io.k8s.api.apps.v1beta1.RollbackConfig
   struct:
     fields:
@@ -1124,7 +1129,7 @@ types:
         scalar: string
     - name: data
       type:
-        namedType: io.k8s.apimachinery.pkg.runtime.RawExtension
+        namedType: __untyped_atomic_
     - name: kind
       type:
         scalar: string
@@ -6621,6 +6626,62 @@ types:
     - name: vsphereVolume
       type:
         namedType: io.k8s.api.core.v1.VsphereVirtualDiskVolumeSource
+    unions:
+    - fields:
+      - fieldName: awsElasticBlockStore
+        discriminatedBy: AWSElasticBlockStore
+      - fieldName: azureDisk
+        discriminatedBy: AzureDisk
+      - fieldName: azureFile
+        discriminatedBy: AzureFile
+      - fieldName: cephfs
+        discriminatedBy: CephFS
+      - fieldName: cinder
+        discriminatedBy: Cinder
+      - fieldName: configMap
+        discriminatedBy: ConfigMap
+      - fieldName: downwardAPI
+        discriminatedBy: DownwardAPI
+      - fieldName: emptyDir
+        discriminatedBy: EmptyDir
+      - fieldName: fc
+        discriminatedBy: FC
+      - fieldName: flexVolume
+        discriminatedBy: FlexVolume
+      - fieldName: flocker
+        discriminatedBy: Flocker
+      - fieldName: gcePersistentDisk
+        discriminatedBy: GCEPersistentDisk
+      - fieldName: gitRepo
+        discriminatedBy: GitRepo
+      - fieldName: glusterfs
+        discriminatedBy: Glusterfs
+      - fieldName: hostPath
+        discriminatedBy: HostPath
+      - fieldName: iscsi
+        discriminatedBy: ISCSI
+      - fieldName: nfs
+        discriminatedBy: NFS
+      - fieldName: persistentVolumeClaim
+        discriminatedBy: PersistentVolumeClaim
+      - fieldName: photonPersistentDisk
+        discriminatedBy: PhotonPersistentDisk
+      - fieldName: portworxVolume
+        discriminatedBy: PortworxVolume
+      - fieldName: projected
+        discriminatedBy: Projected
+      - fieldName: quobyte
+        discriminatedBy: Quobyte
+      - fieldName: rbd
+        discriminatedBy: RBD
+      - fieldName: scaleIO
+        discriminatedBy: ScaleIO
+      - fieldName: secret
+        discriminatedBy: Secret
+      - fieldName: storageos
+        discriminatedBy: StorageOS
+      - fieldName: vsphereVolume
+        discriminatedBy: VsphereVolume
 - name: io.k8s.api.core.v1.VolumeDevice
   struct:
     fields:
@@ -9342,7 +9403,15 @@ types:
       type:
         scalar: string
 - name: io.k8s.apiextensions-apiserver.pkg.apis.apiextensions.v1beta1.CustomResourceSubresourceStatus
-  untyped: {}
+  scalar: untyped
+  list:
+    elementType:
+      namedType: __untyped_atomic_
+    elementRelationship: atomic
+  map:
+    elementType:
+      namedType: __untyped_atomic_
+    elementRelationship: atomic
 - name: io.k8s.apiextensions-apiserver.pkg.apis.apiextensions.v1beta1.CustomResourceSubresources
   struct:
     fields:
@@ -9368,7 +9437,15 @@ types:
       type:
         scalar: string
 - name: io.k8s.apiextensions-apiserver.pkg.apis.apiextensions.v1beta1.JSON
-  untyped: {}
+  scalar: untyped
+  list:
+    elementType:
+      namedType: __untyped_atomic_
+    elementRelationship: atomic
+  map:
+    elementType:
+      namedType: __untyped_atomic_
+    elementRelationship: atomic
 - name: io.k8s.apiextensions-apiserver.pkg.apis.apiextensions.v1beta1.JSONSchemaProps
   struct:
     fields:
@@ -9504,11 +9581,35 @@ types:
       type:
         scalar: boolean
 - name: io.k8s.apiextensions-apiserver.pkg.apis.apiextensions.v1beta1.JSONSchemaPropsOrArray
-  untyped: {}
+  scalar: untyped
+  list:
+    elementType:
+      namedType: __untyped_atomic_
+    elementRelationship: atomic
+  map:
+    elementType:
+      namedType: __untyped_atomic_
+    elementRelationship: atomic
 - name: io.k8s.apiextensions-apiserver.pkg.apis.apiextensions.v1beta1.JSONSchemaPropsOrBool
-  untyped: {}
+  scalar: untyped
+  list:
+    elementType:
+      namedType: __untyped_atomic_
+    elementRelationship: atomic
+  map:
+    elementType:
+      namedType: __untyped_atomic_
+    elementRelationship: atomic
 - name: io.k8s.apiextensions-apiserver.pkg.apis.apiextensions.v1beta1.JSONSchemaPropsOrStringArray
-  untyped: {}
+  scalar: untyped
+  list:
+    elementType:
+      namedType: __untyped_atomic_
+    elementRelationship: atomic
+  map:
+    elementType:
+      namedType: __untyped_atomic_
+    elementRelationship: atomic
 - name: io.k8s.apimachinery.pkg.api.resource.Quantity
   scalar: string
 - name: io.k8s.apimachinery.pkg.apis.meta.v1.APIGroup
@@ -9729,7 +9830,7 @@ types:
       type:
         scalar: string
 - name: io.k8s.apimachinery.pkg.apis.meta.v1.MicroTime
-  scalar: string
+  scalar: untyped
 - name: io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta
   struct:
     fields:
@@ -9815,7 +9916,15 @@ types:
       type:
         scalar: string
 - name: io.k8s.apimachinery.pkg.apis.meta.v1.Patch
-  untyped: {}
+  scalar: untyped
+  list:
+    elementType:
+      namedType: __untyped_atomic_
+    elementRelationship: atomic
+  map:
+    elementType:
+      namedType: __untyped_atomic_
+    elementRelationship: atomic
 - name: io.k8s.apimachinery.pkg.apis.meta.v1.Preconditions
   struct:
     fields:
@@ -9895,13 +10004,13 @@ types:
       type:
         scalar: string
 - name: io.k8s.apimachinery.pkg.apis.meta.v1.Time
-  scalar: string
+  scalar: untyped
 - name: io.k8s.apimachinery.pkg.apis.meta.v1.WatchEvent
   struct:
     fields:
     - name: object
       type:
-        namedType: io.k8s.apimachinery.pkg.runtime.RawExtension
+        namedType: __untyped_atomic_
     - name: type
       type:
         scalar: string
@@ -9912,7 +10021,7 @@ types:
       type:
         scalar: string
 - name: io.k8s.apimachinery.pkg.util.intstr.IntOrString
-  untyped: {}
+  scalar: untyped
 - name: io.k8s.apimachinery.pkg.version.Info
   struct:
     fields:
@@ -10139,3 +10248,13 @@ types:
     - name: namespace
       type:
         scalar: string
+- name: __untyped_atomic_
+  scalar: untyped
+  list:
+    elementType:
+      namedType: __untyped_atomic_
+    elementRelationship: atomic
+  map:
+    elementType:
+      namedType: __untyped_atomic_
+    elementRelationship: atomic

@@ -1,4 +1,4 @@
-package foo
+package foo //@mark(PackageFoo, "foo")
 
 type StructFoo struct { //@item(StructFoo, "StructFoo", "struct{...}", "struct")
 	Value int //@item(Value, "Value", "int", "field")
@@ -16,6 +16,14 @@ func _() {
 	var sFoo StructFoo           //@complete("t", StructFoo)
 	if x := sFoo; x.Value == 1 { //@complete("V", Value),typdef("sFoo", StructFoo)
 		return
+	}
+}
+
+func _() {
+	shadowed := 123
+	{
+		shadowed := "hi" //@item(shadowed, "shadowed", "string", "var")
+		sha              //@complete("a", shadowed)
 	}
 }
 

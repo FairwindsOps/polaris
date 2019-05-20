@@ -1,3 +1,7 @@
+// Copyright 2019 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package cache
 
 import (
@@ -12,13 +16,13 @@ import (
 	"golang.org/x/tools/internal/lsp/source"
 )
 
-// Package contains the type information needed by the source package.
-type Package struct {
+// pkg contains the type information needed by the source package.
+type pkg struct {
 	id, pkgPath string
 	files       []string
 	syntax      []*ast.File
 	errors      []packages.Error
-	imports     map[string]*Package
+	imports     map[string]*pkg
 	types       *types.Package
 	typesInfo   *types.Info
 	typesSizes  types.Sizes
@@ -32,11 +36,12 @@ type Package struct {
 }
 
 type analysisEntry struct {
-	ready chan struct{}
+	done      chan struct{}
+	succeeded bool
 	*source.Action
 }
 
-func (pkg *Package) GetActionGraph(ctx context.Context, a *analysis.Analyzer) (*source.Action, error) {
+func (pkg *pkg) GetActionGraph(ctx context.Context, a *analysis.Analyzer) (*source.Action, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -49,14 +54,20 @@ func (pkg *Package) GetActionGraph(ctx context.Context, a *analysis.Analyzer) (*
 
 		// wait for entry to become ready or the context to be cancelled
 		select {
-		case <-e.ready:
+		case <-e.done:
+			// If the goroutine we are waiting on was cancelled, we should retry.
+			// If errors other than cancelation/timeout become possible, it may
+			// no longer be appropriate to always retry here.
+			if !e.succeeded {
+				return pkg.GetActionGraph(ctx, a)
+			}
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		}
 	} else {
 		// cache miss
 		e = &analysisEntry{
-			ready: make(chan struct{}),
+			done: make(chan struct{}),
 			Action: &source.Action{
 				Analyzer: a,
 				Pkg:      pkg,
@@ -64,6 +75,21 @@ func (pkg *Package) GetActionGraph(ctx context.Context, a *analysis.Analyzer) (*
 		}
 		pkg.analyses[a] = e
 		pkg.mu.Unlock()
+
+		defer func() {
+			// If we got an error, clear out our defunct cache entry. We don't cache
+			// errors since they could depend on our dependencies, which can change.
+			// Currently the only possible error is context.Canceled, though, which
+			// should also not be cached.
+			if !e.succeeded {
+				pkg.mu.Lock()
+				delete(pkg.analyses, a)
+				pkg.mu.Unlock()
+			}
+
+			// Always close done so waiters don't get stuck.
+			close(e.done)
+		}()
 
 		// This goroutine becomes responsible for populating
 		// the entry and broadcasting its readiness.
@@ -86,7 +112,10 @@ func (pkg *Package) GetActionGraph(ctx context.Context, a *analysis.Analyzer) (*
 			}
 			sort.Strings(importPaths) // for determinism
 			for _, importPath := range importPaths {
-				dep := pkg.imports[importPath]
+				dep, ok := pkg.imports[importPath]
+				if !ok {
+					continue
+				}
 				act, err := dep.GetActionGraph(ctx, a)
 				if err != nil {
 					return nil, err
@@ -94,35 +123,49 @@ func (pkg *Package) GetActionGraph(ctx context.Context, a *analysis.Analyzer) (*
 				e.Deps = append(e.Deps, act)
 			}
 		}
-		close(e.ready)
+		e.succeeded = true
 	}
 	return e.Action, nil
 }
 
-func (pkg *Package) GetFilenames() []string {
+func (pkg *pkg) PkgPath() string {
+	return pkg.pkgPath
+}
+
+func (pkg *pkg) GetFilenames() []string {
 	return pkg.files
 }
 
-func (pkg *Package) GetSyntax() []*ast.File {
+func (pkg *pkg) GetSyntax() []*ast.File {
 	return pkg.syntax
 }
 
-func (pkg *Package) GetErrors() []packages.Error {
+func (pkg *pkg) GetErrors() []packages.Error {
 	return pkg.errors
 }
 
-func (pkg *Package) GetTypes() *types.Package {
+func (pkg *pkg) GetTypes() *types.Package {
 	return pkg.types
 }
 
-func (pkg *Package) GetTypesInfo() *types.Info {
+func (pkg *pkg) GetTypesInfo() *types.Info {
 	return pkg.typesInfo
 }
 
-func (pkg *Package) GetTypesSizes() types.Sizes {
+func (pkg *pkg) GetTypesSizes() types.Sizes {
 	return pkg.typesSizes
 }
 
-func (pkg *Package) IsIllTyped() bool {
+func (pkg *pkg) IsIllTyped() bool {
 	return pkg.types == nil && pkg.typesInfo == nil
+}
+
+func (pkg *pkg) GetImport(pkgPath string) source.Package {
+	imported := pkg.imports[pkgPath]
+	// Be careful not to return a nil pointer because that still satisfies the
+	// interface.
+	if imported != nil {
+		return imported
+	}
+	return nil
 }

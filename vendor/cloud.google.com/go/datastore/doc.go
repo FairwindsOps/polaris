@@ -205,22 +205,28 @@ Example code:
 		K *datastore.Key `datastore:"__key__"`
 	}
 
-	k := datastore.NameKey("Entity", "stringID", nil)
-	e := MyEntity{A: 12}
-	k, err = dsClient.Put(ctx, k, e)
-	if err != nil {
-		// Handle error.
-	}
+	func main() {
+		ctx := context.Background()
+		dsClient, err := datastore.NewClient(ctx, "my-project")
+		if err != nil {
+			// Handle error.
+		}
 
-	var entities []MyEntity
-	q := datastore.NewQuery("Entity").Filter("A =", 12).Limit(1)
-	_, err := dsClient.GetAll(ctx, q, &entities)
-	if err != nil {
-		// Handle error
-	}
+		k := datastore.NameKey("Entity", "stringID", nil)
+		e := MyEntity{A: 12}
+		if _, err := dsClient.Put(ctx, k, &e); err != nil {
+			// Handle error.
+		}
 
-	log.Println(entities[0])
-	// Prints {12 /Entity,stringID}
+		var entities []MyEntity
+		q := datastore.NewQuery("Entity").Filter("A =", 12).Limit(1)
+		if _, err := dsClient.GetAll(ctx, q, &entities); err != nil {
+			// Handle error
+		}
+
+		log.Println(entities[0])
+		// Prints {12 /Entity,stringID}
+	}
 
 
 
@@ -302,8 +308,9 @@ an Outer's properties would be equivalent to those of:
 		Z          bool
 	}
 
-Note that the "flatten" option cannot be used for Entity value fields.
-The server will reject any dotted field names for an Entity value.
+Note that the "flatten" option cannot be used for Entity value fields or
+PropertyLoadSaver implementers. The server will reject any dotted field names
+for an Entity value.
 
 
 The PropertyLoadSaver Interface

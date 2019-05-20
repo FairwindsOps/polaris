@@ -3,6 +3,9 @@ package diskv
 import (
 	"bytes"
 	"errors"
+	"math/rand"
+	"regexp"
+	"strings"
 	"testing"
 	"time"
 )
@@ -333,4 +336,95 @@ func TestAtomicWrite(t *testing.T) {
 	if _, ok := <-d.Keys(nil); ok {
 		t.Fatal("Store isn't empty")
 	}
+}
+
+const letterBytes = "abcdef0123456789"
+
+func randStringBytes(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
+}
+
+func TestHybridStore(t *testing.T) {
+	regex := regexp.MustCompile("[0-9a-fA-F]{64}")
+
+	transformFunc := func(s string) *PathKey {
+
+		if regex.MatchString(s) {
+			return &PathKey{Path: []string{"objects", s[0:2]},
+				FileName: s,
+			}
+		}
+
+		folders := strings.Split(s, "/")
+		lfolders := len(folders)
+		if lfolders > 1 {
+			return &PathKey{Path: folders[:lfolders-1],
+				FileName: folders[lfolders-1],
+			}
+		}
+
+		return &PathKey{Path: []string{},
+			FileName: s,
+		}
+	}
+
+	inverseTransformFunc := func(pathKey *PathKey) string {
+
+		if regex.MatchString(pathKey.FileName) {
+			return pathKey.FileName
+
+		}
+
+		if len(pathKey.Path) == 0 {
+			return pathKey.FileName
+		}
+
+		return strings.Join(pathKey.Path, "/") + "/" + pathKey.FileName
+
+	}
+	opts := Options{
+		BasePath:          "test-data",
+		CacheSizeMax:      1024,
+		AdvancedTransform: transformFunc,
+		InverseTransform:  inverseTransformFunc,
+	}
+	d := New(opts)
+	defer d.EraseAll()
+
+	testData := map[string]string{}
+
+	for i := 0; i < 100; i++ {
+		testData[randStringBytes(64)] = randStringBytes(100)
+	}
+
+	for i := 0; i < 100; i++ {
+		testData[randStringBytes(20)] = randStringBytes(100)
+	}
+
+	for i := 0; i < 100; i++ {
+		numsep := rand.Intn(10) + 1
+		key := ""
+		for j := 0; j < numsep; j++ {
+			key += randStringBytes(10) + "/"
+		}
+		key += randStringBytes(40)
+		testData[key] = randStringBytes(100)
+	}
+
+	for k, v := range testData {
+		d.WriteString(k, v)
+	}
+
+	for k, v := range testData {
+		readVal := d.ReadString(k)
+
+		if v != readVal {
+			t.Fatalf("read: expected %s, got %s", v, readVal)
+		}
+	}
+
 }

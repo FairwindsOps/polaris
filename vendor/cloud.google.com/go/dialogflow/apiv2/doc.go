@@ -19,8 +19,19 @@
 //
 //   NOTE: This package is in alpha. It is not stable, and is likely to change.
 //
-// An end-to-end development suite for conversational interfaces (e.g.,
-// chatbots, voice-powered apps and devices).
+// Builds conversational interfaces (for example, chatbots, and voice-powered
+// apps and devices).
+//
+// Use of Context
+//
+// The ctx passed to NewClient is used for authentication requests and
+// for creating the underlying connection, but is not used for subsequent calls.
+// Individual methods on the client use the ctx given to them.
+//
+// To close the open connection, use the Close() method.
+//
+// For information about setting deadlines, reusing contexts, and more
+// please visit godoc.org/cloud.google.com/go.
 package dialogflow // import "cloud.google.com/go/dialogflow/apiv2"
 
 import (
@@ -47,6 +58,7 @@ func insertMetadata(ctx context.Context, mds ...metadata.MD) context.Context {
 func DefaultAuthScopes() []string {
 	return []string{
 		"https://www.googleapis.com/auth/cloud-platform",
+		"https://www.googleapis.com/auth/dialogflow",
 	}
 }
 
@@ -87,4 +99,4 @@ func versionGo() string {
 	return "UNKNOWN"
 }
 
-const versionClient = "20190121"
+const versionClient = "20190508"

@@ -93,6 +93,23 @@ func TestContextWithValue(t *testing.T) {
 	router.ServeHTTP(nil, r)
 }
 
+func TestContextWithoutValue(t *testing.T) {
+	router := New()
+	router.Get("/test", func(w http.ResponseWriter, r *http.Request) {
+		want := ""
+		got := Param(r.Context(), "foo")
+		if want != got {
+			t.Fatalf("Unexpected context value: want %q, got %q", want, got)
+		}
+	})
+
+	r, err := http.NewRequest("GET", "http://localhost:9090/test", nil)
+	if err != nil {
+		t.Fatalf("Error building test request: %s", err)
+	}
+	router.ServeHTTP(nil, r)
+}
+
 func TestInstrumentation(t *testing.T) {
 	var got string
 	cases := []struct {

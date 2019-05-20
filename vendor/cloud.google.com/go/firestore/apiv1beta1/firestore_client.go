@@ -18,6 +18,7 @@ package firestore
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"time"
 
@@ -61,7 +62,6 @@ func defaultCallOptions() *CallOptions {
 		{"default", "idempotent"}: {
 			gax.WithRetry(func() gax.Retryer {
 				return gax.OnCodes([]codes.Code{
-					codes.DeadlineExceeded,
 					codes.Unavailable,
 				}, gax.Backoff{
 					Initial:    100 * time.Millisecond,
@@ -73,7 +73,6 @@ func defaultCallOptions() *CallOptions {
 		{"streaming", "idempotent"}: {
 			gax.WithRetry(func() gax.Retryer {
 				return gax.OnCodes([]codes.Code{
-					codes.DeadlineExceeded,
 					codes.Unavailable,
 				}, gax.Backoff{
 					Initial:    100 * time.Millisecond,
@@ -175,7 +174,8 @@ func (c *Client) SetGoogleClientInfo(keyval ...string) {
 
 // GetDocument gets a single document.
 func (c *Client) GetDocument(ctx context.Context, req *firestorepb.GetDocumentRequest, opts ...gax.CallOption) (*firestorepb.Document, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "name", req.GetName()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.GetDocument[0:len(c.CallOptions.GetDocument):len(c.CallOptions.GetDocument)], opts...)
 	var resp *firestorepb.Document
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
@@ -223,6 +223,7 @@ func (c *Client) ListDocuments(ctx context.Context, req *firestorepb.ListDocumen
 	}
 	it.pageInfo, it.nextFunc = iterator.NewPageInfo(fetch, it.bufLen, it.takeBuf)
 	it.pageInfo.MaxSize = int(req.PageSize)
+	it.pageInfo.Token = req.PageToken
 	return it
 }
 
@@ -244,7 +245,8 @@ func (c *Client) CreateDocument(ctx context.Context, req *firestorepb.CreateDocu
 
 // UpdateDocument updates or inserts a document.
 func (c *Client) UpdateDocument(ctx context.Context, req *firestorepb.UpdateDocumentRequest, opts ...gax.CallOption) (*firestorepb.Document, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "document.name", req.GetDocument().GetName()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.UpdateDocument[0:len(c.CallOptions.UpdateDocument):len(c.CallOptions.UpdateDocument)], opts...)
 	var resp *firestorepb.Document
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
@@ -260,7 +262,8 @@ func (c *Client) UpdateDocument(ctx context.Context, req *firestorepb.UpdateDocu
 
 // DeleteDocument deletes a document.
 func (c *Client) DeleteDocument(ctx context.Context, req *firestorepb.DeleteDocumentRequest, opts ...gax.CallOption) error {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "name", req.GetName()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.DeleteDocument[0:len(c.CallOptions.DeleteDocument):len(c.CallOptions.DeleteDocument)], opts...)
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
 		var err error
@@ -275,7 +278,8 @@ func (c *Client) DeleteDocument(ctx context.Context, req *firestorepb.DeleteDocu
 // Documents returned by this method are not guaranteed to be returned in the
 // same order that they were requested.
 func (c *Client) BatchGetDocuments(ctx context.Context, req *firestorepb.BatchGetDocumentsRequest, opts ...gax.CallOption) (firestorepb.Firestore_BatchGetDocumentsClient, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "database", req.GetDatabase()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.BatchGetDocuments[0:len(c.CallOptions.BatchGetDocuments):len(c.CallOptions.BatchGetDocuments)], opts...)
 	var resp firestorepb.Firestore_BatchGetDocumentsClient
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
@@ -291,7 +295,8 @@ func (c *Client) BatchGetDocuments(ctx context.Context, req *firestorepb.BatchGe
 
 // BeginTransaction starts a new transaction.
 func (c *Client) BeginTransaction(ctx context.Context, req *firestorepb.BeginTransactionRequest, opts ...gax.CallOption) (*firestorepb.BeginTransactionResponse, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "database", req.GetDatabase()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.BeginTransaction[0:len(c.CallOptions.BeginTransaction):len(c.CallOptions.BeginTransaction)], opts...)
 	var resp *firestorepb.BeginTransactionResponse
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
@@ -307,7 +312,8 @@ func (c *Client) BeginTransaction(ctx context.Context, req *firestorepb.BeginTra
 
 // Commit commits a transaction, while optionally updating documents.
 func (c *Client) Commit(ctx context.Context, req *firestorepb.CommitRequest, opts ...gax.CallOption) (*firestorepb.CommitResponse, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "database", req.GetDatabase()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.Commit[0:len(c.CallOptions.Commit):len(c.CallOptions.Commit)], opts...)
 	var resp *firestorepb.CommitResponse
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
@@ -323,7 +329,8 @@ func (c *Client) Commit(ctx context.Context, req *firestorepb.CommitRequest, opt
 
 // Rollback rolls back a transaction.
 func (c *Client) Rollback(ctx context.Context, req *firestorepb.RollbackRequest, opts ...gax.CallOption) error {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "database", req.GetDatabase()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.Rollback[0:len(c.CallOptions.Rollback):len(c.CallOptions.Rollback)], opts...)
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
 		var err error
@@ -335,7 +342,8 @@ func (c *Client) Rollback(ctx context.Context, req *firestorepb.RollbackRequest,
 
 // RunQuery runs a query.
 func (c *Client) RunQuery(ctx context.Context, req *firestorepb.RunQueryRequest, opts ...gax.CallOption) (firestorepb.Firestore_RunQueryClient, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "parent", req.GetParent()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.RunQuery[0:len(c.CallOptions.RunQuery):len(c.CallOptions.RunQuery)], opts...)
 	var resp firestorepb.Firestore_RunQueryClient
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
@@ -383,7 +391,8 @@ func (c *Client) Listen(ctx context.Context, opts ...gax.CallOption) (firestorep
 
 // ListCollectionIds lists all the collection IDs underneath a document.
 func (c *Client) ListCollectionIds(ctx context.Context, req *firestorepb.ListCollectionIdsRequest, opts ...gax.CallOption) *StringIterator {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "parent", req.GetParent()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.ListCollectionIds[0:len(c.CallOptions.ListCollectionIds):len(c.CallOptions.ListCollectionIds)], opts...)
 	it := &StringIterator{}
 	req = proto.Clone(req).(*firestorepb.ListCollectionIdsRequest)
@@ -415,6 +424,7 @@ func (c *Client) ListCollectionIds(ctx context.Context, req *firestorepb.ListCol
 	}
 	it.pageInfo, it.nextFunc = iterator.NewPageInfo(fetch, it.bufLen, it.takeBuf)
 	it.pageInfo.MaxSize = int(req.PageSize)
+	it.pageInfo.Token = req.PageToken
 	return it
 }
 

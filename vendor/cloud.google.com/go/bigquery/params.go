@@ -44,7 +44,7 @@ func bqTagParser(t reflect.StructTag) (name string, keep bool, other interface{}
 		return "", false, nil, err
 	}
 	if name != "" && !validFieldName.MatchString(name) {
-		return "", false, nil, errInvalidFieldName
+		return "", false, nil, invalidFieldNameError(name)
 	}
 	for _, opt := range opts {
 		if opt != nullableTagOption {
@@ -54,6 +54,12 @@ func bqTagParser(t reflect.StructTag) (name string, keep bool, other interface{}
 		}
 	}
 	return name, keep, opts, nil
+}
+
+type invalidFieldNameError string
+
+func (e invalidFieldNameError) Error() string {
+	return fmt.Sprintf("bigquery: invalid name %q of field in struct", string(e))
 }
 
 var fieldCache = fields.NewCache(bqTagParser, nil, nil)
@@ -100,6 +106,10 @@ type QueryParameter struct {
 	// *big.Rat: NUMERIC
 	// Arrays and slices of the above.
 	// Structs of the above. Only the exported fields are used.
+	//
+	// BigQuery does not support params of type GEOGRAPHY.  For users wishing
+	// to parameterize Geography values, use string parameters and cast in the
+	// SQL query, e.g. `SELECT ST_GeogFromText(@string_param) as geo`
 	//
 	// When a QueryParameter is returned inside a QueryConfig from a call to
 	// Job.Config:

@@ -19,7 +19,7 @@ import (
 )
 
 func TestProcStat(t *testing.T) {
-	p, err := FS("fixtures").NewProc(26231)
+	p, err := getProcFixtures(t).NewProc(26231)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,7 +114,11 @@ func TestProcStatCPUTime(t *testing.T) {
 }
 
 func testProcStat(pid int) (ProcStat, error) {
-	p, err := FS("fixtures").NewProc(pid)
+	fs, err := NewFS(procTestFixtures)
+	if err != nil {
+		return ProcStat{}, err
+	}
+	p, err := fs.NewProc(pid)
 	if err != nil {
 		return ProcStat{}, err
 	}

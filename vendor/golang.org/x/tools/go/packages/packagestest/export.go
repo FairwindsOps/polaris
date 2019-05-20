@@ -62,10 +62,11 @@ type Exported struct {
 	// Modules is the module description that was used to produce this exported data set.
 	Modules []Module
 
+	ExpectFileSet *token.FileSet // The file set used when parsing expectations
+
 	temp    string                       // the temporary directory that was exported to
 	primary string                       // the first non GOROOT module that was exported
 	written map[string]map[string]string // the full set of exported files
-	fset    *token.FileSet               // The file set used when parsing expectations
 	notes   []*expect.Note               // The list of expectations extracted from go source files
 	markers map[string]span.Range        // The set of markers extracted from go source files
 }
@@ -140,11 +141,11 @@ func Export(t testing.TB, exporter Exporter, modules []Module) *Exported {
 			Tests:   true,
 			Mode:    packages.LoadImports,
 		},
-		Modules: modules,
-		temp:    temp,
-		primary: modules[0].Name,
-		written: map[string]map[string]string{},
-		fset:    token.NewFileSet(),
+		Modules:       modules,
+		temp:          temp,
+		primary:       modules[0].Name,
+		written:       map[string]map[string]string{},
+		ExpectFileSet: token.NewFileSet(),
 	}
 	defer func() {
 		if t.Failed() || t.Skipped() {
@@ -262,7 +263,7 @@ func MustCopyFileTree(root string) map[string]interface{} {
 		if err != nil {
 			return err
 		}
-		result[fragment] = Copy(path)
+		result[filepath.ToSlash(fragment)] = Copy(path)
 		return nil
 	}); err != nil {
 		log.Panic(fmt.Sprintf("MustCopyFileTree failed: %v", err))

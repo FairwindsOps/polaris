@@ -18,6 +18,7 @@ package pubsub
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"time"
 
@@ -55,7 +56,19 @@ func defaultPublisherCallOptions() *PublisherCallOptions {
 		{"default", "idempotent"}: {
 			gax.WithRetry(func() gax.Retryer {
 				return gax.OnCodes([]codes.Code{
-					codes.DeadlineExceeded,
+					codes.Aborted,
+					codes.Unavailable,
+					codes.Unknown,
+				}, gax.Backoff{
+					Initial:    100 * time.Millisecond,
+					Max:        60000 * time.Millisecond,
+					Multiplier: 1.3,
+				})
+			}),
+		},
+		{"default", "non_idempotent"}: {
+			gax.WithRetry(func() gax.Retryer {
+				return gax.OnCodes([]codes.Code{
 					codes.Unavailable,
 				}, gax.Backoff{
 					Initial:    100 * time.Millisecond,
@@ -64,12 +77,11 @@ func defaultPublisherCallOptions() *PublisherCallOptions {
 				})
 			}),
 		},
-		{"messaging", "one_plus_delivery"}: {
+		{"messaging", "publish"}: {
 			gax.WithRetry(func() gax.Retryer {
 				return gax.OnCodes([]codes.Code{
 					codes.Aborted,
 					codes.Canceled,
-					codes.DeadlineExceeded,
 					codes.Internal,
 					codes.ResourceExhausted,
 					codes.Unavailable,
@@ -83,13 +95,13 @@ func defaultPublisherCallOptions() *PublisherCallOptions {
 		},
 	}
 	return &PublisherCallOptions{
-		CreateTopic:            retry[[2]string{"default", "idempotent"}],
-		UpdateTopic:            retry[[2]string{"default", "idempotent"}],
-		Publish:                retry[[2]string{"messaging", "one_plus_delivery"}],
+		CreateTopic:            retry[[2]string{"default", "non_idempotent"}],
+		UpdateTopic:            retry[[2]string{"default", "non_idempotent"}],
+		Publish:                retry[[2]string{"messaging", "publish"}],
 		GetTopic:               retry[[2]string{"default", "idempotent"}],
 		ListTopics:             retry[[2]string{"default", "idempotent"}],
 		ListTopicSubscriptions: retry[[2]string{"default", "idempotent"}],
-		DeleteTopic:            retry[[2]string{"default", "idempotent"}],
+		DeleteTopic:            retry[[2]string{"default", "non_idempotent"}],
 	}
 }
 
@@ -153,7 +165,8 @@ func (c *PublisherClient) SetGoogleClientInfo(keyval ...string) {
 // <a href="https://cloud.google.com/pubsub/docs/admin#resource_names">
 // resource name rules</a>.
 func (c *PublisherClient) CreateTopic(ctx context.Context, req *pubsubpb.Topic, opts ...gax.CallOption) (*pubsubpb.Topic, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "name", req.GetName()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.CreateTopic[0:len(c.CallOptions.CreateTopic):len(c.CallOptions.CreateTopic)], opts...)
 	var resp *pubsubpb.Topic
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
@@ -170,7 +183,8 @@ func (c *PublisherClient) CreateTopic(ctx context.Context, req *pubsubpb.Topic, 
 // UpdateTopic updates an existing topic. Note that certain properties of a
 // topic are not modifiable.
 func (c *PublisherClient) UpdateTopic(ctx context.Context, req *pubsubpb.UpdateTopicRequest, opts ...gax.CallOption) (*pubsubpb.Topic, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "topic.name", req.GetTopic().GetName()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.UpdateTopic[0:len(c.CallOptions.UpdateTopic):len(c.CallOptions.UpdateTopic)], opts...)
 	var resp *pubsubpb.Topic
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
@@ -187,7 +201,8 @@ func (c *PublisherClient) UpdateTopic(ctx context.Context, req *pubsubpb.UpdateT
 // Publish adds one or more messages to the topic. Returns NOT_FOUND if the topic
 // does not exist.
 func (c *PublisherClient) Publish(ctx context.Context, req *pubsubpb.PublishRequest, opts ...gax.CallOption) (*pubsubpb.PublishResponse, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "topic", req.GetTopic()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.Publish[0:len(c.CallOptions.Publish):len(c.CallOptions.Publish)], opts...)
 	var resp *pubsubpb.PublishResponse
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
@@ -203,7 +218,8 @@ func (c *PublisherClient) Publish(ctx context.Context, req *pubsubpb.PublishRequ
 
 // GetTopic gets the configuration of a topic.
 func (c *PublisherClient) GetTopic(ctx context.Context, req *pubsubpb.GetTopicRequest, opts ...gax.CallOption) (*pubsubpb.Topic, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "topic", req.GetTopic()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.GetTopic[0:len(c.CallOptions.GetTopic):len(c.CallOptions.GetTopic)], opts...)
 	var resp *pubsubpb.Topic
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
@@ -219,7 +235,8 @@ func (c *PublisherClient) GetTopic(ctx context.Context, req *pubsubpb.GetTopicRe
 
 // ListTopics lists matching topics.
 func (c *PublisherClient) ListTopics(ctx context.Context, req *pubsubpb.ListTopicsRequest, opts ...gax.CallOption) *TopicIterator {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "project", req.GetProject()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.ListTopics[0:len(c.CallOptions.ListTopics):len(c.CallOptions.ListTopics)], opts...)
 	it := &TopicIterator{}
 	req = proto.Clone(req).(*pubsubpb.ListTopicsRequest)
@@ -251,12 +268,14 @@ func (c *PublisherClient) ListTopics(ctx context.Context, req *pubsubpb.ListTopi
 	}
 	it.pageInfo, it.nextFunc = iterator.NewPageInfo(fetch, it.bufLen, it.takeBuf)
 	it.pageInfo.MaxSize = int(req.PageSize)
+	it.pageInfo.Token = req.PageToken
 	return it
 }
 
 // ListTopicSubscriptions lists the names of the subscriptions on this topic.
 func (c *PublisherClient) ListTopicSubscriptions(ctx context.Context, req *pubsubpb.ListTopicSubscriptionsRequest, opts ...gax.CallOption) *StringIterator {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "topic", req.GetTopic()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.ListTopicSubscriptions[0:len(c.CallOptions.ListTopicSubscriptions):len(c.CallOptions.ListTopicSubscriptions)], opts...)
 	it := &StringIterator{}
 	req = proto.Clone(req).(*pubsubpb.ListTopicSubscriptionsRequest)
@@ -288,6 +307,7 @@ func (c *PublisherClient) ListTopicSubscriptions(ctx context.Context, req *pubsu
 	}
 	it.pageInfo, it.nextFunc = iterator.NewPageInfo(fetch, it.bufLen, it.takeBuf)
 	it.pageInfo.MaxSize = int(req.PageSize)
+	it.pageInfo.Token = req.PageToken
 	return it
 }
 
@@ -297,7 +317,8 @@ func (c *PublisherClient) ListTopicSubscriptions(ctx context.Context, req *pubsu
 // configuration or subscriptions. Existing subscriptions to this topic are
 // not deleted, but their topic field is set to _deleted-topic_.
 func (c *PublisherClient) DeleteTopic(ctx context.Context, req *pubsubpb.DeleteTopicRequest, opts ...gax.CallOption) error {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "topic", req.GetTopic()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.DeleteTopic[0:len(c.CallOptions.DeleteTopic):len(c.CallOptions.DeleteTopic)], opts...)
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
 		var err error

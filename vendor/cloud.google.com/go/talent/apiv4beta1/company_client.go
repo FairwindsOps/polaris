@@ -18,6 +18,7 @@ package talent
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"time"
 
@@ -53,7 +54,6 @@ func defaultCompanyCallOptions() *CompanyCallOptions {
 		{"default", "idempotent"}: {
 			gax.WithRetry(func() gax.Retryer {
 				return gax.OnCodes([]codes.Code{
-					codes.DeadlineExceeded,
 					codes.Unavailable,
 				}, gax.Backoff{
 					Initial:    100 * time.Millisecond,
@@ -91,7 +91,7 @@ type CompanyClient struct {
 
 // NewCompanyClient creates a new company service client.
 //
-// A service handles company management, including CRUD and job enumeration.
+// A service that handles company management, including CRUD and enumeration.
 func NewCompanyClient(ctx context.Context, opts ...option.ClientOption) (*CompanyClient, error) {
 	conn, err := transport.DialGRPC(ctx, append(defaultCompanyClientOptions(), opts...)...)
 	if err != nil {
@@ -129,7 +129,8 @@ func (c *CompanyClient) setGoogleClientInfo(keyval ...string) {
 
 // CreateCompany creates a new company entity.
 func (c *CompanyClient) CreateCompany(ctx context.Context, req *talentpb.CreateCompanyRequest, opts ...gax.CallOption) (*talentpb.Company, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "parent", req.GetParent()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.CreateCompany[0:len(c.CallOptions.CreateCompany):len(c.CallOptions.CreateCompany)], opts...)
 	var resp *talentpb.Company
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
@@ -145,7 +146,8 @@ func (c *CompanyClient) CreateCompany(ctx context.Context, req *talentpb.CreateC
 
 // GetCompany retrieves specified company.
 func (c *CompanyClient) GetCompany(ctx context.Context, req *talentpb.GetCompanyRequest, opts ...gax.CallOption) (*talentpb.Company, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "name", req.GetName()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.GetCompany[0:len(c.CallOptions.GetCompany):len(c.CallOptions.GetCompany)], opts...)
 	var resp *talentpb.Company
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
@@ -159,11 +161,10 @@ func (c *CompanyClient) GetCompany(ctx context.Context, req *talentpb.GetCompany
 	return resp, nil
 }
 
-// UpdateCompany updates specified company. Company names can't be updated. To update a
-// company name, delete the company and all jobs associated with it, and only
-// then re-create them.
+// UpdateCompany updates specified company.
 func (c *CompanyClient) UpdateCompany(ctx context.Context, req *talentpb.UpdateCompanyRequest, opts ...gax.CallOption) (*talentpb.Company, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "company.name", req.GetCompany().GetName()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.UpdateCompany[0:len(c.CallOptions.UpdateCompany):len(c.CallOptions.UpdateCompany)], opts...)
 	var resp *talentpb.Company
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
@@ -180,7 +181,8 @@ func (c *CompanyClient) UpdateCompany(ctx context.Context, req *talentpb.UpdateC
 // DeleteCompany deletes specified company.
 // Prerequisite: The company has no jobs associated with it.
 func (c *CompanyClient) DeleteCompany(ctx context.Context, req *talentpb.DeleteCompanyRequest, opts ...gax.CallOption) error {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "name", req.GetName()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.DeleteCompany[0:len(c.CallOptions.DeleteCompany):len(c.CallOptions.DeleteCompany)], opts...)
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
 		var err error
@@ -190,9 +192,10 @@ func (c *CompanyClient) DeleteCompany(ctx context.Context, req *talentpb.DeleteC
 	return err
 }
 
-// ListCompanies lists all companies associated with the service account.
+// ListCompanies lists all companies associated with the project.
 func (c *CompanyClient) ListCompanies(ctx context.Context, req *talentpb.ListCompaniesRequest, opts ...gax.CallOption) *CompanyIterator {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "parent", req.GetParent()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.ListCompanies[0:len(c.CallOptions.ListCompanies):len(c.CallOptions.ListCompanies)], opts...)
 	it := &CompanyIterator{}
 	req = proto.Clone(req).(*talentpb.ListCompaniesRequest)
@@ -224,6 +227,7 @@ func (c *CompanyClient) ListCompanies(ctx context.Context, req *talentpb.ListCom
 	}
 	it.pageInfo, it.nextFunc = iterator.NewPageInfo(fetch, it.bufLen, it.takeBuf)
 	it.pageInfo.MaxSize = int(req.PageSize)
+	it.pageInfo.Token = req.PageToken
 	return it
 }
 

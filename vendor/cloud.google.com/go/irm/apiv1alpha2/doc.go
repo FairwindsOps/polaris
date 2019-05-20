@@ -19,6 +19,17 @@
 //
 //   NOTE: This package is in alpha. It is not stable, and is likely to change.
 //
+//
+// Use of Context
+//
+// The ctx passed to NewClient is used for authentication requests and
+// for creating the underlying connection, but is not used for subsequent calls.
+// Individual methods on the client use the ctx given to them.
+//
+// To close the open connection, use the Close() method.
+//
+// For information about setting deadlines, reusing contexts, and more
+// please visit godoc.org/cloud.google.com/go.
 package irm // import "cloud.google.com/go/irm/apiv1alpha2"
 
 import (
@@ -43,7 +54,9 @@ func insertMetadata(ctx context.Context, mds ...metadata.MD) context.Context {
 
 // DefaultAuthScopes reports the default set of authentication scopes to use with this package.
 func DefaultAuthScopes() []string {
-	return []string{}
+	return []string{
+		"https://www.googleapis.com/auth/cloud-platform",
+	}
 }
 
 // versionGo returns the Go runtime version. The returned string
@@ -83,4 +96,4 @@ func versionGo() string {
 	return "UNKNOWN"
 }
 
-const versionClient = "20190201"
+const versionClient = "20190508"

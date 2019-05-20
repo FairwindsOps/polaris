@@ -24,11 +24,13 @@ import (
 	"time"
 
 	vkit "cloud.google.com/go/firestore/apiv1"
+	"cloud.google.com/go/internal/trace"
 	"cloud.google.com/go/internal/version"
 	"github.com/golang/protobuf/ptypes"
 	gax "github.com/googleapis/gax-go/v2"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+	"google.golang.org/api/transport"
 	pb "google.golang.org/genproto/googleapis/firestore/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -39,6 +41,15 @@ import (
 // resourcePrefixHeader is the name of the metadata header used to indicate
 // the resource being operated on.
 const resourcePrefixHeader = "google-cloud-resource-prefix"
+
+// DetectProjectID is a sentinel value that instructs NewClient to detect the
+// project ID. It is given in place of the projectID argument. NewClient will
+// use the project ID from the given credentials or the default credentials
+// (https://developers.google.com/accounts/docs/application-default-credentials)
+// if no credentials were provided. When providing credentials, not all
+// options will allow NewClient to extract the project ID. Specifically a JWT
+// does not have the project ID encoded.
+const DetectProjectID = "*detect-project-id*"
 
 // A Client provides access to the Firestore service.
 type Client struct {
@@ -60,6 +71,18 @@ func NewClient(ctx context.Context, projectID string, opts ...option.ClientOptio
 		o = []option.ClientOption{option.WithGRPCConn(conn)}
 	}
 	o = append(o, opts...)
+
+	if projectID == DetectProjectID {
+		creds, err := transport.Creds(ctx, o...)
+		if err != nil {
+			return nil, fmt.Errorf("fetching creds: %v", err)
+		}
+		if creds.ProjectID == "" {
+			return nil, errors.New("firestore: see the docs on DetectProjectID")
+		}
+		projectID = creds.ProjectID
+	}
+
 	vc, err := vkit.NewClient(ctx, o...)
 	if err != nil {
 		return nil, err
@@ -110,6 +133,19 @@ func (c *Client) Doc(path string) *DocumentRef {
 	return doc
 }
 
+// CollectionGroup creates a reference to a group of collections that include
+// the given ID, regardless of parent document.
+//
+// For example, consider:
+// France/Cities/Paris = {population: 100}
+// Canada/Cities/Montreal = {population: 90}
+//
+// CollectionGroup can be used to query across all "Cities" regardless of
+// its parent "Countries". See ExampleCollectionGroup for a complete example.
+func (c *Client) CollectionGroup(collectionID string) *CollectionGroupRef {
+	return newCollectionGroupRef(c, c.path(), collectionID)
+}
+
 func (c *Client) idsToRef(IDs []string, dbPath string) (*CollectionRef, *DocumentRef) {
 	if len(IDs) == 0 {
 		return nil, nil
@@ -137,7 +173,10 @@ func (c *Client) idsToRef(IDs []string, dbPath string) (*CollectionRef, *Documen
 // returned in the order of the given DocumentRefs.
 //
 // If a document is not present, the corresponding DocumentSnapshot's Exists method will return false.
-func (c *Client) GetAll(ctx context.Context, docRefs []*DocumentRef) ([]*DocumentSnapshot, error) {
+func (c *Client) GetAll(ctx context.Context, docRefs []*DocumentRef) (_ []*DocumentSnapshot, err error) {
+	ctx = trace.StartSpan(ctx, "cloud.google.com/go/firestore.GetAll")
+	defer func() { trace.EndSpan(ctx, err) }()
+
 	return c.getAll(ctx, docRefs, nil)
 }
 

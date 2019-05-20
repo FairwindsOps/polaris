@@ -17,6 +17,7 @@ package testutil
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -36,6 +37,41 @@ const (
 // string if none is configured.
 func ProjID() string {
 	return os.Getenv(envProjID)
+}
+
+// Credentials returns the credentials to use in integration tests, or nil if
+// none is configured. It uses the standard environment variable for tests in
+// this repo.
+func Credentials(ctx context.Context, scopes ...string) *google.Credentials {
+	return CredentialsEnv(ctx, envPrivateKey, scopes...)
+}
+
+// CredentialsEnv returns the credentials to use in integration tests, or nil
+// if none is configured. If the environment variable is unset, CredentialsEnv
+// will try to find 'Application Default Credentials'. Else, CredentialsEnv
+// will return nil. CredentialsEnv will log.Fatal if the token source is
+// specified but missing or invalid.
+func CredentialsEnv(ctx context.Context, envVar string, scopes ...string) *google.Credentials {
+	key := os.Getenv(envVar)
+	if key == "" { // Try for application default credentials.
+		creds, err := google.FindDefaultCredentials(ctx, scopes...)
+		if err != nil {
+			log.Println("No 'Application Default Credentials' found.")
+			return nil
+		}
+		return creds
+	}
+
+	data, err := ioutil.ReadFile(key)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	creds, err := google.CredentialsFromJSON(ctx, data, scopes...)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return creds
 }
 
 // TokenSource returns the OAuth2 token source to use in integration tests,
@@ -103,4 +139,14 @@ func CanReplay(replayFilename string) bool {
 	}
 	_, err := os.Stat(replayFilename)
 	return err == nil
+}
+
+// ErroringTokenSource is a token source for testing purposes,
+// to always return a non-nil error to its caller. It is useful
+// when testing error responses with bad oauth2 credentials.
+type ErroringTokenSource struct{}
+
+// Token implements oauth2.TokenSource, returning a nil oauth2.Token and a non-nil error.
+func (fts ErroringTokenSource) Token() (*oauth2.Token, error) {
+	return nil, errors.New("intentional error")
 }

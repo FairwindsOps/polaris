@@ -1,5 +1,132 @@
 # Changes
 
+## 0.39.0
+
+- bigtable:
+  - Implement DeleteInstance in bttest.
+  - Return an error on invalid ReadRowsRequest.RowRange key ranges in bttest.
+- bigquery:
+  - Move RequirePartitionFilter outside of TimePartioning.
+  - Expose models API.
+- firestore:
+  - Allow array values in create and update calls.
+  - Add CollectionGroup method.
+- pubsub:
+  - Add ExpirationPolicy to Subscription.
+- storage:
+  - Add V4 signing.
+- rpcreplay:
+  - Match streams by first sent request. This further improves rpcreplay's
+  ability to distinguish streams.
+- httpreplay:
+  - Set up Man-In-The-Middle config only once. This should improve proxy
+  creation when multiple proxies are used in a single process.
+  - Remove error on empty Content-Type, allowing requests with no Content-Type
+  header but a non-empty body.
+- all:
+  - Fix an edge case bug in auto-generated library pagination by properly
+  propagating pagetoken.
+
+## 0.38.0
+
+This update includes a substantial reduction in our transitive dependency list
+by way of updating to opencensus@v0.21.0.
+
+- spanner:
+  - Error implements GRPCStatus, allowing status.Convert.
+- bigtable:
+  - Fix a bug in bttest that prevents single column queries returning results
+  that match other filters.
+  - Remove verbose retry logging.
+- logging:
+  - Ensure RequestUrl has proper UTF-8, removing the need for users to wrap and
+  rune replace manually.
+- recaptchaenterprise:
+  - Add v1beta1 client.
+- phishingprotection:
+  - Add v1beta1 client.
+
+## 0.37.4
+
+This patch releases re-builds the go.sum. This was not possible in the
+previous release.
+
+- firestore:
+  - Add sentinel value DetectProjectID for auto-detecting project ID.
+  - Add OpenCensus tracing for public methods.
+  - Marked stable. All future changes come with a backwards compatibility
+  guarantee.
+  - Removed firestore/apiv1beta1. All users relying on this low-level library
+  should migrate to firestore/apiv1. Note that most users should use the
+  high-level firestore package instead.
+- pubsub:
+  - Allow large messages in synchronous pull case.
+  - Cap bundler byte limit. This should prevent OOM conditions when there are
+  a very large number of message publishes occurring.
+- storage:
+  - Add ETag to BucketAttrs and ObjectAttrs.
+- datastore:
+  - Removed some non-sensical OpenCensus traces.
+- webrisk:
+  - Add v1 client.
+- asset:
+  - Add v1 client.
+- cloudtasks:
+  - Add v2 client.
+
+## 0.37.3
+
+This patch release removes github.com/golang/lint from the transitive
+dependency list, resolving `go get -u` problems.
+
+Note: this release intentionally has a broken go.sum. Please use v0.37.4.
+
+## 0.37.2
+
+This patch release is mostly intended to bring in v0.3.0 of
+google.golang.org/api, which fixes a GCF deployment issue.
+
+Note: we had to-date accidentally marked Redis as stable. In this release, we've
+fixed it by downgrading its documentation to alpha, as it is in other languages
+and docs.
+
+- all:
+  - Document context in generated libraries.
+
+## 0.37.1
+
+Small go.mod version bumps to bring in v0.2.0 of google.golang.org/api, which
+introduces a new oauth2 url.
+
+## 0.37.0
+
+- spanner:
+  - Add BatchDML method.
+  - Reduced initial time between retries.
+- bigquery:
+  - Produce better error messages for InferSchema.
+  - Add logical type control for avro loads.
+  - Add support for the GEOGRAPHY type.
+- datastore:
+  - Add sentinel value DetectProjectID for auto-detecting project ID.
+  - Allow flatten tag on struct pointers.
+  - Fixed a bug that caused queries to panic with invalid queries. Instead they
+    will now return an error.
+- profiler:
+  - Add ability to override GCE zone and instance.
+- pubsub:
+  - BEHAVIOR CHANGE: Refactor error code retry logic. RPCs should now more
+    consistently retry specific error codes based on whether they're idempotent
+    or non-idempotent.
+- httpreplay: Fixed a bug when a non-GET request had a zero-length body causing
+  the Content-Length header to be dropped.
+- iot:
+  - Add new apiv1 client.
+- securitycenter:
+  - Add new apiv1 client.
+- cloudscheduler:
+  - Add new apiv1 client.
+
 ## 0.36.0
 
 - spanner:

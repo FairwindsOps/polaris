@@ -56,3 +56,7 @@
 [[constraint]]
   revision = "772775880e1fbf39a7804149ed11c0f714ec89fe"
   name = "gitlab.com/golang-commonmark/markdown"
+
+[[constraint]]
+  revision = "v1.3.1"
+  name = "github.com/golang/protobuf"

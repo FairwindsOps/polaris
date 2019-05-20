@@ -24,10 +24,10 @@ type ParameterInformation struct {
 	Label string
 }
 
-func SignatureHelp(ctx context.Context, f File, pos token.Pos) (*SignatureInformation, error) {
+func SignatureHelp(ctx context.Context, f GoFile, pos token.Pos) (*SignatureInformation, error) {
 	fAST := f.GetAST(ctx)
 	pkg := f.GetPackage(ctx)
-	if pkg.IsIllTyped() {
+	if pkg == nil || pkg.IsIllTyped() {
 		return nil, fmt.Errorf("package for %s is ill typed", f.URI())
 	}
 
@@ -38,7 +38,7 @@ func SignatureHelp(ctx context.Context, f File, pos token.Pos) (*SignatureInform
 		return nil, fmt.Errorf("cannot find node enclosing position")
 	}
 	for _, node := range path {
-		if c, ok := node.(*ast.CallExpr); ok {
+		if c, ok := node.(*ast.CallExpr); ok && pos >= c.Lparen && pos <= c.Rparen {
 			callExpr = c
 			break
 		}
@@ -47,69 +47,105 @@ func SignatureHelp(ctx context.Context, f File, pos token.Pos) (*SignatureInform
 		return nil, fmt.Errorf("cannot find an enclosing function")
 	}
 
-	// Get the type information for the function corresponding to the call expression.
+	// Get the object representing the function, if available.
+	// There is no object in certain cases such as calling a function returned by
+	// a function (e.g. "foo()()").
 	var obj types.Object
 	switch t := callExpr.Fun.(type) {
 	case *ast.Ident:
 		obj = pkg.GetTypesInfo().ObjectOf(t)
 	case *ast.SelectorExpr:
 		obj = pkg.GetTypesInfo().ObjectOf(t.Sel)
-	default:
-		return nil, fmt.Errorf("the enclosing function is malformed")
 	}
-	if obj == nil {
-		return nil, fmt.Errorf("cannot resolve %s", callExpr.Fun)
+
+	// Handle builtin functions separately.
+	if obj, ok := obj.(*types.Builtin); ok {
+		return builtinSignature(ctx, f.View(), callExpr, obj.Name(), pos)
 	}
-	// Find the signature corresponding to the object.
-	var sig *types.Signature
-	switch obj.(type) {
-	case *types.Var:
-		if underlying, ok := obj.Type().Underlying().(*types.Signature); ok {
-			sig = underlying
-		}
-	case *types.Func:
-		sig = obj.Type().(*types.Signature)
+
+	// Get the type information for the function being called.
+	sigType := pkg.GetTypesInfo().TypeOf(callExpr.Fun)
+	if sigType == nil {
+		return nil, fmt.Errorf("cannot get type for Fun %[1]T (%[1]v)", callExpr.Fun)
 	}
+
+	sig, _ := sigType.Underlying().(*types.Signature)
 	if sig == nil {
-		return nil, fmt.Errorf("no function signatures found for %s", obj.Name())
+		return nil, fmt.Errorf("cannot find signature for Fun %[1]T (%[1]v)", callExpr.Fun)
 	}
-	pkgStringer := qualifier(fAST, pkg.GetTypes(), pkg.GetTypesInfo())
-	var paramInfo []ParameterInformation
-	for i := 0; i < sig.Params().Len(); i++ {
-		param := sig.Params().At(i)
-		label := types.TypeString(param.Type(), pkgStringer)
-		if param.Name() != "" {
-			label = fmt.Sprintf("%s %s", param.Name(), label)
+
+	qf := qualifier(fAST, pkg.GetTypes(), pkg.GetTypesInfo())
+	params := formatParams(sig.Params(), sig.Variadic(), qf)
+	results, writeResultParens := formatResults(sig.Results(), qf)
+	activeParam := activeParameter(callExpr, sig.Params().Len(), sig.Variadic(), pos)
+
+	var name string
+	if obj != nil {
+		name = obj.Name()
+	} else {
+		name = "func"
+	}
+	return signatureInformation(name, params, results, writeResultParens, activeParam), nil
+}
+
+func builtinSignature(ctx context.Context, v View, callExpr *ast.CallExpr, name string, pos token.Pos) (*SignatureInformation, error) {
+	decl, ok := lookupBuiltinDecl(v, name).(*ast.FuncDecl)
+	if !ok {
+		return nil, fmt.Errorf("no function declaration for builtin: %s", name)
+	}
+	params, _ := formatFieldList(ctx, v, decl.Type.Params)
+	results, writeResultParens := formatFieldList(ctx, v, decl.Type.Results)
+
+	var (
+		numParams int
+		variadic  bool
+	)
+	if decl.Type.Params.List != nil {
+		numParams = len(decl.Type.Params.List)
+		lastParam := decl.Type.Params.List[numParams-1]
+		if _, ok := lastParam.Type.(*ast.Ellipsis); ok {
+			variadic = true
 		}
-		paramInfo = append(paramInfo, ParameterInformation{
-			Label: label,
-		})
 	}
+	activeParam := activeParameter(callExpr, numParams, variadic, pos)
+	return signatureInformation(name, params, results, writeResultParens, activeParam), nil
+}
+
+func signatureInformation(name string, params, results []string, writeResultParens bool, activeParam int) *SignatureInformation {
+	paramInfo := make([]ParameterInformation, 0, len(params))
+	for _, p := range params {
+		paramInfo = append(paramInfo, ParameterInformation{Label: p})
+	}
+	label, detail := formatFunction(name, params, results, writeResultParens)
+	// Show return values of the function in the label.
+	if detail != "" {
+		label += " " + detail
+	}
+	return &SignatureInformation{
+		Label:           label,
+		Parameters:      paramInfo,
+		ActiveParameter: activeParam,
+	}
+}
+
+func activeParameter(callExpr *ast.CallExpr, numParams int, variadic bool, pos token.Pos) int {
 	// Determine the query position relative to the number of parameters in the function.
 	var activeParam int
 	var start, end token.Pos
-	for i, expr := range callExpr.Args {
+	for _, expr := range callExpr.Args {
 		if start == token.NoPos {
 			start = expr.Pos()
 		}
 		end = expr.End()
-		if i < len(callExpr.Args)-1 {
-			end = callExpr.Args[i+1].Pos() - 1 // comma
-		}
 		if start <= pos && pos <= end {
 			break
 		}
-		activeParam++
+
+		// Don't advance the active parameter for the last parameter of a variadic function.
+		if !variadic || activeParam < numParams-1 {
+			activeParam++
+		}
 		start = expr.Pos() + 1 // to account for commas
 	}
-	// Label for function, qualified by package name.
-	label := obj.Name()
-	if pkg := pkgStringer(obj.Pkg()); pkg != "" {
-		label = pkg + "." + label
-	}
-	return &SignatureInformation{
-		Label:           label + formatParams(sig.Params(), sig.Variadic(), pkgStringer),
-		Parameters:      paramInfo,
-		ActiveParameter: activeParam,
-	}, nil
+	return activeParam
 }

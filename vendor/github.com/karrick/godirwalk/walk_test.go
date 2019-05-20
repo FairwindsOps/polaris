@@ -6,9 +6,8 @@ import (
 	"testing"
 )
 
-const testScratchBufferSize = 16 * 1024
-
-func helperFilepathWalk(tb testing.TB, osDirname string) []string {
+func filepathWalk(tb testing.TB, osDirname string) []string {
+	tb.Helper()
 	var entries []string
 	err := filepath.Walk(osDirname, func(osPathname string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -17,304 +16,239 @@ func helperFilepathWalk(tb testing.TB, osDirname string) []string {
 		if info.Name() == "skip" {
 			return filepath.SkipDir
 		}
-		// filepath.Walk invokes callback function with a slashed version of the
-		// pathname, while godirwalk invokes callback function with the
-		// os-specific pathname separator.
-		entries = append(entries, filepath.ToSlash(osPathname))
+		entries = append(entries, filepath.FromSlash(osPathname))
 		return nil
 	})
-	if err != nil {
-		tb.Fatal(err)
-	}
+	ensureError(tb, err)
 	return entries
 }
 
-func helperGodirwalkWalk(tb testing.TB, osDirname string) []string {
+func godirwalkWalk(tb testing.TB, osDirname string) []string {
+	tb.Helper()
 	var entries []string
 	err := Walk(osDirname, &Options{
+		ScratchBuffer: testScratchBuffer,
 		Callback: func(osPathname string, dirent *Dirent) error {
 			if dirent.Name() == "skip" {
 				return filepath.SkipDir
 			}
-			// filepath.Walk invokes callback function with a slashed version of
-			// the pathname, while godirwalk invokes callback function with the
-			// os-specific pathname separator.
-			entries = append(entries, filepath.ToSlash(osPathname))
+			entries = append(entries, filepath.FromSlash(osPathname))
 			return nil
 		},
-		ScratchBuffer: make([]byte, testScratchBufferSize),
 	})
-	if err != nil {
-		tb.Fatal(err)
-	}
+	ensureError(tb, err)
 	return entries
 }
 
-func symlinkAbs(oldname, newname string) error {
-	absDir, err := filepath.Abs(oldname)
-	if err != nil {
-		return err
-	}
-	return os.Symlink(absDir, newname)
+// Ensure the results from calling this library's Walk function exactly match
+// those returned by filepath.Walk
+func ensureSameAsStandardLibrary(tb testing.TB, osDirname string) {
+	tb.Helper()
+	osDirname = filepath.Join(testRoot, osDirname)
+	actual := godirwalkWalk(tb, osDirname)
+	expected := filepathWalk(tb, osDirname)
+	ensureStringSlicesMatch(tb, actual, expected)
 }
 
+// Test the entire test root hierarchy with all of its artifacts.  This library
+// advertises itself as visiting the same file system entries as the standard
+// library, and responding to discovered errors the same way, including
+// responding to filepath.SkipDir exactly like the standard library does.  This
+// test ensures that behavior is correct by enumerating the contents of the test
+// root directory.
+func TestWalkCompatibleWithFilepathWalk(t *testing.T) {
+	t.Run("test root", func(t *testing.T) {
+		ensureSameAsStandardLibrary(t, "d0")
+	})
+}
+
+// Test cases for encountering the filepath.SkipDir error at different
+// relative positions from the invocation argument.
 func TestWalkSkipDir(t *testing.T) {
-	root := setup(t)
-	defer teardown(t, root)
-
-	// Ensure the results from calling filepath.Walk exactly match the results
-	// for calling this library's walk function.
-
-	test := func(t *testing.T, osDirname string) {
-		osDirname = filepath.Join(root, osDirname)
-		expected := helperFilepathWalk(t, osDirname)
-		actual := helperGodirwalkWalk(t, osDirname)
-
-		if got, want := len(actual), len(expected); got != want {
-			t.Fatalf("\n(GOT)\n\t%#v\n(WNT)\n\t%#v", actual, expected)
-		}
-
-		for i := 0; i < len(actual); i++ {
-			if got, want := actual[i], expected[i]; got != want {
-				t.Errorf("(GOT) %v; (WNT) %v", got, want)
-			}
-		}
-	}
-
-	// Test cases for encountering the filepath.SkipDir error at different times
-	// from the call.
-
-	t.Run("SkipFileAtRoot", func(t *testing.T) {
-		test(t, "dir1/dir1a")
+	t.Run("skip file at root", func(t *testing.T) {
+		ensureSameAsStandardLibrary(t, "d0/skips/d2")
 	})
 
-	t.Run("SkipFileUnderRoot", func(t *testing.T) {
-		test(t, "dir1")
+	t.Run("skip dir at root", func(t *testing.T) {
+		ensureSameAsStandardLibrary(t, "d0/skips/d3")
 	})
 
-	t.Run("SkipDirAtRoot", func(t *testing.T) {
-		test(t, "dir2/skip")
-	})
-
-	t.Run("SkipDirUnderRoot", func(t *testing.T) {
-		test(t, "dir2")
+	t.Run("skip nodes under root", func(t *testing.T) {
+		ensureSameAsStandardLibrary(t, "d0/skips")
 	})
 
 	t.Run("SkipDirOnSymlink", func(t *testing.T) {
-		osDirname := filepath.Join(root, "dir3")
-		actual := helperGodirwalkWalk(t, osDirname)
+		var actual []string
+		err := Walk(filepath.Join(testRoot, "d0/skips"), &Options{
+			ScratchBuffer: testScratchBuffer,
+			Callback: func(osPathname string, dirent *Dirent) error {
+				if dirent.Name() == "skip" {
+					return filepath.SkipDir
+				}
+				actual = append(actual, filepath.FromSlash(osPathname))
+				return nil
+			},
+			FollowSymbolicLinks: true,
+		})
+
+		ensureError(t, err)
 
 		expected := []string{
-			filepath.Join(root, "dir3"),
-			filepath.Join(root, "dir3/aaa.txt"),
-			filepath.Join(root, "dir3/zzz"),
-			filepath.Join(root, "dir3/zzz/aaa.txt"),
+			filepath.Join(testRoot, "d0/skips"),
+			filepath.Join(testRoot, "d0/skips/d2"),
+			filepath.Join(testRoot, "d0/skips/d2/f3"),
+			filepath.Join(testRoot, "d0/skips/d3"),
+			filepath.Join(testRoot, "d0/skips/d3/f4"),
+			filepath.Join(testRoot, "d0/skips/d3/z2"),
 		}
 
-		if got, want := len(actual), len(expected); got != want {
-			t.Fatalf("\n(GOT)\n\t%#v\n(WNT)\n\t%#v", actual, expected)
-		}
-
-		for i := 0; i < len(actual); i++ {
-			if got, want := actual[i], expected[i]; got != want {
-				t.Errorf("(GOT) %v; (WNT) %v", got, want)
-			}
-		}
+		ensureStringSlicesMatch(t, actual, expected)
 	})
 }
 
-func TestWalkNoAccess(t *testing.T) {
-	root := setup(t)
-	defer teardown(t, root)
-
+func TestWalkFollowSymbolicLinks(t *testing.T) {
 	var actual []string
+	var errorCallbackVisited bool
 
-	err := Walk(root, &Options{
-		ScratchBuffer: make([]byte, testScratchBufferSize),
+	err := Walk(filepath.Join(testRoot, "d0/symlinks"), &Options{
+		ScratchBuffer: testScratchBuffer,
 		Callback: func(osPathname string, _ *Dirent) error {
-			// t.Logf("walk in: %s", osPathname)
+			actual = append(actual, filepath.FromSlash(osPathname))
 			return nil
 		},
-		ErrorCallback: func(osChildname string, err error) ErrorAction {
-			actual = append(actual, osChildname)
-			return SkipNode
-		},
-	})
-	if err != nil {
-		t.Errorf("(GOT): %v; (WNT): %v", err, nil)
-	}
-
-	expected := []string{
-		filepath.Join(root, "dir6/noaccess"),
-	}
-
-	if got, want := len(actual), len(expected); got != want {
-		t.Fatalf("\n(GOT)\n\t%#v\n(WNT)\n\t%#v", actual, expected)
-	}
-
-	for i := 0; i < len(actual); i++ {
-		if got, want := actual[i], expected[i]; got != want {
-			t.Errorf("(GOT) %v; (WNT) %v", got, want)
-		}
-	}
-}
-
-func TestWalkFollowSymbolicLinksFalse(t *testing.T) {
-	root := setup(t)
-	defer teardown(t, root)
-
-	osDirname := filepath.Join(root, "dir4")
-	symlink := filepath.Join(root, "dir4/symlinkToAbsDirectory")
-
-	if err := symlinkAbs(filepath.Join(root, "dir4/zzz"), symlink); err != nil {
-		t.Fatal(err)
-	}
-
-	defer func() {
-		if err := os.Remove(symlink); err != nil {
-			t.Error(err)
-		}
-	}()
-
-	var actual []string
-	err := Walk(osDirname, &Options{
-		Callback: func(osPathname string, dirent *Dirent) error {
-			if dirent.Name() == "skip" {
-				return filepath.SkipDir
+		ErrorCallback: func(osPathname string, err error) ErrorAction {
+			if filepath.Base(osPathname) == "nothing" {
+				errorCallbackVisited = true
+				return SkipNode
 			}
-			// filepath.Walk invokes callback function with a slashed version of
-			// the pathname, while godirwalk invokes callback function with the
-			// os-specific pathname separator.
-			actual = append(actual, filepath.ToSlash(osPathname))
-			return nil
+			return Halt
 		},
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	expected := []string{
-		filepath.Join(root, "dir4"),
-		filepath.Join(root, "dir4/aaa.txt"),
-		filepath.Join(root, "dir4/symlinkToAbsDirectory"),
-		filepath.Join(root, "dir4/symlinkToDirectory"),
-		filepath.Join(root, "dir4/symlinkToFile"),
-		filepath.Join(root, "dir4/zzz"),
-		filepath.Join(root, "dir4/zzz/aaa.txt"),
-	}
-
-	if got, want := len(actual), len(expected); got != want {
-		t.Fatalf("\n(GOT)\n\t%#v\n(WNT)\n\t%#v", actual, expected)
-	}
-
-	for i := 0; i < len(actual); i++ {
-		if got, want := actual[i], expected[i]; got != want {
-			t.Errorf("(GOT) %v; (WNT) %v", got, want)
-		}
-	}
-}
-
-func TestWalkFollowSymbolicLinksTrue(t *testing.T) {
-	root := setup(t)
-	defer teardown(t, root)
-
-	osDirname := filepath.Join(root, "dir4")
-	symlink := filepath.Join(root, "dir4/symlinkToAbsDirectory")
-
-	if err := symlinkAbs(filepath.Join(root, "dir4/zzz"), symlink); err != nil {
-		t.Fatal(err)
-	}
-
-	defer func() {
-		if err := os.Remove(symlink); err != nil {
-			t.Error(err)
-		}
-	}()
-
-	var actual []string
-	err := Walk(osDirname, &Options{
 		FollowSymbolicLinks: true,
-		Callback: func(osPathname string, dirent *Dirent) error {
-			if dirent.Name() == "skip" {
-				return filepath.SkipDir
-			}
-			// filepath.Walk invokes callback function with a slashed version of
-			// the pathname, while godirwalk invokes callback function with the
-			// os-specific pathname separator.
-			actual = append(actual, filepath.ToSlash(osPathname))
-			return nil
-		},
 	})
-	if err != nil {
-		t.Fatal(err)
+
+	ensureError(t, err)
+
+	if got, want := errorCallbackVisited, true; got != want {
+		t.Errorf("GOT: %v; WANT: %v", got, want)
 	}
 
 	expected := []string{
-		filepath.Join(root, "dir4"),
-		filepath.Join(root, "dir4/aaa.txt"),
-		filepath.Join(root, "dir4/symlinkToAbsDirectory"),
-		filepath.Join(root, "dir4/symlinkToAbsDirectory/aaa.txt"),
-		filepath.Join(root, "dir4/symlinkToDirectory"),
-		filepath.Join(root, "dir4/symlinkToDirectory/aaa.txt"),
-		filepath.Join(root, "dir4/symlinkToFile"),
-		filepath.Join(root, "dir4/zzz"),
-		filepath.Join(root, "dir4/zzz/aaa.txt"),
+		filepath.Join(testRoot, "d0/symlinks"),
+		filepath.Join(testRoot, "d0/symlinks/d4"),
+		filepath.Join(testRoot, "d0/symlinks/d4/toSD1"),    // chained symbolic link
+		filepath.Join(testRoot, "d0/symlinks/d4/toSD1/f2"), // chained symbolic link
+		filepath.Join(testRoot, "d0/symlinks/d4/toSF1"),    // chained symbolic link
+		filepath.Join(testRoot, "d0/symlinks/nothing"),
+		filepath.Join(testRoot, "d0/symlinks/toAbs"),
+		filepath.Join(testRoot, "d0/symlinks/toD1"),
+		filepath.Join(testRoot, "d0/symlinks/toD1/f2"),
+		filepath.Join(testRoot, "d0/symlinks/toF1"),
 	}
 
-	if got, want := len(actual), len(expected); got != want {
-		t.Fatalf("\n(GOT)\n\t%#v\n(WNT)\n\t%#v", actual, expected)
-	}
-
-	for i := 0; i < len(actual); i++ {
-		if got, want := actual[i], expected[i]; got != want {
-			t.Errorf("(GOT) %v; (WNT) %v", got, want)
-		}
-	}
+	ensureStringSlicesMatch(t, actual, expected)
 }
 
+// While filepath.Walk will deliver the no access error to the regular callback,
+// godirwalk should deliver it first to the ErrorCallback handler, then take
+// action based on the return value of that callback function.
+func TestErrorCallback(t *testing.T) {
+	t.Run("halt", func(t *testing.T) {
+		var callbackVisited, errorCallbackVisited bool
+
+		err := Walk(filepath.Join(testRoot, "d0/symlinks"), &Options{
+			ScratchBuffer: testScratchBuffer,
+			Callback: func(osPathname string, dirent *Dirent) error {
+				switch dirent.Name() {
+				case "nothing":
+					callbackVisited = true
+				}
+				return nil
+			},
+			ErrorCallback: func(osPathname string, err error) ErrorAction {
+				switch filepath.Base(osPathname) {
+				case "nothing":
+					errorCallbackVisited = true
+					return Halt // Direct Walk to propagate error to caller
+				}
+				t.Fatalf("unexpected error callback for %s: %s", osPathname, err)
+				return SkipNode
+			},
+			FollowSymbolicLinks: true,
+		})
+
+		ensureError(t, err, "nothing") // Ensure caller receives propagated access error
+		if got, want := callbackVisited, true; got != want {
+			t.Errorf("GOT: %v; WANT: %v", got, want)
+		}
+		if got, want := errorCallbackVisited, true; got != want {
+			t.Errorf("GOT: %v; WANT: %v", got, want)
+		}
+	})
+
+	t.Run("skipnode", func(t *testing.T) {
+		var callbackVisited, errorCallbackVisited bool
+
+		err := Walk(filepath.Join(testRoot, "d0/symlinks"), &Options{
+			ScratchBuffer: testScratchBuffer,
+			Callback: func(osPathname string, dirent *Dirent) error {
+				switch dirent.Name() {
+				case "nothing":
+					callbackVisited = true
+				}
+				return nil
+			},
+			ErrorCallback: func(osPathname string, err error) ErrorAction {
+				switch filepath.Base(osPathname) {
+				case "nothing":
+					errorCallbackVisited = true
+					return SkipNode // Direct Walk to ignore this error
+				}
+				t.Fatalf("unexpected error callback for %s: %s", osPathname, err)
+				return Halt
+			},
+			FollowSymbolicLinks: true,
+		})
+
+		ensureError(t, err) // Ensure caller receives no access error
+		if got, want := callbackVisited, true; got != want {
+			t.Errorf("GOT: %v; WANT: %v", got, want)
+		}
+		if got, want := errorCallbackVisited, true; got != want {
+			t.Errorf("GOT: %v; WANT: %v", got, want)
+		}
+	})
+}
+
+// Invokes PostChildrenCallback for all directories and nothing else.
 func TestPostChildrenCallback(t *testing.T) {
-	root := setup(t)
-	defer teardown(t, root)
-
-	osDirname := filepath.Join(root, "dir5")
-
 	var actual []string
 
-	err := Walk(osDirname, &Options{
-		ScratchBuffer: make([]byte, testScratchBufferSize),
-		Callback: func(osPathname string, _ *Dirent) error {
-			// t.Logf("walk in: %s", osPathname)
-			return nil
-		},
-		PostChildrenCallback: func(osPathname string, de *Dirent) error {
-			// t.Logf("walk out: %s", osPathname)
+	err := Walk(filepath.Join(testRoot, "d0"), &Options{
+		ScratchBuffer: testScratchBuffer,
+		Callback:      func(_ string, _ *Dirent) error { return nil },
+		PostChildrenCallback: func(osPathname string, _ *Dirent) error {
 			actual = append(actual, osPathname)
 			return nil
 		},
 	})
-	if err != nil {
-		t.Errorf("(GOT): %v; (WNT): %v", err, nil)
-	}
+
+	ensureError(t, err)
 
 	expected := []string{
-		filepath.Join(root, "dir5/a2/a2a"),
-		filepath.Join(root, "dir5/a2"),
-		filepath.Join(root, "dir5"),
+		filepath.Join(testRoot, "d0"),
+		filepath.Join(testRoot, "d0/d1"),
+		filepath.Join(testRoot, "d0/skips"),
+		filepath.Join(testRoot, "d0/skips/d2"),
+		filepath.Join(testRoot, "d0/skips/d3"),
+		filepath.Join(testRoot, "d0/skips/d3/skip"),
+		filepath.Join(testRoot, "d0/symlinks"),
+		filepath.Join(testRoot, "d0/symlinks/d4"),
 	}
 
-	if got, want := len(actual), len(expected); got != want {
-		t.Errorf("(GOT) %v; (WNT) %v", got, want)
-	}
-
-	for i := 0; i < len(actual); i++ {
-		if i >= len(expected) {
-			t.Fatalf("(GOT) %v; (WNT): %v", actual[i], nil)
-		}
-		if got, want := actual[i], expected[i]; got != want {
-			t.Errorf("(GOT) %v; (WNT) %v", got, want)
-		}
-	}
+	ensureStringSlicesMatch(t, actual, expected)
 }
+
+const flameIterations = 10
 
 var goPrefix = filepath.Join(os.Getenv("GOPATH"), "src")
 
@@ -322,32 +256,28 @@ func BenchmarkFilepathWalk(b *testing.B) {
 	if testing.Short() {
 		b.Skip("Skipping benchmark using user's Go source directory")
 	}
-
 	for i := 0; i < b.N; i++ {
-		_ = helperFilepathWalk(b, goPrefix)
+		_ = filepathWalk(b, goPrefix)
 	}
 }
 
-func BenchmarkGoDirWalk(b *testing.B) {
+func BenchmarkGodirwalk(b *testing.B) {
 	if testing.Short() {
 		b.Skip("Skipping benchmark using user's Go source directory")
 	}
-
 	for i := 0; i < b.N; i++ {
-		_ = helperGodirwalkWalk(b, goPrefix)
+		_ = godirwalkWalk(b, goPrefix)
 	}
 }
-
-const flameIterations = 10
 
 func BenchmarkFlameGraphFilepathWalk(b *testing.B) {
 	for i := 0; i < flameIterations; i++ {
-		_ = helperFilepathWalk(b, goPrefix)
+		_ = filepathWalk(b, goPrefix)
 	}
 }
 
-func BenchmarkFlameGraphGoDirWalk(b *testing.B) {
+func BenchmarkFlameGraphGodirwalk(b *testing.B) {
 	for i := 0; i < flameIterations; i++ {
-		_ = helperGodirwalkWalk(b, goPrefix)
+		_ = godirwalkWalk(b, goPrefix)
 	}
 }

@@ -18,6 +18,7 @@ package dialogflow
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"time"
 
@@ -59,7 +60,6 @@ func defaultIntentsCallOptions() *IntentsCallOptions {
 		{"default", "idempotent"}: {
 			gax.WithRetry(func() gax.Retryer {
 				return gax.OnCodes([]codes.Code{
-					codes.DeadlineExceeded,
 					codes.Unavailable,
 				}, gax.Backoff{
 					Initial:    100 * time.Millisecond,
@@ -118,7 +118,7 @@ type IntentsClient struct {
 // *   **Contexts** - provide additional context for intent analysis. For
 //     example, if an intent is related to an object in your application that
 //     plays music, you can provide a context to determine when to match the
-//     intent if the user input is “turn it off”.  You can include a context
+//     intent if the user input is "turn it off". You can include a context
 //     that matches the intent when there is previous user input of
 //     "play music", and not when there is previous user input of
 //     "turn on the light".
@@ -134,7 +134,8 @@ type IntentsClient struct {
 //     Dialogflow API agent to better match intents.
 //
 // For more information about intents, see the
-// [Dialogflow documentation](https://dialogflow.com/docs/intents).
+// [Dialogflow
+// documentation](https://cloud.google.com/dialogflow-enterprise/docs/intents-overview).
 func NewIntentsClient(ctx context.Context, opts ...option.ClientOption) (*IntentsClient, error) {
 	conn, err := transport.DialGRPC(ctx, append(defaultIntentsClientOptions(), opts...)...)
 	if err != nil {
@@ -183,7 +184,8 @@ func (c *IntentsClient) setGoogleClientInfo(keyval ...string) {
 
 // ListIntents returns the list of all intents in the specified agent.
 func (c *IntentsClient) ListIntents(ctx context.Context, req *dialogflowpb.ListIntentsRequest, opts ...gax.CallOption) *IntentIterator {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "parent", req.GetParent()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.ListIntents[0:len(c.CallOptions.ListIntents):len(c.CallOptions.ListIntents)], opts...)
 	it := &IntentIterator{}
 	req = proto.Clone(req).(*dialogflowpb.ListIntentsRequest)
@@ -215,12 +217,14 @@ func (c *IntentsClient) ListIntents(ctx context.Context, req *dialogflowpb.ListI
 	}
 	it.pageInfo, it.nextFunc = iterator.NewPageInfo(fetch, it.bufLen, it.takeBuf)
 	it.pageInfo.MaxSize = int(req.PageSize)
+	it.pageInfo.Token = req.PageToken
 	return it
 }
 
 // GetIntent retrieves the specified intent.
 func (c *IntentsClient) GetIntent(ctx context.Context, req *dialogflowpb.GetIntentRequest, opts ...gax.CallOption) (*dialogflowpb.Intent, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "name", req.GetName()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.GetIntent[0:len(c.CallOptions.GetIntent):len(c.CallOptions.GetIntent)], opts...)
 	var resp *dialogflowpb.Intent
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
@@ -236,7 +240,8 @@ func (c *IntentsClient) GetIntent(ctx context.Context, req *dialogflowpb.GetInte
 
 // CreateIntent creates an intent in the specified agent.
 func (c *IntentsClient) CreateIntent(ctx context.Context, req *dialogflowpb.CreateIntentRequest, opts ...gax.CallOption) (*dialogflowpb.Intent, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "parent", req.GetParent()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.CreateIntent[0:len(c.CallOptions.CreateIntent):len(c.CallOptions.CreateIntent)], opts...)
 	var resp *dialogflowpb.Intent
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
@@ -252,7 +257,8 @@ func (c *IntentsClient) CreateIntent(ctx context.Context, req *dialogflowpb.Crea
 
 // UpdateIntent updates the specified intent.
 func (c *IntentsClient) UpdateIntent(ctx context.Context, req *dialogflowpb.UpdateIntentRequest, opts ...gax.CallOption) (*dialogflowpb.Intent, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "intent.name", req.GetIntent().GetName()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.UpdateIntent[0:len(c.CallOptions.UpdateIntent):len(c.CallOptions.UpdateIntent)], opts...)
 	var resp *dialogflowpb.Intent
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
@@ -266,9 +272,10 @@ func (c *IntentsClient) UpdateIntent(ctx context.Context, req *dialogflowpb.Upda
 	return resp, nil
 }
 
-// DeleteIntent deletes the specified intent.
+// DeleteIntent deletes the specified intent and its direct or indirect followup intents.
 func (c *IntentsClient) DeleteIntent(ctx context.Context, req *dialogflowpb.DeleteIntentRequest, opts ...gax.CallOption) error {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "name", req.GetName()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.DeleteIntent[0:len(c.CallOptions.DeleteIntent):len(c.CallOptions.DeleteIntent)], opts...)
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
 		var err error
@@ -282,7 +289,8 @@ func (c *IntentsClient) DeleteIntent(ctx context.Context, req *dialogflowpb.Dele
 //
 // Operation <response: [BatchUpdateIntentsResponse][google.cloud.dialogflow.v2.BatchUpdateIntentsResponse]>
 func (c *IntentsClient) BatchUpdateIntents(ctx context.Context, req *dialogflowpb.BatchUpdateIntentsRequest, opts ...gax.CallOption) (*BatchUpdateIntentsOperation, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "parent", req.GetParent()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.BatchUpdateIntents[0:len(c.CallOptions.BatchUpdateIntents):len(c.CallOptions.BatchUpdateIntents)], opts...)
 	var resp *longrunningpb.Operation
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
@@ -302,7 +310,8 @@ func (c *IntentsClient) BatchUpdateIntents(ctx context.Context, req *dialogflowp
 //
 // Operation <response: [google.protobuf.Empty][google.protobuf.Empty]>
 func (c *IntentsClient) BatchDeleteIntents(ctx context.Context, req *dialogflowpb.BatchDeleteIntentsRequest, opts ...gax.CallOption) (*BatchDeleteIntentsOperation, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "parent", req.GetParent()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.BatchDeleteIntents[0:len(c.CallOptions.BatchDeleteIntents):len(c.CallOptions.BatchDeleteIntents)], opts...)
 	var resp *longrunningpb.Operation
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
