@@ -16,18 +16,110 @@ package metric
 
 import (
 	"math"
+	"sync"
 	"sync/atomic"
 	"time"
 
+	"go.opencensus.io/internal/tagencoding"
 	"go.opencensus.io/metric/metricdata"
 )
+
+// gauge represents a quantity that can go up an down, for example queue depth
+// or number of outstanding requests.
+//
+// gauge maintains a value for each combination of of label values passed to
+// the Set or Add methods.
+//
+// gauge should not be used directly, use Float64Gauge or Int64Gauge.
+type gauge struct {
+	vals  sync.Map
+	desc  metricdata.Descriptor
+	start time.Time
+	keys  []string
+	gType gaugeType
+}
+
+type gaugeEntry interface {
+	read(t time.Time) metricdata.Point
+}
+
+// Read returns the current values of the gauge as a metric for export.
+func (g *gauge) read() *metricdata.Metric {
+	now := time.Now()
+	m := &metricdata.Metric{
+		Descriptor: g.desc,
+	}
+	g.vals.Range(func(k, v interface{}) bool {
+		entry := v.(gaugeEntry)
+		key := k.(string)
+		labelVals := g.labelValues(key)
+		m.TimeSeries = append(m.TimeSeries, &metricdata.TimeSeries{
+			StartTime:   now, // Gauge value is instantaneous.
+			LabelValues: labelVals,
+			Points: []metricdata.Point{
+				entry.read(now),
+			},
+		})
+		return true
+	})
+	return m
+}
+
+func (g *gauge) mapKey(labelVals []metricdata.LabelValue) string {
+	vb := &tagencoding.Values{}
+	for _, v := range labelVals {
+		b := make([]byte, 1, len(v.Value)+1)
+		if v.Present {
+			b[0] = 1
+			b = append(b, []byte(v.Value)...)
+		}
+		vb.WriteValue(b)
+	}
+	return string(vb.Bytes())
+}
+
+func (g *gauge) labelValues(s string) []metricdata.LabelValue {
+	vals := make([]metricdata.LabelValue, 0, len(g.keys))
+	vb := &tagencoding.Values{Buffer: []byte(s)}
+	for range g.keys {
+		v := vb.ReadValue()
+		if v[0] == 0 {
+			vals = append(vals, metricdata.LabelValue{})
+		} else {
+			vals = append(vals, metricdata.NewLabelValue(string(v[1:])))
+		}
+	}
+	return vals
+}
+
+func (g *gauge) entryForValues(labelVals []metricdata.LabelValue, newEntry func() gaugeEntry) (interface{}, error) {
+	if len(labelVals) != len(g.keys) {
+		return nil, errKeyValueMismatch
+	}
+	mapKey := g.mapKey(labelVals)
+	if entry, ok := g.vals.Load(mapKey); ok {
+		return entry, nil
+	}
+	entry, _ := g.vals.LoadOrStore(mapKey, newEntry())
+	return entry, nil
+}
+
+func (g *gauge) upsertEntry(labelVals []metricdata.LabelValue, newEntry func() gaugeEntry) error {
+	if len(labelVals) != len(g.keys) {
+		return errKeyValueMismatch
+	}
+	mapKey := g.mapKey(labelVals)
+	g.vals.Delete(mapKey)
+	g.vals.Store(mapKey, newEntry())
+	return nil
+}
 
 // Float64Gauge represents a float64 value that can go up and down.
 //
 // Float64Gauge maintains a float64 value for each combination of of label values
 // passed to the Set or Add methods.
 type Float64Gauge struct {
-	bm baseMetric
+	g gauge
 }
 
 // Float64Entry represents a single value of the gauge corresponding to a set
@@ -50,7 +142,7 @@ func (e *Float64Entry) read(t time.Time) metricdata.Point {
 // The number of label values supplied must be exactly the same as the number
 // of keys supplied when this gauge was created.
 func (g *Float64Gauge) GetEntry(labelVals ...metricdata.LabelValue) (*Float64Entry, error) {
-	entry, err := g.bm.entryForValues(labelVals, func() baseEntry {
+	entry, err := g.g.entryForValues(labelVals, func() gaugeEntry {
 		return &Float64Entry{}
 	})
 	if err != nil {
@@ -79,7 +171,7 @@ func (e *Float64Entry) Add(val float64) {
 // Int64Gauge maintains an int64 value for each combination of label values passed to the
 // Set or Add methods.
 type Int64Gauge struct {
-	bm baseMetric
+	g gauge
 }
 
 // Int64GaugeEntry represents a single value of the gauge corresponding to a set
@@ -102,7 +194,7 @@ func (e *Int64GaugeEntry) read(t time.Time) metricdata.Point {
 // The number of label values supplied must be exactly the same as the number
 // of keys supplied when this gauge was created.
 func (g *Int64Gauge) GetEntry(labelVals ...metricdata.LabelValue) (*Int64GaugeEntry, error) {
-	entry, err := g.bm.entryForValues(labelVals, func() baseEntry {
+	entry, err := g.g.entryForValues(labelVals, func() gaugeEntry {
 		return &Int64GaugeEntry{}
 	})
 	if err != nil {
@@ -127,7 +219,7 @@ func (e *Int64GaugeEntry) Add(val int64) {
 // These objects implement Int64DerivedGaugeInterface to read instantaneous value
 // representing the object.
 type Int64DerivedGauge struct {
-	bm baseMetric
+	g gauge
 }
 
 type int64DerivedGaugeEntry struct {
@@ -149,7 +241,7 @@ func (g *Int64DerivedGauge) UpsertEntry(fn func() int64, labelVals ...metricdata
 	if fn == nil {
 		return errInvalidParam
 	}
-	return g.bm.upsertEntry(labelVals, func() baseEntry {
+	return g.g.upsertEntry(labelVals, func() gaugeEntry {
 		return &int64DerivedGaugeEntry{fn}
 	})
 }
@@ -160,7 +252,7 @@ func (g *Int64DerivedGauge) UpsertEntry(fn func() int64, labelVals ...metricdata
 // These objects implement Float64DerivedGaugeInterface to read instantaneous value
 // representing the object.
 type Float64DerivedGauge struct {
-	bm baseMetric
+	g gauge
 }
 
 type float64DerivedGaugeEntry struct {
@@ -182,7 +274,7 @@ func (g *Float64DerivedGauge) UpsertEntry(fn func() float64, labelVals ...metric
 	if fn == nil {
 		return errInvalidParam
 	}
-	return g.bm.upsertEntry(labelVals, func() baseEntry {
+	return g.g.upsertEntry(labelVals, func() gaugeEntry {
 		return &float64DerivedGaugeEntry{fn}
 	})
 }

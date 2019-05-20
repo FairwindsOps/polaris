@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package metric support for gauge and cumulative metrics.
+// Package metric support for gauge metrics.
 //
 // This is an EXPERIMENTAL package, and may change in arbitrary ways without
 // notice.

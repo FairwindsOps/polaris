@@ -19,9 +19,9 @@ import (
 	"testing"
 	"time"
 
-	"context"
 	"go.opencensus.io/internal/testpb"
 	"go.opencensus.io/trace"
+	"golang.org/x/net/context"
 )
 
 type testExporter struct {

@@ -23,11 +23,6 @@ import (
 	"testing"
 )
 
-var (
-	ttlUnlimitedPropMd = createMetadatas(WithTTL(TTLUnlimitedPropagation))
-	ttlNoPropMd        = createMetadatas(WithTTL(TTLNoPropagation))
-)
-
 func TestContext(t *testing.T) {
 	k1, _ := NewKey("k1")
 	k2, _ := NewKey("k2")
@@ -39,8 +34,8 @@ func TestContext(t *testing.T) {
 	)
 	got := FromContext(ctx)
 	want := newMap()
-	want.insert(k1, "v1", ttlUnlimitedPropMd)
-	want.insert(k2, "v2", ttlUnlimitedPropMd)
+	want.insert(k1, "v1")
+	want.insert(k2, "v2")
 
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("Map = %#v; want %#v", got, want)
@@ -57,8 +52,8 @@ func TestDo(t *testing.T) {
 	)
 	got := FromContext(ctx)
 	want := newMap()
-	want.insert(k1, "v1", ttlUnlimitedPropMd)
-	want.insert(k2, "v2", ttlUnlimitedPropMd)
+	want.insert(k1, "v1")
+	want.insert(k2, "v2")
 	Do(ctx, func(ctx context.Context) {
 		got = FromContext(ctx)
 	})
@@ -173,175 +168,23 @@ func TestNewMap(t *testing.T) {
 	}
 }
 
-func TestNewMapWithMetadata(t *testing.T) {
-	k3, _ := NewKey("k3")
-	k4, _ := NewKey("k4")
-	k5, _ := NewKey("k5")
-
-	tests := []struct {
-		name    string
-		initial *Map
-		mods    []Mutator
-		want    *Map
-	}{
-		{
-			name:    "from empty; insert",
-			initial: nil,
-			mods: []Mutator{
-				Insert(k5, "5", WithTTL(TTLNoPropagation)),
-				Insert(k4, "4"),
-			},
-			want: makeTestTagMapWithMetadata(
-				tagContent{"5", ttlNoPropMd},
-				tagContent{"4", ttlUnlimitedPropMd}),
-		},
-		{
-			name:    "from existing; insert existing",
-			initial: makeTestTagMapWithMetadata(tagContent{"5", ttlNoPropMd}),
-			mods: []Mutator{
-				Insert(k5, "5", WithTTL(TTLUnlimitedPropagation)),
-			},
-			want: makeTestTagMapWithMetadata(tagContent{"5", ttlNoPropMd}),
-		},
-		{
-			name:    "from existing; update non-existing",
-			initial: makeTestTagMapWithMetadata(tagContent{"5", ttlNoPropMd}),
-			mods: []Mutator{
-				Update(k4, "4", WithTTL(TTLUnlimitedPropagation)),
-			},
-			want: makeTestTagMapWithMetadata(tagContent{"5", ttlNoPropMd}),
-		},
-		{
-			name: "from existing; update existing",
-			initial: makeTestTagMapWithMetadata(
-				tagContent{"5", ttlUnlimitedPropMd},
-				tagContent{"4", ttlNoPropMd}),
-			mods: []Mutator{
-				Update(k5, "5"),
-				Update(k4, "4", WithTTL(TTLUnlimitedPropagation)),
-			},
-			want: makeTestTagMapWithMetadata(
-				tagContent{"5", ttlUnlimitedPropMd},
-				tagContent{"4", ttlUnlimitedPropMd}),
-		},
-		{
-			name: "from existing; upsert existing",
-			initial: makeTestTagMapWithMetadata(
-				tagContent{"5", ttlNoPropMd},
-				tagContent{"4", ttlNoPropMd}),
-			mods: []Mutator{
-				Upsert(k4, "4", WithTTL(TTLUnlimitedPropagation)),
-			},
-			want: makeTestTagMapWithMetadata(
-				tagContent{"5", ttlNoPropMd},
-				tagContent{"4", ttlUnlimitedPropMd}),
-		},
-		{
-			name: "from existing; upsert non-existing",
-			initial: makeTestTagMapWithMetadata(
-				tagContent{"5", ttlNoPropMd}),
-			mods: []Mutator{
-				Upsert(k4, "4", WithTTL(TTLUnlimitedPropagation)),
-				Upsert(k3, "3"),
-			},
-			want: makeTestTagMapWithMetadata(
-				tagContent{"5", ttlNoPropMd},
-				tagContent{"4", ttlUnlimitedPropMd},
-				tagContent{"3", ttlUnlimitedPropMd}),
-		},
-		{
-			name: "from existing; delete",
-			initial: makeTestTagMapWithMetadata(
-				tagContent{"5", ttlNoPropMd},
-				tagContent{"4", ttlNoPropMd}),
-			mods: []Mutator{
-				Delete(k5),
-			},
-			want: makeTestTagMapWithMetadata(
-				tagContent{"4", ttlNoPropMd}),
-		},
-		{
-			name:    "from non-existing; upsert with multiple-metadata",
-			initial: nil,
-			mods: []Mutator{
-				Upsert(k4, "4", WithTTL(TTLUnlimitedPropagation), WithTTL(TTLNoPropagation)),
-				Upsert(k5, "5", WithTTL(TTLNoPropagation), WithTTL(TTLUnlimitedPropagation)),
-			},
-			want: makeTestTagMapWithMetadata(
-				tagContent{"4", ttlNoPropMd},
-				tagContent{"5", ttlUnlimitedPropMd}),
-		},
-		{
-			name:    "from non-existing; insert with multiple-metadata",
-			initial: nil,
-			mods: []Mutator{
-				Insert(k5, "5", WithTTL(TTLNoPropagation), WithTTL(TTLUnlimitedPropagation)),
-			},
-			want: makeTestTagMapWithMetadata(
-				tagContent{"5", ttlUnlimitedPropMd}),
-		},
-		{
-			name: "from existing; update with multiple-metadata",
-			initial: makeTestTagMapWithMetadata(
-				tagContent{"5", ttlNoPropMd}),
-			mods: []Mutator{
-				Update(k5, "5", WithTTL(TTLNoPropagation), WithTTL(TTLUnlimitedPropagation)),
-			},
-			want: makeTestTagMapWithMetadata(
-				tagContent{"5", ttlUnlimitedPropMd}),
-		},
-		{
-			name:    "from empty; update invalid",
-			initial: nil,
-			mods: []Mutator{
-				Insert(k4, "4\x19", WithTTL(TTLUnlimitedPropagation)),
-				Upsert(k4, "4\x19", WithTTL(TTLUnlimitedPropagation)),
-				Update(k4, "4\x19", WithTTL(TTLUnlimitedPropagation)),
-			},
-			want: nil,
-		},
-		{
-			name:    "from empty; insert partial",
-			initial: nil,
-			mods: []Mutator{
-				Upsert(k3, "3", WithTTL(TTLUnlimitedPropagation)),
-				Upsert(k4, "4\x19", WithTTL(TTLUnlimitedPropagation)),
-			},
-			want: nil,
-		},
-	}
-
-	// Test api for insert, update, and upsert using metadata.
-	for _, tt := range tests {
-		ctx := NewContext(context.Background(), tt.initial)
-		ctx, err := New(ctx, tt.mods...)
-		if tt.want != nil && err != nil {
-			t.Errorf("%v: New = %v", tt.name, err)
-		}
-
-		if got, want := FromContext(ctx), tt.want; !reflect.DeepEqual(got, want) {
-			t.Errorf("%v: got %v; want %v", tt.name, got, want)
-		}
-	}
-}
-
 func TestNewValidation(t *testing.T) {
 	tests := []struct {
 		err  string
 		seed *Map
 	}{
 		// Key name validation in seed
-		{err: "invalid key", seed: &Map{m: map[Key]tagContent{{name: ""}: {"foo", ttlNoPropMd}}}},
-		{err: "", seed: &Map{m: map[Key]tagContent{{name: "key"}: {"foo", ttlNoPropMd}}}},
-		{err: "", seed: &Map{m: map[Key]tagContent{{name: strings.Repeat("a", 255)}: {"census", ttlNoPropMd}}}},
-		{err: "invalid key", seed: &Map{m: map[Key]tagContent{{name: strings.Repeat("a", 256)}: {"census", ttlNoPropMd}}}},
-		{err: "invalid key", seed: &Map{m: map[Key]tagContent{{name: "Приве́т"}: {"census", ttlNoPropMd}}}},
+		{err: "invalid key", seed: &Map{m: map[Key]string{{name: ""}: "foo"}}},
+		{err: "", seed: &Map{m: map[Key]string{{name: "key"}: "foo"}}},
+		{err: "", seed: &Map{m: map[Key]string{{name: strings.Repeat("a", 255)}: "census"}}},
+		{err: "invalid key", seed: &Map{m: map[Key]string{{name: strings.Repeat("a", 256)}: "census"}}},
+		{err: "invalid key", seed: &Map{m: map[Key]string{{name: "Приве́т"}: "census"}}},
 
 		// Value validation
-		{err: "", seed: &Map{m: map[Key]tagContent{{name: "key"}: {"", ttlNoPropMd}}}},
-		{err: "", seed: &Map{m: map[Key]tagContent{{name: "key"}: {strings.Repeat("a", 255), ttlNoPropMd}}}},
-		{err: "invalid value", seed: &Map{m: map[Key]tagContent{{name: "key"}: {"Приве́т", ttlNoPropMd}}}},
-		{err: "invalid value", seed: &Map{m: map[Key]tagContent{{name: "key"}: {strings.Repeat("a", 256), ttlNoPropMd}}}},
+		{err: "", seed: &Map{m: map[Key]string{{name: "key"}: ""}}},
+		{err: "", seed: &Map{m: map[Key]string{{name: "key"}: strings.Repeat("a", 255)}}},
+		{err: "invalid value", seed: &Map{m: map[Key]string{{name: "key"}: "Приве́т"}}},
+		{err: "invalid value", seed: &Map{m: map[Key]string{{name: "key"}: strings.Repeat("a", 256)}}},
 	}
 
 	for i, tt := range tests {
@@ -373,16 +216,7 @@ func makeTestTagMap(ids ...int) *Map {
 	m := newMap()
 	for _, v := range ids {
 		k, _ := NewKey(fmt.Sprintf("k%d", v))
-		m.m[k] = tagContent{fmt.Sprintf("v%d", v), ttlUnlimitedPropMd}
-	}
-	return m
-}
-
-func makeTestTagMapWithMetadata(tcs ...tagContent) *Map {
-	m := newMap()
-	for _, tc := range tcs {
-		k, _ := NewKey(fmt.Sprintf("k%s", tc.value))
-		m.m[k] = tc
+		m.m[k] = fmt.Sprintf("v%d", v)
 	}
 	return m
 }

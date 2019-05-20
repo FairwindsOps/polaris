@@ -3,47 +3,30 @@ package godirwalk
 import (
 	"os"
 	"path/filepath"
-	"sort"
 	"testing"
 )
 
 func TestReadDirents(t *testing.T) {
-	root := setup(t)
-	defer teardown(t, root)
+	actual, err := ReadDirents(filepath.Join(testRoot, "d0"), nil)
 
-	entries, err := ReadDirents(root, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	ensureError(t, err)
 
 	expected := Dirents{
 		&Dirent{
-			name:     "dir1",
+			name:     maxName,
+			modeType: os.FileMode(0),
+		},
+		&Dirent{
+			name:     "d1",
 			modeType: os.ModeDir,
 		},
 		&Dirent{
-			name:     "dir2",
-			modeType: os.ModeDir,
+			name:     "f1",
+			modeType: os.FileMode(0),
 		},
 		&Dirent{
-			name:     "dir3",
+			name:     "skips",
 			modeType: os.ModeDir,
-		},
-		&Dirent{
-			name:     "dir4",
-			modeType: os.ModeDir,
-		},
-		&Dirent{
-			name:     "dir5",
-			modeType: os.ModeDir,
-		},
-		&Dirent{
-			name:     "dir6",
-			modeType: os.ModeDir,
-		},
-		&Dirent{
-			name:     "file3",
-			modeType: 0,
 		},
 		&Dirent{
 			name:     "symlinks",
@@ -51,33 +34,20 @@ func TestReadDirents(t *testing.T) {
 		},
 	}
 
-	if got, want := len(entries), len(expected); got != want {
-		t.Fatalf("(GOT) %v; (WNT) %v", got, want)
-	}
-
-	sort.Sort(entries)
-	sort.Sort(expected)
-
-	for i := 0; i < len(entries); i++ {
-		if got, want := entries[i].name, expected[i].name; got != want {
-			t.Errorf("(GOT) %v; (WNT) %v", got, want)
-		}
-		if got, want := entries[i].modeType, expected[i].modeType; got != want {
-			t.Errorf("(GOT) %v; (WNT) %v", got, want)
-		}
-	}
+	ensureDirentsMatch(t, actual, expected)
 }
 
 func TestReadDirentsSymlinks(t *testing.T) {
-	root := setup(t)
-	defer teardown(t, root)
+	osDirname := filepath.Join(testRoot, "d0/symlinks")
 
-	osDirname := filepath.Join(root, "symlinks")
+	actual, err := ReadDirents(osDirname, nil)
+
+	ensureError(t, err)
 
 	// Because some platforms set multiple mode type bits, when we create the
 	// expected slice, we need to ensure the mode types are set appropriately.
 	var expected Dirents
-	for _, pathname := range []string{"dir-symlink", "file-symlink", "invalid-symlink"} {
+	for _, pathname := range []string{"nothing", "toAbs", "toD1", "toF1", "d4"} {
 		info, err := os.Lstat(filepath.Join(osDirname, pathname))
 		if err != nil {
 			t.Fatal(err)
@@ -85,49 +55,54 @@ func TestReadDirentsSymlinks(t *testing.T) {
 		expected = append(expected, &Dirent{name: pathname, modeType: info.Mode() & os.ModeType})
 	}
 
-	entries, err := ReadDirents(osDirname, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if got, want := len(entries), len(expected); got != want {
-		t.Fatalf("(GOT) %v; (WNT) %v", got, want)
-	}
-
-	sort.Sort(entries)
-	sort.Sort(expected)
-
-	for i := 0; i < len(entries); i++ {
-		if got, want := entries[i].name, expected[i].name; got != want {
-			t.Errorf("(GOT) %v; (WNT) %v", got, want)
-		}
-		if got, want := entries[i].modeType, expected[i].modeType; got != want {
-			t.Errorf("(GOT) %v; (WNT) %v", got, want)
-		}
-	}
+	ensureDirentsMatch(t, actual, expected)
 }
 
 func TestReadDirnames(t *testing.T) {
-	root := setup(t)
-	defer teardown(t, root)
+	actual, err := ReadDirnames(filepath.Join(testRoot, "d0"), nil)
+	ensureError(t, err)
+	expected := []string{maxName, "d1", "f1", "skips", "symlinks"}
+	ensureStringSlicesMatch(t, actual, expected)
+}
 
-	entries, err := ReadDirnames(root, nil)
-	if err != nil {
-		t.Fatal(err)
+func BenchmarkReadDirnamesStandardLibrary(b *testing.B) {
+	if testing.Short() {
+		b.Skip("Skipping benchmark using user's Go source directory")
 	}
 
-	expected := []string{"dir1", "dir2", "dir3", "dir4", "dir5", "dir6", "file3", "symlinks"}
-
-	if got, want := len(entries), len(expected); got != want {
-		t.Fatalf("(GOT) %v; (WNT) %v", got, want)
-	}
-
-	sort.Strings(entries)
-	sort.Strings(expected)
-
-	for i := 0; i < len(entries); i++ {
-		if got, want := entries[i], expected[i]; got != want {
-			t.Errorf("(GOT) %v; (WNT) %v", got, want)
+	f := func(osDirname string) ([]string, error) {
+		dh, err := os.Open(osDirname)
+		if err != nil {
+			return nil, err
 		}
+		return dh.Readdirnames(-1)
 	}
+
+	var count int
+
+	for i := 0; i < b.N; i++ {
+		actual, err := f(goPrefix)
+		if err != nil {
+			b.Fatal(err)
+		}
+		count = len(actual)
+	}
+	_ = count
+}
+
+func BenchmarkReadDirnamesThisLibrary(b *testing.B) {
+	if testing.Short() {
+		b.Skip("Skipping benchmark using user's Go source directory")
+	}
+
+	var count int
+
+	for i := 0; i < b.N; i++ {
+		actual, err := ReadDirnames(goPrefix, testScratchBuffer)
+		if err != nil {
+			b.Fatal(err)
+		}
+		count = len(actual)
+	}
+	_ = count
 }

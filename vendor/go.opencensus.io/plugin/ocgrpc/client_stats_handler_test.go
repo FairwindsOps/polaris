@@ -16,19 +16,14 @@
 package ocgrpc
 
 import (
-	"reflect"
 	"testing"
-
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 
 	"go.opencensus.io/trace"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"context"
+	"golang.org/x/net/context"
 
-	"go.opencensus.io/metric/metricdata"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
 
@@ -339,72 +334,6 @@ func TestClientDefaultCollections(t *testing.T) {
 	}
 }
 
-func TestClientRecordExemplar(t *testing.T) {
-	key, _ := tag.NewKey("test_key")
-	tagInfo := &stats.RPCTagInfo{FullMethodName: "/package.service/method"}
-	out := &stats.OutPayload{Length: 2000}
-	end := &stats.End{Error: nil}
-
-	if err := view.Register(ClientSentBytesPerRPCView); err != nil {
-		t.Error(err)
-	}
-	h := &ClientHandler{}
-	h.StartOptions.Sampler = trace.AlwaysSample()
-	ctx, err := tag.New(context.Background(), tag.Upsert(key, "test_val"))
-	if err != nil {
-		t.Error(err)
-	}
-	encoded := tag.Encode(tag.FromContext(ctx))
-	ctx = stats.SetTags(context.Background(), encoded)
-	ctx = h.TagRPC(ctx, tagInfo)
-
-	out.Client = true
-	h.HandleRPC(ctx, out)
-	end.Client = true
-	h.HandleRPC(ctx, end)
-
-	span := trace.FromContext(ctx)
-	if span == nil {
-		t.Fatal("expected non-nil span, got nil")
-	}
-	if !span.IsRecordingEvents() {
-		t.Errorf("span should be sampled")
-	}
-	attachments := map[string]interface{}{metricdata.AttachmentKeySpanContext: span.SpanContext()}
-	wantExemplar := &metricdata.Exemplar{Value: 2000, Attachments: attachments}
-
-	rows, err := view.RetrieveData(ClientSentBytesPerRPCView.Name)
-	if err != nil {
-		t.Fatal("Error RetrieveData ", err)
-	}
-	if len(rows) == 0 {
-		t.Fatal("No data was recorded.")
-	}
-	data := rows[0].Data
-	dis, ok := data.(*view.DistributionData)
-	if !ok {
-		t.Fatal("want DistributionData, got ", data)
-	}
-	// Only recorded value is 2000, which falls into the second bucket (1024, 2048].
-	wantBuckets := []int64{0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-	if !reflect.DeepEqual(dis.CountPerBucket, wantBuckets) {
-		t.Errorf("want buckets %v, got %v", wantBuckets, dis.CountPerBucket)
-	}
-	for i, e := range dis.ExemplarsPerBucket {
-		// Only the second bucket should have an exemplar.
-		if i == 1 {
-			if diff := cmpExemplar(e, wantExemplar); diff != "" {
-				t.Fatalf("Unexpected Exemplar -got +want: %s", diff)
-			}
-		} else if e != nil {
-			t.Errorf("want nil exemplar, got %v", e)
-		}
-	}
-
-	// Unregister views to cleanup.
-	view.Unregister(ClientSentBytesPerRPCView)
-}
-
 // containsRow returns true if rows contain r.
 func containsRow(rows []*view.Row, r *view.Row) bool {
 	for _, x := range rows {
@@ -413,9 +342,4 @@ func containsRow(rows []*view.Row, r *view.Row) bool {
 		}
 	}
 	return false
-}
-
-// Compare exemplars while ignoring exemplar timestamp, since timestamp is non-deterministic.
-func cmpExemplar(got, want *metricdata.Exemplar) string {
-	return cmp.Diff(got, want, cmpopts.IgnoreFields(metricdata.Exemplar{}, "Timestamp"), cmpopts.IgnoreUnexported(metricdata.Exemplar{}))
 }

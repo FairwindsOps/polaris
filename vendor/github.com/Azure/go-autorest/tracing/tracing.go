@@ -30,10 +30,7 @@ import (
 var (
 	// Transport is the default tracing RoundTripper. The custom options setter will control
 	// if traces are being emitted or not.
-	Transport = &ochttp.Transport{
-		Propagation:     &tracecontext.HTTPFormat{},
-		GetStartOptions: getStartOptions,
-	}
+	Transport = NewTransport()
 
 	// enabled is the flag for marking if tracing is enabled.
 	enabled = false
@@ -54,8 +51,9 @@ func init() {
 }
 
 func enableFromEnv() {
-	_, ok := os.LookupEnv("AZURE_SDK_TRACING_ENABELD")
-	if ok {
+	_, ok := os.LookupEnv("AZURE_SDK_TRACING_ENABLED")
+	_, legacyOk := os.LookupEnv("AZURE_SDK_TRACING_ENABELD")
+	if ok || legacyOk {
 		agentEndpoint, ok := os.LookupEnv("OCAGENT_TRACE_EXPORTER_ENDPOINT")
 
 		if ok {
@@ -63,6 +61,14 @@ func enableFromEnv() {
 		} else {
 			Enable()
 		}
+	}
+}
+
+// NewTransport returns a new instance of a tracing-aware RoundTripper.
+func NewTransport() *ochttp.Transport {
+	return &ochttp.Transport{
+		Propagation:     &tracecontext.HTTPFormat{},
+		GetStartOptions: getStartOptions,
 	}
 }
 

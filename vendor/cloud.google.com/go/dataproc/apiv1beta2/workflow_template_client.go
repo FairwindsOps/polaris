@@ -18,6 +18,7 @@ package dataproc
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"time"
 
@@ -58,7 +59,6 @@ func defaultWorkflowTemplateCallOptions() *WorkflowTemplateCallOptions {
 		{"default", "idempotent"}: {
 			gax.WithRetry(func() gax.Retryer {
 				return gax.OnCodes([]codes.Code{
-					codes.DeadlineExceeded,
 					codes.Internal,
 					codes.Unavailable,
 				}, gax.Backoff{
@@ -165,7 +165,8 @@ func (c *WorkflowTemplateClient) setGoogleClientInfo(keyval ...string) {
 
 // CreateWorkflowTemplate creates new workflow template.
 func (c *WorkflowTemplateClient) CreateWorkflowTemplate(ctx context.Context, req *dataprocpb.CreateWorkflowTemplateRequest, opts ...gax.CallOption) (*dataprocpb.WorkflowTemplate, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "parent", req.GetParent()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.CreateWorkflowTemplate[0:len(c.CallOptions.CreateWorkflowTemplate):len(c.CallOptions.CreateWorkflowTemplate)], opts...)
 	var resp *dataprocpb.WorkflowTemplate
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
@@ -184,7 +185,8 @@ func (c *WorkflowTemplateClient) CreateWorkflowTemplate(ctx context.Context, req
 // Can retrieve previously instantiated template by specifying optional
 // version parameter.
 func (c *WorkflowTemplateClient) GetWorkflowTemplate(ctx context.Context, req *dataprocpb.GetWorkflowTemplateRequest, opts ...gax.CallOption) (*dataprocpb.WorkflowTemplate, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "name", req.GetName()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.GetWorkflowTemplate[0:len(c.CallOptions.GetWorkflowTemplate):len(c.CallOptions.GetWorkflowTemplate)], opts...)
 	var resp *dataprocpb.WorkflowTemplate
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
@@ -217,7 +219,8 @@ func (c *WorkflowTemplateClient) GetWorkflowTemplate(ctx context.Context, req *d
 // [Operation.response][google.longrunning.Operation.response] will be
 // [Empty][google.protobuf.Empty].
 func (c *WorkflowTemplateClient) InstantiateWorkflowTemplate(ctx context.Context, req *dataprocpb.InstantiateWorkflowTemplateRequest, opts ...gax.CallOption) (*InstantiateWorkflowTemplateOperation, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "name", req.GetName()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.InstantiateWorkflowTemplate[0:len(c.CallOptions.InstantiateWorkflowTemplate):len(c.CallOptions.InstantiateWorkflowTemplate)], opts...)
 	var resp *longrunningpb.Operation
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
@@ -236,7 +239,8 @@ func (c *WorkflowTemplateClient) InstantiateWorkflowTemplate(ctx context.Context
 // InstantiateInlineWorkflowTemplate instantiates a template and begins execution.
 //
 // This method is equivalent to executing the sequence
-// [CreateWorkflowTemplate][google.cloud.dataproc.v1beta2.WorkflowTemplateService.CreateWorkflowTemplate], [InstantiateWorkflowTemplate][google.cloud.dataproc.v1beta2.WorkflowTemplateService.InstantiateWorkflowTemplate],
+// [CreateWorkflowTemplate][google.cloud.dataproc.v1beta2.WorkflowTemplateService.CreateWorkflowTemplate],
+// [InstantiateWorkflowTemplate][google.cloud.dataproc.v1beta2.WorkflowTemplateService.InstantiateWorkflowTemplate],
 // [DeleteWorkflowTemplate][google.cloud.dataproc.v1beta2.WorkflowTemplateService.DeleteWorkflowTemplate].
 //
 // The returned Operation can be used to track execution of
@@ -256,7 +260,8 @@ func (c *WorkflowTemplateClient) InstantiateWorkflowTemplate(ctx context.Context
 // [Operation.response][google.longrunning.Operation.response] will be
 // [Empty][google.protobuf.Empty].
 func (c *WorkflowTemplateClient) InstantiateInlineWorkflowTemplate(ctx context.Context, req *dataprocpb.InstantiateInlineWorkflowTemplateRequest, opts ...gax.CallOption) (*InstantiateInlineWorkflowTemplateOperation, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "parent", req.GetParent()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.InstantiateInlineWorkflowTemplate[0:len(c.CallOptions.InstantiateInlineWorkflowTemplate):len(c.CallOptions.InstantiateInlineWorkflowTemplate)], opts...)
 	var resp *longrunningpb.Operation
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
@@ -275,7 +280,8 @@ func (c *WorkflowTemplateClient) InstantiateInlineWorkflowTemplate(ctx context.C
 // UpdateWorkflowTemplate updates (replaces) workflow template. The updated template
 // must contain version that matches the current server version.
 func (c *WorkflowTemplateClient) UpdateWorkflowTemplate(ctx context.Context, req *dataprocpb.UpdateWorkflowTemplateRequest, opts ...gax.CallOption) (*dataprocpb.WorkflowTemplate, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "template.name", req.GetTemplate().GetName()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.UpdateWorkflowTemplate[0:len(c.CallOptions.UpdateWorkflowTemplate):len(c.CallOptions.UpdateWorkflowTemplate)], opts...)
 	var resp *dataprocpb.WorkflowTemplate
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
@@ -291,7 +297,8 @@ func (c *WorkflowTemplateClient) UpdateWorkflowTemplate(ctx context.Context, req
 
 // ListWorkflowTemplates lists workflows that match the specified filter in the request.
 func (c *WorkflowTemplateClient) ListWorkflowTemplates(ctx context.Context, req *dataprocpb.ListWorkflowTemplatesRequest, opts ...gax.CallOption) *WorkflowTemplateIterator {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "parent", req.GetParent()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.ListWorkflowTemplates[0:len(c.CallOptions.ListWorkflowTemplates):len(c.CallOptions.ListWorkflowTemplates)], opts...)
 	it := &WorkflowTemplateIterator{}
 	req = proto.Clone(req).(*dataprocpb.ListWorkflowTemplatesRequest)
@@ -323,12 +330,14 @@ func (c *WorkflowTemplateClient) ListWorkflowTemplates(ctx context.Context, req 
 	}
 	it.pageInfo, it.nextFunc = iterator.NewPageInfo(fetch, it.bufLen, it.takeBuf)
 	it.pageInfo.MaxSize = int(req.PageSize)
+	it.pageInfo.Token = req.PageToken
 	return it
 }
 
 // DeleteWorkflowTemplate deletes a workflow template. It does not cancel in-progress workflows.
 func (c *WorkflowTemplateClient) DeleteWorkflowTemplate(ctx context.Context, req *dataprocpb.DeleteWorkflowTemplateRequest, opts ...gax.CallOption) error {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "name", req.GetName()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.DeleteWorkflowTemplate[0:len(c.CallOptions.DeleteWorkflowTemplate):len(c.CallOptions.DeleteWorkflowTemplate)], opts...)
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
 		var err error
@@ -436,22 +445,6 @@ func (op *InstantiateInlineWorkflowTemplateOperation) Name() string {
 	return op.lro.Name()
 }
 
-// Cancel starts asynchronous cancellation on a long-running operation.
-// The server makes a best effort to cancel the operation, but success is not guaranteed.
-// Clients can use Poll or other methods to check whether the cancellation succeeded or whether the operation
-// completed despite cancellation. On successful cancellation, the operation is not deleted;
-// instead, op.Poll returns an error with code Canceled.
-func (op *InstantiateInlineWorkflowTemplateOperation) Cancel(ctx context.Context, opts ...gax.CallOption) error {
-	return op.lro.Cancel(ctx, opts...)
-}
-
-// Delete deletes a long-running operation.
-// This method indicates that the client is no longer interested in the operation result.
-// It does not cancel the operation.
-func (op *InstantiateInlineWorkflowTemplateOperation) Delete(ctx context.Context, opts ...gax.CallOption) error {
-	return op.lro.Delete(ctx, opts...)
-}
-
 // InstantiateWorkflowTemplateOperation manages a long-running operation from InstantiateWorkflowTemplate.
 type InstantiateWorkflowTemplateOperation struct {
 	lro *longrunning.Operation
@@ -506,20 +499,4 @@ func (op *InstantiateWorkflowTemplateOperation) Done() bool {
 // The name is assigned by the server and is unique within the service from which the operation is created.
 func (op *InstantiateWorkflowTemplateOperation) Name() string {
 	return op.lro.Name()
-}
-
-// Cancel starts asynchronous cancellation on a long-running operation.
-// The server makes a best effort to cancel the operation, but success is not guaranteed.
-// Clients can use Poll or other methods to check whether the cancellation succeeded or whether the operation
-// completed despite cancellation. On successful cancellation, the operation is not deleted;
-// instead, op.Poll returns an error with code Canceled.
-func (op *InstantiateWorkflowTemplateOperation) Cancel(ctx context.Context, opts ...gax.CallOption) error {
-	return op.lro.Cancel(ctx, opts...)
-}
-
-// Delete deletes a long-running operation.
-// This method indicates that the client is no longer interested in the operation result.
-// It does not cancel the operation.
-func (op *InstantiateWorkflowTemplateOperation) Delete(ctx context.Context, opts ...gax.CallOption) error {
-	return op.lro.Delete(ctx, opts...)
 }

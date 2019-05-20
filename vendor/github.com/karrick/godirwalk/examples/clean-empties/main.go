@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 
 	"github.com/karrick/godirwalk"
-	"github.com/pkg/errors"
 )
 
 func main() {
@@ -47,7 +46,7 @@ func pruneEmptyDirectories(osDirname string, scratchBuffer []byte) (int, error) 
 		PostChildrenCallback: func(osPathname string, _ *godirwalk.Dirent) error {
 			deChildren, err := godirwalk.ReadDirents(osPathname, scratchBuffer)
 			if err != nil {
-				return errors.Wrap(err, "cannot ReadDirents")
+				return err
 			}
 			// NOTE: ReadDirents skips "." and ".."
 			if len(deChildren) > 0 {

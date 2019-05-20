@@ -17,8 +17,8 @@ package trace_test
 import (
 	"fmt"
 
-	"context"
 	"go.opencensus.io/trace"
+	"golang.org/x/net/context"
 )
 
 // This example shows how to use StartSpan and (*Span).End to capture

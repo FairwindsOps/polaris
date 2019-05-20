@@ -74,7 +74,7 @@ func TestEnableTracing(t *testing.T) {
 }
 
 func TestTracingByEnv(t *testing.T) {
-	os.Setenv("AZURE_SDK_TRACING_ENABELD", "")
+	os.Setenv("AZURE_SDK_TRACING_ENABLED", "")
 	enableFromEnv()
 	if !IsEnabled() {
 		t.Fatalf("Enable failed, IsEnabled() is %t", IsEnabled())

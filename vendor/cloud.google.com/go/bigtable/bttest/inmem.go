@@ -81,12 +81,14 @@ type Server struct {
 // It is a separate and unexported type so the API won't be cluttered with
 // methods that are only relevant to the fake's implementation.
 type server struct {
-	mu     sync.Mutex
-	tables map[string]*table // keyed by fully qualified name
-	gcc    chan int          // set when gcloop starts, closed when server shuts down
+	mu        sync.Mutex
+	tables    map[string]*table          // keyed by fully qualified name
+	instances map[string]*btapb.Instance // keyed by fully qualified name
+	gcc       chan int                   // set when gcloop starts, closed when server shuts down
 
 	// Any unimplemented methods will cause a panic.
 	btapb.BigtableTableAdminServer
+	btapb.BigtableInstanceAdminServer
 	btpb.BigtableServer
 }
 
@@ -104,9 +106,11 @@ func NewServer(laddr string, opt ...grpc.ServerOption) (*Server, error) {
 		l:    l,
 		srv:  grpc.NewServer(opt...),
 		s: &server{
-			tables: make(map[string]*table),
+			tables:    make(map[string]*table),
+			instances: make(map[string]*btapb.Instance),
 		},
 	}
+	btapb.RegisterBigtableInstanceAdminServer(s.srv, s.s)
 	btapb.RegisterBigtableTableAdminServer(s.srv, s.s)
 	btpb.RegisterBigtableServer(s.srv, s.s)
 
@@ -325,6 +329,10 @@ func (s *server) ReadRows(req *btpb.ReadRowsRequest, stream btpb.Bigtable_ReadRo
 		return status.Errorf(codes.NotFound, "table %q not found", req.TableName)
 	}
 
+	if err := validateRowRanges(req); err != nil {
+		return err
+	}
+
 	// Rows to read can be specified by a set of row keys and/or a set of row ranges.
 	// Output is a stream of sorted, de-duped rows.
 	tbl.mu.RLock()
@@ -479,8 +487,13 @@ func filterRow(f *btpb.RowFilter, r *row) (bool, error) {
 		srs := make([]*row, 0, len(f.Interleave.Filters))
 		for _, sub := range f.Interleave.Filters {
 			sr := r.copy()
-			filterRow(sub, sr)
-			srs = append(srs, sr)
+			match, err := filterRow(sub, sr)
+			if err != nil {
+				return false, err
+			}
+			if match {
+				srs = append(srs, sr)
+			}
 		}
 		// merge
 		// TODO(dsymonds): is this correct?
@@ -804,6 +817,9 @@ func (s *server) CheckAndMutateRow(ctx context.Context, req *btpb.CheckAndMutate
 		// Use true_mutations iff any cells in the row match the filter.
 		// TODO(dsymonds): This could be cheaper.
 		nr := r.copy()
+
+		// TODO(dsymonds, odeke-em): examine if filterRow here should be checked:
+		// with: match, err := filterRow(req.PredicateFilter, nr)
 		filterRow(req.PredicateFilter, nr)
 		whichMut = !nr.isEmpty()
 	}

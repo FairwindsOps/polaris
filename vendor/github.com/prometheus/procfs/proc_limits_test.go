@@ -16,7 +16,7 @@ package procfs
 import "testing"
 
 func TestNewLimits(t *testing.T) {
-	p, err := FS("fixtures").NewProc(26231)
+	p, err := getProcFixtures(t).NewProc(26231)
 	if err != nil {
 		t.Fatal(err)
 	}

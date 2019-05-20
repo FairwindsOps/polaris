@@ -1,12 +1,10 @@
-package diskv_test
+package diskv
 
 import (
 	"reflect"
 	"runtime"
 	"strings"
 	"testing"
-
-	"github.com/peterbourgon/diskv"
 )
 
 var (
@@ -49,7 +47,7 @@ func TestKeysFlat(t *testing.T) {
 		}
 		return []string{}
 	}
-	d := diskv.New(diskv.Options{
+	d := New(Options{
 		BasePath:  "test-data",
 		Transform: transform,
 	})
@@ -63,7 +61,7 @@ func TestKeysFlat(t *testing.T) {
 }
 
 func TestKeysNested(t *testing.T) {
-	d := diskv.New(diskv.Options{
+	d := New(Options{
 		BasePath:  "test-data",
 		Transform: blockTransform(2),
 	})
@@ -77,7 +75,7 @@ func TestKeysNested(t *testing.T) {
 }
 
 func TestKeysPrefixFlat(t *testing.T) {
-	d := diskv.New(diskv.Options{
+	d := New(Options{
 		BasePath: "test-data",
 	})
 	defer d.EraseAll()
@@ -92,7 +90,7 @@ func TestKeysPrefixFlat(t *testing.T) {
 }
 
 func TestKeysPrefixNested(t *testing.T) {
-	d := diskv.New(diskv.Options{
+	d := New(Options{
 		BasePath:  "test-data",
 		Transform: blockTransform(2),
 	})
@@ -108,7 +106,7 @@ func TestKeysPrefixNested(t *testing.T) {
 }
 
 func TestKeysCancel(t *testing.T) {
-	d := diskv.New(diskv.Options{
+	d := New(Options{
 		BasePath: "test-data",
 	})
 	defer d.EraseAll()
@@ -135,7 +133,7 @@ func TestKeysCancel(t *testing.T) {
 	}
 
 	if want, have := cancelAfter, received; want != have {
-		t.Errorf("want %d, have %d")
+		t.Errorf("want %d, have %d", want, have)
 	}
 }
 

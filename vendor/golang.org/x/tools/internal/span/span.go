@@ -7,6 +7,7 @@ package span
 import (
 	"encoding/json"
 	"fmt"
+	"path"
 )
 
 // Span represents a source code range in standardized form.
@@ -54,6 +55,45 @@ func NewPoint(line, col, offset int) Point {
 	p := Point{v: point{Line: line, Column: col, Offset: offset}}
 	p.v.clean()
 	return p
+}
+
+func Compare(a, b Span) int {
+	if r := CompareURI(a.URI(), b.URI()); r != 0 {
+		return r
+	}
+	if r := comparePoint(a.v.Start, b.v.Start); r != 0 {
+		return r
+	}
+	return comparePoint(a.v.End, b.v.End)
+}
+
+func ComparePoint(a, b Point) int {
+	return comparePoint(a.v, b.v)
+}
+
+func comparePoint(a, b point) int {
+	if !a.hasPosition() {
+		if a.Offset < b.Offset {
+			return -1
+		}
+		if a.Offset > b.Offset {
+			return 1
+		}
+		return 0
+	}
+	if a.Line < b.Line {
+		return -1
+	}
+	if a.Line > b.Line {
+		return 1
+	}
+	if a.Column < b.Column {
+		return -1
+	}
+	if a.Column > b.Column {
+		return 1
+	}
+	return 0
 }
 
 func (s Span) HasPosition() bool             { return s.v.Start.hasPosition() }
@@ -128,7 +168,9 @@ func (s Span) Format(f fmt.State, c rune) {
 	// we should always have a uri, simplify if it is file format
 	//TODO: make sure the end of the uri is unambiguous
 	uri := string(s.v.URI)
-	if !fullForm {
+	if c == 'f' {
+		uri = path.Base(uri)
+	} else if !fullForm {
 		if filename, err := s.v.URI.Filename(); err == nil {
 			uri = filename
 		}
@@ -207,7 +249,7 @@ func (s *Span) update(c Converter, withPos, withOffset bool) error {
 			return err
 		}
 	}
-	if withOffset && !s.HasOffset() {
+	if withOffset && (!s.HasOffset() || (s.v.End.hasPosition() && !s.v.End.hasOffset())) {
 		if err := s.v.Start.updateOffset(c); err != nil {
 			return err
 		}

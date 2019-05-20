@@ -33,8 +33,8 @@ func TestCanonicalName(t *testing.T) {
 		{"servicecatalog.k8s.io/foo/bar/v1alpha1.Baz", "io.k8s.servicecatalog.foo.bar.v1alpha1.Baz"},
 	}
 	for _, test := range tests {
-		if got := ToCanonicalName(test.input); got != test.expected {
-			t.Errorf("ToCanonicalName(%q) = %v", test.input, got)
+		if got := ToRESTFriendlyName(test.input); got != test.expected {
+			t.Errorf("ToRESTFriendlyName(%q) = %v", test.input, got)
 		}
 	}
 }

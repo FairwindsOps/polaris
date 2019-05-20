@@ -13,7 +13,6 @@ import (
 func TestIssue2A(t *testing.T) {
 	d := New(Options{
 		BasePath:     "test-issue-2a",
-		Transform:    func(string) []string { return []string{} },
 		CacheSizeMax: 1024,
 	})
 	defer d.EraseAll()

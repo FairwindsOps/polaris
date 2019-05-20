@@ -43,7 +43,6 @@ func benchRead(b *testing.B, size, cachesz int) {
 	b.StopTimer()
 	d := New(Options{
 		BasePath:     "speed-test",
-		Transform:    func(string) []string { return []string{} },
 		CacheSizeMax: uint64(cachesz),
 	})
 	defer d.EraseAll()
@@ -66,7 +65,6 @@ func benchWrite(b *testing.B, size int, withIndex bool) {
 
 	options := Options{
 		BasePath:     "speed-test",
-		Transform:    func(string) []string { return []string{} },
 		CacheSizeMax: 0,
 	}
 	if withIndex {

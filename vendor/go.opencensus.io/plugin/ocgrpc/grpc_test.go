@@ -19,8 +19,8 @@ import (
 	"testing"
 	"time"
 
-	"context"
 	"go.opencensus.io/stats/view"
+	"golang.org/x/net/context"
 	"google.golang.org/grpc/metadata"
 
 	"go.opencensus.io/trace"

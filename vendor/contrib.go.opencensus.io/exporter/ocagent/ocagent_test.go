@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -37,7 +36,10 @@ func TestNewExporter_endToEnd(t *testing.T) {
 	defer ma.stop()
 
 	serviceName := "endToEnd_test"
-	exp, err := ocagent.NewExporter(ocagent.WithInsecure(), ocagent.WithPort(ma.port), ocagent.WithServiceName(serviceName))
+	exp, err := ocagent.NewExporter(ocagent.WithInsecure(),
+		ocagent.WithAddress(ma.address),
+		ocagent.WithReconnectionPeriod(50*time.Millisecond),
+		ocagent.WithServiceName(serviceName))
 	if err != nil {
 		t.Fatalf("Failed to create a new agent exporter: %v", err)
 	}
@@ -52,7 +54,7 @@ func TestNewExporter_endToEnd(t *testing.T) {
 	ma.configsToSend <- &agenttracepb.UpdatedLibraryConfig{
 		Config: &tracepb.TraceConfig{
 			Sampler: &tracepb.TraceConfig_ConstantSampler{
-				ConstantSampler: &tracepb.ConstantSampler{Decision: true}, // Always sample
+				ConstantSampler: &tracepb.ConstantSampler{Decision: tracepb.ConstantSampler_ALWAYS_ON}, // Always sample
 			},
 		},
 	}
@@ -64,6 +66,15 @@ func TestNewExporter_endToEnd(t *testing.T) {
 		span.Annotatef([]trace.Attribute{trace.Int64Attribute("i", int64(i))}, "Annotation")
 		span.End()
 	}
+
+	m := 4
+	batchedSpans := make([]*tracepb.Span, 0, m)
+	for i := 0; i < m; i++ {
+		name := &tracepb.TruncatableString{Value: "AlwaysSample"}
+		batchedSpans = append(batchedSpans, &tracepb.Span{Name: name})
+	}
+	_ = exp.ExportTraceServiceRequest(&agenttracepb.ExportTraceServiceRequest{Spans: batchedSpans})
+
 	<-time.After(10 * time.Millisecond)
 	exp.Flush()
 
@@ -71,7 +82,7 @@ func TestNewExporter_endToEnd(t *testing.T) {
 	ma.configsToSend <- &agenttracepb.UpdatedLibraryConfig{
 		Config: &tracepb.TraceConfig{
 			Sampler: &tracepb.TraceConfig_ConstantSampler{
-				ConstantSampler: &tracepb.ConstantSampler{Decision: false}, // Never sample
+				ConstantSampler: &tracepb.ConstantSampler{Decision: tracepb.ConstantSampler_ALWAYS_OFF}, // Never sample
 			},
 		},
 	}
@@ -104,6 +115,15 @@ func TestNewExporter_endToEnd(t *testing.T) {
 		span.Annotatef([]trace.Attribute{trace.BoolAttribute("odd", i&1 == 1)}, "Annotation")
 		span.End()
 	}
+
+	m = 3
+	batchedSpans = make([]*tracepb.Span, 0, m)
+	for i := 0; i < m; i++ {
+		name := &tracepb.TruncatableString{Value: "ProbabilitySampler-100%"}
+		batchedSpans = append(batchedSpans, &tracepb.Span{Name: name})
+	}
+	_ = exp.ExportTraceServiceRequest(&agenttracepb.ExportTraceServiceRequest{Spans: batchedSpans})
+
 	<-time.After(10 * time.Millisecond)
 	exp.Flush()
 
@@ -152,10 +172,10 @@ func TestNewExporter_endToEnd(t *testing.T) {
 		t.Errorf("ReceivedConfigs: got %d want %d", g, w)
 	}
 
-	// Expecting 7 spanData that were sampled, given that
+	// Expecting 14 spanData that were sampled, given that
 	// two of the trace configs pushed down to the client
 	// were {NeverSample, ProbabilitySampler(0.0)}
-	if g, w := len(spans), 7; g != w {
+	if g, w := len(spans), 14; g != w {
 		t.Errorf("Spans: got %d want %d", g, w)
 	}
 
@@ -209,15 +229,17 @@ func TestNewExporter_invokeStartThenStopManyTimes(t *testing.T) {
 	ma := runMockAgent(t)
 	defer ma.stop()
 
-	exp, err := ocagent.NewUnstartedExporter(ocagent.WithInsecure(), ocagent.WithPort(ma.port))
+	exp, err := ocagent.NewExporter(ocagent.WithInsecure(),
+		ocagent.WithReconnectionPeriod(50*time.Millisecond),
+		ocagent.WithAddress(ma.address))
 	if err != nil {
 		t.Fatal("Surprisingly connected with a bad port")
 	}
 	defer exp.Stop()
 
-	// Invoke Start numerous times
+	// Invoke Start numerous times, should return errAlreadyStarted
 	for i := 0; i < 10; i++ {
-		if err := exp.Start(); err != nil {
+		if err := exp.Start(); err == nil || !strings.Contains(err.Error(), "already started") {
 			t.Errorf("#%d unexpected Start error: %v", i, err)
 		}
 	}
@@ -231,23 +253,65 @@ func TestNewExporter_invokeStartThenStopManyTimes(t *testing.T) {
 	}
 }
 
-func TestNewExporter_agentConnectionDiesInMidst(t *testing.T) {
+func TestNewExporter_agentConnectionDiesThenReconnects(t *testing.T) {
 	ma := runMockAgent(t)
-	exp, err := ocagent.NewUnstartedExporter(ocagent.WithInsecure(), ocagent.WithPort(ma.port))
+
+	reconnectionPeriod := 20 * time.Millisecond
+	exp, err := ocagent.NewExporter(ocagent.WithInsecure(),
+		ocagent.WithAddress(ma.address),
+		ocagent.WithReconnectionPeriod(reconnectionPeriod))
 	if err != nil {
-		t.Fatal("Surprisingly connected with a bad port")
+		t.Fatalf("Unexpected error: %v", err)
 	}
 	defer exp.Stop()
 
-	if err := exp.Start(); err != nil {
-		t.Fatalf("Unexpected Start error: %v", err)
-	}
-
-	// Stop the agent right away to simulate killing
-	// the connection in the midst of communication.
+	// We'll now stop the agent right away to simulate a connection
+	// dying in the midst of communication or even not existing before.
 	ma.stop()
 
-	exp.ExportSpan(&trace.SpanData{Name: "in the midst"})
+	// In the test below, we'll stop the agent many times,
+	// while exporting traces and test to ensure that we can
+	// reconnect.
+	for j := 0; j < 3; j++ {
+
+		exp.ExportSpan(&trace.SpanData{Name: "in the midst"})
+		exp.Flush()
+		<-time.After(reconnectionPeriod * 2)
+
+		// Now resurrect the agent by making a new one but reusing the
+		// old address, and the agent should reconnect automatically.
+		nma := runMockAgentAtAddr(t, ma.address)
+
+		// Give the exporter sometime to reconnect
+		<-time.After(reconnectionPeriod * 4)
+
+		n := 10
+		for i := 0; i < n; i++ {
+			exp.ExportSpan(&trace.SpanData{Name: "Resurrected"})
+		}
+		exp.Flush()
+		m := 10
+		batchedSpans := make([]*tracepb.Span, 0, m)
+		for i := 0; i < m; i++ {
+			name := &tracepb.TruncatableString{Value: "Resurrected"}
+			batchedSpans = append(batchedSpans, &tracepb.Span{Name: name})
+		}
+		_ = exp.ExportTraceServiceRequest(&agenttracepb.ExportTraceServiceRequest{Spans: batchedSpans})
+
+		<-time.After(reconnectionPeriod * 3)
+		nmaSpans := nma.getSpans()
+		// Expecting 10 spanData that were sampled, given that
+		if g, w := len(nmaSpans), n+m; g != w {
+			t.Errorf("Round #%d: Connected agent: spans: got %d want %d", j, g, w)
+		}
+
+		dSpans := ma.getSpans()
+		// Expecting 0 spans to have been received by the original but now dead agent
+		if g, w := len(dSpans), 0; g != w {
+			t.Errorf("Round #%d: Disconnected agent: spans: got %d want %d", j, g, w)
+		}
+		nma.stop()
+	}
 }
 
 // This test takes a long time to run: to skip it, run tests using: -short
@@ -264,36 +328,26 @@ func TestNewExporter_agentOnBadConnection(t *testing.T) {
 	// However, our goal of closing it is to simulate an unavailable connection
 	ln.Close()
 
-	startTime := time.Now()
-	// If this returns in less than 6.5s report an error
-	// since that's a sign that exponential backoff didn't happen.
-	wantMinDuration := (6 * time.Second) + (500 * time.Millisecond)
-	defer func() {
-		timeSpent := time.Now().Sub(startTime)
-		if timeSpent < wantMinDuration {
-			t.Errorf("Took %s, yet with a non-existent connection it should take at least %s",
-				timeSpent, wantMinDuration)
-		}
-	}()
-
 	_, agentPortStr, _ := net.SplitHostPort(ln.Addr().String())
-	agentPort, _ := strconv.Atoi(agentPortStr)
 
-	exp, err := ocagent.NewExporter(ocagent.WithInsecure(), ocagent.WithPort(uint16(agentPort)))
-	if err == nil {
-		t.Fatal("Surprisingly connected to an unavailable non-gRPC connection")
+	address := fmt.Sprintf("localhost:%s", agentPortStr)
+	exp, err := ocagent.NewExporter(ocagent.WithInsecure(),
+		ocagent.WithReconnectionPeriod(50*time.Millisecond),
+		ocagent.WithAddress(address))
+	if err != nil {
+		t.Fatalf("Despite an indefinite background reconnection, got error: %v", err)
 	}
-	if exp != nil {
-		t.Fatalf("Surprisingly created an exporter: %#v", exp)
-	}
+	defer exp.Stop()
 }
 
 func TestNewExporter_withAddress(t *testing.T) {
 	ma := runMockAgent(t)
 	defer ma.stop()
 
-	addr := fmt.Sprintf("localhost:%d", ma.port)
-	exp, err := ocagent.NewUnstartedExporter(ocagent.WithInsecure(), ocagent.WithAddress(addr))
+	exp, err := ocagent.NewUnstartedExporter(
+		ocagent.WithInsecure(),
+		ocagent.WithReconnectionPeriod(50*time.Millisecond),
+		ocagent.WithAddress(ma.address))
 	if err != nil {
 		t.Fatal("Surprisingly connected with a bad port")
 	}

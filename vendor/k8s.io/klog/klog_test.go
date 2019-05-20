@@ -19,6 +19,7 @@ package klog
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	stdLog "log"
 	"path/filepath"
 	"runtime"
@@ -27,6 +28,9 @@ import (
 	"testing"
 	"time"
 )
+
+// TODO: This test package should be refactored so that tests cannot
+// interfere with each-other.
 
 // Test that shortHostname works as advertised.
 func TestShortHostname(t *testing.T) {
@@ -335,7 +339,6 @@ func TestRollover(t *testing.T) {
 	}
 	defer func(previous uint64) { MaxSize = previous }(MaxSize)
 	MaxSize = 512
-
 	Info("x") // Be sure we have a file.
 	info, ok := logging.file[infoLog].(*syncBuffer)
 	if !ok {
@@ -366,8 +369,78 @@ func TestRollover(t *testing.T) {
 	if fname0 == fname1 {
 		t.Errorf("info.f.Name did not change: %v", fname0)
 	}
-	if info.nbytes >= MaxSize {
+	if info.nbytes >= info.maxbytes {
 		t.Errorf("file size was not reset: %d", info.nbytes)
+	}
+}
+
+func TestOpenAppendOnStart(t *testing.T) {
+	const (
+		x string = "xxxxxxxxxx"
+		y string = "yyyyyyyyyy"
+	)
+
+	setFlags()
+	var err error
+	defer func(previous func(error)) { logExitFunc = previous }(logExitFunc)
+	logExitFunc = func(e error) {
+		err = e
+	}
+
+	f, err := ioutil.TempFile("", "test_klog_OpenAppendOnStart")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	logging.logFile = f.Name()
+
+	// Erase files created by prior tests,
+	for i := range logging.file {
+		logging.file[i] = nil
+	}
+
+	// Logging creates the file
+	Info(x)
+	_, ok := logging.file[infoLog].(*syncBuffer)
+	if !ok {
+		t.Fatal("info wasn't created")
+	}
+	if err != nil {
+		t.Fatalf("info has initial error: %v", err)
+	}
+	// ensure we wrote what we expected
+	logging.flushAll()
+	b, err := ioutil.ReadFile(logging.logFile)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(string(b), x) {
+		t.Fatalf("got %s, missing expected Info log: %s", string(b), x)
+	}
+
+	// Set the file to nil so it gets "created" (opened) again on the next write.
+	for i := range logging.file {
+		logging.file[i] = nil
+	}
+
+	// Logging agagin should open the file again with O_APPEND instead of O_TRUNC
+	Info(y)
+	// ensure we wrote what we expected
+	logging.flushAll()
+	b, err = ioutil.ReadFile(logging.logFile)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(string(b), y) {
+		t.Fatalf("got %s, missing expected Info log: %s", string(b), y)
+	}
+	// The initial log message should be preserved across create calls.
+	logging.flushAll()
+	b, err = ioutil.ReadFile(logging.logFile)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(string(b), x) {
+		t.Fatalf("got %s, missing expected Info log: %s", string(b), x)
 	}
 }
 
@@ -411,5 +484,52 @@ func BenchmarkHeader(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		buf, _, _ := logging.header(infoLog, 0)
 		logging.putBuffer(buf)
+	}
+}
+
+// Test the logic on checking log size limitation.
+func TestFileSizeCheck(t *testing.T) {
+	setFlags()
+	testData := map[string]struct {
+		testLogFile          string
+		testLogFileMaxSizeMB uint64
+		testCurrentSize      uint64
+		expectedResult       bool
+	}{
+		"logFile not specified, exceeds max size": {
+			testLogFile:          "",
+			testLogFileMaxSizeMB: 1,
+			testCurrentSize:      1024 * 1024 * 2000, //exceeds the maxSize
+			expectedResult:       true,
+		},
+
+		"logFile not specified, not exceeds max size": {
+			testLogFile:          "",
+			testLogFileMaxSizeMB: 1,
+			testCurrentSize:      1024 * 1024 * 1000, //smaller than the maxSize
+			expectedResult:       false,
+		},
+		"logFile specified, exceeds max size": {
+			testLogFile:          "/tmp/test.log",
+			testLogFileMaxSizeMB: 500,                // 500MB
+			testCurrentSize:      1024 * 1024 * 1000, //exceeds the logFileMaxSizeMB
+			expectedResult:       true,
+		},
+		"logFile specified, not exceeds max size": {
+			testLogFile:          "/tmp/test.log",
+			testLogFileMaxSizeMB: 500,               // 500MB
+			testCurrentSize:      1024 * 1024 * 300, //smaller than the logFileMaxSizeMB
+			expectedResult:       false,
+		},
+	}
+
+	for name, test := range testData {
+		logging.logFile = test.testLogFile
+		logging.logFileMaxSizeMB = test.testLogFileMaxSizeMB
+		actualResult := test.testCurrentSize >= CalculateMaxSize()
+		if test.expectedResult != actualResult {
+			t.Fatalf("Error on test case '%v': Was expecting result equals %v, got %v",
+				name, test.expectedResult, actualResult)
+		}
 	}
 }

@@ -16,13 +16,12 @@ package metric
 
 import (
 	"fmt"
+	"go.opencensus.io/metric/metricdata"
 	"sort"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-
-	"go.opencensus.io/metric/metricdata"
 )
 
 func TestGauge(t *testing.T) {
@@ -42,12 +41,9 @@ func TestGauge(t *testing.T) {
 	want := []*metricdata.Metric{
 		{
 			Descriptor: metricdata.Descriptor{
-				Name: "TestGauge",
-				LabelKeys: []metricdata.LabelKey{
-					{Key: "k1"},
-					{Key: "k2"},
-				},
-				Type: metricdata.TypeGaugeFloat64,
+				Name:      "TestGauge",
+				LabelKeys: []string{"k1", "k2"},
+				Type:      metricdata.TypeGaugeFloat64,
 			},
 			TimeSeries: []*metricdata.TimeSeries{
 				{
@@ -86,73 +82,17 @@ func TestGauge(t *testing.T) {
 	}
 }
 
-func TestGaugeConstLabel(t *testing.T) {
-	r := NewRegistry()
-
-	f, _ := r.AddFloat64Gauge("TestGaugeWithConstLabel",
-		WithLabelKeys("k1"),
-		WithConstLabel(map[metricdata.LabelKey]metricdata.LabelValue{
-			{Key: "const"}:  metricdata.NewLabelValue("same"),
-			{Key: "const2"}: metricdata.NewLabelValue("same2"),
-		}))
-
-	e, _ := f.GetEntry(metricdata.LabelValue{})
-	e.Set(5)
-	e, _ = f.GetEntry(metricdata.NewLabelValue("k1v1"))
-	e.Add(1)
-	m := r.Read()
-	want := []*metricdata.Metric{
-		{
-			Descriptor: metricdata.Descriptor{
-				Name: "TestGaugeWithConstLabel",
-				LabelKeys: []metricdata.LabelKey{
-					{Key: "const"},
-					{Key: "const2"},
-					{Key: "k1"}},
-				Type: metricdata.TypeGaugeFloat64,
-			},
-			TimeSeries: []*metricdata.TimeSeries{
-				{
-					LabelValues: []metricdata.LabelValue{
-						metricdata.NewLabelValue("same"),
-						metricdata.NewLabelValue("same2"),
-						{},
-					},
-					Points: []metricdata.Point{
-						metricdata.NewFloat64Point(time.Time{}, 5),
-					},
-				},
-				{
-					LabelValues: []metricdata.LabelValue{
-						metricdata.NewLabelValue("same"),
-						metricdata.NewLabelValue("same2"),
-						metricdata.NewLabelValue("k1v1"),
-					},
-					Points: []metricdata.Point{
-						metricdata.NewFloat64Point(time.Time{}, 1),
-					},
-				},
-			},
-		},
-	}
-	canonicalize(m)
-	canonicalize(want)
-	if diff := cmp.Diff(m, want, cmp.Comparer(ignoreTimes)); diff != "" {
-		t.Errorf("-got +want: %s", diff)
-	}
-}
-
 func TestGaugeMetricDescriptor(t *testing.T) {
 	r := NewRegistry()
 
 	gf, _ := r.AddFloat64Gauge("float64_gauge")
-	compareType(gf.bm.desc.Type, metricdata.TypeGaugeFloat64, t)
+	compareType(gf.g.desc.Type, metricdata.TypeGaugeFloat64, t)
 	gi, _ := r.AddInt64Gauge("int64_gauge")
-	compareType(gi.bm.desc.Type, metricdata.TypeGaugeInt64, t)
+	compareType(gi.g.desc.Type, metricdata.TypeGaugeInt64, t)
 	dgf, _ := r.AddFloat64DerivedGauge("derived_float64_gauge")
-	compareType(dgf.bm.desc.Type, metricdata.TypeGaugeFloat64, t)
+	compareType(dgf.g.desc.Type, metricdata.TypeGaugeFloat64, t)
 	dgi, _ := r.AddInt64DerivedGauge("derived_int64_gauge")
-	compareType(dgi.bm.desc.Type, metricdata.TypeGaugeInt64, t)
+	compareType(dgi.g.desc.Type, metricdata.TypeGaugeInt64, t)
 }
 
 func compareType(got, want metricdata.Type, t *testing.T) {
@@ -170,7 +110,7 @@ func TestGaugeMetricOptionDesc(t *testing.T) {
 		Description: "test",
 		Type:        metricdata.TypeGaugeFloat64,
 	}
-	got := gf.bm.desc
+	got := gf.g.desc
 	if !cmp.Equal(got, want) {
 		t.Errorf("metric option description: got %v, want %v\n", got, want)
 	}
@@ -185,7 +125,7 @@ func TestGaugeMetricOptionUnit(t *testing.T) {
 		Unit: metricdata.UnitMilliseconds,
 		Type: metricdata.TypeGaugeFloat64,
 	}
-	got := gf.bm.desc
+	got := gf.g.desc
 	if !cmp.Equal(got, want) {
 		t.Errorf("metric descriptor: got %v, want %v\n", got, want)
 	}
@@ -196,35 +136,11 @@ func TestGaugeMetricOptionLabelKeys(t *testing.T) {
 	name := "testOptUnit"
 	gf, _ := r.AddFloat64Gauge(name, WithLabelKeys("k1", "k3"))
 	want := metricdata.Descriptor{
-		Name: name,
-		LabelKeys: []metricdata.LabelKey{
-			{Key: "k1"},
-			{Key: "k3"},
-		},
-		Type: metricdata.TypeGaugeFloat64,
+		Name:      name,
+		LabelKeys: []string{"k1", "k3"},
+		Type:      metricdata.TypeGaugeFloat64,
 	}
-	got := gf.bm.desc
-	if !cmp.Equal(got, want) {
-		t.Errorf("metric descriptor: got %v, want %v\n", got, want)
-	}
-}
-
-func TestGaugeMetricOptionLabelKeysAndDesc(t *testing.T) {
-	r := NewRegistry()
-	name := "testOptUnit"
-	lks := []metricdata.LabelKey{}
-	lks = append(lks, metricdata.LabelKey{Key: "k1", Description: "desc k1"},
-		metricdata.LabelKey{Key: "k3", Description: "desc k3"})
-	gf, _ := r.AddFloat64Gauge(name, WithLabelKeysAndDescription(lks...))
-	want := metricdata.Descriptor{
-		Name: name,
-		LabelKeys: []metricdata.LabelKey{
-			{Key: "k1", Description: "desc k1"},
-			{Key: "k3", Description: "desc k3"},
-		},
-		Type: metricdata.TypeGaugeFloat64,
-	}
-	got := gf.bm.desc
+	got := gf.g.desc
 	if !cmp.Equal(got, want) {
 		t.Errorf("metric descriptor: got %v, want %v\n", got, want)
 	}
@@ -238,7 +154,7 @@ func TestGaugeMetricOptionDefault(t *testing.T) {
 		Name: name,
 		Type: metricdata.TypeGaugeFloat64,
 	}
-	got := gf.bm.desc
+	got := gf.g.desc
 	if !cmp.Equal(got, want) {
 		t.Errorf("metric descriptor: got %v, want %v\n", got, want)
 	}
@@ -311,15 +227,15 @@ func TestGaugeWithSameNameDiffType(t *testing.T) {
 	r.AddInt64Gauge("g")
 	_, gotErr := r.AddFloat64Gauge("g")
 	if gotErr == nil {
-		t.Errorf("got: nil, want error: %v", errMetricExistsWithDiffType)
+		t.Errorf("got: nil, want error: %v", errGaugeExistsWithDiffType)
 	}
 	_, gotErr = r.AddInt64DerivedGauge("g")
 	if gotErr == nil {
-		t.Errorf("got: nil, want error: %v", errMetricExistsWithDiffType)
+		t.Errorf("got: nil, want error: %v", errGaugeExistsWithDiffType)
 	}
 	_, gotErr = r.AddFloat64DerivedGauge("g")
 	if gotErr == nil {
-		t.Errorf("got: nil, want error: %v", errMetricExistsWithDiffType)
+		t.Errorf("got: nil, want error: %v", errGaugeExistsWithDiffType)
 	}
 }
 
@@ -346,11 +262,11 @@ func TestMapKey(t *testing.T) {
 	}
 	for i, tc := range cases {
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
-			g := &baseMetric{
-				keys: make([]metricdata.LabelKey, len(tc)),
+			g := &gauge{
+				keys: make([]string, len(tc)),
 			}
-			mk := g.encodeLabelVals(tc)
-			vals := g.decodeLabelVals(mk)
+			mk := g.mapKey(tc)
+			vals := g.labelValues(mk)
 			if diff := cmp.Diff(vals, tc); diff != "" {
 				t.Errorf("values differ after serialization -got +want: %s", diff)
 			}
@@ -387,18 +303,20 @@ func canonicalize(ms []*metricdata.Metric) {
 	for _, m := range ms {
 		sort.Slice(m.TimeSeries, func(i, j int) bool {
 			// sort time series by their label values
-			iStr := ""
-
-			for _, label := range m.TimeSeries[i].LabelValues {
-				iStr += fmt.Sprintf("%+v", label)
+			iLabels := m.TimeSeries[i].LabelValues
+			jLabels := m.TimeSeries[j].LabelValues
+			for k := 0; k < len(iLabels); k++ {
+				if !iLabels[k].Present {
+					if jLabels[k].Present {
+						return true
+					}
+				} else if !jLabels[k].Present {
+					return false
+				} else {
+					return iLabels[k].Value < jLabels[k].Value
+				}
 			}
-
-			jStr := ""
-			for _, label := range m.TimeSeries[j].LabelValues {
-				jStr += fmt.Sprintf("%+v", label)
-			}
-
-			return iStr < jStr
+			panic("should have returned")
 		})
 	}
 }

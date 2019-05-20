@@ -42,10 +42,6 @@ func main() {
 		if len(vStr) == 0 {
 			continue
 		}
-		// ignore pre-release versions
-		if isPreRelease(vStr) {
-			continue
-		}
 		versions = append(versions, parseVersion(vStr))
 	}
 	sort.Slice(versions, func(i, j int) bool {
@@ -69,11 +65,6 @@ func versionLess(v1, v2 version) bool {
 		}
 	}
 	return false
-}
-
-func isPreRelease(vStr string) bool {
-	split := strings.Split(vStr[1:], ".")
-	return strings.Contains(split[2], "-")
 }
 
 func parseVersion(vStr string) version {

@@ -15,7 +15,6 @@ EMBEDMD=embedmd
 # TODO decide if we need to change these names.
 TRACE_ID_LINT_EXCEPTION="type name will be used as trace.TraceID by other packages"
 TRACE_OPTION_LINT_EXCEPTION="type name will be used as trace.TraceOptions by other packages"
-README_FILES := $(shell find . -name '*README.md' | sort | tr '\n' ' ')
 
 .DEFAULT_GOAL := fmt-lint-vet-embedmd-test
 
@@ -80,7 +79,7 @@ vet:
 	
 .PHONY: embedmd
 embedmd:
-	@EMBEDMDOUT=`$(EMBEDMD) -d $(README_FILES) 2>&1`; \
+	@EMBEDMDOUT=`$(EMBEDMD) -d README.md 2>&1`; \
 	if [ "$$EMBEDMDOUT" ]; then \
 		echo "$(EMBEDMD) FAILED => embedmd the following files:\n"; \
 		echo "$$EMBEDMDOUT\n"; \

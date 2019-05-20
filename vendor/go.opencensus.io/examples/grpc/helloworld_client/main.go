@@ -19,11 +19,11 @@ import (
 	"os"
 	"time"
 
-	"context"
 	"go.opencensus.io/examples/exporter"
 	pb "go.opencensus.io/examples/grpc/proto"
 	"go.opencensus.io/plugin/ocgrpc"
 	"go.opencensus.io/stats/view"
+	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 

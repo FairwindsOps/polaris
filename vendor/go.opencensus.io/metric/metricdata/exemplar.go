@@ -18,11 +18,6 @@ import (
 	"time"
 )
 
-// Exemplars keys.
-const (
-	AttachmentKeySpanContext = "SpanContext"
-)
-
 // Exemplar is an example data point associated with each bucket of a
 // distribution type aggregation.
 //
