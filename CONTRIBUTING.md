@@ -42,3 +42,19 @@ Each new pull request should:
 - Contain a clear indication of if they're ready for review or a work in progress
 - Be up to date and/or rebased on the master branch
 
+## Creating a new release
+* Change the version number everywhere. E.g. for `0.1.4` to `0.1.5`:
+```
+find ./ -type f ! -path "./vendor/*" ! -path "./.git/*" ! -name CHANGELOG.md -exec sed -i 's/0\.1\.4/0.1.5/g' {} \;
+```
+* Add relevant entries to CHANGELOG.md
+* Create a PR to merge your changes
+* Once the PR is merged, wait for CircleCI to finish building the merge commit
+* Tag and push the latest:
+```
+git checkout master
+git pull
+git tag $VERSION
+git push --tags
+```
+* CircleCI will add an entry to the releases page on GitHub
