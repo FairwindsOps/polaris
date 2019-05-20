@@ -26,7 +26,7 @@ references:
       name: Docker tag release
       command: |
         docker login quay.io -u="reactiveops+circleci" -p="${quay_token}"
-        docker pull $REPO:dev-$CIRCLE_SHA1
+        docker build -t $REPO:dev-$CIRCLE_SHA1 .
         docker tag $REPO:dev-$CIRCLE_SHA1 $REPO:$CIRCLE_TAG
         docker push $REPO:$CIRCLE_TAG
 
