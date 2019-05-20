@@ -222,11 +222,16 @@ func TestValidateHealthChecks(t *testing.T) {
 	}
 
 	probe := corev1.Probe{}
-	cv1 := ContainerValidation{
+	emptyCV := ContainerValidation{
 		Container:          &corev1.Container{Name: ""},
 		ResourceValidation: &ResourceValidation{},
 	}
-	cv2 := ContainerValidation{
+	emptyCVInit := ContainerValidation{
+		Container:          &corev1.Container{Name: ""},
+		ResourceValidation: &ResourceValidation{},
+		IsInitContainer:    true,
+	}
+	goodCV := ContainerValidation{
 		Container: &corev1.Container{
 			Name:           "",
 			LivenessProbe:  &probe,
@@ -248,11 +253,12 @@ func TestValidateHealthChecks(t *testing.T) {
 		errors   *[]*ResultMessage
 		warnings *[]*ResultMessage
 	}{
-		{name: "probes not configured", probes: p1, cv: cv1, errors: &f1},
-		{name: "probes not required", probes: p2, cv: cv1, errors: &f1},
-		{name: "probes required & configured", probes: p3, cv: cv2, errors: &f1},
-		{name: "probes required & not configured", probes: p3, cv: cv1, errors: &f2, warnings: &w1},
-		{name: "probes configured, but not required", probes: p2, cv: cv2, errors: &f1},
+		{name: "probes not configured", probes: p1, cv: emptyCV, errors: &f1},
+		{name: "probes not required", probes: p2, cv: emptyCV, errors: &f1},
+		{name: "probes required & configured", probes: p3, cv: goodCV, errors: &f1},
+		{name: "probes required, not configured, but init", probes: p3, cv: emptyCVInit, errors: &f1},
+		{name: "probes required & not configured", probes: p3, cv: emptyCV, errors: &f2, warnings: &w1},
+		{name: "probes configured, but not required", probes: p2, cv: goodCV, errors: &f1},
 	}
 
 	for _, tt := range testCases {
