@@ -89,19 +89,19 @@ func main() {
 	if *webhook {
 		startWebhookServer(c, *disableWebhookConfigInstaller, *webhookPort)
 	} else if *dashboard {
-		startDashboardServer(c, *dashboardPort)
+		startDashboardServer(c, *auditPath, *dashboardPort)
 	} else if *audit {
 		runAudit(c, *auditPath, *auditOutputFile, *auditOutputURL)
 	}
 }
 
-func startDashboardServer(c conf.Configuration, port int) {
+func startDashboardServer(c conf.Configuration, auditPath string, port int) {
 	router := mux.NewRouter()
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
 	router.HandleFunc("/results.json", func(w http.ResponseWriter, r *http.Request) {
-		k, err := kube.CreateResourceProvider("")
+		k, err := kube.CreateResourceProvider(auditPath)
 		if err != nil {
 			logrus.Errorf("Error fetching Kubernetes resources %v", err)
 			http.Error(w, "Error fetching Kubernetes resources", http.StatusInternalServerError)
@@ -124,7 +124,7 @@ func startDashboardServer(c conf.Configuration, port int) {
 			http.NotFound(w, r)
 			return
 		}
-		k, err := kube.CreateResourceProvider("")
+		k, err := kube.CreateResourceProvider(auditPath)
 		if err != nil {
 			logrus.Errorf("Error fetching Kubernetes resources %v", err)
 			http.Error(w, "Error fetching Kubernetes resources", http.StatusInternalServerError)

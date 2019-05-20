@@ -37,6 +37,19 @@ references:
         go test ./pkg/... -coverprofile=coverage.txt -covermode=count
         bash <(curl -s https://codecov.io/bash)
 
+  test_dashboard: &test_dashboard
+    run:
+      name: Test Dashboard
+      command: |
+        go run main.go --dashboard --dashboard-port 3000 --audit-path ./deploy/dashboard.yaml &
+        sleep 5
+        curl -f http://localhost:3000 > /dev/null
+        curl -f http://localhost:3000/health > /dev/null
+        curl -f http://localhost:3000/favicon.ico > /dev/null
+        curl -f http://localhost:3000/static/css/main.css > /dev/null
+        curl -f http://localhost:3000/results.json > /dev/null
+        curl -f http://localhost:3000/details/security > /dev/null
+
 jobs:
   build:
     docker:
@@ -58,6 +71,7 @@ jobs:
       - run: go list ./... | grep -v vendor | xargs golint -set_exit_status
       - run: go list ./... | grep -v vendor | xargs go vet
       - *update_coverage
+      - *test_dashboard
 
   test-deploy:
     docker:
