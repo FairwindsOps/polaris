@@ -7,7 +7,7 @@ import (
 
 const (
 	// PolarisOutputVersion is the version of the current output structure
-	PolarisOutputVersion = "0.0"
+	PolarisOutputVersion = "0.1"
 )
 
 // ClusterSummary contains Polaris results as well as some high-level stats
@@ -18,6 +18,7 @@ type ClusterSummary struct {
 	Pods        int
 	Namespaces  int
 	Deployments int
+	Score       uint
 }
 
 // AuditData contains all the data from a full Polaris audit
@@ -58,6 +59,7 @@ func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider) (
 			Namespaces:  len(kubeResources.Namespaces),
 			Deployments: len(kubeResources.Deployments),
 			Results:     clusterResults,
+			Score:       clusterResults.Totals.GetScore(),
 		},
 		NamespacedResults: nsResults,
 	}

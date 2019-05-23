@@ -89,7 +89,6 @@ func GetBaseTemplate(name string) (*template.Template, error) {
 		"getWeatherIcon":  getWeatherIcon,
 		"getWeatherText":  getWeatherText,
 		"getGrade":        getGrade,
-		"getScore":        getScore,
 		"getIcon":         getIcon,
 		"getCategoryLink": getCategoryLink,
 		"getCategoryInfo": getCategoryInfo,

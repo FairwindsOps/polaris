@@ -45,6 +45,12 @@ type CountSummary struct {
 	Errors    uint
 }
 
+// GetScore returns an overall score in [0, 100] for the CountSummary
+func (cs *CountSummary) GetScore() uint {
+	total := (cs.Successes * 2) + cs.Warnings + (cs.Errors * 2)
+	return uint((float64(cs.Successes*2) / float64(total)) * 100)
+}
+
 func (cs *CountSummary) appendCounts(toAppend CountSummary) {
 	cs.Errors += toAppend.Errors
 	cs.Warnings += toAppend.Warnings
