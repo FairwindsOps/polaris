@@ -161,6 +161,27 @@ func TestValidateResourcesPartiallyValid(t *testing.T) {
 	testValidateResources(t, &container, &resourceConf1, &expectedErrors, &expectedWarnings)
 }
 
+func TestValidateResourcesInit(t *testing.T) {
+	cvEmpty := ContainerValidation{
+		Container:          &corev1.Container{},
+		ResourceValidation: &ResourceValidation{},
+	}
+	cvInit := ContainerValidation{
+		Container:          &corev1.Container{},
+		ResourceValidation: &ResourceValidation{},
+		IsInitContainer:    true,
+	}
+
+	parsedConf, err := conf.Parse([]byte(resourceConf1))
+	assert.NoError(t, err, "Expected no error when parsing config")
+
+	cvEmpty.validateResources(&parsedConf.Resources)
+	assert.Len(t, cvEmpty.Errors, 4)
+
+	cvInit.validateResources(&parsedConf.Resources)
+	assert.Len(t, cvInit.Errors, 0)
+}
+
 func TestValidateResourcesFullyValid(t *testing.T) {
 	cpuRequest, err := resource.ParseQuantity("300m")
 	assert.NoError(t, err, "Error parsing quantity")
