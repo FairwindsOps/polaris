@@ -57,13 +57,11 @@ Each new pull request should:
 - Be up to date and/or rebased on the master branch
 
 ## Creating a new release
-* Change the version number everywhere. E.g. for `0.1.4` to `0.1.5`:
-```
-find ./ -type f ! -path "./vendor/*" ! -path "./.git/*" ! -name CHANGELOG.md -exec sed -i 's/0\.1\.4/0.1.5/g' {} \;
-```
+* Change the version number in:
+  * main.go
+  * README.md
 * Add relevant entries to CHANGELOG.md
-* Create a PR to merge your changes
-* Once the PR is merged, wait for CircleCI to finish building the merge commit
+* Create a PR and merge your changes
 * Tag and push the latest:
 ```
 git checkout master
@@ -72,3 +70,10 @@ git tag $VERSION
 git push --tags
 ```
 * CircleCI will add an entry to the releases page on GitHub
+* In [the helm char](https://github.com/reactiveops/charts), change the version number in:
+  * stable/polaris/README.md
+  * stable/polaris/Chart.yaml
+  * stable/polaris/values.yaml
+* Create a PR for the helm chart and merge your changes
+* In this repo, run `make helm-to-k8s` to regenerate the `deploy/` directory
+* Commit your changes and create a PR
