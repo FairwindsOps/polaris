@@ -55,6 +55,12 @@ func ValidateContainer(cnConf *conf.Configuration, container *corev1.Container, 
 }
 
 func (cv *ContainerValidation) validateResources(resConf *conf.Resources) {
+	// Only validate resources for primary containers. Although it can
+	// be helpful to set these in certain cases, it usually isn't
+	if cv.IsInitContainer {
+		return
+	}
+
 	category := messages.CategoryResources
 	res := cv.Container.Resources
 
