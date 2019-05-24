@@ -35,9 +35,8 @@ Create chart name and version as used by the chart label.
 Standard labels
 */}}
 {{- define "polaris.labels" -}}
-{{- if .Values.templateOnly -}}
 app: {{ include "polaris.name" . }}
-{{- else -}}
+{{- if not .Values.templateOnly }}
 app.kubernetes.io/name: {{ include "polaris.name" . }}
 helm.sh/chart: {{ include "polaris.chart" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
@@ -49,9 +48,8 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 Standard selector
 */}}
 {{- define "polaris.selectors" -}}
-{{- if .Values.templateOnly -}}
 app: {{ include "polaris.name" . }}
-{{- else -}}
+{{- if not .Values.templateOnly }}
 app.kubernetes.io/name: {{ include "polaris.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
