@@ -19,6 +19,8 @@ Polaris helps keep your cluster healthy. It runs a variety of checks to ensure t
 - A dashboard that provides an overview of how well current deployments are configured within a cluster.
 - An experimental validating webhook that can prevent any future deployments that do not live up to a configured standard.
 
+**Want to learn more?** ReactiveOps holds [office hours on Zoom](https://zoom.us/j/951540265) the first Friday of every month, at 12pm Eastern. You can also reach out via email at `opensource@reactiveops.com`
+
 ## Dashboard
 
 The Polaris dashboard is a way to get a simple visual overview of the current state of your Kubernetes deployments as well as a roadmap for what can be improved. The dashboard provides a cluster wide overview as well as breaking out results by category, namespace, and deployment.
