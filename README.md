@@ -108,9 +108,10 @@ Polaris validation checks fall into several different categories:
 
 * `config`: Specify a location for the Polaris config
 * `dashboard`: Runs the webserver for Polaris dashboard.
-* `dashboard-port`: Port for the dashboard webserver (default 8080)
+* `dashboard-port`: Port for the dashboard webserver (default `8080`)
+* `dashboard-base-path`: Path on which the dashboard is being served (default `/`)
 * `webhook`: Runs the webhook webserver.
-* `webhook-port`: Port for the webhook webserver (default 9876)
+* `webhook-port`: Port for the webhook webserver (default `9876`)
 * `disable-webhook-config-installer`: disable the installer in the webhook server, so it won't install webhook configuration resources during bootstrapping
 * `kubeconfig`: Paths to a kubeconfig. Only required if out-of-cluster.
 

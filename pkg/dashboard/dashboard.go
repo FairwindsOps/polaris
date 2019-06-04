@@ -19,8 +19,10 @@ import (
 	"encoding/json"
 	"html/template"
 	"net/http"
+	"strings"
 
 	packr "github.com/gobuffalo/packr/v2"
+	"github.com/gorilla/mux"
 	conf "github.com/reactiveops/polaris/pkg/config"
 	"github.com/reactiveops/polaris/pkg/kube"
 	"github.com/reactiveops/polaris/pkg/validator"
@@ -75,8 +77,9 @@ func GetMarkdownBox() *packr.Box {
 	return markdownBox
 }
 
-// TemplateData is passed to the dashboard HTML template
-type TemplateData struct {
+// templateData is passed to the dashboard HTML template
+type templateData struct {
+	BasePath  string
 	AuditData validator.AuditData
 	JSON      template.JS
 }
@@ -122,7 +125,7 @@ func parseTemplateFiles(tmpl *template.Template, templateFileNames []string) (*t
 	return tmpl, nil
 }
 
-func writeTemplate(tmpl *template.Template, data *TemplateData, w http.ResponseWriter) {
+func writeTemplate(tmpl *template.Template, data *templateData, w http.ResponseWriter) {
 	buf := &bytes.Buffer{}
 	err := tmpl.Execute(buf, data)
 	if err != nil {
@@ -132,8 +135,62 @@ func writeTemplate(tmpl *template.Template, data *TemplateData, w http.ResponseW
 	buf.WriteTo(w)
 }
 
+// GetRouter returns a mux router serving all routes necessary for the dashboard
+func GetRouter(c conf.Configuration, auditPath string, port int, basePath string) *mux.Router {
+	router := mux.NewRouter()
+	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("OK"))
+	})
+	router.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		favicon, err := GetAssetBox().Find("favicon-32x32.png")
+		if err != nil {
+			logrus.Errorf("Error getting favicon: %v", err)
+			http.Error(w, "Error getting favicon", http.StatusInternalServerError)
+			return
+		}
+		w.Write(favicon)
+	})
+	router.HandleFunc("/results.json", func(w http.ResponseWriter, r *http.Request) {
+		k, err := kube.CreateResourceProvider(auditPath)
+		if err != nil {
+			logrus.Errorf("Error fetching Kubernetes resources %v", err)
+			http.Error(w, "Error fetching Kubernetes resources", http.StatusInternalServerError)
+			return
+		}
+		JSONHandler(w, r, c, k)
+	})
+	router.HandleFunc("/details/{category}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		category := vars["category"]
+		category = strings.Replace(category, ".md", "", -1)
+		DetailsHandler(w, r, category, basePath)
+	})
+	fileServer := http.FileServer(GetAssetBox())
+	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fileServer))
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+		k, err := kube.CreateResourceProvider(auditPath)
+		if err != nil {
+			logrus.Errorf("Error fetching Kubernetes resources %v", err)
+			http.Error(w, "Error fetching Kubernetes resources", http.StatusInternalServerError)
+			return
+		}
+		auditData, err := validator.RunAudit(c, k)
+		if err != nil {
+			logrus.Errorf("Error getting audit data: %v", err)
+			http.Error(w, "Error running audit", 500)
+			return
+		}
+		MainHandler(w, r, auditData, basePath)
+	})
+	return router
+}
+
 // MainHandler gets template data and renders the dashboard with it.
-func MainHandler(w http.ResponseWriter, r *http.Request, auditData validator.AuditData) {
+func MainHandler(w http.ResponseWriter, r *http.Request, auditData validator.AuditData, basePath string) {
 	jsonData, err := json.Marshal(auditData)
 
 	if err != nil {
@@ -141,7 +198,8 @@ func MainHandler(w http.ResponseWriter, r *http.Request, auditData validator.Aud
 		return
 	}
 
-	templateData := TemplateData{
+	data := templateData{
+		BasePath:  basePath,
 		AuditData: auditData,
 		JSON:      template.JS(jsonData),
 	}
@@ -151,12 +209,12 @@ func MainHandler(w http.ResponseWriter, r *http.Request, auditData validator.Aud
 		http.Error(w, "Error getting template data", 500)
 		return
 	}
-	writeTemplate(tmpl, &templateData, w)
+	writeTemplate(tmpl, &data, w)
 }
 
-// EndpointHandler gets template data and renders json with it.
-func EndpointHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration, kubeResources *kube.ResourceProvider) {
-	templateData, err := validator.RunAudit(c, kubeResources)
+// JSONHandler gets template data and renders json with it.
+func JSONHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration, kubeResources *kube.ResourceProvider) {
+	auditData, err := validator.RunAudit(c, kubeResources)
 	if err != nil {
 		http.Error(w, "Error Fetching Deployments", http.StatusInternalServerError)
 		return
@@ -164,11 +222,11 @@ func EndpointHandler(w http.ResponseWriter, r *http.Request, c conf.Configuratio
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(templateData)
+	json.NewEncoder(w).Encode(auditData)
 }
 
 // DetailsHandler returns details for a given error type
-func DetailsHandler(w http.ResponseWriter, r *http.Request, category string) {
+func DetailsHandler(w http.ResponseWriter, r *http.Request, category string, basePath string) {
 	box := GetMarkdownBox()
 	contents, err := box.Find(category + ".md")
 	if err != nil {
@@ -192,5 +250,8 @@ func DetailsHandler(w http.ResponseWriter, r *http.Request, category string) {
 		return
 	}
 	tmpl.Parse(detailsHTML)
-	writeTemplate(tmpl, nil, w)
+	data := templateData{
+		BasePath: basePath,
+	}
+	writeTemplate(tmpl, &data, w)
 }
