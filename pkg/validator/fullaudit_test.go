@@ -12,7 +12,7 @@ import (
 func TestGetTemplateData(t *testing.T) {
 	k8s := test.SetupTestAPI()
 	k8s = test.SetupAddDeploys(k8s, "test")
-	resources, err := kube.CreateResourceProviderFromAPI(k8s)
+	resources, err := kube.CreateResourceProviderFromAPI(k8s, "test")
 	assert.Equal(t, err, nil, "error should be nil")
 
 	c := conf.Configuration{
@@ -45,6 +45,8 @@ func TestGetTemplateData(t *testing.T) {
 	assert.Equal(t, err, nil, "error should be nil")
 
 	assert.EqualValues(t, sum, actualAudit.ClusterSummary.Results)
+	assert.Equal(t, actualAudit.SourceType, "Cluster", "should be from a cluster")
+	assert.Equal(t, actualAudit.SourceName, "test", "should be from a cluster")
 	assert.Equal(t, 1, len(actualAudit.NamespacedResults["test"].DeploymentResults), "should be equal")
 	assert.Equal(t, 1, len(actualAudit.NamespacedResults["test"].DeploymentResults), "should be equal")
 	assert.Equal(t, 1, len(actualAudit.NamespacedResults["test"].DeploymentResults[0].PodResult.ContainerResults), "should be equal")

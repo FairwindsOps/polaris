@@ -1,6 +1,11 @@
 {{define "dashboard"}}
   <div class="card cluster">
-    <h3>Cluster Overview</h3>
+    <h3>
+      <span>{{ .AuditData.SourceType }} Overview</span>
+{{- if .AuditData.DisplayName -}}
+<small>: {{ .AuditData.DisplayName }}</small>
+{{ end }}
+    </h3>
     <div class="cluster-overview">
       <div class="cluster-score">
         <div class="score-details">

@@ -31,6 +31,10 @@ spec:
         - --dashboard
         - --config
         - /opt/app/config.yaml
+        {{- with .Values.dashboard.clusterName }}
+        - --cluster-name
+        - {{ . }}
+        {{- end }}
         image: '{{.Values.dashboard.image.repository}}:{{.Values.dashboard.image.tag}}'
         imagePullPolicy: '{{.Values.dashboard.image.pullPolicy}}'
         name: dashboard

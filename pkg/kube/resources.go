@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
@@ -21,6 +22,9 @@ import (
 // ResourceProvider contains k8s resources to be audited
 type ResourceProvider struct {
 	ServerVersion string
+	CreationTime  time.Time
+	SourceName    string
+	SourceType    string
 	Nodes         []corev1.Node
 	Deployments   []appsv1.Deployment
 	Namespaces    []corev1.Namespace
@@ -43,6 +47,8 @@ func CreateResourceProvider(directory string) (*ResourceProvider, error) {
 func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error) {
 	resources := ResourceProvider{
 		ServerVersion: "unknown",
+		SourceType:    "Path",
+		SourceName:    directory,
 		Nodes:         []corev1.Node{},
 		Deployments:   []appsv1.Deployment{},
 		Namespaces:    []corev1.Namespace{},
@@ -126,11 +132,11 @@ func CreateResourceProviderFromCluster() (*ResourceProvider, error) {
 		logrus.Errorf("Error creating Kubernetes client %v", err)
 		return nil, err
 	}
-	return CreateResourceProviderFromAPI(api)
+	return CreateResourceProviderFromAPI(api, kubeConf.Host)
 }
 
 // CreateResourceProviderFromAPI creates a new ResourceProvider from an existing k8s interface
-func CreateResourceProviderFromAPI(kube kubernetes.Interface) (*ResourceProvider, error) {
+func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string) (*ResourceProvider, error) {
 	listOpts := metav1.ListOptions{}
 	serverVersion, err := kube.Discovery().ServerVersion()
 	if err != nil {
@@ -157,8 +163,12 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface) (*ResourceProvider
 		logrus.Errorf("Error fetching Kubernetes Pods %v", err)
 		return nil, err
 	}
+
 	api := ResourceProvider{
 		ServerVersion: serverVersion.Major + "." + serverVersion.Minor,
+		SourceType:    "Cluster",
+		SourceName:    clusterName,
+		CreationTime:  time.Now(),
 		Deployments:   deploys.Items,
 		Nodes:         nodes.Items,
 		Namespaces:    namespaces.Items,

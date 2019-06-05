@@ -56,6 +56,7 @@ func main() {
 	auditOutputURL := flag.String("output-url", "", "Destination URL to send audit results")
 	auditOutputFile := flag.String("output-file", "", "Destination file for audit results")
 	auditOutputFormat := flag.String("output-format", "json", "Output format for results - json, yaml, or score")
+	displayName := flag.String("display-name", "", "An optional identifier for the audit")
 	configPath := flag.String("config", "", "Location of Polaris configuration file")
 	logLevel := flag.String("log-level", logrus.InfoLevel.String(), "Logrus log level")
 	version := flag.Bool("version", false, "Prints the version of Polaris")
@@ -77,6 +78,9 @@ func main() {
 	}
 
 	c, err := conf.ParseFile(*configPath)
+	if *displayName != "" {
+		c.DisplayName = *displayName
+	}
 	if err != nil {
 		logrus.Errorf("Error parsing config at %s: %v", *configPath, err)
 		os.Exit(1)

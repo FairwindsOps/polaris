@@ -1,6 +1,8 @@
 package validator
 
 import (
+	"time"
+
 	conf "github.com/reactiveops/polaris/pkg/config"
 	"github.com/reactiveops/polaris/pkg/kube"
 )
@@ -24,6 +26,10 @@ type ClusterSummary struct {
 // AuditData contains all the data from a full Polaris audit
 type AuditData struct {
 	PolarisOutputVersion string
+	AuditTime            string
+	SourceType           string
+	SourceName           string
+	DisplayName          string
 	ClusterSummary       ClusterSummary
 	NamespacedResults    NamespacedResults
 }
@@ -50,8 +56,17 @@ func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider) (
 		}
 	}
 
+	displayName := config.DisplayName
+	if displayName == "" {
+		displayName = kubeResources.SourceName
+	}
+
 	auditData := AuditData{
 		PolarisOutputVersion: PolarisOutputVersion,
+		AuditTime:            kubeResources.CreationTime.Format(time.RFC3339),
+		SourceType:           kubeResources.SourceType,
+		SourceName:           kubeResources.SourceName,
+		DisplayName:          displayName,
 		ClusterSummary: ClusterSummary{
 			Version:     kubeResources.ServerVersion,
 			Nodes:       len(kubeResources.Nodes),
