@@ -39,3 +39,7 @@
 * [Fix](https://github.com/reactiveops/polaris/issues/116): details pages getting template errors
 * [Fix](https://github.com/reactiveops/polaris/issues/114): support all auth providers
 * [Fix](https://github.com/reactiveops/polaris/issues/112): Ignore readiness probe for initContainers
+
+# 0.1.5
+* [Fix](https://github.com/reactiveops/polaris/issues/125): ignore limits/requests for initContainers
+* [Fix](https://github.com/reactiveops/polaris/issues/132): support custom base path

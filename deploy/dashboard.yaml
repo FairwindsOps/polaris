@@ -160,7 +160,7 @@ spec:
         - --dashboard
         - --config
         - /opt/app/config.yaml
-        image: 'quay.io/reactiveops/polaris:0.1.4'
+        image: 'quay.io/reactiveops/polaris:0.1.5'
         imagePullPolicy: 'Always'
         name: dashboard
         ports:
