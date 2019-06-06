@@ -19,7 +19,7 @@ Polaris helps keep your cluster healthy. It runs a variety of checks to ensure t
 - A dashboard that provides an overview of how well current deployments are configured within a cluster.
 - An experimental validating webhook that can prevent any future deployments that do not live up to a configured standard.
 
-**Want to learn more?** ReactiveOps holds [office hours on Zoom](https://zoom.us/j/951540265) the first Friday of every month, at 12pm Eastern. You can also reach out via email at `opensource@reactiveops.com`
+**Want to learn more?** ReactiveOps holds [office hours on Zoom](https://zoom.us/j/242508205) the first Friday of every month, at 12pm Eastern. You can also reach out via email at `opensource@reactiveops.com`
 
 ## Dashboard
 
