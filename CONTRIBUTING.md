@@ -17,7 +17,6 @@ Polaris is built on top of [controller-runtime](https://github.com/kubernetes-si
 
 We label issues with the ["good first issue" tag](https://github.com/reactiveops/polaris/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) if we believe they'll be a good starting point for new contributors. If you're interested in working on an issue, please start a conversation on that issue, and we can help answer any questions as they come up.
 
-
 ## Setting Up Your Development Environment
 ### Prerequisites
 * A properly configured Golang environment with Go 1.11 or higher
@@ -28,7 +27,6 @@ We label issues with the ["good first issue" tag](https://github.com/reactiveops
 * Change into the polaris directory which is installed at `~/go/src/github.com/reactiveops/polaris`
 * See the dashboard with `go run main.go --dashboard`, then open http://localhost:8080/
 * See the audit data  `go run main.go --audit`. This command shows the audit information on the command line. 
-
 
 ## Running Tests
 
