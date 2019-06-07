@@ -7,7 +7,7 @@ Issues, whether bugs, tasks, or feature requests are essential for keeping Polar
 This project adheres to a [code of conduct](CODE_OF_CONDUCT.md). Please review this document before contributing to this project.
 
 ## Sign the CLA
-Before you can contribute, you will need to sign the [Contributor License Agreement]().
+Before you can contribute, you will need to sign the [Contributor License Agreement](https://cla-assistant.io/reactiveops/polaris).
 
 ## Project Structure
 
@@ -24,7 +24,7 @@ We label issues with the ["good first issue" tag](https://github.com/reactiveops
 
 ### Installation
 * Install the project with `go get github.com/reactiveops/polaris`
-* Change into the polaris directory which is installed at `~/go/src/github.com/reactiveops/polaris`
+* Change into the polaris directory which is installed at `$GOPATH/src/github.com/reactiveops/polaris`
 * See the dashboard with `go run main.go --dashboard`, then open http://localhost:8080/
 * See the audit data  `go run main.go --audit`. This command shows the audit information on the command line. 
 
