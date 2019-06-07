@@ -18,6 +18,7 @@ package redis
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"time"
 
@@ -37,11 +38,12 @@ import (
 
 // CloudRedisCallOptions contains the retry settings for each method of CloudRedisClient.
 type CloudRedisCallOptions struct {
-	ListInstances  []gax.CallOption
-	GetInstance    []gax.CallOption
-	CreateInstance []gax.CallOption
-	UpdateInstance []gax.CallOption
-	DeleteInstance []gax.CallOption
+	ListInstances    []gax.CallOption
+	GetInstance      []gax.CallOption
+	CreateInstance   []gax.CallOption
+	UpdateInstance   []gax.CallOption
+	DeleteInstance   []gax.CallOption
+	FailoverInstance []gax.CallOption
 }
 
 func defaultCloudRedisClientOptions() []option.ClientOption {
@@ -54,11 +56,12 @@ func defaultCloudRedisClientOptions() []option.ClientOption {
 func defaultCloudRedisCallOptions() *CloudRedisCallOptions {
 	retry := map[[2]string][]gax.CallOption{}
 	return &CloudRedisCallOptions{
-		ListInstances:  retry[[2]string{"default", "non_idempotent"}],
-		GetInstance:    retry[[2]string{"default", "non_idempotent"}],
-		CreateInstance: retry[[2]string{"default", "non_idempotent"}],
-		UpdateInstance: retry[[2]string{"default", "non_idempotent"}],
-		DeleteInstance: retry[[2]string{"default", "non_idempotent"}],
+		ListInstances:    retry[[2]string{"default", "non_idempotent"}],
+		GetInstance:      retry[[2]string{"default", "non_idempotent"}],
+		CreateInstance:   retry[[2]string{"default", "non_idempotent"}],
+		UpdateInstance:   retry[[2]string{"default", "non_idempotent"}],
+		DeleteInstance:   retry[[2]string{"default", "non_idempotent"}],
+		FailoverInstance: retry[[2]string{"default", "non_idempotent"}],
 	}
 }
 
@@ -162,7 +165,8 @@ func (c *CloudRedisClient) setGoogleClientInfo(keyval ...string) {
 // If location_id is specified as - (wildcard), then all regions
 // available to the project are queried, and the results are aggregated.
 func (c *CloudRedisClient) ListInstances(ctx context.Context, req *redispb.ListInstancesRequest, opts ...gax.CallOption) *InstanceIterator {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "parent", req.GetParent()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.ListInstances[0:len(c.CallOptions.ListInstances):len(c.CallOptions.ListInstances)], opts...)
 	it := &InstanceIterator{}
 	req = proto.Clone(req).(*redispb.ListInstancesRequest)
@@ -194,12 +198,14 @@ func (c *CloudRedisClient) ListInstances(ctx context.Context, req *redispb.ListI
 	}
 	it.pageInfo, it.nextFunc = iterator.NewPageInfo(fetch, it.bufLen, it.takeBuf)
 	it.pageInfo.MaxSize = int(req.PageSize)
+	it.pageInfo.Token = req.PageToken
 	return it
 }
 
 // GetInstance gets the details of a specific Redis instance.
 func (c *CloudRedisClient) GetInstance(ctx context.Context, req *redispb.GetInstanceRequest, opts ...gax.CallOption) (*redispb.Instance, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "name", req.GetName()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.GetInstance[0:len(c.CallOptions.GetInstance):len(c.CallOptions.GetInstance)], opts...)
 	var resp *redispb.Instance
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
@@ -215,7 +221,7 @@ func (c *CloudRedisClient) GetInstance(ctx context.Context, req *redispb.GetInst
 
 // CreateInstance creates a Redis instance based on the specified tier and memory size.
 //
-// By default, the instance is peered to the project's
+// By default, the instance is accessible from the project's
 // default network (at /compute/docs/networks-and-firewalls#networks).
 //
 // The creation is executed asynchronously and callers may check the returned
@@ -226,7 +232,8 @@ func (c *CloudRedisClient) GetInstance(ctx context.Context, req *redispb.GetInst
 // The returned operation is automatically deleted after a few hours, so there
 // is no need to call DeleteOperation.
 func (c *CloudRedisClient) CreateInstance(ctx context.Context, req *redispb.CreateInstanceRequest, opts ...gax.CallOption) (*CreateInstanceOperation, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "parent", req.GetParent()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.CreateInstance[0:len(c.CallOptions.CreateInstance):len(c.CallOptions.CreateInstance)], opts...)
 	var resp *longrunningpb.Operation
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
@@ -248,7 +255,8 @@ func (c *CloudRedisClient) CreateInstance(ctx context.Context, req *redispb.Crea
 // in the response field. The returned operation is automatically deleted
 // after a few hours, so there is no need to call DeleteOperation.
 func (c *CloudRedisClient) UpdateInstance(ctx context.Context, req *redispb.UpdateInstanceRequest, opts ...gax.CallOption) (*UpdateInstanceOperation, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "instance.name", req.GetInstance().GetName()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.UpdateInstance[0:len(c.CallOptions.UpdateInstance):len(c.CallOptions.UpdateInstance)], opts...)
 	var resp *longrunningpb.Operation
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
@@ -267,7 +275,8 @@ func (c *CloudRedisClient) UpdateInstance(ctx context.Context, req *redispb.Upda
 // DeleteInstance deletes a specific Redis instance.  Instance stops serving and data is
 // deleted.
 func (c *CloudRedisClient) DeleteInstance(ctx context.Context, req *redispb.DeleteInstanceRequest, opts ...gax.CallOption) (*DeleteInstanceOperation, error) {
-	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "name", req.GetName()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
 	opts = append(c.CallOptions.DeleteInstance[0:len(c.CallOptions.DeleteInstance):len(c.CallOptions.DeleteInstance)], opts...)
 	var resp *longrunningpb.Operation
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
@@ -279,6 +288,26 @@ func (c *CloudRedisClient) DeleteInstance(ctx context.Context, req *redispb.Dele
 		return nil, err
 	}
 	return &DeleteInstanceOperation{
+		lro: longrunning.InternalNewOperation(c.LROClient, resp),
+	}, nil
+}
+
+// FailoverInstance failover the master role to current replica node against a specific
+// STANDARD tier redis instance.
+func (c *CloudRedisClient) FailoverInstance(ctx context.Context, req *redispb.FailoverInstanceRequest, opts ...gax.CallOption) (*FailoverInstanceOperation, error) {
+	md := metadata.Pairs("x-goog-request-params", fmt.Sprintf("%s=%v", "name", req.GetName()))
+	ctx = insertMetadata(ctx, c.xGoogMetadata, md)
+	opts = append(c.CallOptions.FailoverInstance[0:len(c.CallOptions.FailoverInstance):len(c.CallOptions.FailoverInstance)], opts...)
+	var resp *longrunningpb.Operation
+	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
+		var err error
+		resp, err = c.cloudRedisClient.FailoverInstance(ctx, req, settings.GRPC...)
+		return err
+	}, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &FailoverInstanceOperation{
 		lro: longrunning.InternalNewOperation(c.LROClient, resp),
 	}, nil
 }
@@ -447,6 +476,75 @@ func (op *DeleteInstanceOperation) Done() bool {
 // Name returns the name of the long-running operation.
 // The name is assigned by the server and is unique within the service from which the operation is created.
 func (op *DeleteInstanceOperation) Name() string {
+	return op.lro.Name()
+}
+
+// FailoverInstanceOperation manages a long-running operation from FailoverInstance.
+type FailoverInstanceOperation struct {
+	lro *longrunning.Operation
+}
+
+// FailoverInstanceOperation returns a new FailoverInstanceOperation from a given name.
+// The name must be that of a previously created FailoverInstanceOperation, possibly from a different process.
+func (c *CloudRedisClient) FailoverInstanceOperation(name string) *FailoverInstanceOperation {
+	return &FailoverInstanceOperation{
+		lro: longrunning.InternalNewOperation(c.LROClient, &longrunningpb.Operation{Name: name}),
+	}
+}
+
+// Wait blocks until the long-running operation is completed, returning the response and any errors encountered.
+//
+// See documentation of Poll for error-handling information.
+func (op *FailoverInstanceOperation) Wait(ctx context.Context, opts ...gax.CallOption) (*redispb.Instance, error) {
+	var resp redispb.Instance
+	if err := op.lro.WaitWithInterval(ctx, &resp, 360000*time.Millisecond, opts...); err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
+// Poll fetches the latest state of the long-running operation.
+//
+// Poll also fetches the latest metadata, which can be retrieved by Metadata.
+//
+// If Poll fails, the error is returned and op is unmodified. If Poll succeeds and
+// the operation has completed with failure, the error is returned and op.Done will return true.
+// If Poll succeeds and the operation has completed successfully,
+// op.Done will return true, and the response of the operation is returned.
+// If Poll succeeds and the operation has not completed, the returned response and error are both nil.
+func (op *FailoverInstanceOperation) Poll(ctx context.Context, opts ...gax.CallOption) (*redispb.Instance, error) {
+	var resp redispb.Instance
+	if err := op.lro.Poll(ctx, &resp, opts...); err != nil {
+		return nil, err
+	}
+	if !op.Done() {
+		return nil, nil
+	}
+	return &resp, nil
+}
+
+// Metadata returns metadata associated with the long-running operation.
+// Metadata itself does not contact the server, but Poll does.
+// To get the latest metadata, call this method after a successful call to Poll.
+// If the metadata is not available, the returned metadata and error are both nil.
+func (op *FailoverInstanceOperation) Metadata() (*anypb.Any, error) {
+	var meta anypb.Any
+	if err := op.lro.Metadata(&meta); err == longrunning.ErrNoMetadata {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+	return &meta, nil
+}
+
+// Done reports whether the long-running operation has completed.
+func (op *FailoverInstanceOperation) Done() bool {
+	return op.lro.Done()
+}
+
+// Name returns the name of the long-running operation.
+// The name is assigned by the server and is unique within the service from which the operation is created.
+func (op *FailoverInstanceOperation) Name() string {
 	return op.lro.Name()
 }
 

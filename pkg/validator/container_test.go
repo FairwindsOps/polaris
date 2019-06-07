@@ -161,6 +161,27 @@ func TestValidateResourcesPartiallyValid(t *testing.T) {
 	testValidateResources(t, &container, &resourceConf1, &expectedErrors, &expectedWarnings)
 }
 
+func TestValidateResourcesInit(t *testing.T) {
+	cvEmpty := ContainerValidation{
+		Container:          &corev1.Container{},
+		ResourceValidation: &ResourceValidation{},
+	}
+	cvInit := ContainerValidation{
+		Container:          &corev1.Container{},
+		ResourceValidation: &ResourceValidation{},
+		IsInitContainer:    true,
+	}
+
+	parsedConf, err := conf.Parse([]byte(resourceConf1))
+	assert.NoError(t, err, "Expected no error when parsing config")
+
+	cvEmpty.validateResources(&parsedConf.Resources)
+	assert.Len(t, cvEmpty.Errors, 4)
+
+	cvInit.validateResources(&parsedConf.Resources)
+	assert.Len(t, cvInit.Errors, 0)
+}
+
 func TestValidateResourcesFullyValid(t *testing.T) {
 	cpuRequest, err := resource.ParseQuantity("300m")
 	assert.NoError(t, err, "Error parsing quantity")
@@ -222,11 +243,16 @@ func TestValidateHealthChecks(t *testing.T) {
 	}
 
 	probe := corev1.Probe{}
-	cv1 := ContainerValidation{
+	emptyCV := ContainerValidation{
 		Container:          &corev1.Container{Name: ""},
 		ResourceValidation: &ResourceValidation{},
 	}
-	cv2 := ContainerValidation{
+	emptyCVInit := ContainerValidation{
+		Container:          &corev1.Container{Name: ""},
+		ResourceValidation: &ResourceValidation{},
+		IsInitContainer:    true,
+	}
+	goodCV := ContainerValidation{
 		Container: &corev1.Container{
 			Name:           "",
 			LivenessProbe:  &probe,
@@ -248,11 +274,12 @@ func TestValidateHealthChecks(t *testing.T) {
 		errors   *[]*ResultMessage
 		warnings *[]*ResultMessage
 	}{
-		{name: "probes not configured", probes: p1, cv: cv1, errors: &f1},
-		{name: "probes not required", probes: p2, cv: cv1, errors: &f1},
-		{name: "probes required & configured", probes: p3, cv: cv2, errors: &f1},
-		{name: "probes required & not configured", probes: p3, cv: cv1, errors: &f2, warnings: &w1},
-		{name: "probes configured, but not required", probes: p2, cv: cv2, errors: &f1},
+		{name: "probes not configured", probes: p1, cv: emptyCV, errors: &f1},
+		{name: "probes not required", probes: p2, cv: emptyCV, errors: &f1},
+		{name: "probes required & configured", probes: p3, cv: goodCV, errors: &f1},
+		{name: "probes required, not configured, but init", probes: p3, cv: emptyCVInit, errors: &f1},
+		{name: "probes required & not configured", probes: p3, cv: emptyCV, errors: &f2, warnings: &w1},
+		{name: "probes configured, but not required", probes: p2, cv: goodCV, errors: &f1},
 	}
 
 	for _, tt := range testCases {

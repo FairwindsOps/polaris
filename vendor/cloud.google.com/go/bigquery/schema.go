@@ -131,15 +131,14 @@ const (
 	// NumericFieldType is a numeric field type. Numeric types include integer types, floating point types and the
 	// NUMERIC data type.
 	NumericFieldType FieldType = "NUMERIC"
+	// GeographyFieldType is a string field type.  Geography types represent a set of points
+	// on the Earth's surface, represented in Well Known Text (WKT) format.
+	GeographyFieldType FieldType = "GEOGRAPHY"
 )
 
 var (
-	errNoStruct             = errors.New("bigquery: can only infer schema from struct or pointer to struct")
-	errUnsupportedFieldType = errors.New("bigquery: unsupported type of field in struct")
-	errInvalidFieldName     = errors.New("bigquery: invalid name of field in struct")
-	errBadNullable          = errors.New(`bigquery: use "nullable" only for []byte and struct pointers; for all other types, use a NullXXX type`)
-	errEmptyJSONSchema      = errors.New("bigquery: empty JSON schema")
-	fieldTypes              = map[FieldType]bool{
+	errEmptyJSONSchema = errors.New("bigquery: empty JSON schema")
+	fieldTypes         = map[FieldType]bool{
 		StringFieldType:    true,
 		BytesFieldType:     true,
 		IntegerFieldType:   true,
@@ -151,6 +150,7 @@ var (
 		TimeFieldType:      true,
 		DateTimeFieldType:  true,
 		NumericFieldType:   true,
+		GeographyFieldType: true,
 	}
 )
 
@@ -182,6 +182,9 @@ var typeOfByteSlice = reflect.TypeOf([]byte{})
 // A Go slice or array type is inferred to be a BigQuery repeated field of the
 // element type. The element type must be one of the above listed types.
 //
+// Due to lack of unique native Go type for GEOGRAPHY, there is no schema
+// inference to GEOGRAPHY at this time.
+//
 // Nullable fields are inferred from the NullXXX types, declared in this package:
 //
 //   STRING      NullString
@@ -192,6 +195,7 @@ var typeOfByteSlice = reflect.TypeOf([]byte{})
 //   DATE        NullDate
 //   TIME        NullTime
 //   DATETIME    NullDateTime
+//   GEOGRAPHY	 NullGeography
 //
 // For a nullable BYTES field, use the type []byte and tag the field "nullable" (see below).
 // For a nullable NUMERIC field, use the type *big.Rat and tag the field "nullable".
@@ -257,7 +261,7 @@ func inferStruct(t reflect.Type) (Schema, error) {
 	switch t.Kind() {
 	case reflect.Ptr:
 		if t.Elem().Kind() != reflect.Struct {
-			return nil, errNoStruct
+			return nil, noStructError{t}
 		}
 		t = t.Elem()
 		fallthrough
@@ -265,15 +269,15 @@ func inferStruct(t reflect.Type) (Schema, error) {
 	case reflect.Struct:
 		return inferFields(t)
 	default:
-		return nil, errNoStruct
+		return nil, noStructError{t}
 	}
 }
 
 // inferFieldSchema infers the FieldSchema for a Go type
-func inferFieldSchema(rt reflect.Type, nullable bool) (*FieldSchema, error) {
+func inferFieldSchema(fieldName string, rt reflect.Type, nullable bool) (*FieldSchema, error) {
 	// Only []byte and struct pointers can be tagged nullable.
 	if nullable && !(rt == typeOfByteSlice || rt.Kind() == reflect.Ptr && rt.Elem().Kind() == reflect.Struct) {
-		return nil, errBadNullable
+		return nil, badNullableError{fieldName, rt}
 	}
 	switch rt {
 	case typeOfByteSlice:
@@ -300,13 +304,13 @@ func inferFieldSchema(rt reflect.Type, nullable bool) (*FieldSchema, error) {
 		et := rt.Elem()
 		if et != typeOfByteSlice && (et.Kind() == reflect.Slice || et.Kind() == reflect.Array) {
 			// Multi dimensional slices/arrays are not supported by BigQuery
-			return nil, errUnsupportedFieldType
+			return nil, unsupportedFieldTypeError{fieldName, rt}
 		}
 		if nullableFieldType(et) != "" {
 			// Repeated nullable types are not supported by BigQuery.
-			return nil, errUnsupportedFieldType
+			return nil, unsupportedFieldTypeError{fieldName, rt}
 		}
-		f, err := inferFieldSchema(et, false)
+		f, err := inferFieldSchema(fieldName, et, false)
 		if err != nil {
 			return nil, err
 		}
@@ -315,7 +319,7 @@ func inferFieldSchema(rt reflect.Type, nullable bool) (*FieldSchema, error) {
 		return f, nil
 	case reflect.Ptr:
 		if rt.Elem().Kind() != reflect.Struct {
-			return nil, errUnsupportedFieldType
+			return nil, unsupportedFieldTypeError{fieldName, rt}
 		}
 		fallthrough
 	case reflect.Struct:
@@ -331,7 +335,7 @@ func inferFieldSchema(rt reflect.Type, nullable bool) (*FieldSchema, error) {
 	case reflect.Float32, reflect.Float64:
 		return &FieldSchema{Required: !nullable, Type: FloatFieldType}, nil
 	default:
-		return nil, errUnsupportedFieldType
+		return nil, unsupportedFieldTypeError{fieldName, rt}
 	}
 }
 
@@ -350,7 +354,7 @@ func inferFields(rt reflect.Type) (Schema, error) {
 				break
 			}
 		}
-		f, err := inferFieldSchema(field.Type, nullable)
+		f, err := inferFieldSchema(field.Name, field.Type, nullable)
 		if err != nil {
 			return nil, err
 		}
@@ -485,4 +489,30 @@ func SchemaFromJSON(schemaJSON []byte) (Schema, error) {
 	}
 
 	return convertSchemaFromJSON(bigQuerySchema)
+}
+
+type noStructError struct {
+	typ reflect.Type
+}
+
+func (e noStructError) Error() string {
+	return fmt.Sprintf("bigquery: can only infer schema from struct or pointer to struct, not %s", e.typ)
+}
+
+type badNullableError struct {
+	name string
+	typ  reflect.Type
+}
+
+func (e badNullableError) Error() string {
+	return fmt.Sprintf(`bigquery: field %q of type %s: use "nullable" only for []byte and struct pointers; for all other types, use a NullXXX type`, e.name, e.typ)
+}
+
+type unsupportedFieldTypeError struct {
+	name string
+	typ  reflect.Type
+}
+
+func (e unsupportedFieldTypeError) Error() string {
+	return fmt.Sprintf("bigquery: field %q: type %s is not supported", e.name, e.typ)
 }

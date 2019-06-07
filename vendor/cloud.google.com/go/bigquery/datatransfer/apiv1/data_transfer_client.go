@@ -62,7 +62,6 @@ func defaultCallOptions() *CallOptions {
 		{"default", "idempotent"}: {
 			gax.WithRetry(func() gax.Retryer {
 				return gax.OnCodes([]codes.Code{
-					codes.DeadlineExceeded,
 					codes.Unavailable,
 				}, gax.Backoff{
 					Initial:    100 * time.Millisecond,
@@ -109,9 +108,9 @@ type Client struct {
 // NewClient creates a new data transfer service client.
 //
 // The Google BigQuery Data Transfer Service API enables BigQuery users to
-// configure the transfer of their data from other Google Products into BigQuery.
-// This service contains methods that are end user exposed. It backs up the
-// frontend.
+// configure the transfer of their data from other Google Products into
+// BigQuery. This service contains methods that are end user exposed. It backs
+// up the frontend.
 func NewClient(ctx context.Context, opts ...option.ClientOption) (*Client, error) {
 	conn, err := transport.DialGRPC(ctx, append(defaultClientOptions(), opts...)...)
 	if err != nil {
@@ -201,6 +200,7 @@ func (c *Client) ListDataSources(ctx context.Context, req *datatransferpb.ListDa
 	}
 	it.pageInfo, it.nextFunc = iterator.NewPageInfo(fetch, it.bufLen, it.takeBuf)
 	it.pageInfo.MaxSize = int(req.PageSize)
+	it.pageInfo.Token = req.PageToken
 	return it
 }
 
@@ -305,6 +305,7 @@ func (c *Client) ListTransferConfigs(ctx context.Context, req *datatransferpb.Li
 	}
 	it.pageInfo, it.nextFunc = iterator.NewPageInfo(fetch, it.bufLen, it.takeBuf)
 	it.pageInfo.MaxSize = int(req.PageSize)
+	it.pageInfo.Token = req.PageToken
 	return it
 }
 
@@ -393,6 +394,7 @@ func (c *Client) ListTransferRuns(ctx context.Context, req *datatransferpb.ListT
 	}
 	it.pageInfo, it.nextFunc = iterator.NewPageInfo(fetch, it.bufLen, it.takeBuf)
 	it.pageInfo.MaxSize = int(req.PageSize)
+	it.pageInfo.Token = req.PageToken
 	return it
 }
 
@@ -431,6 +433,7 @@ func (c *Client) ListTransferLogs(ctx context.Context, req *datatransferpb.ListT
 	}
 	it.pageInfo, it.nextFunc = iterator.NewPageInfo(fetch, it.bufLen, it.takeBuf)
 	it.pageInfo.MaxSize = int(req.PageSize)
+	it.pageInfo.Token = req.PageToken
 	return it
 }
 

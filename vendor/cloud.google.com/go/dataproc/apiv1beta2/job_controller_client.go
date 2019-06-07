@@ -54,7 +54,6 @@ func defaultJobControllerCallOptions() *JobControllerCallOptions {
 		{"default", "idempotent"}: {
 			gax.WithRetry(func() gax.Retryer {
 				return gax.OnCodes([]codes.Code{
-					codes.DeadlineExceeded,
 					codes.Internal,
 					codes.Unavailable,
 				}, gax.Backoff{
@@ -207,6 +206,7 @@ func (c *JobControllerClient) ListJobs(ctx context.Context, req *dataprocpb.List
 	}
 	it.pageInfo, it.nextFunc = iterator.NewPageInfo(fetch, it.bufLen, it.takeBuf)
 	it.pageInfo.MaxSize = int(req.PageSize)
+	it.pageInfo.Token = req.PageToken
 	return it
 }
 
@@ -228,7 +228,8 @@ func (c *JobControllerClient) UpdateJob(ctx context.Context, req *dataprocpb.Upd
 
 // CancelJob starts a job cancellation request. To access the job resource
 // after cancellation, call
-// regions/{region}/jobs.list (at /dataproc/docs/reference/rest/v1beta2/projects.regions.jobs/list) or
+// regions/{region}/jobs.list (at /dataproc/docs/reference/rest/v1beta2/projects.regions.jobs/list)
+// or
 // regions/{region}/jobs.get (at /dataproc/docs/reference/rest/v1beta2/projects.regions.jobs/get).
 func (c *JobControllerClient) CancelJob(ctx context.Context, req *dataprocpb.CancelJobRequest, opts ...gax.CallOption) (*dataprocpb.Job, error) {
 	ctx = insertMetadata(ctx, c.xGoogMetadata)

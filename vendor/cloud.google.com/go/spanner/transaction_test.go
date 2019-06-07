@@ -50,7 +50,7 @@ func TestSingle(t *testing.T) {
 	}
 
 	// Only one CreateSessionRequest is sent.
-	if err := shouldHaveReceived(mock, []interface{}{&sppb.CreateSessionRequest{}}); err != nil {
+	if _, err := shouldHaveReceived(mock, []interface{}{&sppb.CreateSessionRequest{}}); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -159,7 +159,7 @@ func TestApply_Single(t *testing.T) {
 		t.Fatalf("applyAtLeastOnce retry on abort, got %v, want nil.", e)
 	}
 
-	if err := shouldHaveReceived(mock, []interface{}{
+	if _, err := shouldHaveReceived(mock, []interface{}{
 		&sppb.CreateSessionRequest{},
 		&sppb.CommitRequest{},
 	}); err != nil {
@@ -194,7 +194,7 @@ func TestApply_RetryOnAbort(t *testing.T) {
 		t.Fatalf("ReadWriteTransaction retry on abort, got %v, want nil.", e)
 	}
 
-	if err := shouldHaveReceived(mock, []interface{}{
+	if _, err := shouldHaveReceived(mock, []interface{}{
 		&sppb.CreateSessionRequest{},
 		&sppb.BeginTransactionRequest{},
 		&sppb.CommitRequest{}, // First commit fails.
@@ -229,7 +229,8 @@ func TestTransaction_NotFound(t *testing.T) {
 		t.Fatalf("Expect acquire to fail, got %v, want %v.", got, wantErr)
 	}
 
-	// The failure should recycle the session, we expect it to be used in following requests.
+	// The failure should recycle the session, we expect it to be used in
+	// following requests.
 	if got := txn.Query(ctx, NewStatement("SELECT 1")); !testEqual(wantErr, got.err) {
 		t.Fatalf("Expect Query to fail, got %v, want %v.", got.err, wantErr)
 	}
@@ -262,12 +263,74 @@ func TestReadWriteTransaction_ErrorReturned(t *testing.T) {
 	if got != want {
 		t.Fatalf("got %+v, want %+v", got, want)
 	}
-	if err := shouldHaveReceived(mock, []interface{}{
+	requests := drainRequests(mock)
+	if err := compareRequests([]interface{}{
 		&sppb.CreateSessionRequest{},
 		&sppb.BeginTransactionRequest{},
-		&sppb.RollbackRequest{},
-	}); err != nil {
+		&sppb.RollbackRequest{}}, requests); err != nil {
+		// TODO: remove this once the session pool maintainer has been changed
+		// so that is doesn't delete sessions already during the first
+		// maintenance window.
+		// If we failed to get 3, it might have because - due to timing - we got
+		// a fourth request. If this request is DeleteSession, that's OK and
+		// expected.
+		if err := compareRequests([]interface{}{
+			&sppb.CreateSessionRequest{},
+			&sppb.BeginTransactionRequest{},
+			&sppb.RollbackRequest{},
+			&sppb.DeleteSessionRequest{}}, requests); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
+func TestBatchDML_WithMultipleDML(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	client, _, mock, cleanup := serverClientMock(t, SessionPoolConfig{})
+	defer cleanup()
+
+	_, err := client.ReadWriteTransaction(ctx, func(ctx context.Context, tx *ReadWriteTransaction) (err error) {
+		if _, err = tx.Update(ctx, Statement{SQL: "SELECT * FROM whatever"}); err != nil {
+			return err
+		}
+		if _, err = tx.BatchUpdate(ctx, []Statement{{SQL: "SELECT * FROM whatever"}, {SQL: "SELECT * FROM whatever"}}); err != nil {
+			return err
+		}
+		if _, err = tx.Update(ctx, Statement{SQL: "SELECT * FROM whatever"}); err != nil {
+			return err
+		}
+		_, err = tx.BatchUpdate(ctx, []Statement{{SQL: "SELECT * FROM whatever"}})
+		return err
+	})
+	if err != nil {
 		t.Fatal(err)
+	}
+
+	gotReqs, err := shouldHaveReceived(mock, []interface{}{
+		&sppb.CreateSessionRequest{},
+		&sppb.BeginTransactionRequest{},
+		&sppb.ExecuteSqlRequest{},
+		&sppb.ExecuteBatchDmlRequest{},
+		&sppb.ExecuteSqlRequest{},
+		&sppb.ExecuteBatchDmlRequest{},
+		&sppb.CommitRequest{},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got, want := gotReqs[2].(*sppb.ExecuteSqlRequest).Seqno, int64(1); got != want {
+		t.Errorf("got %d, want %d", got, want)
+	}
+	if got, want := gotReqs[3].(*sppb.ExecuteBatchDmlRequest).Seqno, int64(2); got != want {
+		t.Errorf("got %d, want %d", got, want)
+	}
+	if got, want := gotReqs[4].(*sppb.ExecuteSqlRequest).Seqno, int64(3); got != want {
+		t.Errorf("got %d, want %d", got, want)
+	}
+	if got, want := gotReqs[5].(*sppb.ExecuteBatchDmlRequest).Seqno, int64(4); got != want {
+		t.Errorf("got %d, want %d", got, want)
 	}
 }
 
@@ -276,9 +339,13 @@ func TestReadWriteTransaction_ErrorReturned(t *testing.T) {
 //
 // Note: this in-place modifies serverClientMock by popping items off the
 // ReceivedRequests channel.
-func shouldHaveReceived(mock *testutil.FuncMock, want []interface{}) error {
+func shouldHaveReceived(mock *testutil.FuncMock, want []interface{}) ([]interface{}, error) {
 	got := drainRequests(mock)
+	return got, compareRequests(want, got)
+}
 
+// Compares expected requests (want) with actual requests (got).
+func compareRequests(want []interface{}, got []interface{}) error {
 	if len(got) != len(want) {
 		var gotMsg string
 		for _, r := range got {
@@ -298,7 +365,6 @@ func shouldHaveReceived(mock *testutil.FuncMock, want []interface{}) error {
 			return fmt.Errorf("request %d: got %+v, want %+v", i, reflect.TypeOf(got[i]), reflect.TypeOf(want))
 		}
 	}
-
 	return nil
 }
 

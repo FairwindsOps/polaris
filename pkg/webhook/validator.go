@@ -109,11 +109,9 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 
 	if podResult.Summary.Totals.Errors > 0 {
 		allowed = false
-		logrus.Infof("%d validation errors found when validating %s", podResult.Summary.Totals.Errors, podResult.Name)
-
 		reason = getFailureReason(podResult)
 	}
-
+	logrus.Infof("%d validation errors found when validating %s", podResult.Summary.Totals.Errors, podResult.Name)
 	return admission.ValidationResponse(allowed, reason)
 }
 

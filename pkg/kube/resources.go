@@ -14,7 +14,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sYaml "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp" // Required for GKE auth.
+	_ "k8s.io/client-go/plugin/pkg/client/auth" // Required for other auth providers like GKE.
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 )
 
@@ -99,6 +99,9 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 		}
 		specs := regexp.MustCompile("\n-+\n").Split(string(contents), -1)
 		for _, spec := range specs {
+			if strings.TrimSpace(spec) == "" {
+				continue
+			}
 			err = addYaml(spec)
 			if err != nil {
 				logrus.Errorf("Error parsing YAML %v", err)

@@ -13,11 +13,6 @@
 
 include Makefile.common
 
-.PHONY: deps
-deps:
-	@echo ">> getting dependencies"
-	GO111MODULE=$(GO111MODULE) $(GO) get $(GOOPTS) -t ./...
-
 .PHONY: test
 test:: deps check_license unused common-test
 

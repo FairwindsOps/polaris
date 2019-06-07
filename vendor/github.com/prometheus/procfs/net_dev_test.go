@@ -32,12 +32,12 @@ func TestNetDevParseLine(t *testing.T) {
 }
 
 func TestNewNetDev(t *testing.T) {
-	fs, err := NewFS("fixtures")
+	fs, err := NewFS(procTestFixtures)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	nd, err := fs.NewNetDev()
+	netDev, err := fs.NewNetDev()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,10 +49,10 @@ func TestNewNetDev(t *testing.T) {
 		"eth0":        {Name: "eth0", RxBytes: 874354587, RxPackets: 1036395, TxBytes: 563352563, TxPackets: 732147},
 	}
 
-	if want, have := len(lines), len(nd); want != have {
+	if want, have := len(lines), len(netDev); want != have {
 		t.Errorf("want %d parsed net/dev lines, have %d", want, have)
 	}
-	for _, line := range nd {
+	for _, line := range netDev {
 		if want, have := lines[line.Name], line; want != have {
 			t.Errorf("%s: want %v, have %v", line.Name, want, have)
 		}
@@ -60,12 +60,12 @@ func TestNewNetDev(t *testing.T) {
 }
 
 func TestProcNewNetDev(t *testing.T) {
-	p, err := FS("fixtures").NewProc(26231)
+	p, err := getProcFixtures(t).NewProc(26231)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	nd, err := p.NewNetDev()
+	netDev, err := p.NewNetDev()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,10 +75,10 @@ func TestProcNewNetDev(t *testing.T) {
 		"eth0": {Name: "eth0", RxBytes: 438, RxPackets: 5, TxBytes: 648, TxPackets: 8},
 	}
 
-	if want, have := len(lines), len(nd); want != have {
+	if want, have := len(lines), len(netDev); want != have {
 		t.Errorf("want %d parsed net/dev lines, have %d", want, have)
 	}
-	for _, line := range nd {
+	for _, line := range netDev {
 		if want, have := lines[line.Name], line; want != have {
 			t.Errorf("%s: want %v, have %v", line.Name, want, have)
 		}

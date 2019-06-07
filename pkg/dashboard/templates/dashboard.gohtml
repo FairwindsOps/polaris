@@ -62,7 +62,7 @@
           </div>
           <div class="name"><span class="caret-expander"></span>{{ $category }}<span class="category-score">Score: <strong>{{ getScore $summary }}%</strong></span></div>
             <div class="result-messages expandable-content">
-            <p class="category-info">{{ getCategoryInfo $category }} Refer to the <a href="/details/{{ getCategoryLink $category }}">Polaris documentation about {{ $category }}</a> for more information.</p>
+            <p class="category-info">{{ getCategoryInfo $category }} Refer to the <a href="details/{{ getCategoryLink $category }}">Polaris documentation about {{ $category }}</a> for more information.</p>
           </div>
         </div>
       {{ end }} {{/* end range categories */}}
@@ -93,7 +93,7 @@
                     <li class="{{ .Type }}">
                       <i class="message-icon {{ getIcon $message }}"></i>
                       <span class="message">{{ .Message }}</span>
-                      <a class="more-info" href="/details/{{ getCategoryLink .Category }}">
+                      <a class="more-info" href="details/{{ getCategoryLink .Category }}">
                         <i class="far fa-question-circle"></i>
                       </a>
                     </li>
@@ -108,7 +108,7 @@
                       <li class="{{ .Type }}">
                         <i class="message-icon {{ getIcon $message }}"></i>
                         <span class="message">{{ .Message }}</span>
-                        <a class="more-info" href="/details/{{ getCategoryLink .Category }}">
+                        <a class="more-info" href="details/{{ getCategoryLink .Category }}">
                           <i class="far fa-question-circle"></i>
                         </a>
                       </li>
@@ -121,6 +121,6 @@
       </div>
     </div>
   {{ end }} {{/* end range .AuditData.NamespacedResults */}}
-  <script src="/static/js/charts.js">
+  <script src="static/js/charts.js">
   </script>
 {{end}}

@@ -294,6 +294,7 @@ func TestSlice(t *testing.T) {
 	testSlice(t, nil, []int{1, 2, 3}, []int{1, 2, 3}, WithAppendSlice)
 	testSlice(t, []int{}, []int{1, 2, 3}, []int{1, 2, 3}, WithAppendSlice)
 	testSlice(t, []int{1}, []int{2, 3}, []int{1, 2, 3}, WithAppendSlice)
+	testSlice(t, []int{1}, []int{2, 3}, []int{1, 2, 3}, WithAppendSlice, WithOverride)
 	testSlice(t, []int{1}, []int{}, []int{1}, WithAppendSlice)
 	testSlice(t, []int{1}, nil, []int{1}, WithAppendSlice)
 }
@@ -729,5 +730,27 @@ func TestBooleanPointer(t *testing.T) {
 	}
 	if *dst.C != *src.C {
 		t.Fatalf("dst.C should be true")
+	}
+}
+
+func TestMergeMapWithInnerSliceOfDifferentType(t *testing.T) {
+	src := map[string]interface{}{
+		"foo": []string{"a", "b"},
+	}
+	dst := map[string]interface{}{
+		"foo": []int{1, 2},
+	}
+
+	if err := Merge(&src, &dst, WithOverride, WithAppendSlice); err == nil {
+		t.Fatal("expected an error, got nothing")
+	}
+}
+
+func TestMergeSliceDifferentType(t *testing.T) {
+	src := []string{"a", "b"}
+	dst := []int{1, 2}
+
+	if err := Merge(&src, &dst, WithOverride, WithAppendSlice); err == nil {
+		t.Fatal("expected an error, got nothing")
 	}
 }

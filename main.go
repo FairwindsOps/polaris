@@ -22,9 +22,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strings"
 
-	"github.com/gorilla/mux"
 	conf "github.com/reactiveops/polaris/pkg/config"
 	"github.com/reactiveops/polaris/pkg/dashboard"
 	"github.com/reactiveops/polaris/pkg/kube"
@@ -35,7 +33,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	apitypes "k8s.io/apimachinery/pkg/types"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	_ "k8s.io/client-go/plugin/pkg/client/auth" // Required for other auth providers like GKE.
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
@@ -44,7 +42,7 @@ import (
 
 const (
 	// Version represents the current release version of Polaris
-	Version = "0.1.3"
+	Version = "0.1.5"
 )
 
 func main() {
@@ -53,6 +51,7 @@ func main() {
 	audit := flag.Bool("audit", false, "Runs a one-time audit.")
 	auditPath := flag.String("audit-path", "", "If specified, audits one or more YAML files instead of a cluster")
 	dashboardPort := flag.Int("dashboard-port", 8080, "Port for the dashboard webserver")
+	dashboardBasePath := flag.String("dashboard-base-path", "/", "Path on which the dashboard is served")
 	webhookPort := flag.Int("webhook-port", 9876, "Port for the webhook webserver")
 	auditOutputURL := flag.String("output-url", "", "Destination URL to send audit results")
 	auditOutputFile := flag.String("output-file", "", "Destination file for audit results")
@@ -89,56 +88,17 @@ func main() {
 	if *webhook {
 		startWebhookServer(c, *disableWebhookConfigInstaller, *webhookPort)
 	} else if *dashboard {
-		startDashboardServer(c, *dashboardPort)
+		startDashboardServer(c, *auditPath, *dashboardPort, *dashboardBasePath)
 	} else if *audit {
 		runAudit(c, *auditPath, *auditOutputFile, *auditOutputURL)
 	}
 }
 
-func startDashboardServer(c conf.Configuration, port int) {
-	router := mux.NewRouter()
+func startDashboardServer(c conf.Configuration, auditPath string, port int, basePath string) {
+	router := dashboard.GetRouter(c, auditPath, port, basePath)
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
-	router.HandleFunc("/results.json", func(w http.ResponseWriter, r *http.Request) {
-		k, err := kube.CreateResourceProvider("")
-		if err != nil {
-			logrus.Errorf("Error fetching Kubernetes resources %v", err)
-			http.Error(w, "Error fetching Kubernetes resources", http.StatusInternalServerError)
-			return
-		}
-		dashboard.EndpointHandler(w, r, c, k)
-	})
-	router.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "pkg/dashboard/assets/favicon-32x32.png")
-	})
-	router.HandleFunc("/details/{category}", func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		category := vars["category"]
-		category = strings.Replace(category, ".md", "", -1)
-		dashboard.DetailsHandler(w, r, category)
-	})
-	fileServer := http.FileServer(dashboard.GetAssetBox())
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/" {
-			http.NotFound(w, r)
-			return
-		}
-		k, err := kube.CreateResourceProvider("")
-		if err != nil {
-			logrus.Errorf("Error fetching Kubernetes resources %v", err)
-			http.Error(w, "Error fetching Kubernetes resources", http.StatusInternalServerError)
-			return
-		}
-		auditData, err := validator.RunAudit(c, k)
-		if err != nil {
-			logrus.Errorf("Error getting audit data: %v", err)
-			http.Error(w, "Error running audit", 500)
-			return
-		}
-		dashboard.MainHandler(w, r, auditData)
-	})
-	http.Handle("/static/", http.StripPrefix("/static/", fileServer))
 	http.Handle("/", router)
 
 	logrus.Infof("Starting Polaris dashboard server on port %d", port)

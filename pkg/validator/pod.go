@@ -42,8 +42,8 @@ func ValidatePod(podConf conf.Configuration, pod *corev1.PodSpec) PodResult {
 		Summary:          pv.summary(),
 	}
 
-	pv.validateContainers(pod.InitContainers, &pRes, &podConf)
-	pv.validateContainers(pod.Containers, &pRes, &podConf)
+	pv.validateContainers(pod.InitContainers, &pRes, &podConf, true)
+	pv.validateContainers(pod.Containers, &pRes, &podConf, false)
 
 	for _, cRes := range pRes.ContainerResults {
 		pRes.Summary.appendResults(*cRes.Summary)
@@ -52,9 +52,9 @@ func ValidatePod(podConf conf.Configuration, pod *corev1.PodSpec) PodResult {
 	return pRes
 }
 
-func (pv *PodValidation) validateContainers(containers []corev1.Container, pRes *PodResult, podConf *conf.Configuration) {
+func (pv *PodValidation) validateContainers(containers []corev1.Container, pRes *PodResult, podConf *conf.Configuration, isInit bool) {
 	for _, container := range containers {
-		cRes := ValidateContainer(podConf, &container)
+		cRes := ValidateContainer(podConf, &container, isInit)
 		pRes.ContainerResults = append(pRes.ContainerResults, cRes)
 	}
 }

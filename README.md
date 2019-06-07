@@ -5,7 +5,7 @@
   [![Version][version-image]][version-link] [![CircleCI][circleci-image]][circleci-link] [![Go Report Card][goreport-image]][goreport-link]
 </div>
 
-[version-image]: https://img.shields.io/static/v1.svg?label=Version&message=0.1.3&color=239922
+[version-image]: https://img.shields.io/static/v1.svg?label=Version&message=0.1.5&color=239922
 [version-link]: https://github.com/reactiveops/polaris
 
 [goreport-image]: https://goreportcard.com/badge/github.com/reactiveops/polaris
@@ -18,6 +18,8 @@ Polaris helps keep your cluster healthy. It runs a variety of checks to ensure t
 
 - A dashboard that provides an overview of how well current deployments are configured within a cluster.
 - An experimental validating webhook that can prevent any future deployments that do not live up to a configured standard.
+
+**Want to learn more?** ReactiveOps holds [office hours on Zoom](https://zoom.us/j/242508205) the first Friday of every month, at 12pm Eastern. You can also reach out via email at `opensource@reactiveops.com`
 
 ## Dashboard
 
@@ -106,9 +108,10 @@ Polaris validation checks fall into several different categories:
 
 * `config`: Specify a location for the Polaris config
 * `dashboard`: Runs the webserver for Polaris dashboard.
-* `dashboard-port`: Port for the dashboard webserver (default 8080)
+* `dashboard-port`: Port for the dashboard webserver (default `8080`)
+* `dashboard-base-path`: Path on which the dashboard is being served (default `/`)
 * `webhook`: Runs the webhook webserver.
-* `webhook-port`: Port for the webhook webserver (default 9876)
+* `webhook-port`: Port for the webhook webserver (default `9876`)
 * `disable-webhook-config-installer`: disable the installer in the webhook server, so it won't install webhook configuration resources during bootstrapping
 * `kubeconfig`: Paths to a kubeconfig. Only required if out-of-cluster.
 
