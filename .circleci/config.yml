@@ -18,24 +18,31 @@ references:
     run:
       name: Docker login, build, and push
       command: |
-        docker login quay.io -u="reactiveops+circleci" -p="${quay_token}"
         docker build -t $REPO:dev-$CIRCLE_SHA1 .
-        docker push $REPO:dev-$CIRCLE_SHA1
+        if [[ -z $CIRCLE_PR_NUMBER ]]; then
+          docker login quay.io -u="reactiveops+circleci" -p="${quay_token}"
+          docker push $REPO:dev-$CIRCLE_SHA1
+        else
+          echo "Skipping docker push for forked PR"
+        fi
   docker_tag_release: &docker_tag_release
     run:
       name: Docker tag release
       command: |
         docker login quay.io -u="reactiveops+circleci" -p="${quay_token}"
-        docker pull $REPO:dev-$CIRCLE_SHA1
+        docker build -t $REPO:dev-$CIRCLE_SHA1 .
         docker tag $REPO:dev-$CIRCLE_SHA1 $REPO:$CIRCLE_TAG
         docker push $REPO:$CIRCLE_TAG
-
   update_coverage: &update_coverage
     run:
       name: Update Coverage
       command: |
-        go test ./pkg/... -coverprofile=coverage.txt -covermode=count
-        bash <(curl -s https://codecov.io/bash)
+        if [[ -z $CIRCLE_PR_NUMBER ]]; then
+          go test ./pkg/... -coverprofile=coverage.txt -covermode=count
+          bash <(curl -s https://codecov.io/bash)
+        else
+          echo "Skipping coverage for forked PR"
+        fi
 
   test_dashboard: &test_dashboard
     run:
