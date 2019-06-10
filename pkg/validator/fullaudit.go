@@ -9,7 +9,7 @@ import (
 
 const (
 	// PolarisOutputVersion is the version of the current output structure
-	PolarisOutputVersion = "0.1"
+	PolarisOutputVersion = "0.2"
 )
 
 // ClusterSummary contains Polaris results as well as some high-level stats
