@@ -21,6 +21,14 @@ Polaris helps keep your cluster healthy. It runs a variety of checks to ensure t
 
 **Want to learn more?** ReactiveOps holds [office hours on Zoom](https://zoom.us/j/242508205) the first Friday of every month, at 12pm Eastern. You can also reach out via email at `opensource@reactiveops.com`
 
+## Quickstart
+
+```
+kubectl apply -f https://raw.githubusercontent.com/reactiveops/polaris/master/deploy/dashboard.yaml
+kubectl port-forward --namespace polaris svc/polaris-dashboard 8080:80
+```
+With the port forwarding in place, you can open http://localhost:8080 in your browser to view the dashboard.
+
 ## Dashboard
 
 The Polaris dashboard is a way to get a simple visual overview of the current state of your Kubernetes deployments as well as a roadmap for what can be improved. The dashboard provides a cluster wide overview as well as breaking out results by category, namespace, and deployment.
@@ -31,63 +39,84 @@ The Polaris dashboard is a way to get a simple visual overview of the current st
 
 Our default standards in Polaris are rather high, so don’t be surprised if your score is lower than you might expect. A key goal for Polaris was to set a high standard and aim for great configuration by default. If the defaults we’ve included are too strict, it’s easy to adjust the configuration as part of the deployment configuration to better suit your workloads.
 
-### Deploying
-
-To deploy Polaris with kubectl:
-
-```
-kubectl apply -f https://raw.githubusercontent.com/reactiveops/polaris/master/deploy/dashboard.yaml
-```
-
-Polaris can also be deployed with Helm:
-
-```
-helm upgrade --install polaris deploy/helm/polaris/ --namespace polaris
-```
-
-### Viewing the Dashboard
-
-Once the dashboard is deployed, it can be viewed by using kubectl port-forward:
-
-```
-kubectl port-forward --namespace polaris svc/polaris-dashboard 8080:80
-```
-
-With the port forwarding in place, you can open http://localhost:8080 in your browser to view the dashboard.
-
-### Using a Binary Release
-
-If you'd prefer to run Polaris locally, binary releases are available on the [releases page](https://github.com/reactiveops/polaris/releases) or can be installed with [Homebrew](https://brew.sh/):
-
-```
-brew tap reactiveops/tap
-brew install reactiveops/tap/polaris
-```
-
-When running as a binary, Polaris will use your local kubeconfig to connect to a cluster. There are a variety of options available, but the most common usage will likely be to view the dashboard:
-
-```
-polaris --dashboard
-```
-
 ## Webhook
 
 Polaris includes experimental support for an optional validating webhook. This accepts the same configuration as the dashboard, and can run the same validations. This webhook will reject any deployments that trigger a validation error. This is indicative of the greater goal of Polaris, not just to encourage better configuration through dashboard visibility, but to actually enforce it with this webhook. *Although we are working towards greater stability and better test coverage, we do not currently consider this webhook component production ready.*
 
 Unfortunately we have not found a way to display warnings as part of `kubectl` output unless we are rejecting a deployment altogether. That means that any checks with a severity of `warning` will still pass webhook validation, and the only evidence of that warning will either be in the Polaris dashboard or the Polaris webhook logs.
 
-### Deploying
+## Installation and Usage
+Polaris can be installed on your cluster using kubectl or Helm. It can also
+be run as a local binary, which will use your kubeconfig to connect to the cluster
+or run against local YAML files.
 
-The Polaris webhook can be deployed with kubectl:
-
+### kubectl
+#### Dashboard
+```
+kubectl apply -f https://raw.githubusercontent.com/reactiveops/polaris/master/deploy/dashboard.yaml
+kubectl port-forward --namespace polaris svc/polaris-dashboard 8080:80
+```
+#### Webhook
 ```
 kubectl apply -f https://raw.githubusercontent.com/reactiveops/polaris/master/deploy/webhook.yaml
 ```
 
-Alternatively, the webhook can be enabled with Helm by setting `webhook.enable` to true:
+### Helm
+#### Dashboard
+```
+git clone https://github.com/reactiveops/polaris && cd polaris
+helm upgrade --install polaris deploy/helm/polaris/ --namespace polaris
+kubectl port-forward --namespace polaris svc/polaris-dashboard 8080:80
+```
+#### Webhook
+```
+git clone https://github.com/reactiveops/polaris && cd polaris
+helm upgrade --install polaris deploy/helm/polaris/ --namespace polaris --set webhook.enable=true --set dashboard.enable=false
+```
+
+### Local Binary
+#### Installation
+Binary releases are available on the [releases page](https://github.com/reactiveops/polaris/releases) or can be installed with [Homebrew](https://brew.sh/):
+```
+brew tap reactiveops/tap
+brew install reactiveops/tap/polaris
+polaris --version
+```
+
+You can run `polaris --help` to see a full list of options.
+
+#### Dashboard
+The dashboard can be run on your local machine, without installing anything on the cluster.
+Polaris will use your local kubeconfig to connect to the cluster.
 
 ```
-helm upgrade --install polaris deploy/helm/polaris/ --namespace polaris --set webhook.enable=true
+polaris --dashboard --dashboard-port 8080
+```
+
+#### Audits
+You can also run audits on the command line and see the output as JSON, YAML, or a raw score:
+```
+polaris --audit --output-format yaml > report.yaml
+polaris --audit --output-format score
+# 92
+```
+
+Both the dashboard and audits can run against a local directory or YAML file
+rather than a cluster:
+```
+polaris --audit --audit-path ./deploy/
+```
+
+##### Running with CI/CD
+You can integrate Polaris into CI/CD for repositories containing infrastructure-as-code.
+For example, to fail whenever the Polaris score drops below 90%:
+```bash
+score=`polaris --audit --audit-path ./deploy/ --output-format score`
+if [[ $score -lt 90 ]]; then
+  exit 1
+else
+  exit 0
+fi
 ```
 
 ## Configuration

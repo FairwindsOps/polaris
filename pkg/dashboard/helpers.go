@@ -29,7 +29,7 @@ func getSuccessWidth(counts validator.CountSummary, fullWidth int) uint {
 }
 
 func getGrade(counts validator.CountSummary) string {
-	score := getScore(counts)
+	score := counts.GetScore()
 	if score >= 97 {
 		return "A+"
 	} else if score >= 93 {
@@ -59,13 +59,8 @@ func getGrade(counts validator.CountSummary) string {
 	}
 }
 
-func getScore(counts validator.CountSummary) uint {
-	total := (counts.Successes * 2) + counts.Warnings + (counts.Errors * 2)
-	return uint((float64(counts.Successes*2) / float64(total)) * 100)
-}
-
 func getWeatherIcon(counts validator.CountSummary) string {
-	score := getScore(counts)
+	score := counts.GetScore()
 	if score >= 90 {
 		return "fa-sun"
 	} else if score >= 80 {
@@ -80,7 +75,7 @@ func getWeatherIcon(counts validator.CountSummary) string {
 }
 
 func getWeatherText(counts validator.CountSummary) string {
-	score := getScore(counts)
+	score := counts.GetScore()
 	if score >= 90 {
 		return "Smooth sailing"
 	} else if score >= 80 {

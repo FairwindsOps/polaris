@@ -7,7 +7,7 @@
           <div class="weather"><i class="fas {{ getWeatherIcon .AuditData.ClusterSummary.Results.Totals }}"></i></div>
           <div class="sailing">{{ getWeatherText .AuditData.ClusterSummary.Results.Totals }}</div>
           <div class="scores"><span>Grade: </span><strong>{{ getGrade .AuditData.ClusterSummary.Results.Totals }}</strong></div>
-          <div class="scores"><span>Score: </span><strong>{{ getScore .AuditData.ClusterSummary.Results.Totals }}%</strong></div>
+          <div class="scores"><span>Score: </span><strong>{{ .AuditData.ClusterSummary.Results.Totals.GetScore }}%</strong></div>
         </div>
       </div>
       <div class="graph">
@@ -60,7 +60,7 @@
               </div>
             </div>
           </div>
-          <div class="name"><span class="caret-expander"></span>{{ $category }}<span class="category-score">Score: <strong>{{ getScore $summary }}%</strong></span></div>
+          <div class="name"><span class="caret-expander"></span>{{ $category }}<span class="category-score">Score: <strong>{{ $summary.GetScore }}%</strong></span></div>
             <div class="result-messages expandable-content">
             <p class="category-info">{{ getCategoryInfo $category }} Refer to the <a href="details/{{ getCategoryLink $category }}">Polaris documentation about {{ $category }}</a> for more information.</p>
           </div>

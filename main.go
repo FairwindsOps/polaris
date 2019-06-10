@@ -29,7 +29,6 @@ import (
 	"github.com/reactiveops/polaris/pkg/validator"
 	fwebhook "github.com/reactiveops/polaris/pkg/webhook"
 	"github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
 	appsv1 "k8s.io/api/apps/v1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	apitypes "k8s.io/apimachinery/pkg/types"
@@ -38,6 +37,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/yaml"
 )
 
 const (
@@ -55,6 +55,7 @@ func main() {
 	webhookPort := flag.Int("webhook-port", 9876, "Port for the webhook webserver")
 	auditOutputURL := flag.String("output-url", "", "Destination URL to send audit results")
 	auditOutputFile := flag.String("output-file", "", "Destination file for audit results")
+	auditOutputFormat := flag.String("output-format", "json", "Output format for results - json, yaml, or score")
 	configPath := flag.String("config", "", "Location of Polaris configuration file")
 	logLevel := flag.String("log-level", logrus.InfoLevel.String(), "Logrus log level")
 	version := flag.Bool("version", false, "Prints the version of Polaris")
@@ -90,7 +91,7 @@ func main() {
 	} else if *dashboard {
 		startDashboardServer(c, *auditPath, *dashboardPort, *dashboardBasePath)
 	} else if *audit {
-		runAudit(c, *auditPath, *auditOutputFile, *auditOutputURL)
+		runAudit(c, *auditPath, *auditOutputFile, *auditOutputURL, *auditOutputFormat)
 	}
 }
 
@@ -175,7 +176,7 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 	}
 }
 
-func runAudit(c conf.Configuration, auditPath string, outputFile string, outputURL string) {
+func runAudit(c conf.Configuration, auditPath string, outputFile string, outputURL string, outputFormat string) {
 	k, err := kube.CreateResourceProvider(auditPath)
 	if err != nil {
 		logrus.Errorf("Error fetching Kubernetes resources %v", err)
@@ -187,33 +188,39 @@ func runAudit(c conf.Configuration, auditPath string, outputFile string, outputU
 		panic(err)
 	}
 
-	if outputURL == "" && outputFile == "" {
-		yamlBytes, err := yaml.Marshal(auditData)
-
-		if err != nil {
-			logrus.Errorf("Error marshalling YAML: %v", err)
-			os.Exit(1)
+	var outputBytes []byte
+	if outputFormat == "score" {
+		outputBytes = []byte(fmt.Sprint(auditData.ClusterSummary.Score))
+	} else if outputFormat == "yaml" {
+		jsonBytes, err := json.Marshal(auditData)
+		if err == nil {
+			outputBytes, err = yaml.JSONToYAML(jsonBytes)
 		}
-
-		os.Stdout.Write(yamlBytes)
-
 	} else {
-		jsonData, err := json.MarshalIndent(auditData, "", "  ")
-
-		if err != nil {
-			logrus.Errorf("Error marshalling JSON: %v", err)
-			os.Exit(1)
-		}
-
+		outputBytes, err = json.MarshalIndent(auditData, "", "  ")
+	}
+	if err != nil {
+		logrus.Errorf("Error marshalling audit: %v", err)
+		os.Exit(1)
+	}
+	if outputURL == "" && outputFile == "" {
+		os.Stdout.Write(outputBytes)
+	} else {
 		if outputURL != "" {
-			req, err := http.NewRequest("POST", outputURL, bytes.NewBuffer(jsonData))
+			req, err := http.NewRequest("POST", outputURL, bytes.NewBuffer(outputBytes))
 
 			if err != nil {
 				logrus.Errorf("Error building request for output: %v", err)
 				os.Exit(1)
 			}
 
-			req.Header.Set("Content-Type", "application/json")
+			if outputFormat == "json" {
+				req.Header.Set("Content-Type", "application/json")
+			} else if outputFormat == "yaml" {
+				req.Header.Set("Content-Type", "application/x-yaml")
+			} else {
+				req.Header.Set("Content-Type", "text/plain")
+			}
 			client := &http.Client{}
 			resp, err := client.Do(req)
 
@@ -235,7 +242,7 @@ func runAudit(c conf.Configuration, auditPath string, outputFile string, outputU
 		}
 
 		if outputFile != "" {
-			err := ioutil.WriteFile(outputFile, []byte(jsonData), 0644)
+			err := ioutil.WriteFile(outputFile, []byte(outputBytes), 0644)
 			if err != nil {
 				logrus.Errorf("Error writing output to file: %v", err)
 				os.Exit(1)
