@@ -28,6 +28,7 @@ import (
 
 // Configuration contains all of the config for the validation checks.
 type Configuration struct {
+	DisplayName  string       `json:"displayName"`
 	Resources    Resources    `json:"resources"`
 	HealthChecks HealthChecks `json:"healthChecks"`
 	Images       Images       `json:"images"`

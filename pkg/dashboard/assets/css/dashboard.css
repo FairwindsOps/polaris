@@ -9,11 +9,14 @@
   font-weight: 300;
   font-size: 28px;
   padding: 20px 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  margin-left: -2px; /* Fix for kerning issue */
 }
 
 .card.cluster h3 {
-  padding: 0px;
-  padding-bottom: 10px;
+  padding: 4px 0px;
+  margin-bottom: 20px;
 }
 
 .card.namespace h3 strong {
@@ -21,9 +24,7 @@
 }
 
 .cluster-overview {
-  position: relative;
   top: -60px;
-  margin-bottom: -60px;
 }
 
 .cluster-overview .graph {
@@ -38,11 +39,12 @@
   display: inline-block;
   width: 32%;
   vertical-align: top;
-  padding-top: 65px;
 }
-
+.cluster-overview .cluster-score{
+  padding-top: 15px;
+}
 .cluster-overview .result-messages {
-  padding-top: 90px;
+  padding-top: 70px;
 }
 
 .cluster-overview .graph canvas {
