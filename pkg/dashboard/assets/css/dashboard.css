@@ -15,8 +15,8 @@
 }
 
 .card.cluster h3 {
-  padding: 0px;
-  padding-bottom: 20px;
+  padding: 4px 0px;
+  margin-bottom: 20px;
 }
 
 .card.namespace h3 strong {
