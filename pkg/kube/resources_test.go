@@ -4,6 +4,7 @@ import (
 	"github.com/reactiveops/polaris/test"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 func TestGetResourcesFromPath(t *testing.T) {
@@ -14,6 +15,7 @@ func TestGetResourcesFromPath(t *testing.T) {
 	assert.Equal(t, "Path", resources.SourceType, "Should have type Path")
 	assert.Equal(t, "./test_files/test_1", resources.SourceName, "Should have filename as name")
 	assert.Equal(t, "unknown", resources.ServerVersion, "Server version should be unknown")
+	assert.IsType(t, time.Now(), resources.CreationTime, "Creation time should be set")
 
 	assert.Equal(t, 0, len(resources.Nodes), "Should not have any nodes")
 
@@ -36,6 +38,7 @@ func TestGetMultipleResourceFromSingleFile(t *testing.T) {
 	assert.Equal(t, "Path", resources.SourceType, "Should have type Path")
 	assert.Equal(t, "./test_files/test_2/multi.yaml", resources.SourceName, "Should have filename as name")
 	assert.Equal(t, "unknown", resources.ServerVersion, "Server version should be unknown")
+	assert.IsType(t, time.Now(), resources.CreationTime, "Creation time should be set")
 
 	assert.Equal(t, 0, len(resources.Nodes), "Should not have any nodes")
 
@@ -55,6 +58,7 @@ func TestGetResourceFromAPI(t *testing.T) {
 
 	assert.Equal(t, "Cluster", resources.SourceType, "Should have type Path")
 	assert.Equal(t, "test", resources.SourceName, "Should have source name")
+	assert.IsType(t, time.Now(), resources.CreationTime, "Creation time should be set")
 
 	assert.Equal(t, 0, len(resources.Nodes), "Should not have any nodes")
 	assert.Equal(t, 1, len(resources.Deployments), "Should have a deployment")
