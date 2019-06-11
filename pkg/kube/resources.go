@@ -126,7 +126,11 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 
 // CreateResourceProviderFromCluster creates a new ResourceProvider using live data from a cluster
 func CreateResourceProviderFromCluster() (*ResourceProvider, error) {
-	kubeConf := config.GetConfig()
+	kubeConf, configError := config.GetConfig()
+	if configError != nil {
+		logrus.Errorf("Error fetching KubeConfig %v", configError)
+		return nil, configError
+	}
 	api, err := kubernetes.NewForConfig(kubeConf)
 	if err != nil {
 		logrus.Errorf("Error creating Kubernetes client %v", err)
