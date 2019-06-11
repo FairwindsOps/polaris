@@ -265,6 +265,11 @@ ul.message-list li i.message-icon {
   color: #a11f4c;
 }
 
+.controller-type {
+  display: inline-block;
+  min-width: 115px;
+}
+
 a.more-info {
   color: #bbb;
   font-size: 12px;

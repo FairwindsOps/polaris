@@ -28,14 +28,31 @@ const (
 	MessageTypeError MessageType = "error"
 )
 
+// NamespaceResult groups container results by parent resource.
+type NamespaceResult struct {
+	Name               string
+	Summary            *ResultSummary
+	DeploymentResults  []ControllerResult
+	StatefulSetResults []ControllerResult
+}
+
 // NamespacedResults is a mapping of namespace name to the validation results.
 type NamespacedResults map[string]*NamespaceResult
 
-// NamespaceResult groups container results by parent resource.
-type NamespaceResult struct {
-	Name              string
-	Summary           *ResultSummary
-	DeploymentResults []ControllerResult
+func (nsResults NamespacedResults) getNamespaceResult(nsName string) *NamespaceResult {
+	nsResult := &NamespaceResult{}
+	switch nsResults[nsName] {
+	case nil:
+		nsResult = &NamespaceResult{
+			Summary:            &ResultSummary{},
+			DeploymentResults:  []ControllerResult{},
+			StatefulSetResults: []ControllerResult{},
+		}
+		nsResults[nsName] = nsResult
+	default:
+		nsResult = nsResults[nsName]
+	}
+	return nsResult
 }
 
 // CountSummary provides a high level overview of success, warnings, and errors.

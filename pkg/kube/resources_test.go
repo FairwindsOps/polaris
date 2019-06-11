@@ -22,6 +22,9 @@ func TestGetResourcesFromPath(t *testing.T) {
 	assert.Equal(t, 1, len(resources.Deployments), "Should have a deployment")
 	assert.Equal(t, "ubuntu", resources.Deployments[0].Spec.Template.Spec.Containers[0].Name)
 
+	assert.Equal(t, 1, len(resources.StatefulSets), "Should have a stateful set")
+	assert.Equal(t, "nginx", resources.StatefulSets[0].Spec.Template.Spec.Containers[0].Name)
+
 	assert.Equal(t, 1, len(resources.Namespaces), "Should have a namespace")
 	assert.Equal(t, "two", resources.Namespaces[0].ObjectMeta.Name)
 
@@ -52,7 +55,7 @@ func TestGetMultipleResourceFromSingleFile(t *testing.T) {
 
 func TestGetResourceFromAPI(t *testing.T) {
 	k8s := test.SetupTestAPI()
-	k8s = test.SetupAddDeploys(k8s, "test")
+	k8s = test.SetupAddControllers(k8s, "test")
 	resources, err := CreateResourceProviderFromAPI(k8s, "test")
 	assert.Equal(t, nil, err, "Error should be nil")
 
@@ -62,6 +65,7 @@ func TestGetResourceFromAPI(t *testing.T) {
 
 	assert.Equal(t, 0, len(resources.Nodes), "Should not have any nodes")
 	assert.Equal(t, 1, len(resources.Deployments), "Should have a deployment")
+	assert.Equal(t, 1, len(resources.StatefulSets), "Should have a stateful set")
 	assert.Equal(t, 0, len(resources.Pods), "Should have a pod")
 
 	assert.Equal(t, "", resources.Deployments[0].ObjectMeta.Name)

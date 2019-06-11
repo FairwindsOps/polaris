@@ -35,7 +35,7 @@ func TestValidatePod(t *testing.T) {
 	}
 
 	k8s := test.SetupTestAPI()
-	k8s = test.SetupAddDeploys(k8s, "test")
+	k8s = test.SetupAddControllers(k8s, "test")
 	pod := test.MockPod()
 
 	expectedSum := ResultSummary{

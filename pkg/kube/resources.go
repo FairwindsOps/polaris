@@ -27,6 +27,7 @@ type ResourceProvider struct {
 	SourceType    string
 	Nodes         []corev1.Node
 	Deployments   []appsv1.Deployment
+	StatefulSets  []appsv1.StatefulSet
 	Namespaces    []corev1.Namespace
 	Pods          []corev1.Pod
 }
@@ -51,47 +52,13 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 		SourceName:    directory,
 		Nodes:         []corev1.Node{},
 		Deployments:   []appsv1.Deployment{},
+		StatefulSets:  []appsv1.StatefulSet{},
 		Namespaces:    []corev1.Namespace{},
 		Pods:          []corev1.Pod{},
 	}
 
 	addYaml := func(contents string) error {
-		contentBytes := []byte(contents)
-		decoder := k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(contentBytes), 1000)
-		resource := k8sResource{}
-		err := decoder.Decode(&resource)
-		if err != nil {
-			// TODO: should we panic if the YAML is bad?
-			logrus.Errorf("Invalid YAML: %s", string(contents))
-			return nil
-		}
-		decoder = k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(contentBytes), 1000)
-		if resource.Kind == "Deployment" {
-			dep := appsv1.Deployment{}
-			err = decoder.Decode(&dep)
-			if err != nil {
-				logrus.Errorf("Error parsing deployment %v", err)
-				return err
-			}
-			resources.Deployments = append(resources.Deployments, dep)
-		} else if resource.Kind == "Namespace" {
-			ns := corev1.Namespace{}
-			err = decoder.Decode(&ns)
-			if err != nil {
-				logrus.Errorf("Error parsing namespace %v", err)
-				return err
-			}
-			resources.Namespaces = append(resources.Namespaces, ns)
-		} else if resource.Kind == "Pod" {
-			pod := corev1.Pod{}
-			err = decoder.Decode(&pod)
-			if err != nil {
-				logrus.Errorf("Error parsing pod %v", err)
-				return err
-			}
-			resources.Pods = append(resources.Pods, pod)
-		}
-		return nil
+		return addResourceFromString(contents, &resources)
 	}
 
 	visitFile := func(path string, f os.FileInfo, err error) error {
@@ -144,27 +111,32 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 	listOpts := metav1.ListOptions{}
 	serverVersion, err := kube.Discovery().ServerVersion()
 	if err != nil {
-		logrus.Errorf("Error fetching Kubernetes API version %v", err)
+		logrus.Errorf("Error fetching Cluster API version %v", err)
 		return nil, err
 	}
 	deploys, err := kube.AppsV1().Deployments("").List(listOpts)
 	if err != nil {
-		logrus.Errorf("Error fetching Kubernetes Deployments %v", err)
+		logrus.Errorf("Error fetching Deployments %v", err)
+		return nil, err
+	}
+	statefulSets, err := kube.AppsV1().StatefulSets("").List(listOpts)
+	if err != nil {
+		logrus.Errorf("Error fetching StatefulSets%v", err)
 		return nil, err
 	}
 	nodes, err := kube.CoreV1().Nodes().List(listOpts)
 	if err != nil {
-		logrus.Errorf("Error fetching Kubernetes Nodes %v", err)
+		logrus.Errorf("Error fetching Nodes %v", err)
 		return nil, err
 	}
 	namespaces, err := kube.CoreV1().Namespaces().List(listOpts)
 	if err != nil {
-		logrus.Errorf("Error fetching Kubernetes Namespaces %v", err)
+		logrus.Errorf("Error fetching Namespaces %v", err)
 		return nil, err
 	}
 	pods, err := kube.CoreV1().Pods("").List(listOpts)
 	if err != nil {
-		logrus.Errorf("Error fetching Kubernetes Pods %v", err)
+		logrus.Errorf("Error fetching Pods %v", err)
 		return nil, err
 	}
 
@@ -174,9 +146,45 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 		SourceName:    clusterName,
 		CreationTime:  time.Now(),
 		Deployments:   deploys.Items,
+		StatefulSets:  statefulSets.Items,
 		Nodes:         nodes.Items,
 		Namespaces:    namespaces.Items,
 		Pods:          pods.Items,
 	}
 	return &api, nil
+}
+
+func addResourceFromString(contents string, resources *ResourceProvider) error {
+	contentBytes := []byte(contents)
+	decoder := k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(contentBytes), 1000)
+	resource := k8sResource{}
+	err := decoder.Decode(&resource)
+	if err != nil {
+		// TODO: should we panic if the YAML is bad?
+		logrus.Errorf("Invalid YAML: %s", string(contents))
+		return nil
+	}
+	decoder = k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(contentBytes), 1000)
+	if resource.Kind == "Deployment" {
+		dep := appsv1.Deployment{}
+		err = decoder.Decode(&dep)
+		resources.Deployments = append(resources.Deployments, dep)
+	} else if resource.Kind == "StatefulSet" {
+		dep := appsv1.StatefulSet{}
+		err = decoder.Decode(&dep)
+		resources.StatefulSets = append(resources.StatefulSets, dep)
+	} else if resource.Kind == "Namespace" {
+		ns := corev1.Namespace{}
+		err = decoder.Decode(&ns)
+		resources.Namespaces = append(resources.Namespaces, ns)
+	} else if resource.Kind == "Pod" {
+		pod := corev1.Pod{}
+		err = decoder.Decode(&pod)
+		resources.Pods = append(resources.Pods, pod)
+	}
+	if err != nil {
+		logrus.Errorf("Error parsing %s: %v", resource.Kind, err)
+		return err
+	}
+	return nil
 }
