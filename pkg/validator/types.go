@@ -14,6 +14,8 @@
 
 package validator
 
+import corev1 "k8s.io/api/core/v1"
+
 // MessageType represents the type of Message
 type MessageType string
 
@@ -116,6 +118,7 @@ type PodResult struct {
 	Summary          *ResultSummary
 	Messages         []*ResultMessage
 	ContainerResults []ContainerResult
+	podSpec          corev1.PodSpec
 }
 
 // ResultMessage contains a message and a type indicator (success, warning, or error).

@@ -593,6 +593,24 @@ func TestValidateSecurity(t *testing.T) {
 		ResourceValidation: &ResourceValidation{},
 	}
 
+	strongCVWithPodSpec := ContainerValidation{
+		Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
+			RunAsNonRoot:             nil, // not set but overridden via podSpec
+			ReadOnlyRootFilesystem:   &trueVar,
+			Privileged:               &falseVar,
+			AllowPrivilegeEscalation: &falseVar,
+			Capabilities: &corev1.Capabilities{
+				Drop: []corev1.Capability{"ALL"},
+			},
+		}},
+		ResourceValidation: &ResourceValidation{},
+		parentPodSpec: corev1.PodSpec{
+			SecurityContext: &corev1.PodSecurityContext{
+				RunAsNonRoot: &trueVar,
+			},
+		},
+	}
+
 	var testCases = []struct {
 		name             string
 		securityConf     conf.Security
@@ -717,6 +735,32 @@ func TestValidateSecurity(t *testing.T) {
 			name:         "strong security context + strong validation config",
 			securityConf: strongConf,
 			cv:           strongCV,
+			expectedMessages: []*ResultMessage{{
+				Message:  "Is not allowed to run as root",
+				Type:     "success",
+				Category: "Security",
+			}, {
+				Message:  "Filesystem is read only",
+				Type:     "success",
+				Category: "Security",
+			}, {
+				Message:  "Not running as privileged",
+				Type:     "success",
+				Category: "Security",
+			}, {
+				Message:  "Privilege escalation not allowed",
+				Type:     "success",
+				Category: "Security",
+			}, {
+				Message:  "Security capabilities are within the configured limits",
+				Type:     "success",
+				Category: "Security",
+			}},
+		},
+		{
+			name:         "strong security context + strong validation config via podspec override",
+			securityConf: strongConf,
+			cv:           strongCVWithPodSpec,
 			expectedMessages: []*ResultMessage{{
 				Message:  "Is not allowed to run as root",
 				Type:     "success",

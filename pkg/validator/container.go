@@ -29,14 +29,32 @@ type ContainerValidation struct {
 	*ResourceValidation
 	Container       *corev1.Container
 	IsInitContainer bool
+	parentPodSpec   corev1.PodSpec
 }
 
 // ValidateContainer validates that each pod conforms to the Polaris config, returns a ResourceResult.
-func ValidateContainer(cnConf *conf.Configuration, container *corev1.Container, isInit bool) ContainerResult {
+// FIXME When validating a container, there are some things in a container spec
+//       that can be affected by the podSpec. This means we need a copy of the
+//       relevant podSpec in order to check certain aspects of a containerSpec.
+//       Perhaps there is a more ideal solution instead of attaching a parent
+//       podSpec to every container Validation struct...
+func ValidateContainer(cnConf *conf.Configuration, container *corev1.Container, isInit bool, parentPodResult *PodResult) ContainerResult {
 	cv := ContainerValidation{
 		Container:          container,
 		ResourceValidation: &ResourceValidation{},
 		IsInitContainer:    isInit,
+	}
+
+	// Support initializing
+	// FIXME This is a product of pulling in the podSpec, ideally we'd never
+	//       expect this be nil but our tests have conditions in which the
+	//       parent podResult isn't initialized in this ContainerValidation
+	//       struct.
+	if parentPodResult == nil {
+		// initialize a blank pod spec
+		cv.parentPodSpec = corev1.PodSpec{}
+	} else {
+		cv.parentPodSpec = parentPodResult.podSpec
 	}
 
 	cv.validateResources(&cnConf.Resources)
@@ -176,20 +194,29 @@ func (cv *ContainerValidation) validateNetworking(networkConf *conf.Networking) 
 func (cv *ContainerValidation) validateSecurity(securityConf *conf.Security) {
 	category := messages.CategorySecurity
 	securityContext := cv.Container.SecurityContext
+	podSecurityContext := cv.parentPodSpec.SecurityContext
+
+	// Support an empty container security context
 	if securityContext == nil {
 		securityContext = &corev1.SecurityContext{}
 	}
 
+	// Support an empty pod security context
+	if podSecurityContext == nil {
+		podSecurityContext = &corev1.PodSecurityContext{}
+	}
+
 	if securityConf.RunAsRootAllowed.IsActionable() {
-		if securityContext.RunAsNonRoot == (*bool)(nil) || !*securityContext.RunAsNonRoot {
-			cv.addFailure(messages.RunAsRootFailure, securityConf.RunAsRootAllowed, category)
-		} else {
+		// Check if either container or pod security-contexts are set to a good value
+		if isTrue(securityContext.RunAsNonRoot) || isTrue(podSecurityContext.RunAsNonRoot) {
 			cv.addSuccess(messages.RunAsRootSuccess, category)
+		} else {
+			cv.addFailure(messages.RunAsRootFailure, securityConf.RunAsRootAllowed, category)
 		}
 	}
 
 	if securityConf.RunAsPrivileged.IsActionable() {
-		if securityContext.Privileged == (*bool)(nil) || !*securityContext.Privileged {
+		if isFalseOrNil(securityContext.Privileged) {
 			cv.addSuccess(messages.RunAsPrivilegedSuccess, category)
 		} else {
 			cv.addFailure(messages.RunAsPrivilegedFailure, securityConf.RunAsPrivileged, category)
@@ -197,15 +224,15 @@ func (cv *ContainerValidation) validateSecurity(securityConf *conf.Security) {
 	}
 
 	if securityConf.NotReadOnlyRootFileSystem.IsActionable() {
-		if securityContext.ReadOnlyRootFilesystem == (*bool)(nil) || !*securityContext.ReadOnlyRootFilesystem {
-			cv.addFailure(messages.ReadOnlyFilesystemFailure, securityConf.NotReadOnlyRootFileSystem, category)
-		} else {
+		if isTrue(securityContext.ReadOnlyRootFilesystem) {
 			cv.addSuccess(messages.ReadOnlyFilesystemSuccess, category)
+		} else {
+			cv.addFailure(messages.ReadOnlyFilesystemFailure, securityConf.NotReadOnlyRootFileSystem, category)
 		}
 	}
 
 	if securityConf.PrivilegeEscalationAllowed.IsActionable() {
-		if securityContext.AllowPrivilegeEscalation == (*bool)(nil) || !*securityContext.AllowPrivilegeEscalation {
+		if isFalseOrNil(securityContext.AllowPrivilegeEscalation) {
 			cv.addSuccess(messages.PrivilegeEscalationSuccess, category)
 		} else {
 			cv.addFailure(messages.PrivilegeEscalationFailure, securityConf.PrivilegeEscalationAllowed, category)
