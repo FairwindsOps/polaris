@@ -1,38 +1,32 @@
 version: 2
 
 references:
-  install_goreleaser: &install_goreleaser
-    run:
-      name: Install GoReleaser
-      command: |
-        curl -fsSLo goreleaser.deb https://github.com/goreleaser/goreleaser/releases/download/v0.94.0/goreleaser_amd64.deb
-        echo "8dbad6683d6fc9367e637e6eed8e01a0d63c9660  goreleaser.deb" | sha1sum -c
-        sudo dpkg -i goreleaser.deb
-        rm goreleaser.deb
   set_environment_variables: &set_environment_variables
     run:
       name: Set Environment Variables
       command: |
-        echo 'export REPO=quay.io/reactiveops/polaris' >> ${BASH_ENV}
+        echo 'export CI_SHA1=$CIRCLE_SHA1' >> ${BASH_ENV}
+        echo 'export CI_BRANCH=$CIRCLE_BRANCH' >> ${BASH_ENV}
+        echo 'export CI_BUILD_NUM=$CIRCLE_BUILD_NUM' >> ${BASH_ENV}
+        echo 'export CI_TAG=$CIRCLE_TAG' >> ${BASH_ENV}
+        echo 'export PUSH_ALL_VERSION_TAGS=true' >> ${BASH_ENV}
   docker_build_and_push: &docker_build_and_push
     run:
       name: Docker login, build, and push
       command: |
-        docker build -t $REPO:dev-$CIRCLE_SHA1 .
+        docker-pull -f .circleci/build.config
+        docker-build -f .circleci/build.config
+        if [[ -n $CIRCLE_TAG ]]; then
+          export ADDITIONAL_DOCKER_TAG_VERSIONS=(`echo $CIRCLE_TAG | sed -e 's/\(\w\+\)\..*$/\1/'`)
+        fi
         if [[ -z $CIRCLE_PR_NUMBER ]]; then
           docker login quay.io -u="reactiveops+circleci" -p="${quay_token}"
-          docker push $REPO:dev-$CIRCLE_SHA1
+          docker-push -f .circleci/build.config
         else
           echo "Skipping docker push for forked PR"
         fi
-  docker_tag_release: &docker_tag_release
-    run:
-      name: Docker tag release
-      command: |
-        docker login quay.io -u="reactiveops+circleci" -p="${quay_token}"
-        docker build -t $REPO:dev-$CIRCLE_SHA1 .
-        docker tag $REPO:dev-$CIRCLE_SHA1 $REPO:$CIRCLE_TAG
-        docker push $REPO:$CIRCLE_TAG
+
+  # Test scripts
   update_coverage: &update_coverage
     run:
       name: Update Coverage
@@ -43,12 +37,11 @@ references:
         else
           echo "Skipping coverage for forked PR"
         fi
-
   test_dashboard: &test_dashboard
     run:
       name: Test Dashboard
       command: |
-        go run main.go --dashboard --dashboard-port 3000 --audit-path ./deploy/dashboard.yaml &
+        go run main.go --dashboard --dashboard-port 3000 --audit-path ./examples &
         sleep 5
         curl -f http://localhost:3000 > /dev/null
         curl -f http://localhost:3000/health > /dev/null
@@ -56,6 +49,30 @@ references:
         curl -f http://localhost:3000/static/css/main.css > /dev/null
         curl -f http://localhost:3000/results.json > /dev/null
         curl -f http://localhost:3000/details/security > /dev/null
+
+  # Release scripts
+  install_goreleaser: &install_goreleaser
+    run:
+      name: Install GoReleaser
+      command: |
+        curl -fsSLo goreleaser.deb https://github.com/goreleaser/goreleaser/releases/download/v0.94.0/goreleaser_amd64.deb
+        echo "8dbad6683d6fc9367e637e6eed8e01a0d63c9660  goreleaser.deb" | sha1sum -c
+        sudo dpkg -i goreleaser.deb
+        rm goreleaser.deb
+  release_deploy_configs: &release_deploy_configs
+    run:
+      name: Release deploy configs
+      command: |
+        git clone --branch polaris-latest https://github.com/reactiveops/charts
+        mkdir deploy
+        helm template ./charts/stable/polaris --name polaris --namespace polaris --set templateOnly=true > deploy/dashboard.yaml
+        helm template ./charts/stable/polaris --name polaris --namespace polaris --set templateOnly=true --set webhook.enable=true --set dashboard.enable=false > deploy/webhook.yaml
+        upload_url=$(curl --silent https://api.github.com/repos/reactiveops/polaris/releases/latest | grep upload_url)
+        upload_url=$(echo $upload_url | sed -e 's/.*\(https.*\){.*$/\1/')
+        curl -X POST "$upload_url?name=dashboard.yaml" --data-binary "@./deploy/dashboard.yaml" -H "Authorization: Bearer $GITHUB_TOKEN" -H "Content-Type: application/x-yaml"
+        curl -X POST "$upload_url?name=webhook.yaml" --data-binary "@./deploy/webhook.yaml" -H "Authorization: Bearer $GITHUB_TOKEN" -H "Content-Type: application/x-yaml"
+        rm -rf ./charts
+        rm -rf ./deploy
 
 jobs:
   build:
@@ -80,30 +97,7 @@ jobs:
       - *update_coverage
       - *test_dashboard
 
-  test-deploy:
-    docker:
-      - image: quay.io/reactiveops/ci-images:v8.0-stretch
-    steps:
-      - checkout
-      - run:
-          name: Verify helm chart synced with dashboard.yaml
-          command: |
-            diff \
-              <(helm template deploy/helm/polaris/ --name polaris --namespace polaris --set templateOnly=true) \
-              deploy/dashboard.yaml || (echo "
-                Make sure to regenerate k8s deploy config with make helm-to-k8s" &&
-                exit 1)
-
-      - run:
-          name: Verify helm chart synced with webhook.yaml
-          command: |
-            diff \
-              <(helm template deploy/helm/polaris/ --name polaris --namespace polaris --set templateOnly=true --set webhook.enable=true --set dashboard.enable=false) \
-              deploy/webhook.yaml || (echo "
-                Make sure to regenerate k8s deploy config with make helm-to-k8s" &&
-                exit 1)
-
-  release:
+  release_binary:
     working_directory: /go/src/github.com/reactiveops/polaris/
     docker:
       - image: circleci/golang:1.12
@@ -111,22 +105,30 @@ jobs:
       - checkout
       - setup_remote_docker
       - *set_environment_variables
-      - *docker_tag_release
       - *install_goreleaser
       - run: go get -u github.com/gobuffalo/packr/v2/packr2
       - run: packr2
       - run: goreleaser
+
+  release_images:
+    working_directory: /go/src/github.com/reactiveops/polaris/
+    docker:
+      - image: quay.io/reactiveops/ci-images:v8.0-stretch
+    steps:
+      - checkout
+      - setup_remote_docker
+      - *set_environment_variables
+      - *docker_build_and_push
+      - *release_deploy_configs
 
 workflows:
   version: 2
   build:
     jobs:
       - test
-      - test-deploy
       - build:
           requires:
             - test
-            - test-deploy
           context: org-global
           # Allow using testing tags for testing circle test + build steps
           filters:
@@ -134,7 +136,17 @@ workflows:
               only: /^testing-.*/
   release:
     jobs:
-      - release:
+      - release_binary:
+          context: org-global
+          filters:
+            branches:
+              ignore: /.*/
+            # Testing tags are reserved for testing circle test + build steps
+            tags:
+              ignore: /^testing-.*/
+      - release_images:
+          requires:
+            - release_binary
           context: org-global
           filters:
             branches:

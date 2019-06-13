@@ -57,18 +57,35 @@ Each new pull request should:
 - Be up to date and/or rebased on the master branch
 
 ## Creating a new release
-* Change the version number everywhere. E.g. for `0.1.4` to `0.1.5`:
-```
-find ./ -type f ! -path "./vendor/*" ! -path "./.git/*" ! -name CHANGELOG.md -exec sed -i 's/0\.1\.4/0.1.5/g' {} \;
-```
-* Add relevant entries to CHANGELOG.md
-* Create a PR to merge your changes
-* Once the PR is merged, wait for CircleCI to finish building the merge commit
-* Tag and push the latest:
-```
-git checkout master
-git pull
-git tag $VERSION
-git push --tags
-```
-* CircleCI will add an entry to the releases page on GitHub
+
+### Minor/patch releases
+Minor and patch releases only need to change this repo. The Helm chart and deploy scripts
+will automatically pull in the latest changes.
+
+To deploy a minor or patch release, follow steps 2 and 3 from "Major releases" below.
+
+### Major releases
+Major releases need to change both this repository and the
+[Helm chart repo](https://github.com/reactiveops/charts/).
+
+The steps are:
+1. Create a PR in the [charts repo](https://github.com/reactiveops/charts/)
+  * Use a branch named `polaris-latest`
+  * Bump the version number in:
+    * stable/polaris/README.md
+    * stable/polaris/Chart.yaml
+    * stable/polaris/values.yaml
+  * **Don't merge yet!**
+2. Create a PR for this repo
+  * Bump the version number in:
+    * main.go
+    * README.md
+  * Merge your PR
+3. Tag the latest branch for this repo
+  * Pull the latest for the `master` branch
+  * Run `git tag $VERSION && git push --tags`
+  * Wait for CircleCI to finish the build for the tag, which will:
+    * Create the proper image tag in quay.io
+    * Add an entry to the releases page on GitHub
+4. Merge the PR for the charts repo you created in step 1.
+

@@ -24,7 +24,7 @@ Polaris helps keep your cluster healthy. It runs a variety of checks to ensure t
 ## Quickstart
 
 ```
-kubectl apply -f https://raw.githubusercontent.com/reactiveops/polaris/master/deploy/dashboard.yaml
+kubectl apply -f https://github.com/reactiveops/polaris/releases/latest/download/dashboard.yaml
 kubectl port-forward --namespace polaris svc/polaris-dashboard 8080:80
 ```
 With the port forwarding in place, you can open http://localhost:8080 in your browser to view the dashboard.
@@ -53,25 +53,31 @@ or run against local YAML files.
 ### kubectl
 #### Dashboard
 ```
-kubectl apply -f https://raw.githubusercontent.com/reactiveops/polaris/master/deploy/dashboard.yaml
+kubectl apply -f https://github.com/reactiveops/polaris/releases/latest/download/dashboard.yaml
 kubectl port-forward --namespace polaris svc/polaris-dashboard 8080:80
 ```
+
 #### Webhook
 ```
-kubectl apply -f https://raw.githubusercontent.com/reactiveops/polaris/master/deploy/webhook.yaml
+kubectl apply -f https://github.com/reactiveops/polaris/releases/latest/download/webhook.yaml
 ```
 
 ### Helm
+Start by adding the ReactiveOps Helm repo:
+```
+helm repo add reactiveops-stable https://charts.reactiveops.com/stable
+```
+
 #### Dashboard
 ```
-git clone https://github.com/reactiveops/polaris && cd polaris
-helm upgrade --install polaris deploy/helm/polaris/ --namespace polaris
+helm upgrade --install polaris reactiveops-stable/polaris --namespace polaris
 kubectl port-forward --namespace polaris svc/polaris-dashboard 8080:80
 ```
+
 #### Webhook
 ```
-git clone https://github.com/reactiveops/polaris && cd polaris
-helm upgrade --install polaris deploy/helm/polaris/ --namespace polaris --set webhook.enable=true --set dashboard.enable=false
+helm upgrade --install polaris reactiveops-stable/polaris --namespace polaris \
+  --set webhook.enable=true --set dashboard.enable=false
 ```
 
 ### Local Binary
