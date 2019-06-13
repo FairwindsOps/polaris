@@ -20,6 +20,13 @@ import (
 	"strings"
 )
 
+func getAllControllerResults(nr validator.NamespaceResult) []validator.ControllerResult {
+	results := []validator.ControllerResult{}
+	results = append(results, nr.DeploymentResults...)
+	results = append(results, nr.StatefulSetResults...)
+	return results
+}
+
 func getWarningWidth(counts validator.CountSummary, fullWidth int) uint {
 	return uint(float64(counts.Successes+counts.Warnings) / float64(counts.Successes+counts.Warnings+counts.Errors) * float64(fullWidth))
 }

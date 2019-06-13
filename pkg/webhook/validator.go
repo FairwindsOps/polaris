@@ -87,19 +87,24 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 	var err error
 	var podResult validator.PodResult
 
-	allowed := true
-	reason := ""
-
-	switch req.AdmissionRequest.Kind.Kind {
-	case "Deployment":
-		deploy := appsv1.Deployment{}
-		err = v.decoder.Decode(req, &deploy)
-		deployResult := validator.ValidateDeployment(v.Config, &deploy)
-		podResult = deployResult.PodResult
-	case "Pod":
+	if req.AdmissionRequest.Kind.Kind == "Pod" {
 		pod := corev1.Pod{}
 		err = v.decoder.Decode(req, &pod)
 		podResult = validator.ValidatePod(v.Config, &pod.Spec)
+	} else {
+		var controller validator.Controller
+		switch req.AdmissionRequest.Kind.Kind {
+		case "Deployment":
+			deploy := appsv1.Deployment{}
+			err = v.decoder.Decode(req, &deploy)
+			controller = validator.ControllerFromDeployment(deploy)
+		case "StatefulSet":
+			statefulSet := appsv1.StatefulSet{}
+			err = v.decoder.Decode(req, &statefulSet)
+			controller = validator.ControllerFromStatefulSet(statefulSet)
+		}
+		controllerResult := validator.ValidateController(v.Config, controller)
+		podResult = controllerResult.PodResult
 	}
 
 	if err != nil {
@@ -107,6 +112,8 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 		return admission.ErrorResponse(http.StatusBadRequest, err)
 	}
 
+	allowed := true
+	reason := ""
 	if podResult.Summary.Totals.Errors > 0 {
 		allowed = false
 		reason = getFailureReason(podResult)

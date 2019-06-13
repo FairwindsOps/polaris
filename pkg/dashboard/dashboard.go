@@ -87,14 +87,15 @@ type templateData struct {
 // GetBaseTemplate puts together the dashboard template. Individual pieces can be overridden before rendering.
 func GetBaseTemplate(name string) (*template.Template, error) {
 	tmpl := template.New(name).Funcs(template.FuncMap{
-		"getWarningWidth": getWarningWidth,
-		"getSuccessWidth": getSuccessWidth,
-		"getWeatherIcon":  getWeatherIcon,
-		"getWeatherText":  getWeatherText,
-		"getGrade":        getGrade,
-		"getIcon":         getIcon,
-		"getCategoryLink": getCategoryLink,
-		"getCategoryInfo": getCategoryInfo,
+		"getWarningWidth":         getWarningWidth,
+		"getSuccessWidth":         getSuccessWidth,
+		"getWeatherIcon":          getWeatherIcon,
+		"getWeatherText":          getWeatherText,
+		"getGrade":                getGrade,
+		"getIcon":                 getIcon,
+		"getCategoryLink":         getCategoryLink,
+		"getCategoryInfo":         getCategoryInfo,
+		"getAllControllerResults": getAllControllerResults,
 	})
 
 	templateFileNames := []string{

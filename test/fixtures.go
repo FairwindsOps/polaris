@@ -39,15 +39,30 @@ func mockDeploy() appsv1.Deployment {
 	return d
 }
 
+func mockStatefulSet() appsv1.StatefulSet {
+	p := MockPod()
+	s := appsv1.StatefulSet{
+		Spec: appsv1.StatefulSetSpec{
+			Template: p,
+		},
+	}
+	return s
+}
+
 // SetupTestAPI creates a test kube API struct.
 func SetupTestAPI() kubernetes.Interface {
 	return fake.NewSimpleClientset()
 }
 
-// SetupAddDeploys creates a mock deployment and adds it to the test clientset.
-func SetupAddDeploys(k kubernetes.Interface, namespace string) kubernetes.Interface {
+// SetupAddControllers creates mock controllers and adds them to the test clientset.
+func SetupAddControllers(k kubernetes.Interface, namespace string) kubernetes.Interface {
 	d1 := mockDeploy()
 	_, err := k.AppsV1().Deployments(namespace).Create(&d1)
+	if err != nil {
+		fmt.Println(err)
+	}
+	s1 := mockStatefulSet()
+	_, err = k.AppsV1().StatefulSets(namespace).Create(&s1)
 	if err != nil {
 		fmt.Println(err)
 	}

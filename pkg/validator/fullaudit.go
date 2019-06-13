@@ -14,13 +14,14 @@ const (
 
 // ClusterSummary contains Polaris results as well as some high-level stats
 type ClusterSummary struct {
-	Results     ResultSummary
-	Version     string
-	Nodes       int
-	Pods        int
-	Namespaces  int
-	Deployments int
-	Score       uint
+	Results      ResultSummary
+	Version      string
+	Nodes        int
+	Pods         int
+	Namespaces   int
+	Deployments  int
+	StatefulSets int
+	Score        uint
 }
 
 // AuditData contains all the data from a full Polaris audit
@@ -36,22 +37,17 @@ type AuditData struct {
 
 // RunAudit runs a full Polaris audit and returns an AuditData object
 func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider) (AuditData, error) {
-	// TODO: Validate StatefulSets, DaemonSets, Cron jobs
-	// in addition to deployments
-
-	// TODO: Once we are validating more than deployments,
-	// we will need to merge the namespaceResults that get returned
-	// from each validation.
-	nsResults, err := ValidateDeployments(config, kubeResources)
-	if err != nil {
-		return AuditData{}, err
-	}
+	nsResults := NamespacedResults{}
+	ValidateControllers(config, kubeResources, &nsResults)
 
 	clusterResults := ResultSummary{}
 
 	// Aggregate all summary counts to get a clusterwide count.
 	for _, nsRes := range nsResults {
 		for _, dr := range nsRes.DeploymentResults {
+			clusterResults.appendResults(*dr.PodResult.Summary)
+		}
+		for _, dr := range nsRes.StatefulSetResults {
 			clusterResults.appendResults(*dr.PodResult.Summary)
 		}
 	}
@@ -68,13 +64,14 @@ func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider) (
 		SourceName:           kubeResources.SourceName,
 		DisplayName:          displayName,
 		ClusterSummary: ClusterSummary{
-			Version:     kubeResources.ServerVersion,
-			Nodes:       len(kubeResources.Nodes),
-			Pods:        len(kubeResources.Pods),
-			Namespaces:  len(kubeResources.Namespaces),
-			Deployments: len(kubeResources.Deployments),
-			Results:     clusterResults,
-			Score:       clusterResults.Totals.GetScore(),
+			Version:      kubeResources.ServerVersion,
+			Nodes:        len(kubeResources.Nodes),
+			Pods:         len(kubeResources.Pods),
+			Namespaces:   len(kubeResources.Namespaces),
+			Deployments:  len(kubeResources.Deployments),
+			StatefulSets: len(kubeResources.StatefulSets),
+			Results:      clusterResults,
+			Score:        clusterResults.Totals.GetScore(),
 		},
 		NamespacedResults: nsResults,
 	}
