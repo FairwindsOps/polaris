@@ -207,16 +207,20 @@ func (cv *ContainerValidation) validateSecurity(securityConf *conf.Security) {
 	}
 
 	if securityConf.RunAsRootAllowed.IsActionable() {
-		// Check if container RunAsNonRoot is set correctly
 		if isTrue(securityContext.RunAsNonRoot) {
+			// Check if the container is explicitly set to True (pass)
 			cv.addSuccess(messages.RunAsRootSuccess, category)
 		} else if isNilBool(securityContext.RunAsNonRoot) {
+			// Check if the container value is not set
 			if isTrue(podSecurityContext.RunAsNonRoot) {
+				// if the pod spec default for containers is true, then pass
 				cv.addSuccess(messages.RunAsRootSuccess, category)
 			} else {
+				// else fail since no default values or explicit values are correct
 				cv.addFailure(messages.RunAsRootFailure, securityConf.RunAsRootAllowed, category)
 			}
 		} else {
+			// catch if the value is explicitly set to False
 			cv.addFailure(messages.RunAsRootFailure, securityConf.RunAsRootAllowed, category)
 		}
 	}
