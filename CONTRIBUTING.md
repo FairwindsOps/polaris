@@ -70,22 +70,23 @@ Major releases need to change both this repository and the
 
 The steps are:
 1. Create a PR in the [charts repo](https://github.com/reactiveops/charts/)
-  * Use a branch named `polaris-latest`
-  * Bump the version number in:
-    * stable/polaris/README.md
-    * stable/polaris/Chart.yaml
-    * stable/polaris/values.yaml
-  * **Don't merge yet!**
+    1. Use a branch named `polaris-latest`
+    2. Bump the version number in:
+        1. stable/polaris/README.md
+        2. stable/polaris/Chart.yaml
+        3. stable/polaris/values.yaml
+    3. **Don't merge yet!**
 2. Create a PR for this repo
-  * Bump the version number in:
-    * main.go
-    * README.md
-  * Merge your PR
+    1. Bump the version number in:
+        1. main.go
+        2. README.md
+    2. Update CHANGELOG.md
+    3. Merge your PR
 3. Tag the latest branch for this repo
-  * Pull the latest for the `master` branch
-  * Run `git tag $VERSION && git push --tags`
-  * Wait for CircleCI to finish the build for the tag, which will:
-    * Create the proper image tag in quay.io
-    * Add an entry to the releases page on GitHub
+    1. Pull the latest for the `master` branch
+    2. Run `git tag $VERSION && git push --tags`
+    3. Wait for CircleCI to finish the build for the tag, which will:
+        1. Create the proper image tag in quay.io
+        2. Add an entry to the releases page on GitHub
 4. Merge the PR for the charts repo you created in step 1.
 
