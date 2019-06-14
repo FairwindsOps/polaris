@@ -16,9 +16,6 @@ references:
       command: |
         docker-pull -f .circleci/build.config
         docker-build -f .circleci/build.config
-        if [[ -n $CIRCLE_TAG ]]; then
-          export ADDITIONAL_DOCKER_TAG_VERSIONS=(`echo $CIRCLE_TAG | sed -e 's/\(\w\+\)\..*$/\1/'`)
-        fi
         if [[ -z $CIRCLE_PR_NUMBER ]]; then
           docker login quay.io -u="reactiveops+circleci" -p="${quay_token}"
           docker-push -f .circleci/build.config
