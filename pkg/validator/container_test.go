@@ -567,6 +567,24 @@ func TestValidateSecurity(t *testing.T) {
 		ResourceValidation: &ResourceValidation{},
 	}
 
+	badCVWithBadPodSpec := ContainerValidation{
+		Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
+			RunAsNonRoot:             nil, // this will use the default from the podspec
+			ReadOnlyRootFilesystem:   &falseVar,
+			Privileged:               &trueVar,
+			AllowPrivilegeEscalation: &trueVar,
+			Capabilities: &corev1.Capabilities{
+				Add: []corev1.Capability{"AUDIT_CONTROL", "SYS_ADMIN", "NET_ADMIN"},
+			},
+		}},
+		ResourceValidation: &ResourceValidation{},
+		parentPodSpec: corev1.PodSpec{
+			SecurityContext: &corev1.PodSecurityContext{
+				RunAsNonRoot: &falseVar,
+			},
+		},
+	}
+
 	goodCV := ContainerValidation{
 		Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
 			RunAsNonRoot:             &trueVar,
@@ -593,7 +611,7 @@ func TestValidateSecurity(t *testing.T) {
 		ResourceValidation: &ResourceValidation{},
 	}
 
-	strongCVWithPodSpec := ContainerValidation{
+	strongCVWithPodSpecSecurityContext := ContainerValidation{
 		Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
 			RunAsNonRoot:             nil, // not set but overridden via podSpec
 			ReadOnlyRootFilesystem:   &trueVar,
@@ -607,6 +625,24 @@ func TestValidateSecurity(t *testing.T) {
 		parentPodSpec: corev1.PodSpec{
 			SecurityContext: &corev1.PodSecurityContext{
 				RunAsNonRoot: &trueVar,
+			},
+		},
+	}
+
+	strongCVWithBadPodSpecSecurityContext := ContainerValidation{
+		Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
+			RunAsNonRoot:             &trueVar, // will override the bad setting in PodSpec
+			ReadOnlyRootFilesystem:   &trueVar,
+			Privileged:               &falseVar,
+			AllowPrivilegeEscalation: &falseVar,
+			Capabilities: &corev1.Capabilities{
+				Drop: []corev1.Capability{"ALL"},
+			},
+		}},
+		ResourceValidation: &ResourceValidation{},
+		parentPodSpec: corev1.PodSpec{
+			SecurityContext: &corev1.PodSecurityContext{
+				RunAsNonRoot: &falseVar, // is overridden at container level with RunAsNonRoot:true
 			},
 		},
 	}
@@ -653,6 +689,36 @@ func TestValidateSecurity(t *testing.T) {
 			name:         "bad security context + standard validation config",
 			securityConf: standardConf,
 			cv:           badCV,
+			expectedMessages: []*ResultMessage{{
+				Message:  "The following security capabilities should not be added: SYS_ADMIN, NET_ADMIN",
+				Type:     "error",
+				Category: "Security",
+			}, {
+				Message:  "Privilege escalation should not be allowed",
+				Type:     "error",
+				Category: "Security",
+			}, {
+				Message:  "Should not be running as privileged",
+				Type:     "error",
+				Category: "Security",
+			}, {
+				Message:  "The following security capabilities should not be added: AUDIT_CONTROL, SYS_ADMIN, NET_ADMIN",
+				Type:     "warning",
+				Category: "Security",
+			}, {
+				Message:  "Should not be allowed to run as root",
+				Type:     "warning",
+				Category: "Security",
+			}, {
+				Message:  "Filesystem should be read only",
+				Type:     "warning",
+				Category: "Security",
+			}},
+		},
+		{
+			name:         "bad security context + standard validation config from default set in podspec",
+			securityConf: standardConf,
+			cv:           badCVWithBadPodSpec,
 			expectedMessages: []*ResultMessage{{
 				Message:  "The following security capabilities should not be added: SYS_ADMIN, NET_ADMIN",
 				Type:     "error",
@@ -758,9 +824,35 @@ func TestValidateSecurity(t *testing.T) {
 			}},
 		},
 		{
-			name:         "strong security context + strong validation config via podspec override",
+			name:         "strong security context + strong validation config via podspec default",
 			securityConf: strongConf,
-			cv:           strongCVWithPodSpec,
+			cv:           strongCVWithPodSpecSecurityContext,
+			expectedMessages: []*ResultMessage{{
+				Message:  "Is not allowed to run as root",
+				Type:     "success",
+				Category: "Security",
+			}, {
+				Message:  "Filesystem is read only",
+				Type:     "success",
+				Category: "Security",
+			}, {
+				Message:  "Not running as privileged",
+				Type:     "success",
+				Category: "Security",
+			}, {
+				Message:  "Privilege escalation not allowed",
+				Type:     "success",
+				Category: "Security",
+			}, {
+				Message:  "Security capabilities are within the configured limits",
+				Type:     "success",
+				Category: "Security",
+			}},
+		},
+		{
+			name:         "strong security context + strong validation config with bad setting in podspec default",
+			securityConf: strongConf,
+			cv:           strongCVWithBadPodSpecSecurityContext,
 			expectedMessages: []*ResultMessage{{
 				Message:  "Is not allowed to run as root",
 				Type:     "success",

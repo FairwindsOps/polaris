@@ -207,9 +207,15 @@ func (cv *ContainerValidation) validateSecurity(securityConf *conf.Security) {
 	}
 
 	if securityConf.RunAsRootAllowed.IsActionable() {
-		// Check if either container or pod security-contexts are set to a good value
-		if isTrue(securityContext.RunAsNonRoot) || isTrue(podSecurityContext.RunAsNonRoot) {
+		// Check if container RunAsNonRoot is set correctly
+		if isTrue(securityContext.RunAsNonRoot) {
 			cv.addSuccess(messages.RunAsRootSuccess, category)
+		} else if isNilBool(securityContext.RunAsNonRoot) {
+			if isTrue(podSecurityContext.RunAsNonRoot) {
+				cv.addSuccess(messages.RunAsRootSuccess, category)
+			} else {
+				cv.addFailure(messages.RunAsRootFailure, securityConf.RunAsRootAllowed, category)
+			}
 		} else {
 			cv.addFailure(messages.RunAsRootFailure, securityConf.RunAsRootAllowed, category)
 		}
