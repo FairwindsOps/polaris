@@ -38,7 +38,7 @@ type ContainerValidation struct {
 //       relevant podSpec in order to check certain aspects of a containerSpec.
 //       Perhaps there is a more ideal solution instead of attaching a parent
 //       podSpec to every container Validation struct...
-func ValidateContainer(cnConf *conf.Configuration, container *corev1.Container, isInit bool, parentPodResult *PodResult) ContainerResult {
+func ValidateContainer(container *corev1.Container, parentPodResult *PodResult, cnConf *conf.Configuration, isInit bool) ContainerResult {
 	cv := ContainerValidation{
 		Container:          container,
 		ResourceValidation: &ResourceValidation{},

@@ -55,7 +55,7 @@ func ValidatePod(podConf conf.Configuration, pod *corev1.PodSpec) PodResult {
 
 func (pv *PodValidation) validateContainers(containers []corev1.Container, pRes *PodResult, podConf *conf.Configuration, isInit bool) {
 	for _, container := range containers {
-		cRes := ValidateContainer(podConf, &container, isInit, pRes)
+		cRes := ValidateContainer(&container, pRes, podConf, isInit)
 		pRes.ContainerResults = append(pRes.ContainerResults, cRes)
 	}
 }
