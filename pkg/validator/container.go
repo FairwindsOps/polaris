@@ -207,34 +207,31 @@ func (cv *ContainerValidation) validateSecurity(securityConf *conf.Security) {
 	}
 
 	if securityConf.RunAsRootAllowed.IsActionable() {
-		if isTrue(securityContext.RunAsNonRoot) {
+		if getBoolValue(securityContext.RunAsNonRoot) {
 			// Check if the container is explicitly set to True (pass)
 			cv.addSuccess(messages.RunAsRootSuccess, category)
-		} else if isNilBool(securityContext.RunAsNonRoot) {
+		} else {
 			// Check if the container value is not set
-			if isTrue(podSecurityContext.RunAsNonRoot) {
+			if getBoolValue(podSecurityContext.RunAsNonRoot) {
 				// if the pod spec default for containers is true, then pass
 				cv.addSuccess(messages.RunAsRootSuccess, category)
 			} else {
 				// else fail since no default values or explicit values are correct
 				cv.addFailure(messages.RunAsRootFailure, securityConf.RunAsRootAllowed, category)
 			}
-		} else {
-			// catch if the value is explicitly set to False
-			cv.addFailure(messages.RunAsRootFailure, securityConf.RunAsRootAllowed, category)
 		}
 	}
 
 	if securityConf.RunAsPrivileged.IsActionable() {
-		if isFalseOrNil(securityContext.Privileged) {
-			cv.addSuccess(messages.RunAsPrivilegedSuccess, category)
-		} else {
+		if getBoolValue(securityContext.Privileged) {
 			cv.addFailure(messages.RunAsPrivilegedFailure, securityConf.RunAsPrivileged, category)
+		} else {
+			cv.addSuccess(messages.RunAsPrivilegedSuccess, category)
 		}
 	}
 
 	if securityConf.NotReadOnlyRootFileSystem.IsActionable() {
-		if isTrue(securityContext.ReadOnlyRootFilesystem) {
+		if getBoolValue(securityContext.ReadOnlyRootFilesystem) {
 			cv.addSuccess(messages.ReadOnlyFilesystemSuccess, category)
 		} else {
 			cv.addFailure(messages.ReadOnlyFilesystemFailure, securityConf.NotReadOnlyRootFileSystem, category)
@@ -242,10 +239,10 @@ func (cv *ContainerValidation) validateSecurity(securityConf *conf.Security) {
 	}
 
 	if securityConf.PrivilegeEscalationAllowed.IsActionable() {
-		if isFalseOrNil(securityContext.AllowPrivilegeEscalation) {
-			cv.addSuccess(messages.PrivilegeEscalationSuccess, category)
-		} else {
+		if getBoolValue(securityContext.AllowPrivilegeEscalation) {
 			cv.addFailure(messages.PrivilegeEscalationFailure, securityConf.PrivilegeEscalationAllowed, category)
+		} else {
+			cv.addSuccess(messages.PrivilegeEscalationSuccess, category)
 		}
 	}
 
@@ -359,4 +356,13 @@ func capContains(list []corev1.Capability, val corev1.Capability) bool {
 	}
 
 	return false
+}
+
+// getBoolValue returns false if nil or returns the value of the bool pointer
+func getBoolValue(val *bool) bool {
+	if val == nil {
+		return false
+	}
+
+	return *val
 }
