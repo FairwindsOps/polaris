@@ -85,8 +85,6 @@ The steps are:
 3. Tag the latest branch for this repo
     1. Pull the latest for the `master` branch
     2. Run `git tag $VERSION && git push --tags`
-    3. Wait for CircleCI to finish the build for the tag, which will:
-        1. Create the proper image tag in quay.io
-        2. Add an entry to the releases page on GitHub
+    3. Wait for CircleCI to finish the build for the tag, which pushes images to quay.io and creates a release in github
 4. Merge the PR for the charts repo you created in step 1.
 
