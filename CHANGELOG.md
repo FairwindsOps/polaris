@@ -1,5 +1,8 @@
-# x.x.x (Next Release)
-* BUG: Fixed logic on RunAsNonRoot check to incorporate settings in podSpec
+# x.x.x (next release)
+
+
+# 0.2.1
+* [Fix](https://github.com/reactiveops/polaris/issues/146): Fixed logic on RunAsNonRoot check to incorporate settings in podSpec
 
 # 0.2.0
 * Added `--output-format` flag for better CI/CD support
