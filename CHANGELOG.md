@@ -1,4 +1,7 @@
-# x.x.x (Next Release)
+# x.x.x (next release)
+
+
+# 0.2.1
 * BUG: Fixed logic on RunAsNonRoot check to incorporate settings in podSpec
 
 # 0.2.0
