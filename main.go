@@ -50,6 +50,7 @@ func main() {
 	webhook := flag.Bool("webhook", false, "Runs the webhook webserver.")
 	audit := flag.Bool("audit", false, "Runs a one-time audit.")
 	auditPath := flag.String("audit-path", "", "If specified, audits one or more YAML files instead of a cluster")
+	exitCode := flag.String("exit-code", "", "set a non-zero exit code when the audit contains error-level issues.")
 	dashboardPort := flag.Int("dashboard-port", 8080, "Port for the dashboard webserver")
 	dashboardBasePath := flag.String("dashboard-base-path", "/", "Path on which the dashboard is served")
 	webhookPort := flag.Int("webhook-port", 9876, "Port for the webhook webserver")
@@ -180,6 +181,11 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 	}
 }
 
+func exitAudit() {
+	// if the audit contains error-level issues, exit with code 1
+	ox.Exit(1)
+}
+
 func runAudit(c conf.Configuration, auditPath string, outputFile string, outputURL string, outputFormat string) {
 	k, err := kube.CreateResourceProvider(auditPath)
 	if err != nil {
@@ -242,6 +248,7 @@ func runAudit(c conf.Configuration, auditPath string, outputFile string, outputU
 				os.Exit(1)
 			}
 
+			// exitAudit here? 
 			logrus.Infof("Received response: %v", body)
 		}
 
