@@ -193,11 +193,6 @@ func runAudit(c conf.Configuration, auditPath string, setExitCode bool, outputFi
 		panic(err)
 	}
 
-	if setExitCode && auditData.ClusterSummary.Results.Totals.Errors > 0 {
-		logrus.Infof("Error found. Exiting audit.")
-		os.Exit(3)
-	}
-
 	var outputBytes []byte
 	if outputFormat == "score" {
 		outputBytes = []byte(fmt.Sprint(auditData.ClusterSummary.Score))
@@ -258,5 +253,10 @@ func runAudit(c conf.Configuration, auditPath string, setExitCode bool, outputFi
 				os.Exit(1)
 			}
 		}
+	}
+
+	if setExitCode && auditData.ClusterSummary.Results.Totals.Errors > 0 {
+		logrus.Infof("Error found. Exiting audit.")
+		os.Exit(3)
 	}
 }
