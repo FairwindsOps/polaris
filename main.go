@@ -50,7 +50,7 @@ func main() {
 	webhook := flag.Bool("webhook", false, "Runs the webhook webserver.")
 	audit := flag.Bool("audit", false, "Runs a one-time audit.")
 	auditPath := flag.String("audit-path", "", "If specified, audits one or more YAML files instead of a cluster")
-	setExitCode := flag.Bool("exit-code", false, "set an exit code of 2 when the audit contains error-level issues.")
+	setExitCode := flag.Bool("set-exit-code-on-error", false, "set an exit code of 2 when the audit contains error-level issues.")
 	dashboardPort := flag.Int("dashboard-port", 8080, "Port for the dashboard webserver")
 	dashboardBasePath := flag.String("dashboard-base-path", "/", "Path on which the dashboard is served")
 	webhookPort := flag.Int("webhook-port", 9876, "Port for the webhook webserver")
@@ -194,8 +194,8 @@ func runAudit(c conf.Configuration, auditPath string, setExitCode bool, outputFi
 	}
 
 	if setExitCode && auditData.ClusterSummary.Results.Totals.Errors > 0 {
-		logrus.Errorf("Error found. Exiting audit.")
-		os.Exit(2)
+		logrus.Infof("Error found. Exiting audit.")
+		os.Exit(3)
 	}
 
 	var outputBytes []byte
