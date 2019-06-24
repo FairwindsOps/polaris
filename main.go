@@ -50,6 +50,7 @@ func main() {
 	webhook := flag.Bool("webhook", false, "Runs the webhook webserver.")
 	audit := flag.Bool("audit", false, "Runs a one-time audit.")
 	auditPath := flag.String("audit-path", "", "If specified, audits one or more YAML files instead of a cluster")
+	setExitCode := flag.Bool("set-exit-code-on-error", false, "set an exit code of 2 when the audit contains error-level issues.")
 	dashboardPort := flag.Int("dashboard-port", 8080, "Port for the dashboard webserver")
 	dashboardBasePath := flag.String("dashboard-base-path", "/", "Path on which the dashboard is served")
 	webhookPort := flag.Int("webhook-port", 9876, "Port for the webhook webserver")
@@ -95,7 +96,7 @@ func main() {
 	} else if *dashboard {
 		startDashboardServer(c, *auditPath, *dashboardPort, *dashboardBasePath)
 	} else if *audit {
-		runAudit(c, *auditPath, *auditOutputFile, *auditOutputURL, *auditOutputFormat)
+		runAudit(c, *auditPath, *setExitCode, *auditOutputFile, *auditOutputURL, *auditOutputFormat)
 	}
 }
 
@@ -180,7 +181,7 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 	}
 }
 
-func runAudit(c conf.Configuration, auditPath string, outputFile string, outputURL string, outputFormat string) {
+func runAudit(c conf.Configuration, auditPath string, setExitCode bool, outputFile string, outputURL string, outputFormat string) {
 	k, err := kube.CreateResourceProvider(auditPath)
 	if err != nil {
 		logrus.Errorf("Error fetching Kubernetes resources %v", err)
@@ -252,5 +253,10 @@ func runAudit(c conf.Configuration, auditPath string, outputFile string, outputU
 				os.Exit(1)
 			}
 		}
+	}
+
+	if setExitCode && auditData.ClusterSummary.Results.Totals.Errors > 0 {
+		logrus.Infof("Error found. Exiting audit.")
+		os.Exit(3)
 	}
 }
