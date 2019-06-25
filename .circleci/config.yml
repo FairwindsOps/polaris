@@ -56,20 +56,6 @@ references:
         echo "8dbad6683d6fc9367e637e6eed8e01a0d63c9660  goreleaser.deb" | sha1sum -c
         sudo dpkg -i goreleaser.deb
         rm goreleaser.deb
-  release_deploy_configs: &release_deploy_configs
-    run:
-      name: Release deploy configs
-      command: |
-        git clone --branch polaris-latest https://github.com/reactiveops/charts
-        mkdir deploy
-        helm template ./charts/stable/polaris --name polaris --namespace polaris --set templateOnly=true > deploy/dashboard.yaml
-        helm template ./charts/stable/polaris --name polaris --namespace polaris --set templateOnly=true --set webhook.enable=true --set dashboard.enable=false > deploy/webhook.yaml
-        upload_url=$(curl --silent https://api.github.com/repos/reactiveops/polaris/releases/latest | grep upload_url)
-        upload_url=$(echo $upload_url | sed -e 's/.*\(https.*\){.*$/\1/')
-        curl -X POST "$upload_url?name=dashboard.yaml" --data-binary "@./deploy/dashboard.yaml" -H "Authorization: Bearer $GITHUB_TOKEN" -H "Content-Type: application/x-yaml"
-        curl -X POST "$upload_url?name=webhook.yaml" --data-binary "@./deploy/webhook.yaml" -H "Authorization: Bearer $GITHUB_TOKEN" -H "Content-Type: application/x-yaml"
-        rm -rf ./charts
-        rm -rf ./deploy
 
 jobs:
   build:
@@ -116,7 +102,6 @@ jobs:
       - setup_remote_docker
       - *set_environment_variables
       - *docker_build_and_push
-      - *release_deploy_configs
 
 workflows:
   version: 2
