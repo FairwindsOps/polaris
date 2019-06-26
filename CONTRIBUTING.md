@@ -62,8 +62,8 @@ Each new pull request should:
 Patch releases only need to change this repo. The Helm chart and deploy scripts
 will automatically pull in the latest changes.
 
-If the release involves changes to anything in the `deploy/` folder, it needs to be a minor
-or major release in order to prevent breaking the Helm chart.
+If the release involves changes to anything in the `deploy/` folder (e.g. new RBAC permissions),
+it needs to be a minor or major release in order to prevent breaking the Helm chart.
 
 To deploy a patch release, follow steps 2 and 3 below.
 
@@ -77,7 +77,8 @@ The steps are:
         1. stable/polaris/README.md
         2. stable/polaris/Chart.yaml
         3. stable/polaris/values.yaml
-    2. Make any additional changes necessary (e.g. new RBAC permissions)
+    2. Make any necessary changes to the chart to support the new version of Polaris (e.g. new RBAC permissions)
+    3. **Don't merge yet!**
 2. Create a PR for this repo
     1. Regenerate the deployment files. Assuming you've cloned the charts repo to `~/charts`:
         1. `helm template ~/charts/stable/polaris/ --name polaris --namespace polaris --set templateOnly=true > deploy/dashboard.yaml`
