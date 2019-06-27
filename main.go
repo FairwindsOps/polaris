@@ -50,7 +50,8 @@ func main() {
 	webhook := flag.Bool("webhook", false, "Runs the webhook webserver.")
 	audit := flag.Bool("audit", false, "Runs a one-time audit.")
 	auditPath := flag.String("audit-path", "", "If specified, audits one or more YAML files instead of a cluster")
-	setExitCode := flag.Bool("set-exit-code-on-error", false, "set an exit code of 2 when the audit contains error-level issues.")
+	setExitCode := flag.Bool("set-exit-code-on-error", false, "When running with --audit, set an exit code of 3 when the audit contains error-level issues.")
+	minScore := flag.Int("set-exit-code-below-score", 0, "When running with --audit, set an exit code of 4 when the score is below this threshold (1-100)")
 	dashboardPort := flag.Int("dashboard-port", 8080, "Port for the dashboard webserver")
 	dashboardBasePath := flag.String("dashboard-base-path", "/", "Path on which the dashboard is served")
 	webhookPort := flag.Int("webhook-port", 9876, "Port for the webhook webserver")
@@ -96,7 +97,14 @@ func main() {
 	} else if *dashboard {
 		startDashboardServer(c, *auditPath, *dashboardPort, *dashboardBasePath)
 	} else if *audit {
-		runAudit(c, *auditPath, *setExitCode, *auditOutputFile, *auditOutputURL, *auditOutputFormat)
+		auditData := runAndReportAudit(c, *auditPath, *auditOutputFile, *auditOutputURL, *auditOutputFormat)
+		if *setExitCode && auditData.ClusterSummary.Results.Totals.Errors > 0 {
+			logrus.Infof("%d errors found in audit", auditData.ClusterSummary.Results.Totals.Errors)
+			os.Exit(3)
+		} else if *minScore != 0 && auditData.ClusterSummary.Score < uint(*minScore) {
+			logrus.Infof("Audit score of %d is less than the provided minimum of %d", auditData.ClusterSummary.Score, *minScore)
+			os.Exit(4)
+		}
 	}
 }
 
@@ -181,7 +189,7 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 	}
 }
 
-func runAudit(c conf.Configuration, auditPath string, setExitCode bool, outputFile string, outputURL string, outputFormat string) {
+func runAndReportAudit(c conf.Configuration, auditPath string, outputFile string, outputURL string, outputFormat string) validator.AuditData {
 	k, err := kube.CreateResourceProvider(auditPath)
 	if err != nil {
 		logrus.Errorf("Error fetching Kubernetes resources %v", err)
@@ -195,7 +203,7 @@ func runAudit(c conf.Configuration, auditPath string, setExitCode bool, outputFi
 
 	var outputBytes []byte
 	if outputFormat == "score" {
-		outputBytes = []byte(fmt.Sprint(auditData.ClusterSummary.Score))
+		outputBytes = []byte(fmt.Sprintf("%d\n", auditData.ClusterSummary.Score))
 	} else if outputFormat == "yaml" {
 		jsonBytes, err := json.Marshal(auditData)
 		if err == nil {
@@ -254,9 +262,5 @@ func runAudit(c conf.Configuration, auditPath string, setExitCode bool, outputFi
 			}
 		}
 	}
-
-	if setExitCode && auditData.ClusterSummary.Results.Totals.Errors > 0 {
-		logrus.Infof("Error found. Exiting audit.")
-		os.Exit(3)
-	}
+	return auditData
 }

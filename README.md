@@ -14,10 +14,13 @@
 [circleci-image]: https://circleci.com/gh/reactiveops/polaris.svg?style=svg
 [circleci-link]: https://circleci.com/gh/reactiveops/polaris.svg
 
-Polaris helps keep your cluster healthy. It runs a variety of checks to ensure that Kubernetes deployments are configured using best practices that will avoid potential problems in the future. The project includes two primary components:
+Polaris helps keep your cluster healthy. It runs a variety of checks to ensure that
+Kubernetes deployments are configured using best practices, helping you avoid
+problems in the future. Polaris can be run in a few different modes:
 
 - A dashboard that provides an overview of how well current deployments are configured within a cluster.
 - An experimental validating webhook that can prevent any future deployments that do not live up to a configured standard.
+- A command-line audit that can be incorporated into your CI/CD pipeline
 
 **Want to learn more?** ReactiveOps holds [office hours on Zoom](https://zoom.us/j/242508205) the first Friday of every month, at 12pm Eastern. You can also reach out via email at `opensource@reactiveops.com`
 
@@ -115,14 +118,11 @@ polaris --audit --audit-path ./deploy/
 
 ##### Running with CI/CD
 You can integrate Polaris into CI/CD for repositories containing infrastructure-as-code.
-For example, to fail whenever the Polaris score drops below 90%:
+For example, to fail if polaris detects *any* error-level issues, or if the score drops below 90%:
 ```bash
-score=`polaris --audit --audit-path ./deploy/ --output-format score`
-if [[ $score -lt 90 ]]; then
-  exit 1
-else
-  exit 0
-fi
+polaris --audit --audit-path ./deploy/ \
+  --set-exit-code-on-error \
+  --set-exit-code-below-score 90
 ```
 
 ## Configuration
