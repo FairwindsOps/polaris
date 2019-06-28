@@ -27,7 +27,7 @@ problems in the future. Polaris can be run in a few different modes:
 ## Quickstart
 
 ```
-kubectl apply -f https://raw.githubusercontent.com/reactiveops/polaris/master/deploy/dashboard.yaml
+kubectl apply -f https://github.com/reactiveops/polaris/releases/latest/download/dashboard.yaml
 kubectl port-forward --namespace polaris svc/polaris-dashboard 8080:80
 ```
 With the port forwarding in place, you can open http://localhost:8080 in your browser to view the dashboard.
@@ -56,13 +56,13 @@ or run against local YAML files.
 ### kubectl
 #### Dashboard
 ```
-kubectl apply -f https://raw.githubusercontent.com/reactiveops/polaris/master/deploy/dashboard.yaml
+kubectl apply -f https://github.com/reactiveops/polaris/releases/latest/download/dashboard.yaml
 kubectl port-forward --namespace polaris svc/polaris-dashboard 8080:80
 ```
 
 #### Webhook
 ```
-kubectl apply -f https://raw.githubusercontent.com/reactiveops/polaris/master/deploy/webhook.yaml
+kubectl apply -f https://github.com/reactiveops/polaris/releases/latest/download/webhook.yaml
 ```
 
 ### Helm
