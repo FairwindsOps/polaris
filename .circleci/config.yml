@@ -1,4 +1,9 @@
-version: 2
+version: 2.1
+
+executors:
+  vm:
+    machine:
+      enabled: true
 
 references:
   set_environment_variables: &set_environment_variables
@@ -10,18 +15,33 @@ references:
         echo 'export CI_BUILD_NUM=$CIRCLE_BUILD_NUM' >> ${BASH_ENV}
         echo 'export CI_TAG=$CIRCLE_TAG' >> ${BASH_ENV}
         echo 'export PUSH_ALL_VERSION_TAGS=true' >> ${BASH_ENV}
-  docker_build_and_push: &docker_build_and_push
+  install_k8s: &install_k8s
     run:
-      name: Docker login, build, and push
+      name: Install K8s
       command: |
-        docker-pull -f .circleci/build.config
-        docker-build -f .circleci/build.config
-        if [[ -z $CIRCLE_PR_NUMBER ]]; then
-          docker login quay.io -u="reactiveops+circleci" -p="${quay_token}"
-          docker-push -f .circleci/build.config
-        else
-          echo "Skipping docker push for forked PR"
-        fi
+        echo "Installing git and jq"
+        sudo apt-get install -yqq jq git
+
+        echo "Installing KIND"
+        curl -sLO https://github.com/kubernetes-sigs/kind/releases/download/0.2.1/kind-linux-amd64
+        chmod 0755 kind-linux-amd64
+        sudo mv kind-linux-amd64 /usr/local/bin/kind
+        kind version
+
+        echo "Installing Kubectl"
+        curl -sLO https://storage.googleapis.com/kubernetes-release/release/v1.12.7/bin/linux/amd64/kubectl
+        chmod 0755 kubectl
+        sudo mv kubectl /usr/local/bin/
+        kubectl version --client
+
+
+        echo "Creating Kubernetes Cluster with Kind"
+        kind create cluster --wait=90s
+        docker ps -a
+
+        echo "Setting up kubecfg"
+        cp $(kind get kubeconfig-path --name=kind) ~/.kube/config
+        kubectl version
 
   # Test scripts
   update_coverage: &update_coverage
@@ -34,11 +54,25 @@ references:
         else
           echo "Skipping coverage for forked PR"
         fi
-  test_dashboard: &test_dashboard
+  test_binary_dashboard: &test_binary_dashboard
     run:
       name: Test Dashboard
       command: |
         go run main.go --dashboard --dashboard-port 3000 --audit-path ./examples &
+        sleep 5
+        curl -f http://localhost:3000 > /dev/null
+        curl -f http://localhost:3000/health > /dev/null
+        curl -f http://localhost:3000/favicon.ico > /dev/null
+        curl -f http://localhost:3000/static/css/main.css > /dev/null
+        curl -f http://localhost:3000/results.json > /dev/null
+        curl -f http://localhost:3000/details/security > /dev/null
+  test_kube_dashboard: &test_kube_dashboard
+    run:
+      name: Test Dashboard
+      command: |
+        kubectl apply -f ./deploy/dashboard.yaml
+        sleep 10
+        kubectl port-forward --namespace polaris svc/polaris-dashboard 3000:80 &
         sleep 5
         curl -f http://localhost:3000 > /dev/null
         curl -f http://localhost:3000/health > /dev/null
@@ -56,20 +90,26 @@ references:
         echo "8dbad6683d6fc9367e637e6eed8e01a0d63c9660  goreleaser.deb" | sha1sum -c
         sudo dpkg -i goreleaser.deb
         rm goreleaser.deb
+  docker_build_and_push: &docker_build_and_push
+    run:
+      name: Docker login, build, and push
+      command: |
+        docker-pull -f .circleci/build.config
+        docker-build -f .circleci/build.config
+        if [[ -z $CIRCLE_PR_NUMBER ]]; then
+          docker login quay.io -u="reactiveops+circleci" -p="${quay_token}"
+          docker-push -f .circleci/build.config
+        else
+          echo "Skipping docker push for forked PR"
+        fi
   release_deploy_configs: &release_deploy_configs
     run:
       name: Release deploy configs
       command: |
-        git clone --branch polaris-latest https://github.com/reactiveops/charts
-        mkdir deploy
-        helm template ./charts/stable/polaris --name polaris --namespace polaris --set templateOnly=true > deploy/dashboard.yaml
-        helm template ./charts/stable/polaris --name polaris --namespace polaris --set templateOnly=true --set webhook.enable=true --set dashboard.enable=false > deploy/webhook.yaml
         upload_url=$(curl --silent https://api.github.com/repos/reactiveops/polaris/releases/latest | grep upload_url)
         upload_url=$(echo $upload_url | sed -e 's/.*\(https.*\){.*$/\1/')
         curl -X POST "$upload_url?name=dashboard.yaml" --data-binary "@./deploy/dashboard.yaml" -H "Authorization: Bearer $GITHUB_TOKEN" -H "Content-Type: application/x-yaml"
         curl -X POST "$upload_url?name=webhook.yaml" --data-binary "@./deploy/webhook.yaml" -H "Authorization: Bearer $GITHUB_TOKEN" -H "Content-Type: application/x-yaml"
-        rm -rf ./charts
-        rm -rf ./deploy
 
 jobs:
   build:
@@ -81,18 +121,26 @@ jobs:
       - *set_environment_variables
       - *docker_build_and_push
 
+  test_k8s:
+    working_directory: ~/polaris
+    resource_class: medium
+    executor: vm
+    steps:
+      - checkout
+      - *install_k8s
+      - *test_kube_dashboard
+
   test:
     working_directory: /go/src/github.com/reactiveops/polaris/
     docker:
       - image: circleci/golang:1.12
-
     steps:
       - checkout
       - run: go get -u golang.org/x/lint/golint
       - run: go list ./... | grep -v vendor | xargs golint -set_exit_status
       - run: go list ./... | grep -v vendor | xargs go vet
       - *update_coverage
-      - *test_dashboard
+      - *test_binary_dashboard
 
   release_binary:
     working_directory: /go/src/github.com/reactiveops/polaris/
@@ -106,6 +154,7 @@ jobs:
       - run: go get -u github.com/gobuffalo/packr/v2/packr2
       - run: packr2
       - run: goreleaser
+      - *release_deploy_configs
 
   release_images:
     working_directory: /go/src/github.com/reactiveops/polaris/
@@ -116,13 +165,13 @@ jobs:
       - setup_remote_docker
       - *set_environment_variables
       - *docker_build_and_push
-      - *release_deploy_configs
 
 workflows:
   version: 2
   build:
     jobs:
       - test
+      - test_k8s
       - build:
           requires:
             - test

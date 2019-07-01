@@ -58,33 +58,53 @@ Each new pull request should:
 
 ## Creating a new release
 
-### Minor/patch releases
-Minor and patch releases only need to change this repo. The Helm chart and deploy scripts
+### Patch releases
+Patch releases only need to change this repo. The Helm chart and deploy scripts
 will automatically pull in the latest changes.
 
-To deploy a minor or patch release, follow steps 2 and 3 from "Major releases" below.
+If the release involves changes to anything in the `deploy/` folder (e.g. new RBAC permissions),
+it needs to be a minor or major release in order to prevent breaking the Helm chart.
 
-### Major releases
-Major releases need to change both this repository and the
-[Helm chart repo](https://github.com/reactiveops/charts/).
-
-The steps are:
-1. Create a PR in the [charts repo](https://github.com/reactiveops/charts/)
-    1. Use a branch named `polaris-latest`
-    2. Bump the version number in:
-        1. stable/polaris/README.md
-        2. stable/polaris/Chart.yaml
-        3. stable/polaris/values.yaml
-    3. **Don't merge yet!**
-2. Create a PR for this repo
+1. Create a PR for this repo
     1. Bump the version number in:
         1. main.go
         2. README.md
     2. Update CHANGELOG.md
     3. Merge your PR
+2. Tag the latest branch for this repo
+    1. Pull the latest commit for the `master` branch (which you just merged in your PR)
+    2. Run `git tag $VERSION && git push --tags`
+    3. Make sure CircleCI runs successfully for the new tag - this will push images to quay.io and create a release in GitHub
+        1. If CircleCI fails, check with Codeowners ASAP
+
+### Minor/Major releases
+Minor and major releases need to change both this repository and the
+[Helm chart repo](https://github.com/reactiveops/charts/).
+
+The steps are:
+1. Modify the [Helm chart](https://github.com/reactiveops/charts/stable/polaris)
+    1. Clone the helm charts repo
+        1. `git clone https://github.com/reactiveops/charts`
+        2. `git checkout -b yourname/update-polaris`
+    1. Bump the version number in:
+        1. stable/polaris/README.md
+        2. stable/polaris/Chart.yaml
+        3. stable/polaris/values.yaml
+    2. Make any necessary changes to the chart to support the new version of Polaris (e.g. new RBAC permissions)
+    3. **Don't merge yet!**
+2. Create a PR for this repo
+    1. Bump the version number in:
+        1. main.go
+        2. README.md
+    2. Regenerate the deployment files. Assuming you've cloned the charts repo to `./charts`:
+        1. `helm template ./charts/stable/polaris/ --name polaris --namespace polaris --set templateOnly=true > deploy/dashboard.yaml`
+        2. `helm template ./charts/stable/polaris/ --name polaris --namespace polaris --set templateOnly=true --set webhook.enable=true --set dashboard.enable=false > deploy/webhook.yaml`
+    3. Update CHANGELOG.md
+    4. Merge your PR
 3. Tag the latest branch for this repo
     1. Pull the latest for the `master` branch
     2. Run `git tag $VERSION && git push --tags`
-    3. Wait for CircleCI to finish the build for the tag, which pushes images to quay.io and creates a release in github
-4. Merge the PR for the charts repo you created in step 1.
+    3. Make sure CircleCI runs successfully for the new tag - this will push images to quay.io and create a release in GitHub
+        1. If CircleCI fails, check with Codeowners ASAP
+4. Create and merge a PR for your changes to the Helm chart
 
