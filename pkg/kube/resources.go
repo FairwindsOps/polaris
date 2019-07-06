@@ -11,6 +11,8 @@ import (
 
 	"github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
+	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sYaml "k8s.io/apimachinery/pkg/util/yaml"
@@ -28,6 +30,9 @@ type ResourceProvider struct {
 	Nodes         []corev1.Node
 	Deployments   []appsv1.Deployment
 	StatefulSets  []appsv1.StatefulSet
+	DaemonSets    []appsv1.DaemonSet
+	Jobs          []batchv1.Job
+	CronJobs      []batchv1beta1.CronJob
 	Namespaces    []corev1.Namespace
 	Pods          []corev1.Pod
 }
@@ -53,6 +58,9 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 		Nodes:         []corev1.Node{},
 		Deployments:   []appsv1.Deployment{},
 		StatefulSets:  []appsv1.StatefulSet{},
+		DaemonSets:    []appsv1.DaemonSet{},
+		Jobs:          []batchv1.Job{},
+		CronJobs:      []batchv1beta1.CronJob{},
 		Namespaces:    []corev1.Namespace{},
 		Pods:          []corev1.Pod{},
 	}
@@ -124,6 +132,21 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 		logrus.Errorf("Error fetching StatefulSets%v", err)
 		return nil, err
 	}
+	daemonSets, err := kube.AppsV1().DaemonSets("").List(listOpts)
+	if err != nil {
+		logrus.Errorf("Error fetching DaemonSets %v", err)
+		return nil, err
+	}
+	jobs, err := kube.BatchV1().Jobs("").List(listOpts)
+	if err != nil {
+		logrus.Errorf("Error fetching Jobs %v", err)
+		return nil, err
+	}
+	cronJobs, err := kube.BatchV1beta1().CronJobs("").List(listOpts)
+	if err != nil {
+		logrus.Errorf("Error fetching CronJobs %v", err)
+		return nil, err
+	}
 	nodes, err := kube.CoreV1().Nodes().List(listOpts)
 	if err != nil {
 		logrus.Errorf("Error fetching Nodes %v", err)
@@ -147,6 +170,9 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 		CreationTime:  time.Now(),
 		Deployments:   deploys.Items,
 		StatefulSets:  statefulSets.Items,
+		DaemonSets:    daemonSets.Items,
+		Jobs:          jobs.Items,
+		CronJobs:      cronJobs.Items,
 		Nodes:         nodes.Items,
 		Namespaces:    namespaces.Items,
 		Pods:          pods.Items,
@@ -173,6 +199,18 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 		dep := appsv1.StatefulSet{}
 		err = decoder.Decode(&dep)
 		resources.StatefulSets = append(resources.StatefulSets, dep)
+	} else if resource.Kind == "DaemonSet" {
+		dep := appsv1.DaemonSet{}
+		err = decoder.Decode(&dep)
+		resources.DaemonSets = append(resources.DaemonSets, dep)
+	} else if resource.Kind == "Job" {
+		dep := batchv1.Job{}
+		err = decoder.Decode(&dep)
+		resources.Jobs = append(resources.Jobs, dep)
+	} else if resource.Kind == "Job" {
+		dep := batchv1beta1.CronJob{}
+		err = decoder.Decode(&dep)
+		resources.CronJobs = append(resources.CronJobs, dep)
 	} else if resource.Kind == "Namespace" {
 		ns := corev1.Namespace{}
 		err = decoder.Decode(&ns)

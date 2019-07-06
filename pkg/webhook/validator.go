@@ -22,6 +22,7 @@ import (
 
 	conf "github.com/reactiveops/polaris/pkg/config"
 	validator "github.com/reactiveops/polaris/pkg/validator"
+	"github.com/reactiveops/polaris/pkg/validator/controllers"
 	"github.com/sirupsen/logrus"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -92,16 +93,27 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 		err = v.decoder.Decode(req, &pod)
 		podResult = validator.ValidatePod(v.Config, &pod.Spec)
 	} else {
-		var controller validator.Controller
-		switch req.AdmissionRequest.Kind.Kind {
-		case "Deployment":
+		var controller controllers.Interface
+		if yes := v.Config.CheckIfKindIsConfiguredForValidation(req.AdmissionRequest.Kind.Kind); !yes {
+			logrus.Warnf("Skipping, kind (%s) isn't something we are configured to scan", req.AdmissionRequest.Kind.Kind)
+			// FIXME: Should we be returning an OK response as skipped?
+			return admission.ErrorResponse(http.StatusBadRequest, err)
+		}
+		controllerType, err := conf.GetSupportedControllerFromString(req.AdmissionRequest.Kind.Kind)
+		if err != nil {
+			msg := fmt.Errorf("Unexpected error occurred. Expected Kind to be a supported type (%s)", req.AdmissionRequest.Kind.Kind)
+			logrus.Error(msg)
+			return admission.ErrorResponse(http.StatusInternalServerError, err)
+		}
+		switch controllerType {
+		case conf.Deployments:
 			deploy := appsv1.Deployment{}
 			err = v.decoder.Decode(req, &deploy)
-			controller = validator.ControllerFromDeployment(deploy)
-		case "StatefulSet":
+			controller = controllers.NewDeploymentController(deploy)
+		case conf.StatefulSets:
 			statefulSet := appsv1.StatefulSet{}
 			err = v.decoder.Decode(req, &statefulSet)
-			controller = validator.ControllerFromStatefulSet(statefulSet)
+			controller = controllers.NewStatefulSetController(statefulSet)
 		}
 		controllerResult := validator.ValidateController(v.Config, controller)
 		podResult = controllerResult.PodResult

@@ -36,6 +36,9 @@ type NamespaceResult struct {
 	Summary            *ResultSummary
 	DeploymentResults  []ControllerResult
 	StatefulSetResults []ControllerResult
+	DaemonSetResults   []ControllerResult
+	JobResults         []ControllerResult
+	CronJobResults     []ControllerResult
 }
 
 // NamespacedResults is a mapping of namespace name to the validation results.
@@ -49,6 +52,9 @@ func (nsResults NamespacedResults) getNamespaceResult(nsName string) *NamespaceR
 			Summary:            &ResultSummary{},
 			DeploymentResults:  []ControllerResult{},
 			StatefulSetResults: []ControllerResult{},
+			DaemonSetResults:   []ControllerResult{},
+			JobResults:         []ControllerResult{},
+			CronJobResults:     []ControllerResult{},
 		}
 		nsResults[nsName] = nsResult
 	default:

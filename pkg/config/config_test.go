@@ -53,6 +53,9 @@ resources:
     warning:
       below: 300M
       above: 4G
+controllers_to_scan:
+  - Deployments
+  - StatefulSets
 `
 
 var resourceConfJSON1 = `{
@@ -97,7 +100,8 @@ var resourceConfJSON1 = `{
 				"above": "4G"
 			}
 		}
-	}
+	},
+	"controllers_to_scan": ["Deployments", "StatefulSets"]
 }`
 
 func TestParseError(t *testing.T) {
@@ -144,4 +148,7 @@ func testParsedConfig(t *testing.T, config *Configuration) {
 	assert.Equal(t, int64(6000), memLimits.Error.Above.ScaledValue(resource.Mega))
 	assert.Equal(t, int64(300), memLimits.Warning.Below.ScaledValue(resource.Mega))
 	assert.Equal(t, int64(4000), memLimits.Warning.Above.ScaledValue(resource.Mega))
+
+	controllersToScan := config.ControllersToScan
+	assert.ElementsMatch(t, []SupportedController{Deployments, StatefulSets}, controllersToScan)
 }

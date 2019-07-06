@@ -46,6 +46,8 @@ const (
 )
 
 func main() {
+	// Load CLI Flags
+	// TODO: Split up global flags vs dashboard/webhook/audit specific flags
 	dashboard := flag.Bool("dashboard", false, "Runs the webserver for Polaris dashboard.")
 	webhook := flag.Bool("webhook", false, "Runs the webhook webserver.")
 	audit := flag.Bool("audit", false, "Runs a one-time audit.")
@@ -67,11 +69,13 @@ func main() {
 
 	flag.Parse()
 
+	// if version is specified anywhere, print and exit
 	if *version {
 		fmt.Printf("Polaris version %s\n", Version)
 		os.Exit(0)
 	}
 
+	// Set logging level
 	parsedLevel, err := logrus.ParseLevel(*logLevel)
 	if err != nil {
 		logrus.Errorf("log-level flag has invalid value %s", *logLevel)
@@ -79,25 +83,32 @@ func main() {
 		logrus.SetLevel(parsedLevel)
 	}
 
+	// Parse the config file
 	c, err := conf.ParseFile(*configPath)
-	if *displayName != "" {
-		c.DisplayName = *displayName
-	}
 	if err != nil {
 		logrus.Errorf("Error parsing config at %s: %v", *configPath, err)
 		os.Exit(1)
 	}
 
+	// Override display name on reports if defined in CLI flags
+	if *displayName != "" {
+		c.DisplayName = *displayName
+	}
+
+	// default to run as audit if no "run-mode" is defined
 	if !*dashboard && !*webhook && !*audit {
 		*audit = true
 	}
 
+	// perform the action for the desired "run-mode"
 	if *webhook {
 		startWebhookServer(c, *disableWebhookConfigInstaller, *webhookPort)
 	} else if *dashboard {
 		startDashboardServer(c, *auditPath, *dashboardPort, *dashboardBasePath)
 	} else if *audit {
 		auditData := runAndReportAudit(c, *auditPath, *auditOutputFile, *auditOutputURL, *auditOutputFormat)
+
+		// exit code 3 if any errors in the audit else if score is under desired minimum, exit 4
 		if *setExitCode && auditData.ClusterSummary.Results.Totals.Errors > 0 {
 			logrus.Infof("%d errors found in audit", auditData.ClusterSummary.Results.Totals.Errors)
 			os.Exit(3)
@@ -190,6 +201,7 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 }
 
 func runAndReportAudit(c conf.Configuration, auditPath string, outputFile string, outputURL string, outputFormat string) validator.AuditData {
+	// Create a kubernetes client resource provider
 	k, err := kube.CreateResourceProvider(auditPath)
 	if err != nil {
 		logrus.Errorf("Error fetching Kubernetes resources %v", err)
@@ -198,7 +210,8 @@ func runAndReportAudit(c conf.Configuration, auditPath string, outputFile string
 	auditData, err := validator.RunAudit(c, k)
 
 	if err != nil {
-		panic(err)
+		logrus.Errorf("Error while running audit on resources: %v", err)
+		os.Exit(1)
 	}
 
 	var outputBytes []byte

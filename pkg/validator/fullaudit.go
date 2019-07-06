@@ -21,6 +21,9 @@ type ClusterSummary struct {
 	Namespaces   int
 	Deployments  int
 	StatefulSets int
+	DaemonSets   int
+	Jobs         int
+	CronJobs     int
 	Score        uint
 }
 
@@ -70,6 +73,9 @@ func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider) (
 			Namespaces:   len(kubeResources.Namespaces),
 			Deployments:  len(kubeResources.Deployments),
 			StatefulSets: len(kubeResources.StatefulSets),
+			DaemonSets:   len(kubeResources.DaemonSets),
+			Jobs:         len(kubeResources.Jobs),
+			CronJobs:     len(kubeResources.CronJobs),
 			Results:      clusterResults,
 			Score:        clusterResults.Totals.GetScore(),
 		},
