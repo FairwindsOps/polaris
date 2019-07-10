@@ -161,7 +161,7 @@ spec:
         - --dashboard
         - --config
         - /opt/app/config.yaml
-        image: 'quay.io/reactiveops/polaris:0.2'
+        image: 'quay.io/reactiveops/polaris:0.3'
         imagePullPolicy: 'Always'
         name: dashboard
         ports:
@@ -199,6 +199,12 @@ spec:
           subPath: config.yaml
           readOnly: true
       serviceAccountName: polaris-dashboard
+---
+# Source: polaris/templates/audit.job.yaml
+
+---
+# Source: polaris/templates/audit.rbac.yaml
+
 ---
 # Source: polaris/templates/ingress.yaml
 

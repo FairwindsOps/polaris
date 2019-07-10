@@ -211,7 +211,7 @@ spec:
             - --webhook
             - --config
             - /opt/app/config.yaml
-          image: 'quay.io/reactiveops/polaris:0.2'
+          image: 'quay.io/reactiveops/polaris:0.3'
           imagePullPolicy: 'Always'
           ports:
             - containerPort: 9876
@@ -270,6 +270,12 @@ spec:
             secretName: polaris-webhook
         - name: cr-logs
           emptyDir: {}
+---
+# Source: polaris/templates/audit.job.yaml
+
+---
+# Source: polaris/templates/audit.rbac.yaml
+
 ---
 # Source: polaris/templates/dashboard.deployment.yaml
 
