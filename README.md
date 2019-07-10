@@ -148,7 +148,7 @@ Polaris validation checks fall into several different categories:
 * `webhook`: Runs the webhook webserver.
 * `webhook-port`: Port for the webhook webserver (default `9876`)
 * `disable-webhook-config-installer`: disable the installer in the webhook server, so it won't install webhook configuration resources during bootstrapping
-* `kubeconfig`: Paths to a kubeconfig. Only required if out-of-cluster.
+* `kubeconfig`: Path to a kubeconfig. Only required if out-of-cluster.
 
 ## Contributing
 PRs welcome! Check out the [Contributing Guidelines](CONTRIBUTING.md),
