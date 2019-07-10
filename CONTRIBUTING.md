@@ -93,14 +93,15 @@ The steps are:
     2. Make any necessary changes to the chart to support the new version of Polaris (e.g. new RBAC permissions)
     3. **Don't merge yet!**
 2. Create a PR for this repo
-    1. Bump the version number in:
+    1. Create a new branch named `yourname/update-version`
+    2. Bump the version number in:
         1. main.go
         2. README.md
-    2. Regenerate the deployment files. Assuming you've cloned the charts repo to `./charts`:
+    3. Regenerate the deployment files. Assuming you've cloned the charts repo to `./charts`:
         1. `helm template ./charts/stable/polaris/ --name polaris --namespace polaris --set templateOnly=true > deploy/dashboard.yaml`
         2. `helm template ./charts/stable/polaris/ --name polaris --namespace polaris --set templateOnly=true --set webhook.enable=true --set dashboard.enable=false > deploy/webhook.yaml`
-    3. Update CHANGELOG.md
-    4. Merge your PR
+    4. Update CHANGELOG.md
+    5. Merge your PR
 3. Tag the latest branch for this repo
     1. Pull the latest for the `master` branch
     2. Run `git tag $VERSION && git push --tags`
