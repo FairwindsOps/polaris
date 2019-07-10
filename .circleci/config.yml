@@ -106,7 +106,7 @@ references:
     run:
       name: Release deploy configs
       command: |
-        upload_url=$(curl --silent https://api.github.com/repos/reactiveops/polaris/releases/latest | grep upload_url)
+        upload_url=$(curl --silent https://api.github.com/repos/FairwindsOps/polaris/releases/latest | grep upload_url)
         upload_url=$(echo $upload_url | sed -e 's/.*\(https.*\){.*$/\1/')
         curl -X POST "$upload_url?name=dashboard.yaml" --data-binary "@./deploy/dashboard.yaml" -H "Authorization: Bearer $GITHUB_TOKEN" -H "Content-Type: application/x-yaml"
         curl -X POST "$upload_url?name=webhook.yaml" --data-binary "@./deploy/webhook.yaml" -H "Authorization: Bearer $GITHUB_TOKEN" -H "Content-Type: application/x-yaml"
