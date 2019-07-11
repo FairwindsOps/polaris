@@ -1,5 +1,7 @@
 # x.x.x (next release)
 
+# 0.3.0
+* Added `--set-exit-code-on-error` and `--set-exit-code-below-score` flags to better support CI/CD
 
 # 0.2.1
 * [Fix](https://github.com/reactiveops/polaris/issues/146): Fixed logic on RunAsNonRoot check to incorporate settings in podSpec

@@ -72,6 +72,7 @@ references:
       command: |
         kubectl apply -f ./deploy/dashboard.yaml
         sleep 10
+        kubectl get pods --namespace polaris
         kubectl port-forward --namespace polaris svc/polaris-dashboard 3000:80 &
         sleep 5
         curl -f http://localhost:3000 > /dev/null
@@ -171,7 +172,11 @@ workflows:
   build:
     jobs:
       - test
-      - test_k8s
+      - test_k8s:
+          # Ignore update-version branch, which changes deploy/ image references before the images are built
+          filters:
+            branches:
+              ignore: /.*\/update-version/
       - build:
           requires:
             - test

@@ -5,7 +5,7 @@
   [![Version][version-image]][version-link] [![CircleCI][circleci-image]][circleci-link] [![Go Report Card][goreport-image]][goreport-link]
 </div>
 
-[version-image]: https://img.shields.io/static/v1.svg?label=Version&message=0.2.1&color=239922
+[version-image]: https://img.shields.io/static/v1.svg?label=Version&message=0.3.0&color=239922
 [version-link]: https://github.com/reactiveops/polaris
 
 [goreport-image]: https://goreportcard.com/badge/github.com/reactiveops/polaris
@@ -141,14 +141,53 @@ Polaris validation checks fall into several different categories:
 
 ## CLI Options
 
-* `config`: Specify a location for the Polaris config
-* `dashboard`: Runs the webserver for Polaris dashboard.
-* `dashboard-port`: Port for the dashboard webserver (default `8080`)
-* `dashboard-base-path`: Path on which the dashboard is being served (default `/`)
-* `webhook`: Runs the webhook webserver.
-* `webhook-port`: Port for the webhook webserver (default `9876`)
-* `disable-webhook-config-installer`: disable the installer in the webhook server, so it won't install webhook configuration resources during bootstrapping
-* `kubeconfig`: Path to a kubeconfig. Only required if out-of-cluster.
+```
+# high-level flags
+-version
+      Prints the version of Polaris
+-config string
+      Location of Polaris configuration file
+-kubeconfig string
+      Path to a kubeconfig. Only required if out-of-cluster.
+-log-level string
+      Logrus log level (default "info")
+-master string
+      The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.
+
+# dashboard flags
+-dashboard
+      Runs the webserver for Polaris dashboard.
+-dashboard-base-path string
+      Path on which the dashboard is served (default "/")
+-dashboard-port int
+      Port for the dashboard webserver (default 8080)
+-display-name string
+      An optional identifier for the audit
+
+# audit flags
+-audit
+      Runs a one-time audit.
+-audit-path string
+      If specified, audits one or more YAML files instead of a cluster
+-output-file string
+      Destination file for audit results
+-output-format string
+      Output format for results - json, yaml, or score (default "json")
+-output-url string
+      Destination URL to send audit results
+-set-exit-code-below-score int
+      When running with --audit, set an exit code of 4 when the score is below this threshold (1-100)
+-set-exit-code-on-error
+      When running with --audit, set an exit code of 3 when the audit contains error-level issues.
+
+# webhook flags
+-webhook
+      Runs the webhook webserver.
+-webhook-port int
+      Port for the webhook webserver (default 9876)
+-disable-webhook-config-installer
+      disable the installer in the webhook server, so it won't install webhook configuration resources during bootstrapping
+```
 
 ## Contributing
 PRs welcome! Check out the [Contributing Guidelines](CONTRIBUTING.md),
