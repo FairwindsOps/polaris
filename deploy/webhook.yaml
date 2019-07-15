@@ -88,11 +88,13 @@ metadata:
     app: polaris
 rules:
   - apiGroups:
+      - ''
       - 'apps'
       - 'extensions'
     resources:
       - 'deployments'
       - 'statefulsets'
+      - 'limitranges'
     verbs:
       - 'get'
       - 'list'

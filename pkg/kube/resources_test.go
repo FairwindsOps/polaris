@@ -31,6 +31,9 @@ func TestGetResourcesFromPath(t *testing.T) {
 	assert.Equal(t, 2, len(resources.Pods), "Should have two pods")
 	assert.Equal(t, "", resources.Pods[0].ObjectMeta.Namespace, "Should have one pod in default namespace")
 	assert.Equal(t, "two", resources.Pods[1].ObjectMeta.Namespace, "Should have one pod in namespace 'two'")
+
+	assert.Equal(t, 1, len(resources.LimitRanges), "Should have one LimitRange")
+	assert.Equal(t, "limit", resources.LimitRanges[0].ObjectMeta.Namespace)
 }
 
 func TestGetMultipleResourceFromSingleFile(t *testing.T) {
@@ -55,7 +58,7 @@ func TestGetMultipleResourceFromSingleFile(t *testing.T) {
 
 func TestGetResourceFromAPI(t *testing.T) {
 	k8s := test.SetupTestAPI()
-	k8s = test.SetupAddControllers(k8s, "test")
+	test.SetupAddControllers(k8s, "test")
 	resources, err := CreateResourceProviderFromAPI(k8s, "test")
 	assert.Equal(t, nil, err, "Error should be nil")
 

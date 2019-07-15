@@ -11,7 +11,7 @@ import (
 
 func TestGetTemplateData(t *testing.T) {
 	k8s := test.SetupTestAPI()
-	k8s = test.SetupAddControllers(k8s, "test")
+	test.SetupAddControllers(k8s, "test")
 	resources, err := kube.CreateResourceProviderFromAPI(k8s, "test")
 	assert.Equal(t, err, nil, "error should be nil")
 

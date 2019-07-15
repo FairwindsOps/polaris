@@ -30,6 +30,7 @@ type ResourceProvider struct {
 	StatefulSets  []appsv1.StatefulSet
 	Namespaces    []corev1.Namespace
 	Pods          []corev1.Pod
+	LimitRanges   []corev1.LimitRange
 }
 
 type k8sResource struct {
@@ -67,7 +68,7 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 		}
 		contents, err := ioutil.ReadFile(path)
 		if err != nil {
-			logrus.Errorf("Error reading file %v", path)
+			logrus.Errorf("Error reading file: %v", path)
 			return err
 		}
 		specs := regexp.MustCompile("\n-+\n").Split(string(contents), -1)
@@ -77,7 +78,7 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 			}
 			err = addYaml(spec)
 			if err != nil {
-				logrus.Errorf("Error parsing YAML %v", err)
+				logrus.Errorf("Error parsing YAML: %v", err)
 				return err
 			}
 		}
@@ -95,12 +96,12 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 func CreateResourceProviderFromCluster() (*ResourceProvider, error) {
 	kubeConf, configError := config.GetConfig()
 	if configError != nil {
-		logrus.Errorf("Error fetching KubeConfig %v", configError)
+		logrus.Errorf("Error fetching KubeConfig: %v", configError)
 		return nil, configError
 	}
 	api, err := kubernetes.NewForConfig(kubeConf)
 	if err != nil {
-		logrus.Errorf("Error creating Kubernetes client %v", err)
+		logrus.Errorf("Error creating Kubernetes client: %v", err)
 		return nil, err
 	}
 	return CreateResourceProviderFromAPI(api, kubeConf.Host)
@@ -111,12 +112,12 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 	listOpts := metav1.ListOptions{}
 	serverVersion, err := kube.Discovery().ServerVersion()
 	if err != nil {
-		logrus.Errorf("Error fetching Cluster API version %v", err)
+		logrus.Errorf("Error fetching Cluster API version: %v", err)
 		return nil, err
 	}
 	deploys, err := kube.AppsV1().Deployments("").List(listOpts)
 	if err != nil {
-		logrus.Errorf("Error fetching Deployments %v", err)
+		logrus.Errorf("Error fetching Deployments: %v", err)
 		return nil, err
 	}
 	statefulSets, err := kube.AppsV1().StatefulSets("").List(listOpts)
@@ -126,17 +127,22 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 	}
 	nodes, err := kube.CoreV1().Nodes().List(listOpts)
 	if err != nil {
-		logrus.Errorf("Error fetching Nodes %v", err)
+		logrus.Errorf("Error fetching Nodes: %v", err)
 		return nil, err
 	}
 	namespaces, err := kube.CoreV1().Namespaces().List(listOpts)
 	if err != nil {
-		logrus.Errorf("Error fetching Namespaces %v", err)
+		logrus.Errorf("Error fetching Namespaces: %v", err)
 		return nil, err
 	}
 	pods, err := kube.CoreV1().Pods("").List(listOpts)
 	if err != nil {
-		logrus.Errorf("Error fetching Pods %v", err)
+		logrus.Errorf("Error fetching Pods: %v", err)
+		return nil, err
+	}
+	limitRanges, err := kube.CoreV1().LimitRanges("").List(listOpts)
+	if err != nil {
+		logrus.Errorf("Error fetching LimitRanges: %v", err)
 		return nil, err
 	}
 
@@ -150,6 +156,7 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 		Nodes:         nodes.Items,
 		Namespaces:    namespaces.Items,
 		Pods:          pods.Items,
+		LimitRanges:   limitRanges.Items,
 	}
 	return &api, nil
 }
@@ -181,6 +188,10 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 		pod := corev1.Pod{}
 		err = decoder.Decode(&pod)
 		resources.Pods = append(resources.Pods, pod)
+	} else if resource.Kind == "LimitRange" {
+		lr := corev1.LimitRange{}
+		err = decoder.Decode(&lr)
+		resources.LimitRanges = append(resources.LimitRanges, lr)
 	}
 	if err != nil {
 		logrus.Errorf("Error parsing %s: %v", resource.Kind, err)

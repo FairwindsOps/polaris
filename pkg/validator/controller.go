@@ -19,6 +19,7 @@ import (
 	"github.com/reactiveops/polaris/pkg/kube"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 // ControllerSpec is a generic type for k8s controller specs
@@ -56,6 +57,7 @@ func ValidateControllers(config conf.Configuration, kubeResources *kube.Resource
 		controllers = append(controllers, ControllerFromStatefulSet(deploy))
 	}
 	for _, controller := range controllers {
+		applyLimitRanges(&controller, kubeResources.LimitRanges)
 		controllerResult := ValidateController(config, controller)
 		nsResult := nsResults.getNamespaceResult(controller.Namespace)
 		nsResult.Summary.appendResults(*controllerResult.PodResult.Summary)
@@ -63,6 +65,39 @@ func ValidateControllers(config conf.Configuration, kubeResources *kube.Resource
 			nsResult.DeploymentResults = append(nsResult.DeploymentResults, controllerResult)
 		} else if controller.Type == "StatefulSet" {
 			nsResult.StatefulSetResults = append(nsResult.StatefulSetResults, controllerResult)
+		}
+	}
+}
+
+// applyLimitRanges modifies the Limits and Requests of the input controller
+// based on the presense an applicable LimitRange
+func applyLimitRanges(controller *Controller, limits []corev1.LimitRange) {
+	for _, limit := range limits {
+		if limit.ObjectMeta.Namespace != controller.Namespace {
+			continue
+		}
+		for _, limitItem := range limit.Spec.Limits {
+			if limitItem.Type != corev1.LimitTypeContainer {
+				continue
+			}
+			for containerIdx, container := range controller.Spec.Template.Spec.Containers {
+				if container.Resources.Limits == nil {
+					controller.Spec.Template.Spec.Containers[containerIdx].Resources.Limits = make(map[corev1.ResourceName]resource.Quantity)
+				}
+				if container.Resources.Requests == nil {
+					controller.Spec.Template.Spec.Containers[containerIdx].Resources.Requests = make(map[corev1.ResourceName]resource.Quantity)
+				}
+				for resType, resLimit := range limitItem.Default {
+					if _, ok := container.Resources.Limits[resType]; !ok {
+						controller.Spec.Template.Spec.Containers[containerIdx].Resources.Limits[resType] = resLimit
+					}
+				}
+				for resType, resLimit := range limitItem.DefaultRequest {
+					if _, ok := container.Resources.Requests[resType]; !ok {
+						controller.Spec.Template.Spec.Containers[containerIdx].Resources.Requests[resType] = resLimit
+					}
+				}
+			}
 		}
 	}
 }

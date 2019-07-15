@@ -90,6 +90,7 @@ rules:
       - 'nodes'
       - 'namespaces'
       - 'pods'
+      - 'limitranges'
     verbs:
       - 'get'
       - 'list'
