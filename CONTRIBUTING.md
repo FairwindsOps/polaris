@@ -42,6 +42,7 @@ go test ./pkg/... -v -coverprofile cover.out
 
 If you've encountered an issue that is not already reported, please create an issue that contains the following:
 
+- The version of Polaris you are using
 - Clear description of the issue
 - Steps to reproduce it
 - Appropriate labels
