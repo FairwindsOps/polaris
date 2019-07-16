@@ -56,6 +56,9 @@ resources:
 controllers_to_scan:
   - Deployments
   - StatefulSets
+  - Jobs
+  - CronJobs
+  - DaemonSets
 `
 
 var resourceConfJSON1 = `{
@@ -101,7 +104,7 @@ var resourceConfJSON1 = `{
 			}
 		}
 	},
-	"controllers_to_scan": ["Deployments", "StatefulSets"]
+	"controllers_to_scan": ["Deployments", "StatefulSets", "Jobs", "CronJobs", "DaemonSets"]
 }`
 
 func TestParseError(t *testing.T) {
@@ -150,5 +153,5 @@ func testParsedConfig(t *testing.T, config *Configuration) {
 	assert.Equal(t, int64(4000), memLimits.Warning.Above.ScaledValue(resource.Mega))
 
 	controllersToScan := config.ControllersToScan
-	assert.ElementsMatch(t, []SupportedController{Deployments, StatefulSets}, controllersToScan)
+	assert.ElementsMatch(t, []SupportedController{Deployments, StatefulSets, Jobs, CronJobs, DaemonSets}, controllersToScan)
 }
