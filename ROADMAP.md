@@ -5,7 +5,16 @@ as well as the project's overall functionality.
 If you have ideas for a new check, or for new Polaris features,
 you can submit a pull request for this file, or open an issue in GitHub.
 
-## Features
+## Q3 2019
+Below is a list of work we plan to get done this quarter. Some more details can be found under
+[Future Work](#future_work), or
+[in the milestone](https://github.com/FairwindsOps/polaris/milestone/1)
+* Rule exceptions - we'd like to provide a way of overriding Polaris checks on individual controllers, e.g. through annotations
+* More controller types - we plan to implement checks for more than just deployments
+* Image repo checks - we plan to provide a check that ensures all repos conform to a set of user-defined patterns
+* OPA integration (investigate only) - we plan to investigate the potential use of OPA to let users define custom Polaris checks
+
+## Future Work
 ### Validating Webhook
 The validating webhook rejects incoming workloads if they cause `error`-level
 issues, as defined by the Polaris configuration.
@@ -21,7 +30,7 @@ when we feel it's ready.
 * Pass `warning`-level messages back to `kubectl` if possible (may require changes
 to core k8s or `kubectl`)
 
-## Ability to override checks
+### Ability to override checks
 We plan to add the ability to override Polaris checks for particular namespaces
 and workloads. This may be something that is set in the Polaris configuration,
 or an annotation that can be added to the resource definition.
@@ -30,12 +39,9 @@ This is important, as certain workloads have good reason to skip particular Pola
 checks - for instance, the `dns-controller` deployment in `kube-system` needs to have
 the host network configured.
 
-## Checks
-These are checks that we plan to implement. If you have requests or ideas,
-let us know! You can submit a pull request for this file, or open an issue in GitHub.
-
-### Images
-* List of allowed/disallowed registries
+### Images Registries Check
+We'd like to allow users to restrict images to a list of allowed/disallowed registries.
+We'll likely allow patterns, e.g. `*.dkr.ecr.*.amazonaws.com`
 
 ### New controller types
 Currently we only look at Deployments. We plan to also validate these types of controllers:
