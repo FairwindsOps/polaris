@@ -22,7 +22,7 @@ problems in the future. Polaris can be run in a few different modes:
 - An experimental validating webhook that can prevent any future deployments that do not live up to a configured standard.
 - A command-line audit that can be incorporated into your CI/CD pipeline
 
-**Want to learn more?** ReactiveOps holds [office hours on Zoom](https://zoom.us/j/242508205) the first Friday of every month, at 12pm Eastern. You can also reach out via email at `opensource@reactiveops.com`
+**Want to learn more?** ReactiveOps holds [office hours on Zoom](https://zoom.us/j/242508205) the first Friday of every month, at 12pm Eastern. You can also reach out via email at `opensource@fairwinds.com`
 
 ## Quickstart
 
@@ -197,7 +197,7 @@ PRs welcome! Check out the [Contributing Guidelines](CONTRIBUTING.md),
 A history of changes to this project can be viewed in the [Changelog](CHANGELOG.md)
 
 If you'd like to learn more about Polaris, or if you'd like to speak with
-a Kubernetes expert, you can contact `info@reactiveops.com` or [visit our website](https://reactiveops.com)
+a Kubernetes expert, you can contact `info@fairwinds.com` or [visit our website](https://fairwinds.com)
 
 ## License
 Apache License 2.0
