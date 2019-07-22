@@ -6,13 +6,13 @@
 </div>
 
 [version-image]: https://img.shields.io/static/v1.svg?label=Version&message=0.3.0&color=239922
-[version-link]: https://github.com/reactiveops/polaris
+[version-link]: https://github.com/FairwindsOps/polaris
 
-[goreport-image]: https://goreportcard.com/badge/github.com/reactiveops/polaris
-[goreport-link]: https://goreportcard.com/report/github.com/reactiveops/polaris
+[goreport-image]: https://goreportcard.com/badge/github.com/FairwindsOps/polaris
+[goreport-link]: https://goreportcard.com/report/github.com/FairwindsOps/polaris
 
-[circleci-image]: https://circleci.com/gh/reactiveops/polaris.svg?style=svg
-[circleci-link]: https://circleci.com/gh/reactiveops/polaris.svg
+[circleci-image]: https://circleci.com/gh/FairwindsOps/polaris.svg?style=svg
+[circleci-link]: https://circleci.com/gh/FairwindsOps/polaris.svg
 
 Polaris helps keep your cluster healthy. It runs a variety of checks to ensure that
 Kubernetes deployments are configured using best practices, helping you avoid
