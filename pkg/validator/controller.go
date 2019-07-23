@@ -19,6 +19,7 @@ import (
 	"github.com/reactiveops/polaris/pkg/kube"
 	"github.com/reactiveops/polaris/pkg/validator/controllers"
 	controller "github.com/reactiveops/polaris/pkg/validator/controllers"
+	"github.com/sirupsen/logrus"
 )
 
 // ValidateController validates a single controller, returns a ControllerResult.
@@ -45,17 +46,8 @@ func ValidateControllers(config conf.Configuration, kubeResources *kube.Resource
 		controllerResult := ValidateController(config, controller)
 		nsResult := nsResults.getNamespaceResult(controller.GetNamespace())
 		nsResult.Summary.appendResults(*controllerResult.PodResult.Summary)
-		switch controller.GetType() {
-		case conf.StatefulSets:
-			nsResult.StatefulSetResults = append(nsResult.StatefulSetResults, controllerResult)
-		case conf.DaemonSets:
-			nsResult.DaemonSetResults = append(nsResult.DaemonSetResults, controllerResult)
-		case conf.Deployments:
-			nsResult.DeploymentResults = append(nsResult.DeploymentResults, controllerResult)
-		case conf.Jobs:
-			nsResult.JobResults = append(nsResult.JobResults, controllerResult)
-		case conf.CronJobs:
-			nsResult.CronJobResults = append(nsResult.CronJobResults, controllerResult)
+		if err := nsResult.AddResult(controller.GetType(), controllerResult); err != nil {
+			logrus.Errorf("Internal Error: Failed to add a grouped result: %s", err)
 		}
 	}
 }

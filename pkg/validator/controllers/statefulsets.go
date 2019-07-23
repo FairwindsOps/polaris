@@ -28,10 +28,10 @@ func (s StatefulSetController) GetType() config.SupportedController {
 }
 
 // NewStatefulSetController builds a statefulset controller
-func NewStatefulSetController(originalStatefulSetResource kubeAPIAppsV1.StatefulSet) Interface {
+func NewStatefulSetController(originalResource kubeAPIAppsV1.StatefulSet) Interface {
 	controller := StatefulSetController{}
-	controller.Name = originalStatefulSetResource.Name
-	controller.Namespace = originalStatefulSetResource.Namespace
-	controller.K8SResource = originalStatefulSetResource
+	controller.Name = originalResource.Name
+	controller.Namespace = originalResource.Namespace
+	controller.K8SResource = originalResource
 	return controller
 }

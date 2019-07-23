@@ -13,25 +13,25 @@ type JobController struct {
 }
 
 // GetPodTemplate returns the original template spec
-func (d JobController) GetPodTemplate() *kubeAPICoreV1.PodTemplateSpec {
-	return &d.K8SResource.Spec.Template
+func (j JobController) GetPodTemplate() *kubeAPICoreV1.PodTemplateSpec {
+	return &j.K8SResource.Spec.Template
 }
 
 // GetPodSpec returns the original kubernetes template pod spec
-func (d JobController) GetPodSpec() *kubeAPICoreV1.PodSpec {
-	return &d.K8SResource.Spec.Template.Spec
+func (j JobController) GetPodSpec() *kubeAPICoreV1.PodSpec {
+	return &j.K8SResource.Spec.Template.Spec
 }
 
 // GetType returns the supportedcontroller enum type
-func (d JobController) GetType() config.SupportedController {
+func (j JobController) GetType() config.SupportedController {
 	return config.Jobs
 }
 
 // NewJobController builds a new controller interface for Deployments
-func NewJobController(originalDeploymentResource kubeAPIBatchV1.Job) Interface {
+func NewJobController(originalResource kubeAPIBatchV1.Job) Interface {
 	controller := JobController{}
-	controller.Name = originalDeploymentResource.Name
-	controller.Namespace = originalDeploymentResource.Namespace
-	controller.K8SResource = originalDeploymentResource
+	controller.Name = originalResource.Name
+	controller.Namespace = originalResource.Namespace
+	controller.K8SResource = originalResource
 	return controller
 }

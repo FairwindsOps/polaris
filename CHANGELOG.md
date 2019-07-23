@@ -1,5 +1,8 @@
 # x.x.x (next release)
 
+# 0.4.0
+* Added additional Pod Controllers to scan PodSpec (`jobs`, `cronjobs`, `daemonsets`, `replicationcontrollers`)
+
 # 0.3.1
 * Changed dashboard branding to refer to new org name Fairwinds
 

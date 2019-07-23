@@ -57,6 +57,10 @@ func LoadControllersByType(controllerType config.SupportedController, kubeResour
 		for _, cronJob := range kubeResources.CronJobs {
 			interfaces = append(interfaces, NewCronJobController(cronJob))
 		}
+	case config.ReplicationControllers:
+		for _, replicationController := range kubeResources.ReplicationControllers {
+			interfaces = append(interfaces, NewReplicationControllerController(replicationController))
+		}
 	}
 	if len(interfaces) > 0 {
 		return interfaces, nil

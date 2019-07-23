@@ -28,10 +28,10 @@ func (d DaemonSetController) GetType() config.SupportedController {
 }
 
 // NewDaemonSetController builds a new controller interface for Deployments
-func NewDaemonSetController(originalDeploymentResource kubeAPIAppsV1.DaemonSet) Interface {
+func NewDaemonSetController(originalResource kubeAPIAppsV1.DaemonSet) Interface {
 	controller := DaemonSetController{}
-	controller.Name = originalDeploymentResource.Name
-	controller.Namespace = originalDeploymentResource.Namespace
-	controller.K8SResource = originalDeploymentResource
+	controller.Name = originalResource.Name
+	controller.Namespace = originalResource.Namespace
+	controller.K8SResource = originalResource
 	return controller
 }

@@ -13,17 +13,17 @@ type CronJobController struct {
 }
 
 // GetPodTemplate returns the original template spec
-func (d CronJobController) GetPodTemplate() *kubeAPICoreV1.PodTemplateSpec {
-	return &d.K8SResource.Spec.JobTemplate.Spec.Template
+func (c CronJobController) GetPodTemplate() *kubeAPICoreV1.PodTemplateSpec {
+	return &c.K8SResource.Spec.JobTemplate.Spec.Template
 }
 
 // GetPodSpec returns the original kubernetes template pod spec
-func (d CronJobController) GetPodSpec() *kubeAPICoreV1.PodSpec {
-	return &d.K8SResource.Spec.JobTemplate.Spec.Template.Spec
+func (c CronJobController) GetPodSpec() *kubeAPICoreV1.PodSpec {
+	return &c.K8SResource.Spec.JobTemplate.Spec.Template.Spec
 }
 
 // GetType returns the supportedcontroller enum type
-func (d CronJobController) GetType() config.SupportedController {
+func (c CronJobController) GetType() config.SupportedController {
 	return config.CronJobs
 }
 

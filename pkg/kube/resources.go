@@ -23,18 +23,19 @@ import (
 
 // ResourceProvider contains k8s resources to be audited
 type ResourceProvider struct {
-	ServerVersion string
-	CreationTime  time.Time
-	SourceName    string
-	SourceType    string
-	Nodes         []corev1.Node
-	Deployments   []appsv1.Deployment
-	StatefulSets  []appsv1.StatefulSet
-	DaemonSets    []appsv1.DaemonSet
-	Jobs          []batchv1.Job
-	CronJobs      []batchv1beta1.CronJob
-	Namespaces    []corev1.Namespace
-	Pods          []corev1.Pod
+	ServerVersion          string
+	CreationTime           time.Time
+	SourceName             string
+	SourceType             string
+	Nodes                  []corev1.Node
+	Deployments            []appsv1.Deployment
+	StatefulSets           []appsv1.StatefulSet
+	DaemonSets             []appsv1.DaemonSet
+	Jobs                   []batchv1.Job
+	CronJobs               []batchv1beta1.CronJob
+	ReplicationControllers []corev1.ReplicationController
+	Namespaces             []corev1.Namespace
+	Pods                   []corev1.Pod
 }
 
 type k8sResource struct {
@@ -52,17 +53,18 @@ func CreateResourceProvider(directory string) (*ResourceProvider, error) {
 // CreateResourceProviderFromPath returns a new ResourceProvider using the YAML files in a directory
 func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error) {
 	resources := ResourceProvider{
-		ServerVersion: "unknown",
-		SourceType:    "Path",
-		SourceName:    directory,
-		Nodes:         []corev1.Node{},
-		Deployments:   []appsv1.Deployment{},
-		StatefulSets:  []appsv1.StatefulSet{},
-		DaemonSets:    []appsv1.DaemonSet{},
-		Jobs:          []batchv1.Job{},
-		CronJobs:      []batchv1beta1.CronJob{},
-		Namespaces:    []corev1.Namespace{},
-		Pods:          []corev1.Pod{},
+		ServerVersion:          "unknown",
+		SourceType:             "Path",
+		SourceName:             directory,
+		Nodes:                  []corev1.Node{},
+		Deployments:            []appsv1.Deployment{},
+		StatefulSets:           []appsv1.StatefulSet{},
+		DaemonSets:             []appsv1.DaemonSet{},
+		Jobs:                   []batchv1.Job{},
+		CronJobs:               []batchv1beta1.CronJob{},
+		ReplicationControllers: []corev1.ReplicationController{},
+		Namespaces:             []corev1.Namespace{},
+		Pods:                   []corev1.Pod{},
 	}
 
 	addYaml := func(contents string) error {
@@ -85,7 +87,7 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 			}
 			err = addYaml(spec)
 			if err != nil {
-				logrus.Errorf("Error parsing YAML %v", err)
+				logrus.Errorf("Error parsing YAML: (%v)", err)
 				return err
 			}
 		}
@@ -147,6 +149,11 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 		logrus.Errorf("Error fetching CronJobs %v", err)
 		return nil, err
 	}
+	replicationControllers, err := kube.CoreV1().ReplicationControllers("").List(listOpts)
+	if err != nil {
+		logrus.Errorf("Error fetching ReplicationControllers %v", err)
+		return nil, err
+	}
 	nodes, err := kube.CoreV1().Nodes().List(listOpts)
 	if err != nil {
 		logrus.Errorf("Error fetching Nodes %v", err)
@@ -164,18 +171,19 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 	}
 
 	api := ResourceProvider{
-		ServerVersion: serverVersion.Major + "." + serverVersion.Minor,
-		SourceType:    "Cluster",
-		SourceName:    clusterName,
-		CreationTime:  time.Now(),
-		Deployments:   deploys.Items,
-		StatefulSets:  statefulSets.Items,
-		DaemonSets:    daemonSets.Items,
-		Jobs:          jobs.Items,
-		CronJobs:      cronJobs.Items,
-		Nodes:         nodes.Items,
-		Namespaces:    namespaces.Items,
-		Pods:          pods.Items,
+		ServerVersion:          serverVersion.Major + "." + serverVersion.Minor,
+		SourceType:             "Cluster",
+		SourceName:             clusterName,
+		CreationTime:           time.Now(),
+		Deployments:            deploys.Items,
+		StatefulSets:           statefulSets.Items,
+		DaemonSets:             daemonSets.Items,
+		Jobs:                   jobs.Items,
+		CronJobs:               cronJobs.Items,
+		ReplicationControllers: replicationControllers.Items,
+		Nodes:                  nodes.Items,
+		Namespaces:             namespaces.Items,
+		Pods:                   pods.Items,
 	}
 	return &api, nil
 }
@@ -186,9 +194,8 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 	resource := k8sResource{}
 	err := decoder.Decode(&resource)
 	if err != nil {
-		// TODO: should we panic if the YAML is bad?
 		logrus.Errorf("Invalid YAML: %s", string(contents))
-		return nil
+		return err
 	}
 	decoder = k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(contentBytes), 1000)
 	if resource.Kind == "Deployment" {
@@ -207,10 +214,14 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 		dep := batchv1.Job{}
 		err = decoder.Decode(&dep)
 		resources.Jobs = append(resources.Jobs, dep)
-	} else if resource.Kind == "Job" {
+	} else if resource.Kind == "CronJob" {
 		dep := batchv1beta1.CronJob{}
 		err = decoder.Decode(&dep)
 		resources.CronJobs = append(resources.CronJobs, dep)
+	} else if resource.Kind == "ReplicationController" {
+		dep := corev1.ReplicationController{}
+		err = decoder.Decode(&dep)
+		resources.ReplicationControllers = append(resources.ReplicationControllers, dep)
 	} else if resource.Kind == "Namespace" {
 		ns := corev1.Namespace{}
 		err = decoder.Decode(&ns)

@@ -20,6 +20,8 @@ const (
 	Jobs
 	// CronJobs are a supported controller for scanning pod specs
 	CronJobs
+	// ReplicationControllers are supported controllers for scanning pod specs
+	ReplicationControllers
 )
 
 // ControllerStrings are strongly ordered to match the SupportedController enum
@@ -30,20 +32,23 @@ var ControllerStrings = []string{
 	"DaemonSets",
 	"Jobs",
 	"CronJobs",
+	"ReplicationController",
 }
 
 // stringLookupForSupportedControllers is the list of lowercase singular and plural strings for string to enum lookup
 var stringLookupForSupportedControllers = map[string]SupportedController{
-	"deployment":   Deployments,
-	"deployments":  Deployments,
-	"statefulset":  StatefulSets,
-	"statefulsets": StatefulSets,
-	"daemonset":    DaemonSets,
-	"daemonsets":   DaemonSets,
-	"job":          Jobs,
-	"jobs":         Jobs,
-	"cronjob":      CronJobs,
-	"cronjobs":     CronJobs,
+	"deployment":             Deployments,
+	"deployments":            Deployments,
+	"statefulset":            StatefulSets,
+	"statefulsets":           StatefulSets,
+	"daemonset":              DaemonSets,
+	"daemonsets":             DaemonSets,
+	"job":                    Jobs,
+	"jobs":                   Jobs,
+	"cronjob":                CronJobs,
+	"cronjobs":               CronJobs,
+	"replicationcontroller":  ReplicationControllers,
+	"replicationcontrollers": ReplicationControllers,
 }
 
 // SupportedController is a constant item of a controller that is supported for scanning pod specs

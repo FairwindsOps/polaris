@@ -47,3 +47,4 @@ controllers_to_scan:
   - DaemonSets
   - CronJobs
   - Jobs
+  - ReplicationControllers
