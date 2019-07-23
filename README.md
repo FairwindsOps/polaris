@@ -22,7 +22,7 @@ problems in the future. Polaris can be run in a few different modes:
 - An experimental validating webhook that can prevent any future deployments that do not live up to a configured standard.
 - A command-line audit that can be incorporated into your CI/CD pipeline
 
-**Want to learn more?** ReactiveOps holds [office hours on Zoom](https://zoom.us/j/242508205) the first Friday of every month, at 12pm Eastern. You can also reach out via email at `opensource@fairwinds.com`
+**Want to learn more?** FairWinds holds [office hours on Zoom](https://zoom.us/j/242508205) the first Friday of every month, at 12pm Eastern. You can also reach out via email at `opensource@fairwinds.com`
 
 # Quickstart Dashboard
 
