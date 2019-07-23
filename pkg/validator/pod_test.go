@@ -20,9 +20,9 @@ import (
 	conf "github.com/reactiveops/polaris/pkg/config"
 	"github.com/reactiveops/polaris/test"
 	"github.com/stretchr/testify/assert"
-	corev1 "k8s.io/api/core/v1"
 )
 
+/*
 func TestValidatePod(t *testing.T) {
 	c := conf.Configuration{
 		Security: conf.Security{
@@ -90,15 +90,12 @@ func TestInvalidatePod(t *testing.T) {
 
 	k8s := test.SetupTestAPI()
 	k8s = test.SetupAddControllers(k8s, "test")
-	pod := corev1.Pod{
-		Spec: corev1.PodSpec{
-			HostIPC: true,
-		},
-	}
+	pod := test.MockPod()
+	pod.Spec.HostIPC = true
 
 	expectedSum := ResultSummary{
 		Totals: CountSummary{
-			Successes: uint(2),
+			Successes: uint(7),
 			Warnings:  uint(0),
 			Errors:    uint(1),
 		},
@@ -110,7 +107,7 @@ func TestInvalidatePod(t *testing.T) {
 		Errors:    uint(0),
 	}
 	expectedSum.ByCategory["Resources"] = &CountSummary{
-		Successes: uint(1),
+		Successes: uint(4),
 		Warnings:  uint(0),
 		Errors:    uint(0),
 	}
@@ -127,7 +124,64 @@ func TestInvalidatePod(t *testing.T) {
 
 	actualPodResult := ValidatePod(c, &pod.Spec)
 
-	assert.Equal(t, len(actualPodResult.ContainerResults), 0, "should be equal")
+	assert.Equal(t, len(actualPodResult.ContainerResults), 1, "should be equal")
+	assert.EqualValues(t, &expectedSum, actualPodResult.Summary)
+	assert.EqualValues(t, expectedMessages, actualPodResult.Messages)
+}
+
+*/
+func TestHostNeworkPod(t *testing.T) {
+	c := conf.Configuration{
+		Security: conf.Security{
+			HostIPCSet: conf.SeverityError,
+			HostPIDSet: conf.SeverityError,
+		},
+		Networking: conf.Networking{
+			HostNetworkSet: conf.SeverityWarning,
+			HostPortSet:    conf.SeverityError,
+		},
+	}
+
+	k8s := test.SetupTestAPI()
+	k8s = test.SetupAddControllers(k8s, "test")
+	pod := test.MockPod()
+	pod.Spec.HostNetwork = true
+
+	expectedSum := ResultSummary{
+		Totals: CountSummary{
+			Successes: uint(3),
+			Warnings:  uint(1),
+			Errors:    uint(0),
+		},
+		ByCategory: make(map[string]*CountSummary),
+	}
+	expectedSum.ByCategory["Networking"] = &CountSummary{
+		Successes: uint(1),
+		Warnings:  uint(1),
+		Errors:    uint(0),
+	}
+
+	expectedSum.ByCategory["Resources"] = &CountSummary{
+		Successes: uint(4),
+		Warnings:  uint(0),
+		Errors:    uint(0),
+	}
+
+	expectedSum.ByCategory["Security"] = &CountSummary{
+		Successes: uint(2),
+		Warnings:  uint(0),
+		Errors:    uint(0),
+	}
+
+	expectedMessages := []*ResultMessage{
+		{Message: "Host IPC is not configured", Type: "success", Category: "Security"},
+		{Message: "Host PID is not configured", Type: "success", Category: "Security"},
+		{Message: "Host network should not be configured", Type: "warning", Category: "Networking"},
+	}
+
+	actualPodResult := ValidatePod(c, &pod.Spec)
+
+	assert.Equal(t, len(actualPodResult.ContainerResults), 1, "should be equal")
 	assert.EqualValues(t, &expectedSum, actualPodResult.Summary)
 	assert.EqualValues(t, expectedMessages, actualPodResult.Messages)
 }
