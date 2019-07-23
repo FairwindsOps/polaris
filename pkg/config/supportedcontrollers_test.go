@@ -18,6 +18,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type checkMarshal struct {
@@ -101,5 +103,23 @@ func TestCheckIfControllerKindIsConfiguredForValidation(t *testing.T) {
 		if ok := config.CheckIfKindIsConfiguredForValidation(kind); ok {
 			t.Errorf("Kind (%s) should not be a valid controller to check", kind)
 		}
+	}
+}
+
+func TestGetSupportedControllerFromString(t *testing.T) {
+	fixture := map[string]SupportedController{
+		"":            Unsupported,
+		"asdfasdf":    Unsupported,
+		"\000":        Unsupported,
+		"deployMENTS": Deployments,
+		"JOB":         Jobs,
+	}
+
+	for inputString, expectedType := range fixture {
+		resolvedType, err := GetSupportedControllerFromString(inputString)
+		if expectedType == Unsupported && err == nil {
+			t.Errorf("Expected (%s) to resolve to an unsupported type and throw an error.", inputString)
+		}
+		assert.Equal(t, expectedType, resolvedType, fmt.Sprintf("Expected (%s) to return (%s) controller type.", inputString, expectedType))
 	}
 }
