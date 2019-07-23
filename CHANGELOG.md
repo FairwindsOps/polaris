@@ -1,5 +1,8 @@
 # x.x.x (next release)
 
+# 0.3.1
+* Changed dashboard branding to refer to new org name Fairwinds
+
 # 0.3.0
 * Added `--set-exit-code-on-error` and `--set-exit-code-below-score` flags to better support CI/CD
 
