@@ -149,7 +149,7 @@ func TestHostNeworkPod(t *testing.T) {
 
 	expectedSum := ResultSummary{
 		Totals: CountSummary{
-			Successes: uint(3),
+			Successes: uint(7),
 			Warnings:  uint(1),
 			Errors:    uint(0),
 		},
