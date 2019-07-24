@@ -70,7 +70,7 @@ references:
     run:
       name: Test Dashboard
       command: |
-        sed -ri "s|'(quay.io/reactiveops/polaris:).+|'\1${CI_SHA1}'|" ./deploy/dashboard.yaml
+        sed -ri "s|'(quay.io/reactiveops/polaris:).+'|'\1${CI_SHA1}'|" ./deploy/dashboard.yaml
         kubectl apply -f ./deploy/dashboard.yaml
         sleep 10
         kubectl get pods --namespace polaris
@@ -177,6 +177,10 @@ workflows:
           requires:
             - test
           context: org-global
+          # Allow using testing tags for testing circle test + build steps
+          filters:
+            tags:
+              only: /^testing-.*/
       - test_k8s:
           requires:
             - build
