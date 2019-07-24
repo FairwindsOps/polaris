@@ -199,29 +199,29 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 	}
 	decoder = k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(contentBytes), 1000)
 	if resource.Kind == "Deployment" {
-		dep := appsv1.Deployment{}
-		err = decoder.Decode(&dep)
-		resources.Deployments = append(resources.Deployments, dep)
+		controller := appsv1.Deployment{}
+		err = decoder.Decode(&controller)
+		resources.Deployments = append(resources.Deployments, controller)
 	} else if resource.Kind == "StatefulSet" {
-		dep := appsv1.StatefulSet{}
-		err = decoder.Decode(&dep)
-		resources.StatefulSets = append(resources.StatefulSets, dep)
+		controller := appsv1.StatefulSet{}
+		err = decoder.Decode(&controller)
+		resources.StatefulSets = append(resources.StatefulSets, controller)
 	} else if resource.Kind == "DaemonSet" {
-		dep := appsv1.DaemonSet{}
-		err = decoder.Decode(&dep)
-		resources.DaemonSets = append(resources.DaemonSets, dep)
+		controller := appsv1.DaemonSet{}
+		err = decoder.Decode(&controller)
+		resources.DaemonSets = append(resources.DaemonSets, controller)
 	} else if resource.Kind == "Job" {
-		dep := batchv1.Job{}
-		err = decoder.Decode(&dep)
-		resources.Jobs = append(resources.Jobs, dep)
+		controller := batchv1.Job{}
+		err = decoder.Decode(&controller)
+		resources.Jobs = append(resources.Jobs, controller)
 	} else if resource.Kind == "CronJob" {
-		dep := batchv1beta1.CronJob{}
-		err = decoder.Decode(&dep)
-		resources.CronJobs = append(resources.CronJobs, dep)
+		controller := batchv1beta1.CronJob{}
+		err = decoder.Decode(&controller)
+		resources.CronJobs = append(resources.CronJobs, controller)
 	} else if resource.Kind == "ReplicationController" {
-		dep := corev1.ReplicationController{}
-		err = decoder.Decode(&dep)
-		resources.ReplicationControllers = append(resources.ReplicationControllers, dep)
+		controller := corev1.ReplicationController{}
+		err = decoder.Decode(&controller)
+		resources.ReplicationControllers = append(resources.ReplicationControllers, controller)
 	} else if resource.Kind == "Namespace" {
 		ns := corev1.Namespace{}
 		err = decoder.Decode(&ns)

@@ -88,10 +88,11 @@ func (s *SupportedController) UnmarshalJSON(b []byte) error {
 // GetSupportedControllerFromString fuzzy matches a string with a SupportedController Enum
 func GetSupportedControllerFromString(str string) (SupportedController, error) {
 	lowerStr := strings.ToLower(str)
-	if stringLookupForSupportedControllers[lowerStr] == Unsupported {
+	controller, keyFound := stringLookupForSupportedControllers[lowerStr]
+	if !keyFound || controller == Unsupported {
 		return 0, fmt.Errorf("Value ('%v') in configuration was not found in Supported Controllers: (%v)", str, strings.Join(ControllerStrings, ","))
 	}
-	return stringLookupForSupportedControllers[lowerStr], nil
+	return controller, nil
 }
 
 // CheckIfKindIsConfiguredForValidation takes a kind (in string format) and checks if Polaris is configured to scan this type of controller
