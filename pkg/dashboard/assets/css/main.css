@@ -30,14 +30,16 @@ body {
   display: block;
   font-size: 11px;
   margin-bottom: 3px;
+  padding-left: 66px;
+  margin-bottom: -8px;
+}
+
+.navbar .fw-logo {
+  height: 50px;
 }
 
 .navbar a {
   text-decoration: none;
-}
-
-.navbar .ro-logo {
-  height: 50px;
 }
 
 .card {

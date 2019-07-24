@@ -40,11 +40,8 @@ go test ./pkg/... -v -coverprofile cover.out
 
 ## Creating a New Issue
 
-If you've encountered an issue that is not already reported, please create an issue that contains the following:
+If you've encountered an issue that is not already reported, please create a [new issue](https://github.com/FairwindsOps/polaris/issues), choose `Bug Report`, `Feature Request` or `Misc.` and follow the instructions in the template. 
 
-- Clear description of the issue
-- Steps to reproduce it
-- Appropriate labels
 
 ## Creating a Pull Request
 
