@@ -70,7 +70,7 @@ func TestValidatePod(t *testing.T) {
 
 	actualPodResult := ValidatePod(c, &pod.Spec)
 
-	assert.Equal(t, len(actualPodResult.ContainerResults), 1, "should be equal")
+	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, &expectedSum, actualPodResult.Summary)
 	assert.EqualValues(t, expectedMessages, actualPodResult.Messages)
 }
@@ -123,7 +123,7 @@ func TestInvalidIPCPod(t *testing.T) {
 
 	actualPodResult := ValidatePod(c, &pod.Spec)
 
-	assert.Equal(t, len(actualPodResult.ContainerResults), 1, "should be equal")
+	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, &expectedSum, actualPodResult.Summary)
 	assert.EqualValues(t, expectedMessages, actualPodResult.Messages)
 }
@@ -179,7 +179,7 @@ func TestInvalidNeworkPod(t *testing.T) {
 
 	actualPodResult := ValidatePod(c, &pod.Spec)
 
-	assert.Equal(t, len(actualPodResult.ContainerResults), 1, "should be equal")
+	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, &expectedSum, actualPodResult.Summary)
 	assert.EqualValues(t, expectedMessages, actualPodResult.Messages)
 }
@@ -233,7 +233,7 @@ func TestInvalidPIDPod(t *testing.T) {
 
 	actualPodResult := ValidatePod(c, &pod.Spec)
 
-	assert.Equal(t, len(actualPodResult.ContainerResults), 1, "should be equal")
+	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, &expectedSum, actualPodResult.Summary)
 	assert.EqualValues(t, expectedMessages, actualPodResult.Messages)
 }
