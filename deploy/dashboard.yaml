@@ -81,6 +81,15 @@ rules:
     resources:
       - 'deployments'
       - 'statefulsets'
+      - 'daemonsets'
+    verbs:
+      - 'get'
+      - 'list'
+  - apiGroups:
+      - 'batch'
+    resources:
+      - 'jobs'
+      - 'cronjobs'
     verbs:
       - 'get'
       - 'list'
@@ -90,6 +99,7 @@ rules:
       - 'nodes'
       - 'namespaces'
       - 'pods'
+      - 'replicationcontrollers'
     verbs:
       - 'get'
       - 'list'
@@ -161,7 +171,7 @@ spec:
         - --dashboard
         - --config
         - /opt/app/config.yaml
-        image: 'quay.io/reactiveops/polaris:0.3'
+        image: 'quay.io/reactiveops/polaris:0.4'
         imagePullPolicy: 'Always'
         name: dashboard
         ports:
@@ -219,3 +229,4 @@ spec:
 
 ---
 # Source: polaris/templates/webhook.service.yaml
+

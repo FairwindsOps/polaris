@@ -87,12 +87,32 @@ metadata:
   labels:
     app: polaris
 rules:
+  # auditor rules rbac
   - apiGroups:
       - 'apps'
       - 'extensions'
     resources:
       - 'deployments'
       - 'statefulsets'
+      - 'daemonsets'
+    verbs:
+      - 'get'
+      - 'list'
+  - apiGroups:
+      - 'batch'
+    resources:
+      - 'jobs'
+      - 'cronjobs'
+    verbs:
+      - 'get'
+      - 'list'
+  - apiGroups:
+      - ''
+    resources:
+      - 'nodes'
+      - 'namespaces'
+      - 'pods'
+      - 'replicationcontrollers'
     verbs:
       - 'get'
       - 'list'
@@ -211,7 +231,7 @@ spec:
             - --webhook
             - --config
             - /opt/app/config.yaml
-          image: 'quay.io/reactiveops/polaris:0.3'
+          image: 'quay.io/reactiveops/polaris:0.2'
           imagePullPolicy: 'Always'
           ports:
             - containerPort: 9876
