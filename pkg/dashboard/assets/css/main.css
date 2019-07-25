@@ -22,20 +22,11 @@ body {
 }
 
 .navbar .logo {
-  width: 250px;
-}
-
-.navbar span.oss-text {
-  color: #23103A;
-  display: block;
-  font-size: 11px;
-  margin-bottom: 3px;
-  padding-left: 66px;
-  margin-bottom: -8px;
+  height: 80px;
 }
 
 .navbar .fw-logo {
-  height: 50px;
+  height: 64px;
 }
 
 .navbar a {
