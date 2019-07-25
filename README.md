@@ -87,8 +87,8 @@ helm upgrade --install polaris fairwinds-stable/polaris --namespace polaris \
 #### Installation
 Binary releases are available on the [releases page](https://github.com/FairwindsOps/polaris/releases) or can be installed with [Homebrew](https://brew.sh/):
 ```
-brew tap fairwinds/tap
-brew install fairwinds/tap/polaris
+brew tap FairwindsOps/tap
+brew install FairwindsOps/tap/polaris
 polaris --version
 ```
 
