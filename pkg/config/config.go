@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
+	"strings"
 
 	packr "github.com/gobuffalo/packr/v2"
 	corev1 "k8s.io/api/core/v1"
@@ -112,16 +114,27 @@ type SecurityCapabilityLists struct {
 
 // ParseFile parses config from a file.
 func ParseFile(path string) (Configuration, error) {
-	configBox := packr.New("Config", "../../examples")
-	var rawBytes []byte
 	var err error
-	if path == "" {
-		rawBytes, err = configBox.Find("config.yaml")
+	var rawBytes []byte
+
+	if strings.HasPrefix(path, "https://") || strings.HasPrefix(path, "http://") {
+		//path is a url
+		response, err := http.Get(path)
+		if err != nil {
+			return Configuration{}, err
+		}
+		rawBytes, err = ioutil.ReadAll(response.Body)
 	} else {
-		rawBytes, err = ioutil.ReadFile(path)
-	}
-	if err != nil {
-		return Configuration{}, err
+		//path is local
+		configBox := packr.New("Config", "../../examples")
+		if path == "" {
+			rawBytes, err = configBox.Find("config.yaml")
+		} else {
+			rawBytes, err = ioutil.ReadFile(path)
+		}
+		if err != nil {
+			return Configuration{}, err
+		}
 	}
 	return Parse(rawBytes)
 }

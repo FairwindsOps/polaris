@@ -15,6 +15,10 @@
 package config
 
 import (
+	"context"
+	"io"
+	"log"
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -118,6 +122,38 @@ func TestParseJson(t *testing.T) {
 	assert.NoError(t, err, "Expected no error when parsing JSON config")
 
 	testParsedConfig(t, &parsedConf)
+}
+
+func TestConfigFromURL(t *testing.T) {
+	var err error
+	var parsedConf Configuration
+	srv := &http.Server{Addr: ":8081"}
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		io.WriteString(w, resourceConfYAML1)
+	})
+
+	go func() {
+		// returns ErrServerClosed on graceful close
+		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+			// NOTE: there is a chance that next line won't have time to run,
+			// as main() doesn't wait for this goroutine to stop. don't use
+			// code with race conditions like these for production. see post
+			// comments below on more discussion on how to handle this.
+			log.Fatalf("ListenAndServe(): %s", err)
+		}
+	}()
+
+	parsedConf, err = ParseFile("http://localhost:8081/exampleURL")
+	assert.NoError(t, err, "Expected no error when parsing YAML from URL")
+	if err := srv.Shutdown(context.TODO()); err != nil {
+		panic(err) // failure/timeout shutting down the server gracefully
+	}
+	testParsedConfig(t, &parsedConf)
+
+	//http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	//	fmt.Fprintf(w, resourceConfYAML1, html.EscapeString(r.URL.Path))
+	//})
+	//log.Fatal(http.ListenAndServe(":8081", nil))
 }
 
 func testParsedConfig(t *testing.T, config *Configuration) {
