@@ -1,4 +1,4 @@
-// Copyright 2019 ReactiveOps
+// Copyright 2019 FairwindsOps Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,9 +23,9 @@ import (
 
 	packr "github.com/gobuffalo/packr/v2"
 	"github.com/gorilla/mux"
-	conf "github.com/reactiveops/polaris/pkg/config"
-	"github.com/reactiveops/polaris/pkg/kube"
-	"github.com/reactiveops/polaris/pkg/validator"
+	conf "github.com/fairwindsops/polaris/pkg/config"
+	"github.com/fairwindsops/polaris/pkg/kube"
+	"github.com/fairwindsops/polaris/pkg/validator"
 	"github.com/sirupsen/logrus"
 	"gitlab.com/golang-commonmark/markdown"
 )
