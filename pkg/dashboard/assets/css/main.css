@@ -22,22 +22,15 @@ body {
 }
 
 .navbar .logo {
-  width: 250px;
+  height: 80px;
 }
 
-.navbar span.oss-text {
-  color: #23103A;
-  display: block;
-  font-size: 11px;
-  margin-bottom: 3px;
+.navbar .fw-logo {
+  height: 64px;
 }
 
 .navbar a {
   text-decoration: none;
-}
-
-.navbar .ro-logo {
-  height: 50px;
 }
 
 .card {
