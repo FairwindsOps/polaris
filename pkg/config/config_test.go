@@ -19,6 +19,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -150,7 +151,8 @@ func TestConfigFromURL(t *testing.T) {
 func TestConfigNoServerError(t *testing.T) {
 	var err error
 	_, err = ParseFile("http://localhost:8081/exampleURL")
-	assert.EqualError(t, err, "Get http://localhost:8081/exampleURL: dial tcp [::1]:8081: connect: connection refused")
+	assert.Error(t, err)
+	assert.Regexp(t, regexp.MustCompile("connection refused"), err.Error())
 }
 
 func testParsedConfig(t *testing.T, config *Configuration) {
