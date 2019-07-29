@@ -139,12 +139,18 @@ func TestConfigFromURL(t *testing.T) {
 	}()
 
 	parsedConf, err = ParseFile("http://localhost:8081/exampleURL")
-	assert.NoError(t, err, "Expected no error when parsing YAML from URL")
+	assert.NoError(t, err, "Expected no error when parsing JSON config")
 	if err := srv.Shutdown(context.TODO()); err != nil {
 		panic(err)
 	}
 	testParsedConfig(t, &parsedConf)
 
+}
+
+func TestConfigNoServerError(t *testing.T) {
+	var err error
+	_, err = ParseFile("http://localhost:8081/exampleURL")
+	assert.EqualError(t, err, "Get http://localhost:8081/exampleURL: dial tcp [::1]:8081: connect: connection refused")
 }
 
 func testParsedConfig(t *testing.T, config *Configuration) {

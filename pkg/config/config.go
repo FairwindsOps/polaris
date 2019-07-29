@@ -116,7 +116,13 @@ type SecurityCapabilityLists struct {
 func ParseFile(path string) (Configuration, error) {
 	var err error
 	var rawBytes []byte
-
+	configBox := packr.New("Config", "../../examples")
+	if path == "" {
+		rawBytes, err = configBox.Find("config.yaml")
+		if err != nil {
+			return Configuration{}, err
+		}
+	}
 	if strings.HasPrefix(path, "https://") || strings.HasPrefix(path, "http://") {
 		//path is a url
 		response, err := http.Get(path)
@@ -126,12 +132,7 @@ func ParseFile(path string) (Configuration, error) {
 		rawBytes, err = ioutil.ReadAll(response.Body)
 	} else {
 		//path is local
-		configBox := packr.New("Config", "../../examples")
-		if path == "" {
-			rawBytes, err = configBox.Find("config.yaml")
-		} else {
-			rawBytes, err = ioutil.ReadFile(path)
-		}
+		rawBytes, err = ioutil.ReadFile(path)
 		if err != nil {
 			return Configuration{}, err
 		}
