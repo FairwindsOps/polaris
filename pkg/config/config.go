@@ -122,8 +122,7 @@ func ParseFile(path string) (Configuration, error) {
 		if err != nil {
 			return Configuration{}, err
 		}
-	}
-	if strings.HasPrefix(path, "https://") || strings.HasPrefix(path, "http://") {
+	} else if strings.HasPrefix(path, "https://") || strings.HasPrefix(path, "http://") {
 		//path is a url
 		response, err := http.Get(path)
 		if err != nil {
