@@ -139,7 +139,7 @@ func TestConfigFromURL(t *testing.T) {
 	}()
 
 	parsedConf, err = ParseFile("http://localhost:8081/exampleURL")
-	assert.NoError(t, err, "Expected no error when parsing JSON config")
+	assert.NoError(t, err, "Expected no error when parsing YAML from URL")
 	if err := srv.Shutdown(context.TODO()); err != nil {
 		panic(err)
 	}
