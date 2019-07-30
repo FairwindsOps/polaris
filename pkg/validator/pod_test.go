@@ -1,4 +1,4 @@
-// Copyright 2019 ReactiveOps
+// Copyright 2019 FairwindsOps Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@ package validator
 import (
 	"testing"
 
-	conf "github.com/reactiveops/polaris/pkg/config"
-	"github.com/reactiveops/polaris/test"
+	conf "github.com/fairwindsops/polaris/pkg/config"
+	"github.com/fairwindsops/polaris/test"
 	"github.com/stretchr/testify/assert"
 )
 

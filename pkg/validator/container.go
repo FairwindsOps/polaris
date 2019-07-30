@@ -1,4 +1,4 @@
-// Copyright 2019 ReactiveOps
+// Copyright 2019 FairwindsOps Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@ import (
 	"fmt"
 	"strings"
 
-	conf "github.com/reactiveops/polaris/pkg/config"
-	"github.com/reactiveops/polaris/pkg/validator/messages"
+	conf "github.com/fairwindsops/polaris/pkg/config"
+	"github.com/fairwindsops/polaris/pkg/validator/messages"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )

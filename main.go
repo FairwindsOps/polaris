@@ -1,4 +1,4 @@
-// Copyright 2019 ReactiveOps
+// Copyright 2019 FairwindsOps Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,11 +23,11 @@ import (
 	"net/http"
 	"os"
 
-	conf "github.com/reactiveops/polaris/pkg/config"
-	"github.com/reactiveops/polaris/pkg/dashboard"
-	"github.com/reactiveops/polaris/pkg/kube"
-	"github.com/reactiveops/polaris/pkg/validator"
-	fwebhook "github.com/reactiveops/polaris/pkg/webhook"
+	conf "github.com/fairwindsops/polaris/pkg/config"
+	"github.com/fairwindsops/polaris/pkg/dashboard"
+	"github.com/fairwindsops/polaris/pkg/kube"
+	"github.com/fairwindsops/polaris/pkg/validator"
+	fwebhook "github.com/fairwindsops/polaris/pkg/webhook"
 	"github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
