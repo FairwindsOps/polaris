@@ -22,12 +22,12 @@ problems in the future. Polaris can be run in a few different modes:
 - An experimental validating webhook that can prevent any future deployments that do not live up to a configured standard.
 - A command-line audit that can be incorporated into your CI/CD pipeline
 
-**Want to learn more?** ReactiveOps holds [office hours on Zoom](https://zoom.us/j/242508205) the first Friday of every month, at 12pm Eastern. You can also reach out via email at `opensource@fairwinds.com`
+**Want to learn more?** Fairwinds holds [office hours on Zoom](https://zoom.us/j/242508205) the first Friday of every month, at 12pm Eastern. You can also reach out via email at `opensource@fairwinds.com`
 
 ## Quickstart
 
 ```
-kubectl apply -f https://github.com/reactiveops/polaris/releases/latest/download/dashboard.yaml
+kubectl apply -f https://github.com/FairwindsOps/polaris/releases/latest/download/dashboard.yaml
 kubectl port-forward --namespace polaris svc/polaris-dashboard 8080:80
 ```
 With the port forwarding in place, you can open http://localhost:8080 in your browser to view the dashboard.
@@ -56,39 +56,39 @@ or run against local YAML files.
 ### kubectl
 #### Dashboard
 ```
-kubectl apply -f https://github.com/reactiveops/polaris/releases/latest/download/dashboard.yaml
+kubectl apply -f https://github.com/FairwindsOps/polaris/releases/latest/download/dashboard.yaml
 kubectl port-forward --namespace polaris svc/polaris-dashboard 8080:80
 ```
 
 #### Webhook
 ```
-kubectl apply -f https://github.com/reactiveops/polaris/releases/latest/download/webhook.yaml
+kubectl apply -f https://github.com/FairwindsOps/polaris/releases/latest/download/webhook.yaml
 ```
 
 ### Helm
-Start by adding the ReactiveOps Helm repo:
+Start by adding the Fairwinds Helm repo:
 ```
-helm repo add reactiveops-stable https://charts.reactiveops.com/stable
+helm repo add fairwinds-stable https://charts.fairwinds.com/stable
 ```
 
 #### Dashboard
 ```
-helm upgrade --install polaris reactiveops-stable/polaris --namespace polaris
+helm upgrade --install polaris fairwinds-stable/polaris --namespace polaris
 kubectl port-forward --namespace polaris svc/polaris-dashboard 8080:80
 ```
 
 #### Webhook
 ```
-helm upgrade --install polaris reactiveops-stable/polaris --namespace polaris \
+helm upgrade --install polaris fairwinds-stable/polaris --namespace polaris \
   --set webhook.enable=true --set dashboard.enable=false
 ```
 
 ### Local Binary
 #### Installation
-Binary releases are available on the [releases page](https://github.com/reactiveops/polaris/releases) or can be installed with [Homebrew](https://brew.sh/):
+Binary releases are available on the [releases page](https://github.com/FairwindsOps/polaris/releases) or can be installed with [Homebrew](https://brew.sh/):
 ```
-brew tap reactiveops/tap
-brew install reactiveops/tap/polaris
+brew tap FairwindsOps/tap
+brew install FairwindsOps/tap/polaris
 polaris --version
 ```
 
@@ -127,7 +127,7 @@ polaris --audit --audit-path ./deploy/ \
 
 ## Configuration
 
-Polaris supports a wide range of validations covering a number of Kubernetes best practices. Here's a sample configuration file that includes all currently supported checks. The [default configuration](https://github.com/reactiveops/polaris/blob/master/examples/config.yaml) contains a number of those checks. This repository also includes a sample [full configuration file](https://github.com/reactiveops/polaris/blob/master/examples/config-full.yaml) that enables all available checks.
+Polaris supports a wide range of validations covering a number of Kubernetes best practices. Here's a sample configuration file that includes all currently supported checks. The [default configuration](https://github.com/FairwindsOps/polaris/blob/master/examples/config.yaml) contains a number of those checks. This repository also includes a sample [full configuration file](https://github.com/FairwindsOps/polaris/blob/master/examples/config-full.yaml) that enables all available checks.
 
 Each check can be assigned a `severity`. Only checks with a severity of `error` or `warning` will be validated. The results of these validations are visible on the dashboard. In the case of the validating webhook, only failures with a severity of `error` will result in a change being rejected.
 
