@@ -123,15 +123,12 @@ func ParseFile(path string) (Configuration, error) {
 		//path is a url
 		response, err := http.Get(path)
 		rawBytes, err = ioutil.ReadAll(response.Body)
-		if err != nil {
-			return Configuration{}, err
-		}
 	} else {
 		//path is local
 		rawBytes, err = ioutil.ReadFile(path)
-		if err != nil {
-			return Configuration{}, err
-		}
+	}
+	if err != nil {
+		return Configuration{}, err
 	}
 	return Parse(rawBytes)
 }
