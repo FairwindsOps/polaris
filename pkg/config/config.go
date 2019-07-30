@@ -119,16 +119,13 @@ func ParseFile(path string) (Configuration, error) {
 	configBox := packr.New("Config", "../../examples")
 	if path == "" {
 		rawBytes, err = configBox.Find("config.yaml")
-		if err != nil {
-			return Configuration{}, err
-		}
 	} else if strings.HasPrefix(path, "https://") || strings.HasPrefix(path, "http://") {
 		//path is a url
 		response, err := http.Get(path)
+		rawBytes, err = ioutil.ReadAll(response.Body)
 		if err != nil {
 			return Configuration{}, err
 		}
-		rawBytes, err = ioutil.ReadAll(response.Body)
 	} else {
 		//path is local
 		rawBytes, err = ioutil.ReadFile(path)
