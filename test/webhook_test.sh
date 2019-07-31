@@ -1,5 +1,5 @@
 #!/bin/bash
-kubectl apply -f https://github.com/FairwindsOps/polaris/releases/latest/download/webhook.yaml
+kubectl apply &> /dev/null -f https://github.com/FairwindsOps/polaris/releases/latest/download/webhook.yaml
 
 kubectl apply &> /dev/null -f test/correctconfig.yaml
 if [ $? -eq 0 ]; then
@@ -9,7 +9,7 @@ else
     echo "Test Failed: Polaris prevented a deployment with no configuration issues." 
 fi
 
-kubectl apply &> /dev/null -f test/incorrectconfig.yaml
+kubectl apply -f test/incorrectconfig.yaml
 if [ $? -ne 0 ]; then
     VAR2="pass"
     echo pass 
