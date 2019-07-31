@@ -42,6 +42,17 @@ references:
         echo "Setting up kubecfg"
         cp $(kind get kubeconfig-path --name=kind) ~/.kube/config
         kubectl version
+  install_kind: &install_kind
+    run:
+      name: Install Kind
+      command: |
+      echo "Installing KIND"
+      curl -Lo ./kind-darwin-amd64 https://github.com/kubernetes-sigs/kind/releases/download/v0.4.0/kind-darwin-amd64
+      chmod +x ./kind-darwin-amd64
+      mv ./kind-darwin-amd64 /usr/local/bin/kind
+      kind version
+
+  
 
   # Test scripts
   update_coverage: &update_coverage
@@ -142,6 +153,8 @@ jobs:
       - run: go list ./... | grep -v vendor | xargs go vet
       - *update_coverage
       - *test_binary_dashboard
+      - *install_kind
+      - run: ./test/webhook_test.sh
 
   release_binary:
     working_directory: /go/src/github.com/reactiveops/polaris/
