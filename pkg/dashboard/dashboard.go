@@ -72,7 +72,7 @@ func GetTemplateBox() *packr.Box {
 // GetMarkdownBox returns a binary-friendly set of markdown files with error details
 func GetMarkdownBox() *packr.Box {
 	if markdownBox == (*packr.Box)(nil) {
-		markdownBox = packr.New("Markdown", "../../docs")
+		markdownBox = packr.New("Markdown", "../../docs/check-documentation")
 	}
 	return markdownBox
 }

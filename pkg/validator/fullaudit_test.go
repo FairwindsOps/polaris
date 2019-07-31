@@ -20,23 +20,32 @@ func TestGetTemplateData(t *testing.T) {
 			ReadinessProbeMissing: conf.SeverityError,
 			LivenessProbeMissing:  conf.SeverityWarning,
 		},
+		ControllersToScan: []conf.SupportedController{
+			conf.Deployments,
+			conf.StatefulSets,
+			conf.DaemonSets,
+			conf.Jobs,
+			conf.CronJobs,
+			conf.ReplicationControllers,
+		},
 	}
 
+	// TODO: split out the logic for calculating summaries into another set of tests
 	sum := ResultSummary{
 		Totals: CountSummary{
-			Successes: uint(8),
-			Warnings:  uint(2),
-			Errors:    uint(2),
+			Successes: uint(24),
+			Warnings:  uint(6),
+			Errors:    uint(6),
 		},
 		ByCategory: CategorySummary{},
 	}
 	sum.ByCategory["Health Checks"] = &CountSummary{
 		Successes: uint(0),
-		Warnings:  uint(2),
-		Errors:    uint(2),
+		Warnings:  uint(6),
+		Errors:    uint(6),
 	}
 	sum.ByCategory["Resources"] = &CountSummary{
-		Successes: uint(8),
+		Successes: uint(24),
 		Warnings:  uint(0),
 		Errors:    uint(0),
 	}

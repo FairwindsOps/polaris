@@ -70,6 +70,7 @@ references:
     run:
       name: Test Dashboard
       command: |
+        sed -ri "s|'(quay.io/reactiveops/polaris:).+'|'\1${CIRCLE_SHA1}'|" ./deploy/dashboard.yaml
         kubectl apply -f ./deploy/dashboard.yaml
         sleep 10
         kubectl get pods --namespace polaris
@@ -172,11 +173,6 @@ workflows:
   build:
     jobs:
       - test
-      - test_k8s:
-          # Ignore update-version branch, which changes deploy/ image references before the images are built
-          filters:
-            branches:
-              ignore: /.*\/update-version/
       - build:
           requires:
             - test
@@ -185,6 +181,9 @@ workflows:
           filters:
             tags:
               only: /^testing-.*/
+      - test_k8s:
+          requires:
+            - build
   release:
     jobs:
       - release_binary:

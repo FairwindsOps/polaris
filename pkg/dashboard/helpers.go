@@ -16,15 +16,13 @@ package dashboard
 
 import (
 	"fmt"
-	"github.com/fairwindsops/polaris/pkg/validator"
 	"strings"
+
+	"github.com/fairwindsops/polaris/pkg/validator"
 )
 
 func getAllControllerResults(nr validator.NamespaceResult) []validator.ControllerResult {
-	results := []validator.ControllerResult{}
-	results = append(results, nr.DeploymentResults...)
-	results = append(results, nr.StatefulSetResults...)
-	return results
+	return nr.GetAllControllerResults()
 }
 
 func getWarningWidth(counts validator.CountSummary, fullWidth int) uint {

@@ -22,9 +22,12 @@ import (
 
 	conf "github.com/fairwindsops/polaris/pkg/config"
 	validator "github.com/fairwindsops/polaris/pkg/validator"
+	"github.com/fairwindsops/polaris/pkg/validator/controllers"
 	"github.com/sirupsen/logrus"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
+	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -92,16 +95,47 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 		err = v.decoder.Decode(req, &pod)
 		podResult = validator.ValidatePod(v.Config, &pod.Spec)
 	} else {
-		var controller validator.Controller
-		switch req.AdmissionRequest.Kind.Kind {
-		case "Deployment":
+		var controller controllers.Interface
+		if yes := v.Config.CheckIfKindIsConfiguredForValidation(req.AdmissionRequest.Kind.Kind); !yes {
+			logrus.Warnf("Skipping, kind (%s) isn't something we are configured to scan", req.AdmissionRequest.Kind.Kind)
+			return admission.ValidationResponse(true, fmt.Sprintf("Skipping: (%s) isn't something we're configured to scan.", req.AdmissionRequest.Kind.Kind))
+		}
+
+		// We should never hit this case unless something is misconfiured in CheckIfKindIsConfiguredForValidation
+		controllerType, err := conf.GetSupportedControllerFromString(req.AdmissionRequest.Kind.Kind)
+		if err != nil {
+			msg := fmt.Errorf("Unexpected error occurred. Expected Kind to be a supported type (%s)", req.AdmissionRequest.Kind.Kind)
+			logrus.Error(msg)
+			return admission.ErrorResponse(http.StatusInternalServerError, err)
+		}
+
+		// For each type, perform the scan
+		// TODO: This isn't really that elegant due to the decoder and NewXXXController setup :( could use love
+		switch controllerType {
+		case conf.Deployments:
 			deploy := appsv1.Deployment{}
 			err = v.decoder.Decode(req, &deploy)
-			controller = validator.ControllerFromDeployment(deploy)
-		case "StatefulSet":
+			controller = controllers.NewDeploymentController(deploy)
+		case conf.StatefulSets:
 			statefulSet := appsv1.StatefulSet{}
 			err = v.decoder.Decode(req, &statefulSet)
-			controller = validator.ControllerFromStatefulSet(statefulSet)
+			controller = controllers.NewStatefulSetController(statefulSet)
+		case conf.DaemonSets:
+			daemonSet := appsv1.DaemonSet{}
+			err = v.decoder.Decode(req, &daemonSet)
+			controller = controllers.NewDaemonSetController(daemonSet)
+		case conf.Jobs:
+			job := batchv1.Job{}
+			err = v.decoder.Decode(req, &job)
+			controller = controllers.NewJobController(job)
+		case conf.CronJobs:
+			cronJob := batchv1beta1.CronJob{}
+			err = v.decoder.Decode(req, &cronJob)
+			controller = controllers.NewCronJobController(cronJob)
+		case conf.ReplicationControllers:
+			replicationController := corev1.ReplicationController{}
+			err = v.decoder.Decode(req, &replicationController)
+			controller = controllers.NewReplicationControllerController(replicationController)
 		}
 		controllerResult := validator.ValidateController(v.Config, controller)
 		podResult = controllerResult.PodResult

@@ -17,80 +17,37 @@ package validator
 import (
 	conf "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
-	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
+	"github.com/fairwindsops/polaris/pkg/validator/controllers"
+	controller "github.com/fairwindsops/polaris/pkg/validator/controllers"
+	"github.com/sirupsen/logrus"
 )
 
-// ControllerSpec is a generic type for k8s controller specs
-type ControllerSpec struct {
-	Template corev1.PodTemplateSpec
-}
-
-// Controller is a generic type for k8s controllers (e.g. Deployments and StatefulSets)
-type Controller struct {
-	Type      string
-	Name      string
-	Namespace string
-	Spec      ControllerSpec
-}
-
 // ValidateController validates a single controller, returns a ControllerResult.
-func ValidateController(conf conf.Configuration, controller Controller) ControllerResult {
-	pod := controller.Spec.Template.Spec
-	podResult := ValidatePod(conf, &pod)
+func ValidateController(conf conf.Configuration, controller controller.Interface) ControllerResult {
+	pod := controller.GetPodSpec()
+	podResult := ValidatePod(conf, pod)
 	return ControllerResult{
-		Type:      controller.Type,
-		Name:      controller.Name,
+		Type:      controller.GetType().String(),
+		Name:      controller.GetName(),
 		PodResult: podResult,
 	}
 }
 
 // ValidateControllers validates that each deployment conforms to the Polaris config,
-// returns a list of ResourceResults organized by namespace.
+// builds a list of ResourceResults organized by namespace.
 func ValidateControllers(config conf.Configuration, kubeResources *kube.ResourceProvider, nsResults *NamespacedResults) {
-	controllers := []Controller{}
-	for _, deploy := range kubeResources.Deployments {
-		controllers = append(controllers, ControllerFromDeployment(deploy))
+	var controllersToAudit []controller.Interface
+	for _, supportedControllers := range config.ControllersToScan {
+		loadedControllers, _ := controllers.LoadControllersByType(supportedControllers, kubeResources)
+		controllersToAudit = append(controllersToAudit, loadedControllers...)
 	}
-	for _, deploy := range kubeResources.StatefulSets {
-		controllers = append(controllers, ControllerFromStatefulSet(deploy))
-	}
-	for _, controller := range controllers {
+
+	for _, controller := range controllersToAudit {
 		controllerResult := ValidateController(config, controller)
-		nsResult := nsResults.getNamespaceResult(controller.Namespace)
+		nsResult := nsResults.getNamespaceResult(controller.GetNamespace())
 		nsResult.Summary.appendResults(*controllerResult.PodResult.Summary)
-		if controller.Type == "Deployment" {
-			nsResult.DeploymentResults = append(nsResult.DeploymentResults, controllerResult)
-		} else if controller.Type == "StatefulSet" {
-			nsResult.StatefulSetResults = append(nsResult.StatefulSetResults, controllerResult)
+		if err := nsResult.AddResult(controller.GetType(), controllerResult); err != nil {
+			logrus.Errorf("Internal Error: Failed to add a grouped result: %s", err)
 		}
-	}
-}
-
-// ControllerFrom* functions are 100% boilerplate
-
-// ControllerFromDeployment creates a controller
-func ControllerFromDeployment(c appsv1.Deployment) Controller {
-	spec := ControllerSpec{
-		Template: c.Spec.Template,
-	}
-	return Controller{
-		Type:      "Deployment",
-		Name:      c.Name,
-		Namespace: c.Namespace,
-		Spec:      spec,
-	}
-}
-
-// ControllerFromStatefulSet creates a controller
-func ControllerFromStatefulSet(c appsv1.StatefulSet) Controller {
-	spec := ControllerSpec{
-		Template: c.Spec.Template,
-	}
-	return Controller{
-		Type:      "StatefulSet",
-		Name:      c.Name,
-		Namespace: c.Namespace,
-		Spec:      spec,
 	}
 }
