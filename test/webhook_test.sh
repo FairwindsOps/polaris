@@ -15,7 +15,7 @@ else
     echo "Test Failed: Polaris should have prevented this deployment due to configuration problems."
 fi
 
-if [ "$VAR1" = "pass" -a "$VAR2" = "pass" ]; then
+if [ "$VAR1" == "pass" -a "$VAR2" == "pass" ]; then
     echo "Tests Passed."
 else
     echo "Tests Failed"
