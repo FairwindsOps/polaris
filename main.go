@@ -187,15 +187,18 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 	// Iterate all the configurations supported controllers to scan and register them for webhooks
 	// Should only register controllers that are configured to be scanned
 	logrus.Debug("Registering webhooks to the webhook server")
+	var webhooks []webhook.Webhook
 	for index, controllerToScan := range c.ControllersToScan {
 		for innerIndex, supportedAPIType := range controllerToScan.ListSupportedAPIVersions() {
 			webhookName := strings.ToLower(fmt.Sprintf("%s-%d-%d", controllerToScan, index, innerIndex))
-			webhook := fwebhook.NewWebhook(webhookName, mgr, fwebhook.Validator{Config: c}, supportedAPIType)
-			if err = as.Register(webhook); err != nil {
-				logrus.Debugf("Unable to register webhooks in the admission server: %v", err)
-				os.Exit(1)
-			}
+			hook := fwebhook.NewWebhook(webhookName, mgr, fwebhook.Validator{Config: c}, supportedAPIType)
+			webhooks = append(webhooks, hook)
 		}
+	}
+
+	if err = as.Register(webhooks...); err != nil {
+		logrus.Debugf("Unable to register webhooks in the admission server: %v", err)
+		os.Exit(1)
 	}
 
 	logrus.Debug("Starting webhook manager")
