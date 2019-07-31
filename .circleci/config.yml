@@ -130,6 +130,8 @@ jobs:
       - checkout
       - *install_k8s
       - *test_kube_dashboard
+      - *install_k8s
+      - run: ./test/webhook_test.sh
 
   test:
     working_directory: /go/src/github.com/fairwindsops/polaris/
@@ -142,8 +144,6 @@ jobs:
       - run: go list ./... | grep -v vendor | xargs go vet
       - *update_coverage
       - *test_binary_dashboard
-      - *install_k8s
-      - run: ./test/webhook_test.sh
 
   release_binary:
     working_directory: /go/src/github.com/fairwindsops/polaris/

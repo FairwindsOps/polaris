@@ -1,5 +1,4 @@
 #!/bin/bash
-export KUBECONFIG="$(kind get kubeconfig-path)"
 kubectl apply  &> /dev/null -f correctconfig.yaml
 if [ $? -eq 0 ]; then
     VAR1="pass"
