@@ -15,8 +15,8 @@
 package validator
 
 import (
-	conf "github.com/reactiveops/polaris/pkg/config"
-	"github.com/reactiveops/polaris/pkg/validator/messages"
+	conf "github.com/fairwindsops/polaris/pkg/config"
+	"github.com/fairwindsops/polaris/pkg/validator/messages"
 	corev1 "k8s.io/api/core/v1"
 )
 

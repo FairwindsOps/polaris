@@ -23,9 +23,9 @@ import (
 
 	packr "github.com/gobuffalo/packr/v2"
 	"github.com/gorilla/mux"
-	conf "github.com/reactiveops/polaris/pkg/config"
-	"github.com/reactiveops/polaris/pkg/kube"
-	"github.com/reactiveops/polaris/pkg/validator"
+	conf "github.com/fairwindsops/polaris/pkg/config"
+	"github.com/fairwindsops/polaris/pkg/kube"
+	"github.com/fairwindsops/polaris/pkg/validator"
 	"github.com/sirupsen/logrus"
 	"gitlab.com/golang-commonmark/markdown"
 )

@@ -17,8 +17,8 @@ package validator
 import (
 	"testing"
 
-	conf "github.com/reactiveops/polaris/pkg/config"
-	"github.com/reactiveops/polaris/test"
+	conf "github.com/fairwindsops/polaris/pkg/config"
+	"github.com/fairwindsops/polaris/test"
 	"github.com/stretchr/testify/assert"
 )
 

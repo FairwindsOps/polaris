@@ -16,7 +16,7 @@ package dashboard
 
 import (
 	"fmt"
-	"github.com/reactiveops/polaris/pkg/validator"
+	"github.com/fairwindsops/polaris/pkg/validator"
 	"strings"
 )
 

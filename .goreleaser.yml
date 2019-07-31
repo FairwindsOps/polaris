@@ -21,7 +21,7 @@ changelog:
     - '^test:'
 brew:
   github:
-    owner: reactiveops
+    owner: FairwindsOps
     name: homebrew-tap
   folder: Formula
   description: Open Source Best Practices for Kubernetes
