@@ -15,6 +15,11 @@
 package config
 
 import (
+	"context"
+	"io"
+	"log"
+	"net/http"
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -118,6 +123,36 @@ func TestParseJson(t *testing.T) {
 	assert.NoError(t, err, "Expected no error when parsing JSON config")
 
 	testParsedConfig(t, &parsedConf)
+}
+
+func TestConfigFromURL(t *testing.T) {
+	var err error
+	var parsedConf Configuration
+	srv := &http.Server{Addr: ":8081"}
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		io.WriteString(w, resourceConfYAML1)
+	})
+
+	go func() {
+		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+			log.Fatalf("ListenAndServe(): %s", err)
+		}
+	}()
+
+	parsedConf, err = ParseFile("http://localhost:8081/exampleURL")
+	assert.NoError(t, err, "Expected no error when parsing YAML from URL")
+	if err := srv.Shutdown(context.TODO()); err != nil {
+		panic(err)
+	}
+	testParsedConfig(t, &parsedConf)
+
+}
+
+func TestConfigNoServerError(t *testing.T) {
+	var err error
+	_, err = ParseFile("http://localhost:8081/exampleURL")
+	assert.Error(t, err)
+	assert.Regexp(t, regexp.MustCompile("connection refused"), err.Error())
 }
 
 func testParsedConfig(t *testing.T, config *Configuration) {
