@@ -1,6 +1,6 @@
 #!/bin/bash
 kubectl apply &> /dev/null -f https://github.com/FairwindsOps/polaris/releases/latest/download/webhook.yaml
-
+wait 5s
 kubectl apply &> /dev/null -f test/correctconfig.yaml
 if [ $? -eq 0 ]; then
     VAR1="pass"
