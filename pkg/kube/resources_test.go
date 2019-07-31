@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/reactiveops/polaris/test"
+	"github.com/fairwindsops/polaris/test"
 	"github.com/stretchr/testify/assert"
 )
 

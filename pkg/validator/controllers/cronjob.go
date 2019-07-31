@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"github.com/reactiveops/polaris/pkg/config"
+	"github.com/fairwindsops/polaris/pkg/config"
 	kubeAPIBatchV1beta1 "k8s.io/api/batch/v1beta1"
 	kubeAPICoreV1 "k8s.io/api/core/v1"
 )

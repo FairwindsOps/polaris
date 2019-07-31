@@ -15,10 +15,10 @@
 package validator
 
 import (
-	conf "github.com/reactiveops/polaris/pkg/config"
-	"github.com/reactiveops/polaris/pkg/kube"
-	"github.com/reactiveops/polaris/pkg/validator/controllers"
-	controller "github.com/reactiveops/polaris/pkg/validator/controllers"
+	conf "github.com/fairwindsops/polaris/pkg/config"
+	"github.com/fairwindsops/polaris/pkg/kube"
+	"github.com/fairwindsops/polaris/pkg/validator/controllers"
+	controller "github.com/fairwindsops/polaris/pkg/validator/controllers"
 	"github.com/sirupsen/logrus"
 )
 

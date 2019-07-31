@@ -17,8 +17,8 @@ package validator
 import (
 	"fmt"
 
-	"github.com/reactiveops/polaris/pkg/config"
-	conf "github.com/reactiveops/polaris/pkg/config"
+	"github.com/fairwindsops/polaris/pkg/config"
+	conf "github.com/fairwindsops/polaris/pkg/config"
 	corev1 "k8s.io/api/core/v1"
 )
 

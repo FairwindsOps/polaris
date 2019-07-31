@@ -5,7 +5,7 @@ or run against local YAML files.
 
 ## Configuration
 
-Polaris supports a wide range of validations covering a number of Kubernetes best practices. Here's a sample configuration file that includes all currently supported checks. The [default configuration](https://github.com/reactiveops/polaris/blob/master/examples/config.yaml) contains a number of those checks. This repository also includes a sample [full configuration file](https://github.com/reactiveops/polaris/blob/master/examples/config-full.yaml) that enables all available checks.
+Polaris supports a wide range of validations covering a number of Kubernetes best practices. Here's a sample configuration file that includes all currently supported checks. The [default configuration](https://github.com/fairwindsops/polaris/blob/master/examples/config.yaml) contains a number of those checks. This repository also includes a sample [full configuration file](https://github.com/fairwindsops/polaris/blob/master/examples/config-full.yaml) that enables all available checks.
 
 Each check can be assigned a `severity`. Only checks with a severity of `error` or `warning` will be validated. The results of these validations are visible on the dashboard. In the case of the validating webhook, only failures with a severity of `error` will result in a change being rejected.
 
@@ -73,13 +73,13 @@ There are several ways to install and use Polaris. Below outline ways to install
 ## kubectl
 ### Dashboard
 ```
-kubectl apply -f https://github.com/reactiveops/polaris/releases/latest/download/dashboard.yaml
+kubectl apply -f https://github.com/fairwindsops/polaris/releases/latest/download/dashboard.yaml
 kubectl port-forward --namespace polaris svc/polaris-dashboard 8080:80
 ```
 
 ### Webhook
 ```
-kubectl apply -f https://github.com/reactiveops/polaris/releases/latest/download/webhook.yaml
+kubectl apply -f https://github.com/fairwindsops/polaris/releases/latest/download/webhook.yaml
 ```
 
 ## Helm
@@ -102,7 +102,7 @@ helm upgrade --install polaris reactiveops-stable/polaris --namespace polaris \
 
 ## Local Binary
 ### Installation
-Binary releases are available on the [releases page](https://github.com/reactiveops/polaris/releases) or can be installed with [Homebrew](https://brew.sh/):
+Binary releases are available on the [releases page](https://github.com/fairwindsops/polaris/releases) or can be installed with [Homebrew](https://brew.sh/):
 ```
 brew tap reactiveops/tap
 brew install reactiveops/tap/polaris

@@ -20,9 +20,9 @@ import (
 	"net/http"
 	"os"
 
-	conf "github.com/reactiveops/polaris/pkg/config"
-	validator "github.com/reactiveops/polaris/pkg/validator"
-	"github.com/reactiveops/polaris/pkg/validator/controllers"
+	conf "github.com/fairwindsops/polaris/pkg/config"
+	validator "github.com/fairwindsops/polaris/pkg/validator"
+	"github.com/fairwindsops/polaris/pkg/validator/controllers"
 	"github.com/sirupsen/logrus"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"

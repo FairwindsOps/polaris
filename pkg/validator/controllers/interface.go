@@ -3,8 +3,8 @@ package controllers
 import (
 	"fmt"
 
-	"github.com/reactiveops/polaris/pkg/config"
-	"github.com/reactiveops/polaris/pkg/kube"
+	"github.com/fairwindsops/polaris/pkg/config"
+	"github.com/fairwindsops/polaris/pkg/kube"
 	kubeAPICoreV1 "k8s.io/api/core/v1"
 )
 
