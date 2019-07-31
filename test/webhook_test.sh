@@ -1,5 +1,5 @@
 #!/bin/bash
-kubectl apply  &> /dev/null -f correctconfig.yaml
+kubectl apply -f correctconfig.yaml
 if [ $? -eq 0 ]; then
     VAR1="pass"
     echo pass 
