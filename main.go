@@ -23,6 +23,8 @@ import (
 	"net/http"
 	"os"
 
+	"k8s.io/apimachinery/pkg/runtime"
+
 	conf "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/dashboard"
 	"github.com/fairwindsops/polaris/pkg/kube"
@@ -30,6 +32,9 @@ import (
 	fwebhook "github.com/fairwindsops/polaris/pkg/webhook"
 	"github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
+	batchv1beta1 "k8s.io/api/batch/v1beta1"
+	corev1 "k8s.io/api/core/v1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	apitypes "k8s.io/apimachinery/pkg/types"
 	_ "k8s.io/client-go/plugin/pkg/client/auth" // Required for other auth providers like GKE.
@@ -185,12 +190,23 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 
 	logrus.Infof("Polaris webhook server listening on port %d", port)
 
-	d1 := fwebhook.NewWebhook("deployments", mgr, fwebhook.Validator{Config: c}, &appsv1.Deployment{})
-	d2 := fwebhook.NewWebhook("deployments-ext", mgr, fwebhook.Validator{Config: c}, &extensionsv1beta1.Deployment{})
+	// TODO: This logic really should probably live with the SupportedController struct in config - to house the supported versions and specs
+	supportedControllersToScan := map[runtime.Object]string{
+		&appsv1.Deployment{}:            "deployments",
+		&extensionsv1beta1.Deployment{}: "deployments-ext",
+		&appsv1.StatefulSet{}:           "statefulsets",
+		&appsv1.DaemonSet{}:             "daemonsets",
+		&batchv1.Job{}:                  "jobs",
+		&batchv1beta1.CronJob{}:         "cronjobs",
+		&corev1.ReplicationController{}: "replicationcontrollers",
+	}
 	logrus.Debug("Registering webhooks to the webhook server")
-	if err = as.Register(d1, d2); err != nil {
-		logrus.Debugf("Unable to register webhooks in the admission server: %v", err)
-		os.Exit(1)
+	for supportedAPIType, name := range supportedControllersToScan {
+		webhook := fwebhook.NewWebhook(name, mgr, fwebhook.Validator{Config: c}, supportedAPIType)
+		if err = as.Register(webhook); err != nil {
+			logrus.Debugf("Unable to register webhooks in the admission server: %v", err)
+			os.Exit(1)
+		}
 	}
 
 	logrus.Debug("Starting webhook manager")
