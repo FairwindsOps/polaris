@@ -1,4 +1,4 @@
-// Copyright 2019 ReactiveOps
+// Copyright 2019 FairwindsOps Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@ import (
 	"net/http"
 	"os"
 
-	conf "github.com/reactiveops/polaris/pkg/config"
-	validator "github.com/reactiveops/polaris/pkg/validator"
+	conf "github.com/fairwindsops/polaris/pkg/config"
+	validator "github.com/fairwindsops/polaris/pkg/validator"
 	"github.com/sirupsen/logrus"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"

@@ -1,7 +1,7 @@
 package kube
 
 import (
-	"github.com/reactiveops/polaris/test"
+	"github.com/fairwindsops/polaris/test"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"

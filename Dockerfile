@@ -1,5 +1,5 @@
 FROM golang:1.12.4 AS build-env
-WORKDIR /go/src/github.com/reactiveops/polaris/
+WORKDIR /go/src/github.com/fairwindsops/polaris/
 
 COPY . .
 RUN go get -u github.com/gobuffalo/packr/v2/packr2
@@ -11,7 +11,7 @@ RUN apk --no-cache add ca-certificates
 
 RUN addgroup -S polaris && adduser -u 1200 -S polaris -G polaris
 USER 1200
-COPY --from=build-env /go/src/github.com/reactiveops/polaris/polaris .
+COPY --from=build-env /go/src/github.com/fairwindsops/polaris/polaris .
 
 WORKDIR /opt/app
 
