@@ -1,5 +1,5 @@
 #!/bin/bash
-kubectl apply -f correctconfig.yaml
+kubectl apply &> /dev/null -f test/correctconfig.yaml
 if [ $? -eq 0 ]; then
     VAR1="pass"
     echo pass 
@@ -7,7 +7,7 @@ else
     echo "Test Failed: Polaris prevented a deployment with no configuration issues." 
 fi
 
-kubectl apply &> /dev/null -f incorrectconfig.yaml
+kubectl apply &> /dev/null -f test/incorrectconfig.yaml
 if [ $? -ne 0 ]; then
     VAR2="pass"
     echo pass 
