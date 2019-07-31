@@ -24,7 +24,7 @@ problems in the future. Polaris can be run in a few different modes:
 
 **Want to learn more?** Fairwinds holds [office hours on Zoom](https://zoom.us/j/242508205) the first Friday of every month, at 12pm Eastern. You can also reach out via email at `opensource@fairwinds.com`
 
-# Quickstart Dashboard
+# Dashboard Quickstart
 
 ```
 kubectl apply -f https://github.com/FairwindsOps/polaris/releases/latest/download/dashboard.yaml
