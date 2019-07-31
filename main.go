@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 
 	conf "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/dashboard"
@@ -188,7 +189,7 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 	logrus.Debug("Registering webhooks to the webhook server")
 	for index, controllerToScan := range c.ControllersToScan {
 		for innerIndex, supportedAPIType := range controllerToScan.ListSupportedAPIVersions() {
-			webhookName := fmt.Sprintf("%s-%d-%d", controllerToScan, index, innerIndex)
+			webhookName := strings.ToLower(fmt.Sprintf("%s-%d-%d", controllerToScan, index, innerIndex))
 			webhook := fwebhook.NewWebhook(webhookName, mgr, fwebhook.Validator{Config: c}, supportedAPIType)
 			if err = as.Register(webhook); err != nil {
 				logrus.Debugf("Unable to register webhooks in the admission server: %v", err)
