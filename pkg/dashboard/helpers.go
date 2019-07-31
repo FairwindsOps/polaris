@@ -22,9 +22,7 @@ import (
 )
 
 func getAllControllerResults(nr validator.NamespaceResult) []validator.ControllerResult {
-	results := []validator.ControllerResult{}
-	results = nr.GetAllControllerResults()
-	return results
+	return nr.GetAllControllerResults()
 }
 
 func getWarningWidth(counts validator.CountSummary, fullWidth int) uint {
