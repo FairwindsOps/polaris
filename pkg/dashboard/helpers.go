@@ -16,14 +16,14 @@ package dashboard
 
 import (
 	"fmt"
-	"github.com/fairwindsops/polaris/pkg/validator"
 	"strings"
+
+	"github.com/fairwindsops/polaris/pkg/validator"
 )
 
 func getAllControllerResults(nr validator.NamespaceResult) []validator.ControllerResult {
 	results := []validator.ControllerResult{}
-	results = append(results, nr.DeploymentResults...)
-	results = append(results, nr.StatefulSetResults...)
+	results = nr.GetAllControllerResults()
 	return results
 }
 
