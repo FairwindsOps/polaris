@@ -5,6 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	appsv1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
+	batchv1beta1 "k8s.io/api/batch/v1beta1"
+	corev1 "k8s.io/api/core/v1"
+	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 const (
@@ -83,6 +90,39 @@ func (s *SupportedController) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	return nil
+}
+
+// ListSupportedAPIVersions for SupportedController returns all the apimachinery object type supported
+func (s SupportedController) ListSupportedAPIVersions() []runtime.Object {
+	var supportedVersions []runtime.Object
+	switch s {
+	case Deployments:
+		supportedVersions = []runtime.Object{
+			&appsv1.Deployment{},
+			&extensionsv1beta1.Deployment{},
+		}
+	case StatefulSets:
+		supportedVersions = []runtime.Object{
+			&appsv1.StatefulSet{},
+		}
+	case DaemonSets:
+		supportedVersions = []runtime.Object{
+			&appsv1.DaemonSet{},
+		}
+	case Jobs:
+		supportedVersions = []runtime.Object{
+			&batchv1.Job{},
+		}
+	case CronJobs:
+		supportedVersions = []runtime.Object{
+			&batchv1beta1.CronJob{},
+		}
+	case ReplicationControllers:
+		supportedVersions = []runtime.Object{
+			&corev1.ReplicationController{},
+		}
+	}
+	return supportedVersions
 }
 
 // GetSupportedControllerFromString fuzzy matches a string with a SupportedController Enum

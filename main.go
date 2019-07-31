@@ -23,19 +23,12 @@ import (
 	"net/http"
 	"os"
 
-	"k8s.io/apimachinery/pkg/runtime"
-
 	conf "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/dashboard"
 	"github.com/fairwindsops/polaris/pkg/kube"
 	"github.com/fairwindsops/polaris/pkg/validator"
 	fwebhook "github.com/fairwindsops/polaris/pkg/webhook"
 	"github.com/sirupsen/logrus"
-	appsv1 "k8s.io/api/apps/v1"
-	batchv1 "k8s.io/api/batch/v1"
-	batchv1beta1 "k8s.io/api/batch/v1beta1"
-	corev1 "k8s.io/api/core/v1"
-	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	apitypes "k8s.io/apimachinery/pkg/types"
 	_ "k8s.io/client-go/plugin/pkg/client/auth" // Required for other auth providers like GKE.
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
@@ -190,22 +183,17 @@ func startWebhookServer(c conf.Configuration, disableWebhookConfigInstaller bool
 
 	logrus.Infof("Polaris webhook server listening on port %d", port)
 
-	// TODO: This logic really should probably live with the SupportedController struct in config - to house the supported versions and specs
-	supportedControllersToScan := map[runtime.Object]string{
-		&appsv1.Deployment{}:            "deployments",
-		&extensionsv1beta1.Deployment{}: "deployments-ext",
-		&appsv1.StatefulSet{}:           "statefulsets",
-		&appsv1.DaemonSet{}:             "daemonsets",
-		&batchv1.Job{}:                  "jobs",
-		&batchv1beta1.CronJob{}:         "cronjobs",
-		&corev1.ReplicationController{}: "replicationcontrollers",
-	}
+	// Iterate all the configurations supported controllers to scan and register them for webhooks
+	// Should only register controllers that are configured to be scanned
 	logrus.Debug("Registering webhooks to the webhook server")
-	for supportedAPIType, name := range supportedControllersToScan {
-		webhook := fwebhook.NewWebhook(name, mgr, fwebhook.Validator{Config: c}, supportedAPIType)
-		if err = as.Register(webhook); err != nil {
-			logrus.Debugf("Unable to register webhooks in the admission server: %v", err)
-			os.Exit(1)
+	for index, controllerToScan := range c.ControllersToScan {
+		for innerIndex, supportedAPIType := range controllerToScan.ListSupportedAPIVersions() {
+			webhookName := fmt.Sprintf("%s-%d-%d", controllerToScan, index, innerIndex)
+			webhook := fwebhook.NewWebhook(webhookName, mgr, fwebhook.Validator{Config: c}, supportedAPIType)
+			if err = as.Register(webhook); err != nil {
+				logrus.Debugf("Unable to register webhooks in the admission server: %v", err)
+				os.Exit(1)
+			}
 		}
 	}
 
