@@ -130,7 +130,6 @@ jobs:
       - checkout
       - *install_k8s
       - *test_kube_dashboard
-      - *install_k8s
       - run: ./test/webhook_test.sh
 
   test:
