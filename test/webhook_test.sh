@@ -1,7 +1,7 @@
 #!/bin/bash
 sed -ri "s|'(quay.io/reactiveops/polaris:).+'|'\1${CIRCLE_SHA1}'|" ./deploy/webhook.yaml
 kubectl apply &> /dev/null -f ./deploy/webhook.yaml
-sleep 20
+sleep 10
 
 kubectl apply &> /dev/null -f test/correctconfig.yaml
 if [ $? -eq 0 ]; then
