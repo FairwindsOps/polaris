@@ -1,8 +1,14 @@
 #!/bin/bash
-kubectl apply &> /dev/null -f https://github.com/FairwindsOps/polaris/releases/latest/download/webhook.yaml
-sleep 5
-kubectl apply &> /dev/null -f test/correctconfig.yaml
-if [ $? -eq 0 ]; then
+set -x
+sed -ri "s|'(quay.io/reactiveops/polaris:).+'|'\1${CIRCLE_SHA1}'|" ./deploy/webhook.yaml
+kubectl apply -f ./deploy/webhook.yaml
+sleep 20
+kubectl apply -f test/correctconfig.yaml
+status=$?
+sleep 20 
+
+
+if [ status -eq 0 ]; then
     VAR1="pass"
     echo pass 
 else
@@ -10,7 +16,9 @@ else
 fi
 
 kubectl apply -f test/incorrectconfig.yaml
-if [ $? -ne 0 ]; then
+status=$?
+sleep 20
+if [ status -ne 0 ]; then
     VAR2="pass"
     echo pass 
 else
