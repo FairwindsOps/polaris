@@ -8,7 +8,7 @@ status=$?
 sleep 20 
 
 
-if [ status -eq 0 ]; then
+if [ $status -eq 0 ]; then
     VAR1="pass"
     echo pass 
 else
@@ -18,7 +18,7 @@ fi
 kubectl apply -f test/incorrectconfig.yaml
 status=$?
 sleep 20
-if [ status -ne 0 ]; then
+if [ $status -ne 0 ]; then
     VAR2="pass"
     echo pass 
 else
