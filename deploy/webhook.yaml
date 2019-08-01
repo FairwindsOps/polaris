@@ -69,6 +69,13 @@ data:
             - SYS_CHROOT
             - KILL
             - AUDIT_WRITE
+    controllers_to_scan:
+      - Deployments
+      - StatefulSets
+      - DaemonSets
+      - Jobs
+      - CronJobs
+      - ReplicationControllers
   
 ---
 # Source: polaris/templates/webhook.rbac.yaml
@@ -87,12 +94,32 @@ metadata:
   labels:
     app: polaris
 rules:
+  # auditor rules rbac
   - apiGroups:
       - 'apps'
       - 'extensions'
     resources:
       - 'deployments'
       - 'statefulsets'
+      - 'daemonsets'
+    verbs:
+      - 'get'
+      - 'list'
+  - apiGroups:
+      - 'batch'
+    resources:
+      - 'jobs'
+      - 'cronjobs'
+    verbs:
+      - 'get'
+      - 'list'
+  - apiGroups:
+      - ''
+    resources:
+      - 'nodes'
+      - 'namespaces'
+      - 'pods'
+      - 'replicationcontrollers'
     verbs:
       - 'get'
       - 'list'
@@ -186,7 +213,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    checksum/config: '6ec4a4dc87403cae67c01438398a5f1d4ef836ffeaf26a33b685c066b940495a'
+    checksum/config: '8aa5a565fba7a2db98d46752087de8c1dcc83b70cd762c5829d5ba01270d54a2'
   name: polaris-webhook
   namespace: polaris
   labels:
@@ -211,7 +238,7 @@ spec:
             - --webhook
             - --config
             - /opt/app/config.yaml
-          image: 'quay.io/reactiveops/polaris:0.3'
+          image: 'quay.io/reactiveops/polaris:0.4'
           imagePullPolicy: 'Always'
           ports:
             - containerPort: 9876
@@ -261,6 +288,8 @@ spec:
               mountPath: /tmp/
               readOnly: false
       serviceAccountName:  polaris-webhook
+      nodeSelector: {}
+      tolerations: []
       volumes:
         - name: config
           configMap:

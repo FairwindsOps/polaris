@@ -41,3 +41,10 @@ security:
         - SYS_CHROOT
         - KILL
         - AUDIT_WRITE
+controllers_to_scan:
+  - Deployments
+  - StatefulSets
+  - DaemonSets
+  - CronJobs
+  - Jobs
+  - ReplicationControllers

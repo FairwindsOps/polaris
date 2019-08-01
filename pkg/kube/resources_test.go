@@ -1,10 +1,11 @@
 package kube
 
 import (
-	"github.com/fairwindsops/polaris/test"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/fairwindsops/polaris/test"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetResourcesFromPath(t *testing.T) {
@@ -51,6 +52,11 @@ func TestGetMultipleResourceFromSingleFile(t *testing.T) {
 	assert.Equal(t, 2, len(resources.Namespaces), "Should have a namespace")
 	assert.Equal(t, "polaris", resources.Namespaces[0].ObjectMeta.Name)
 	assert.Equal(t, "polaris-2", resources.Namespaces[1].ObjectMeta.Name)
+}
+
+func TestGetMultipleResourceFromBadFile(t *testing.T) {
+	_, err := CreateResourceProviderFromPath("./test_files/test_3")
+	assert.NotEqual(t, nil, err, "CreateResource From Path should fail with bad yaml")
 }
 
 func TestGetResourceFromAPI(t *testing.T) {

@@ -14,7 +14,13 @@
 
 package validator
 
-import corev1 "k8s.io/api/core/v1"
+import (
+	"fmt"
+
+	"github.com/fairwindsops/polaris/pkg/config"
+	conf "github.com/fairwindsops/polaris/pkg/config"
+	corev1 "k8s.io/api/core/v1"
+)
 
 // MessageType represents the type of Message
 type MessageType string
@@ -32,23 +38,87 @@ const (
 
 // NamespaceResult groups container results by parent resource.
 type NamespaceResult struct {
-	Name               string
-	Summary            *ResultSummary
-	DeploymentResults  []ControllerResult
-	StatefulSetResults []ControllerResult
+	Name    string
+	Summary *ResultSummary
+
+	// TODO: This struct could use some love to reorganize it as just having "results"
+	//       and then having methods to return filtered results by type
+	//       (deploy, daemonset, etc)
+	//       The way this is structured right now makes it difficult to add
+	//       additional result types and potentially miss things in the metrics
+	//       summary.
+	DeploymentResults            []ControllerResult
+	StatefulSetResults           []ControllerResult
+	DaemonSetResults             []ControllerResult
+	JobResults                   []ControllerResult
+	CronJobResults               []ControllerResult
+	ReplicationControllerResults []ControllerResult
+}
+
+// AddResult adds a result to the result sets by leveraging the types supported by NamespaceResult
+func (n *NamespaceResult) AddResult(resourceType config.SupportedController, result ControllerResult) error {
+	// Iterate all the resource types supported in this struct
+	var results *[]ControllerResult
+	switch resourceType {
+	case conf.Deployments:
+		results = &n.DeploymentResults
+	case conf.StatefulSets:
+		results = &n.StatefulSetResults
+	case conf.DaemonSets:
+		results = &n.DaemonSetResults
+	case conf.Jobs:
+		results = &n.JobResults
+	case conf.CronJobs:
+		results = &n.CronJobResults
+	case conf.ReplicationControllers:
+		results = &n.ReplicationControllerResults
+	default:
+		return fmt.Errorf("Unknown Resource Type: (%s) Missing Implementation in NamespacedResult", resourceType)
+	}
+
+	// Append the new result to the results pointer loaded from the supported values
+	*results = append(*results, result)
+
+	return nil
+}
+
+// GetAllControllerResults grabs all the different types of controller results from the namespaced result as a single list for easier iteration
+func (n NamespaceResult) GetAllControllerResults() []ControllerResult {
+	all := []ControllerResult{}
+	all = append(all, n.DeploymentResults...)
+	all = append(all, n.StatefulSetResults...)
+	all = append(all, n.DaemonSetResults...)
+	all = append(all, n.JobResults...)
+	all = append(all, n.CronJobResults...)
+	all = append(all, n.ReplicationControllerResults...)
+
+	return all
 }
 
 // NamespacedResults is a mapping of namespace name to the validation results.
 type NamespacedResults map[string]*NamespaceResult
+
+// GetAllControllerResults aggregates all the namespaced results in the set together
+func (nsResults NamespacedResults) GetAllControllerResults() []ControllerResult {
+	all := []ControllerResult{}
+	for _, nsResult := range nsResults {
+		all = append(all, nsResult.GetAllControllerResults()...)
+	}
+	return all
+}
 
 func (nsResults NamespacedResults) getNamespaceResult(nsName string) *NamespaceResult {
 	nsResult := &NamespaceResult{}
 	switch nsResults[nsName] {
 	case nil:
 		nsResult = &NamespaceResult{
-			Summary:            &ResultSummary{},
-			DeploymentResults:  []ControllerResult{},
-			StatefulSetResults: []ControllerResult{},
+			Summary:                      &ResultSummary{},
+			DeploymentResults:            []ControllerResult{},
+			StatefulSetResults:           []ControllerResult{},
+			DaemonSetResults:             []ControllerResult{},
+			JobResults:                   []ControllerResult{},
+			CronJobResults:               []ControllerResult{},
+			ReplicationControllerResults: []ControllerResult{},
 		}
 		nsResults[nsName] = nsResult
 	default:

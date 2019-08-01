@@ -30,12 +30,13 @@ import (
 
 // Configuration contains all of the config for the validation checks.
 type Configuration struct {
-	DisplayName  string       `json:"displayName"`
-	Resources    Resources    `json:"resources"`
-	HealthChecks HealthChecks `json:"healthChecks"`
-	Images       Images       `json:"images"`
-	Networking   Networking   `json:"networking"`
-	Security     Security     `json:"security"`
+	DisplayName       string                `json:"displayName"`
+	Resources         Resources             `json:"resources"`
+	HealthChecks      HealthChecks          `json:"healthChecks"`
+	Images            Images                `json:"images"`
+	Networking        Networking            `json:"networking"`
+	Security          Security              `json:"security"`
+	ControllersToScan []SupportedController `json:"controllers_to_scan"`
 }
 
 // Resources contains config for resource requests and limits.

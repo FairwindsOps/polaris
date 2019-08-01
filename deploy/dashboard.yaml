@@ -57,6 +57,13 @@ data:
             - SYS_CHROOT
             - KILL
             - AUDIT_WRITE
+    controllers_to_scan:
+      - Deployments
+      - StatefulSets
+      - DaemonSets
+      - Jobs
+      - CronJobs
+      - ReplicationControllers
   
 ---
 # Source: polaris/templates/dashboard.rbac.yaml
@@ -81,6 +88,15 @@ rules:
     resources:
       - 'deployments'
       - 'statefulsets'
+      - 'daemonsets'
+    verbs:
+      - 'get'
+      - 'list'
+  - apiGroups:
+      - 'batch'
+    resources:
+      - 'jobs'
+      - 'cronjobs'
     verbs:
       - 'get'
       - 'list'
@@ -90,6 +106,7 @@ rules:
       - 'nodes'
       - 'namespaces'
       - 'pods'
+      - 'replicationcontrollers'
     verbs:
       - 'get'
       - 'list'
@@ -133,7 +150,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    checksum/config: '6ec4a4dc87403cae67c01438398a5f1d4ef836ffeaf26a33b685c066b940495a'
+    checksum/config: '8aa5a565fba7a2db98d46752087de8c1dcc83b70cd762c5829d5ba01270d54a2'
   name: polaris-dashboard
   namespace: polaris
   labels:
@@ -161,7 +178,7 @@ spec:
         - --dashboard
         - --config
         - /opt/app/config.yaml
-        image: 'quay.io/reactiveops/polaris:0.3'
+        image: 'quay.io/reactiveops/polaris:0.4'
         imagePullPolicy: 'Always'
         name: dashboard
         ports:
@@ -199,6 +216,8 @@ spec:
           subPath: config.yaml
           readOnly: true
       serviceAccountName: polaris-dashboard
+      nodeSelector: {}
+      tolerations: []
 ---
 # Source: polaris/templates/audit.job.yaml
 
