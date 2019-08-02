@@ -1,5 +1,6 @@
 #!/bin/bash
-#Descption here
+#Testing to ensure that the webhook starts up, allows a correct deployment to pass,
+#and prevents a incorrectly formatted deployment. 
 set -e
 sed -ri "s|'(quay.io/reactiveops/polaris:).+'|'\1${CIRCLE_SHA1}'|" ./deploy/webhook.yaml
 
@@ -18,7 +19,7 @@ echo "Webhook started!"
 
 ALL_TESTS_PASSED=true
 
- if [ kubectl apply -f test/passing_test.deployment.yaml &> /dev/null eq 0 ]; then
+if [ kubectl apply -f test/passing_test.deployment.yaml &> /dev/null eq 0 ]; then
     echo pass 
 else
     $ALL_TESTS_PASSED=false
