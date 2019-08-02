@@ -22,14 +22,14 @@ ALL_TESTS_PASSED=true
 if [ kubectl apply -f test/passing_test.deployment.yaml &> /dev/null eq 0 ]; then
     echo pass 
 else
-    $ALL_TESTS_PASSED=false
+    ALL_TESTS_PASSED=false
     echo "Test Failed: Polaris prevented a deployment with no configuration issues." 
 fi
 
 if [ kubectl apply -f test/failing_test.deployment.yaml &> /dev/null  -ne 0 ]; then
     echo pass 
 else
-    $ALL_TESTS_PASSED=false
+    ALL_TESTS_PASSED=false
     echo "Test Failed: Polaris should have prevented this deployment due to configuration problems."
 fi
 
