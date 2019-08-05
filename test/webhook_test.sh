@@ -14,8 +14,8 @@ while kubectl apply -f test/failing_test.deployment.yaml; do
   fi
   timeout=$((timeout-1))
   sleep 1
+  kubectl delete nginx-deployment
 done
-kubectl delete nginx-deployment
 echo "Webhook started!"
 
 ALL_TESTS_PASSED=1
