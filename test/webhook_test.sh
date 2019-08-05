@@ -15,7 +15,7 @@ while kubectl apply -f test/failing_test.deployment.yaml &> /dev/null; do
     echo "Timed out while waiting for webhook to start"
     exit 1
   fi
-  kubectl logs `kubectl get pods --namespace polaris -o name`
+  kubectl logs --namespace polaris `kubectl get pods --namespace polaris -o name`
   timeout=$((timeout-1))
   sleep 1
 done
