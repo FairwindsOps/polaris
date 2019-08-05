@@ -19,7 +19,7 @@ echo "Webhook started!"
 
 ALL_TESTS_PASSED=1
 
-if kubectl apply -f test/failing_test.deployment.yaml &> /dev/null; then
+if kubectl apply -f test/passing_test.deployment.yaml &> /dev/null; then
     echo pass 
 else
     ALL_TESTS_PASSED=0
