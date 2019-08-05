@@ -6,9 +6,9 @@
 sed -ri "s|'(quay.io/reactiveops/polaris:).+'|'\1${CIRCLE_SHA1}'|" ./deploy/webhook.yaml
 
 kubectl apply -f ./deploy/webhook.yaml 
-timeout=100
+timeout=25
 kubectl delete nginx-deployment
-while kubectl apply -f test/failing_test.deployment.yaml &> /dev/null; do
+while kubectl apply -f test/failing_test.deployment.yaml; do
   echo "Waiting for webhook to start..."
   if [ $timeout -eq 0 ]; then
     kubectl get pods -n polaris
