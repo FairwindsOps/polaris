@@ -235,6 +235,8 @@ spec:
         - name: webhook
           command:
             - polaris
+            - --log-level
+            - info
             - --webhook
             - --config
             - /opt/app/config.yaml
