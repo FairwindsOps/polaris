@@ -14,19 +14,20 @@
 [circleci-image]: https://circleci.com/gh/FairwindsOps/polaris.svg?style=svg
 [circleci-link]: https://circleci.com/gh/FairwindsOps/polaris.svg
 
-Polaris helps keep your cluster healthy. It runs a variety of checks to ensure that
-Kubernetes deployments are configured using best practices, helping you avoid
+Fairwinds' Polaris keeps your clusters sailing smoothly. It runs a variety of checks to ensure that
+Kubernetes pods and controllers are configured using best practices, helping you avoid
 problems in the future. Polaris can be run in a few different modes:
 
-- A dashboard that provides an overview of how well current deployments are configured within a cluster.
-- An experimental validating webhook that can prevent any future deployments that do not live up to a configured standard.
-- A command-line audit that can be incorporated into your CI/CD pipeline
+Polaris can be run in three different modes:
+* As a [dashboard](#dashboard), so you can audit what's running inside your cluster.
+* As a [validating webhook](#webhook), so you can automatically reject workloads that don't adhere to your organization's policies.
+* As a [command-line tool](#cli), so you can test local YAML files, e.g. as part of a CI/CD process.
 
 **Want to learn more?** Fairwinds holds [office hours on Zoom](https://zoom.us/j/242508205) the first Friday of every month, at 12pm Eastern. You can also reach out via email at `opensource@fairwinds.com`
 
 # Dashboard Quickstart
 
-```
+```bash
 kubectl apply -f https://github.com/FairwindsOps/polaris/releases/latest/download/dashboard.yaml
 kubectl port-forward --namespace polaris svc/polaris-dashboard 8080:80
 ```
@@ -35,9 +36,11 @@ With the port forwarding in place, you can open http://localhost:8080 in your br
 * * *
 
 # Components
-## Dashboard
 
-The Polaris dashboard is a way to get a simple visual overview of the current state of your Kubernetes deployments as well as a roadmap for what can be improved. The dashboard provides a cluster wide overview as well as breaking out results by category, namespace, and deployment.
+## Dashboard
+> [View installation instructions](docs/usage.md#dashboard)
+
+The Polaris dashboard is a way to get a simple visual overview of the current state of your Kubernetes workloads as well as a roadmap for what can be improved. The dashboard provides a cluster wide overview as well as breaking out results by category, namespace, and workload.
 
 <p align="center">
   <img src="/dashboard-screenshot.png" alt="Polaris Dashboard" />
@@ -47,13 +50,22 @@ Our default standards in Polaris are rather high, so don’t be surprised if you
 
 
 ## Webhook
+> [View installation instructions](docs/usage.md#webhook)
 
-Polaris includes experimental support for an optional validating webhook. This accepts the same configuration as the dashboard, and can run the same validations. This webhook will reject any deployments that trigger a validation error. This is indicative of the greater goal of Polaris, not just to encourage better configuration through dashboard visibility, but to actually enforce it with this webhook. *Although we are working towards greater stability and better test coverage, we do not currently consider this webhook component production ready.*
+Polaris includes experimental support for an optional validating webhook. This accepts the same configuration as the dashboard, and can run the same validations. This webhook will reject any workloads that trigger a validation error. This is indicative of the greater goal of Polaris, not just to encourage better configuration through dashboard visibility, but to actually enforce it with this webhook. *Although we are working towards greater stability and better test coverage, we do not currently consider this webhook component production ready.*
 
-Unfortunately we have not found a way to display warnings as part of `kubectl` output unless we are rejecting a deployment altogether. That means that any checks with a severity of `warning` will still pass webhook validation, and the only evidence of that warning will either be in the Polaris dashboard or the Polaris webhook logs.
+Unfortunately we have not found a way to display warnings as part of `kubectl` output unless we are rejecting a workload altogether. That means that any checks with a severity of `warning` will still pass webhook validation, and the only evidence of that warning will either be in the Polaris dashboard or the Polaris webhook logs.
 
-# Usage Documentation
-See the [Usage Guide](/docs/usage.md) in the docs folder.
+## CLI
+> [View installation instructions](docs/usage.md#cli)
+
+Polaris can also be used on the command line, either to audit local files or a running cluster.
+This is particularly helpful for running Polaris against your infrastructure-as-code as part of a
+CI/CD pipeline. Use the available [command line flags](docs/usage.md#running-with-ci-cd)
+to cause CI/CD to fail if your Polaris score drops below a certain threshold, or if any errors arise.
+
+# Installation and Usage
+See the [Usage Guide](/docs/usage.md) for details on different methods for installing and using Polaris.
 
 # Contributing
 PRs welcome! Check out the [Contributing Guidelines](CONTRIBUTING.md),
