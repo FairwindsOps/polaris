@@ -17,23 +17,23 @@ while ! kubectl get pods -n polaris | grep "polaris-webhook.*Running"; do
 done
 echo "Webhook started!"
 
-ALL_TESTS_PASSED=true
+ALL_TESTS_PASSED=1
 
-if [ kubectl apply -f test/passing_test.deployment.yaml &> /dev/null eq 0 ]; then
+if kubectl apply -f test/failing_test.deployment.yaml &> /dev/null; then
     echo pass 
 else
-    ALL_TESTS_PASSED=false
+    ALL_TESTS_PASSED=0
     echo "Test Failed: Polaris prevented a deployment with no configuration issues." 
 fi
 
-if [ kubectl apply -f test/failing_test.deployment.yaml &> /dev/null  -ne 0 ]; then
+if ! kubectl apply -f test/failing_test.deployment.yaml &> /dev/null; then
     echo pass 
 else
-    ALL_TESTS_PASSED=false
+    ALL_TESTS_PASSED=0
     echo "Test Failed: Polaris should have prevented this deployment due to configuration problems."
 fi
 
-if [ $ALL_TESTS_PASSED ]; then
+if [ $ALL_TESTS_PASSED -eq 1 ]; then
     echo "Tests Passed."
 else
     echo "Tests Failed"
