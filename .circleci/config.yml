@@ -130,8 +130,8 @@ jobs:
     steps:
       - checkout
       - *install_k8s
-      - *test_kube_dashboard
       - run: ./test/webhook_test.sh
+      - *test_kube_dashboard
 
   test:
     working_directory: /go/src/github.com/fairwindsops/polaris/

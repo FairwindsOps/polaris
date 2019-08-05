@@ -1,7 +1,7 @@
 #!/bin/bash
 #Testing to ensure that the webhook starts up, allows a correct deployment to pass,
 #and prevents a incorrectly formatted deployment. 
-set -e
+
 #sed is replacing the polaris version with this commit sha so we are testing exactly this verison.
 sed -ri "s|'(quay.io/reactiveops/polaris:).+'|'\1${CIRCLE_SHA1}'|" ./deploy/webhook.yaml
 
@@ -10,7 +10,6 @@ timeout=100
 while kubectl apply -f test/failing_test.deployment.yaml &> /dev/null; do
   echo "Waiting for webhook to start..."
   if [ $timeout -eq 0 ]; then
-    kubectl apply -f test/failing_test.deployment.yaml
     kubectl get pods -n polaris
     echo "Timed out while waiting for webhook to start"
     exit 1
