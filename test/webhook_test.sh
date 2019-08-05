@@ -5,7 +5,7 @@ set -e
 #sed is replacing the polaris version with this commit sha so we are testing exactly this verison.
 sed -ri "s|'(quay.io/reactiveops/polaris:).+'|'\1${CIRCLE_SHA1}'|" ./deploy/webhook.yaml
 
-kubectl apply -f ./deploy/webhook.yaml &> /dev/null
+kubectl apply -f ./deploy/webhook.yaml 
 timeout=100
 while kubectl apply -f test/failing_test.deployment.yaml &> /dev/null; do
   echo "Waiting for webhook to start..."
@@ -15,8 +15,9 @@ while kubectl apply -f test/failing_test.deployment.yaml &> /dev/null; do
   fi
   timeout=$((timeout-1))
   sleep 1
-  kubectl delete nginx-deployment
+  kubectl get pods -- ns polaris
 done
+kubectl delete nginx-deployment
 echo "Webhook started!"
 
 #Webhook started, setting all tests as passed initially.
