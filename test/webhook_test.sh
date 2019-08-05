@@ -10,12 +10,12 @@ timeout=100
 while kubectl apply -f test/failing_test.deployment.yaml &> /dev/null; do
   echo "Waiting for webhook to start..."
   if [ $timeout -eq 0 ]; then
+    kubectl get pods -- ns polaris
     echo "Timed out while waiting for webhook to start"
     exit 1
   fi
   timeout=$((timeout-1))
   sleep 1
-  kubectl get pods -- ns polaris
 done
 kubectl delete nginx-deployment
 echo "Webhook started!"
