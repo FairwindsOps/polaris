@@ -1,14 +1,14 @@
 #!/bin/bash
 #Testing to ensure that the webhook starts up, allows a correct deployment to pass,
 #and prevents a incorrectly formatted deployment. 
-
+set -e
 #sed is replacing the polaris version with this commit sha so we are testing exactly this verison.
 sed -ri "s|'(quay.io/reactiveops/polaris:).+'|'\1${CIRCLE_SHA1}'|" ./deploy/webhook.yaml
 kubectl apply -f ./deploy/webhook.yaml &> /dev/null
 timeout=25
-#Fix Me: Need a more deterministic way to test for completion of webhook installation. Currently,
-#the while loop is testing for the existence of pods, but the pods can be created but not yet 
-#running, so the webhook would be ineffective. This is why we have to sleep 5 again after the loop.
+#Fix Me: Need a more deterministic way to test for completion of webhook installation.
+#The while loop exits when the webhook is installed but not yet effective, so we have to sleep
+#before testing it.
 while ! kubectl get pods -n polaris | grep "polaris-webhook.*Running"; do
   echo "Waiting for webhook to start..."
   if [ $timeout -eq 0 ]; then
@@ -33,7 +33,6 @@ if kubectl apply -f test/failing_test.deployment.yaml; then
     ALL_TESTS_PASSED=0
     echo "Test Failed: Polaris should have prevented this deployment due to configuration issues."
 fi
-
 
 #Verify that all the tests passed.
 if [ $ALL_TESTS_PASSED -eq 1 ]; then
