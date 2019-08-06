@@ -13,14 +13,12 @@ while ! kubectl get pods -n polaris | grep "polaris-webhook.*Running"; do
   echo "Waiting for webhook to start..."
   if [ $timeout -eq 0 ]; then
     echo "Timed out while waiting for webhook to start"
-    kubectl delete nginx-deployment
     exit 1
   fi
   timeout=$((timeout-1))
   sleep 1
 done
-sleep 5
-delete nginx-deployment
+sleep 30
 echo "Webhook started!"
 
 #Webhook started, setting all tests as passed initially.
@@ -35,6 +33,7 @@ if kubectl apply -f test/failing_test.deployment.yaml; then
     ALL_TESTS_PASSED=0
     echo "Test Failed: Polaris should have prevented this deployment due to configuration issues."
 fi
+
 
 #Verify that all the tests passed.
 if [ $ALL_TESTS_PASSED -eq 1 ]; then
