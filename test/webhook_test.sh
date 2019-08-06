@@ -18,7 +18,7 @@ while ! kubectl get pods -n polaris | grep "polaris-webhook.*Running"; do
   timeout=$((timeout-1))
   sleep 1
 done
-sleep 30
+sleep 60
 echo "Webhook started!"
 
 #Webhook started, setting all tests as passed initially.
