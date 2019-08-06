@@ -29,7 +29,7 @@ if ! kubectl apply -f test/passing_test.deployment.yaml &> /dev/null; then
     echo "Test Failed: Polaris prevented a deployment with no configuration issues." 
 fi
 
-if kubectl apply -f test/failing_test.deployment.yaml; then
+if kubectl apply -f test/failing_test.deployment.yaml &> /dev/null; then
     ALL_TESTS_PASSED=0
     echo "Test Failed: Polaris should have prevented this deployment due to configuration issues."
 fi

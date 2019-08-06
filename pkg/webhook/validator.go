@@ -81,8 +81,7 @@ func NewWebhook(name string, mgr manager.Manager, validator Validator, apiType r
 		logrus.Errorf("Error building webhook: %v", err)
 		os.Exit(1)
 	} else {
-		logrus.Info("Webhook started!")
-	}
+		logrus.Info(name + " webhook started")
 
 	return webhook
 }

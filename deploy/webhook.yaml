@@ -235,12 +235,10 @@ spec:
         - name: webhook
           command:
             - polaris
-            - --log-level
-            - info
             - --webhook
             - --config
             - /opt/app/config.yaml
-          image: 'quay.io/reactiveops/polaris:3b29be4abf7fb34eb03ad00fc5ff299193dab717'
+          image: 'quay.io/reactiveops/polaris:0.4'
           imagePullPolicy: 'Always'
           ports:
             - containerPort: 9876
