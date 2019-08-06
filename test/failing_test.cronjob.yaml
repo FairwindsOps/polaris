@@ -14,7 +14,7 @@ spec:
             args:
             - whoami
             securityContext:
-              allowPrivilegeEscalation: false
+              allowPrivilegeEscalation: true
               privileged: false 
               readOnlyRootFilesystem: true
               runAsNonRoot: true

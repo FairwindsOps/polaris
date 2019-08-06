@@ -9,7 +9,7 @@ timeout=25
 #Fix Me: Need a more deterministic way to test for completion of webhook installation.
 #The while loop exits when the webhook is installed but not yet effective, so we have to sleep
 #before testing it.
-while ! kubectl get pods -n polaris | grep "polaris-webhook.*Running"; do
+while ! kubectl get pods -n polaris | grep "polaris-webhook.*1/1.*Running"; do
   echo "Waiting for webhook to start..."
   if [ $timeout -eq 0 ]; then
     echo "Timed out while waiting for webhook to start"
@@ -18,7 +18,7 @@ while ! kubectl get pods -n polaris | grep "polaris-webhook.*Running"; do
   timeout=$((timeout-1))
   sleep 1
 done
-sleep 60
+sleep 5
 echo "Webhook started!"
 
 #Webhook started, setting all tests as passed initially.
