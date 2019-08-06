@@ -24,15 +24,20 @@ echo "Webhook started!"
 #Webhook started, setting all tests as passed initially.
 ALL_TESTS_PASSED=1
 
-if ! kubectl apply -f test/passing_test.deployment.yaml &> /dev/null; then
-    ALL_TESTS_PASSED=0
-    echo "Test Failed: Polaris prevented a deployment with no configuration issues." 
-fi
-
-if kubectl apply -f test/failing_test.deployment.yaml &> /dev/null; then
-    ALL_TESTS_PASSED=0
-    echo "Test Failed: Polaris should have prevented this deployment due to configuration issues."
-fi
+for filename in test/passing_test.*.yaml; do
+    echo $filename
+    if ! kubectl apply -f $filename &> /dev/null; then
+        ALL_TESTS_PASSED=0
+        echo "Test Failed: Polaris prevented a deployment with no configuration issues." 
+    fi
+done
+for filename in test/failing_test.*.yaml; do
+    echo $filename
+    if kubectl apply -f $filename &> /dev/null; then
+        ALL_TESTS_PASSED=0
+        echo "Test Failed: Polaris should have prevented this deployment due to configuration issues."
+    fi
+done
 
 #Verify that all the tests passed.
 if [ $ALL_TESTS_PASSED -eq 1 ]; then
