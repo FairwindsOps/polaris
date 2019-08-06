@@ -82,7 +82,7 @@ func NewWebhook(name string, mgr manager.Manager, validator Validator, apiType r
 		os.Exit(1)
 	} else {
 		logrus.Info(name + " webhook started")
-
+	}
 	return webhook
 }
 
