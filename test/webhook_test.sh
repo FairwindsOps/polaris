@@ -64,8 +64,9 @@ function grab_logs() {
     kubectl -n polaris logs -l app=polaris
 }
 
-# Install the webhook
+# Install the webhook and dashboard
 kubectl apply -f ./deploy/webhook.yaml &> /dev/null
+kubectl apply -f ./deploy/dashboard.yaml &> /dev/null
 
 # wait for the webhook and dashboard to come online
 check_webhook_is_ready
