@@ -27,7 +27,7 @@ import (
 	conf "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/dashboard"
 	"github.com/fairwindsops/polaris/pkg/kube"
-	validator "github.com/fairwindsops/polaris/pkg/validator"
+	"github.com/fairwindsops/polaris/pkg/validator"
 	fwebhook "github.com/fairwindsops/polaris/pkg/webhook"
 	"github.com/sirupsen/logrus"
 	apitypes "k8s.io/apimachinery/pkg/types"
@@ -137,7 +137,7 @@ func main() {
 }
 
 func startDashboardServer(c conf.Configuration, auditPath string, port int, basePath string, auditData *validator.AuditData) {
-	router := dashboard.GetRouter(c, auditPath, port, basePath, nil)
+	router := dashboard.GetRouter(c, auditPath, port, basePath, auditData)
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
