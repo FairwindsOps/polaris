@@ -15,7 +15,7 @@ function check_webhook_is_ready() {
 
     # loop until this fails (desired condition is we cannot apply this yaml doc, which means the webhook is working
     echo "Waiting for webhook to be ready"
-    while ! kubectl get pods -n polaris | grep -E "webhook.*Running"; do
+    while ! kubectl get pods -n polaris | grep -E "webhook.*1/1.*Running"; do
         check_timeout "${timeout_epoch}"
         echo -n "."
     done
@@ -27,7 +27,7 @@ function check_dashboard_is_ready() {
     local timeout_epoch
     timeout_epoch=$(date -d "+2 minutes" +%s)
     echo "Waiting for dashboard to be ready"
-    while ! kubectl get pods -n polaris | grep -E "dashboard.*Running"; do
+    while ! kubectl get pods -n polaris | grep -E "dashboard.*1/1.*Running"; do
         echo -n "."
     done
 
