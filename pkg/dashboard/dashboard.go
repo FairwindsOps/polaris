@@ -21,11 +21,11 @@ import (
 	"net/http"
 	"strings"
 
-	packr "github.com/gobuffalo/packr/v2"
-	"github.com/gorilla/mux"
 	conf "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
 	"github.com/fairwindsops/polaris/pkg/validator"
+	packr "github.com/gobuffalo/packr/v2"
+	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"gitlab.com/golang-commonmark/markdown"
 )
@@ -136,7 +136,7 @@ func writeTemplate(tmpl *template.Template, data *templateData, w http.ResponseW
 }
 
 // GetRouter returns a mux router serving all routes necessary for the dashboard
-func GetRouter(c conf.Configuration, auditPath string, port int, basePath string) *mux.Router {
+func GetRouter(c conf.Configuration, auditPath string, port int, basePath string, auditData *validator.AuditData) *mux.Router {
 	router := mux.NewRouter()
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
@@ -151,13 +151,16 @@ func GetRouter(c conf.Configuration, auditPath string, port int, basePath string
 		w.Write(favicon)
 	})
 	router.HandleFunc("/results.json", func(w http.ResponseWriter, r *http.Request) {
-		k, err := kube.CreateResourceProvider(auditPath)
-		if err != nil {
-			logrus.Errorf("Error fetching Kubernetes resources %v", err)
-			http.Error(w, "Error fetching Kubernetes resources", http.StatusInternalServerError)
-			return
+		if auditData == nil {
+			k, err := kube.CreateResourceProvider(auditPath)
+			if err != nil {
+				logrus.Errorf("Error fetching Kubernetes resources %v", err)
+				http.Error(w, "Error fetching Kubernetes resources", http.StatusInternalServerError)
+				return
+			}
+
+			JSONHandler(w, r, c, k)
 		}
-		JSONHandler(w, r, c, k)
 	})
 	router.HandleFunc("/details/{category}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -178,13 +181,19 @@ func GetRouter(c conf.Configuration, auditPath string, port int, basePath string
 			http.Error(w, "Error fetching Kubernetes resources", http.StatusInternalServerError)
 			return
 		}
-		auditData, err := validator.RunAudit(c, k)
-		if err != nil {
-			logrus.Errorf("Error getting audit data: %v", err)
-			http.Error(w, "Error running audit", 500)
-			return
+		if auditData == nil {
+			auditData, err := validator.RunAudit(c, k)
+
+			if err != nil {
+				logrus.Errorf("Error getting audit data: %v", err)
+				http.Error(w, "Error running audit", 500)
+				return
+			}
+			MainHandler(w, r, auditData, basePath)
+		} else {
+			MainHandler(w, r, *auditData, basePath)
 		}
-		MainHandler(w, r, auditData, basePath)
+
 	})
 	return router
 }

@@ -27,7 +27,7 @@ import (
 	conf "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/dashboard"
 	"github.com/fairwindsops/polaris/pkg/kube"
-	"github.com/fairwindsops/polaris/pkg/validator"
+	validator "github.com/fairwindsops/polaris/pkg/validator"
 	fwebhook "github.com/fairwindsops/polaris/pkg/webhook"
 	"github.com/sirupsen/logrus"
 	apitypes "k8s.io/apimachinery/pkg/types"
@@ -59,6 +59,7 @@ func main() {
 	auditOutputURL := flag.String("output-url", "", "Destination URL to send audit results")
 	auditOutputFile := flag.String("output-file", "", "Destination file for audit results")
 	auditOutputFormat := flag.String("output-format", "json", "Output format for results - json, yaml, or score")
+	loadAuditFile := flag.String("load-audit-file", "", "Runs the dashboard with data saved from a past audit.")
 	displayName := flag.String("display-name", "", "An optional identifier for the audit")
 	configPath := flag.String("config", "", "Location of Polaris configuration file")
 	logLevel := flag.String("log-level", logrus.InfoLevel.String(), "Logrus log level")
@@ -103,7 +104,24 @@ func main() {
 	if *webhook {
 		startWebhookServer(c, *disableWebhookConfigInstaller, *webhookPort)
 	} else if *dashboard {
-		startDashboardServer(c, *auditPath, *dashboardPort, *dashboardBasePath)
+		if *loadAuditFile == "" {
+			startDashboardServer(c, *auditPath, *dashboardPort, *dashboardBasePath, nil)
+		} else {
+			auditData := validator.AuditData{}
+			oldFileBytes, err := ioutil.ReadFile(*loadAuditFile)
+			if err != nil {
+				logrus.Errorf("Unable to read contents of loaded file: %v", err)
+				os.Exit(1)
+			}
+			err = json.Unmarshal(oldFileBytes, &auditData)
+			if err != nil {
+				logrus.Errorf("Error parsing file contents into AuditData: %v", err)
+				os.Exit(1)
+			}
+			startDashboardServer(c, *auditPath, *dashboardPort, *dashboardBasePath, &auditData)
+
+		}
+
 	} else if *audit {
 		auditData := runAndReportAudit(c, *auditPath, *auditOutputFile, *auditOutputURL, *auditOutputFormat)
 
@@ -118,8 +136,8 @@ func main() {
 	}
 }
 
-func startDashboardServer(c conf.Configuration, auditPath string, port int, basePath string) {
-	router := dashboard.GetRouter(c, auditPath, port, basePath)
+func startDashboardServer(c conf.Configuration, auditPath string, port int, basePath string, auditData *validator.AuditData) {
+	router := dashboard.GetRouter(c, auditPath, port, basePath, nil)
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
