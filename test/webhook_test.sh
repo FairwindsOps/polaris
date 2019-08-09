@@ -23,17 +23,6 @@ function check_webhook_is_ready() {
     echo "Webhook started!"
 }
 
-function check_dashboard_is_ready() {
-    local timeout_epoch
-    timeout_epoch=$(date -d "+2 minutes" +%s)
-    echo "Waiting for dashboard to be ready"
-    while ! kubectl get pods -n polaris | grep -E "dashboard.*1/1.*Running"; do
-        echo -n "."
-    done
-
-    echo "Dashboard Running!"
-}
-
 # Check if timeout is hit and exit if it is
 function check_timeout() {
     local timeout_epoch="${1}"
@@ -64,13 +53,13 @@ function grab_logs() {
     kubectl -n polaris logs -l app=polaris
 }
 
-# Install the webhook and dashboard
+# Install the webhook 
 kubectl apply -f ./deploy/webhook.yaml &> /dev/null
-kubectl apply -f ./deploy/dashboard.yaml &> /dev/null
 
-# wait for the webhook and dashboard to come online
+
+# wait for the webhook to come online
 check_webhook_is_ready
-check_dashboard_is_ready
+
 
 # Webhook started, setting all tests as passed initially.
 ALL_TESTS_PASSED=1
