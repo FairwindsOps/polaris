@@ -3,6 +3,7 @@ sed -ri "s|'(quay.io/reactiveops/polaris:).+'|'\1${CIRCLE_SHA1}'|" ./deploy/dash
 
 function check_dashboard_is_ready() {
     local timeout_epoch
+    check_timeout "${timeout_epoch}"
     timeout_epoch=$(date -d "+2 minutes" +%s)
     echo "Waiting for dashboard to be ready"
     while ! kubectl get pods -n polaris | grep -E "dashboard.*1/1.*Running"; do
