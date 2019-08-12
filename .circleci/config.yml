@@ -66,22 +66,6 @@ references:
         curl -f http://localhost:3000/static/css/main.css > /dev/null
         curl -f http://localhost:3000/results.json > /dev/null
         curl -f http://localhost:3000/details/security > /dev/null
-  test_kube_dashboard: &test_kube_dashboard
-    run:
-      name: Test Dashboard
-      command: |
-        sed -ri "s|'(quay.io/reactiveops/polaris:).+'|'\1${CIRCLE_SHA1}'|" ./deploy/dashboard.yaml
-        kubectl apply -f ./deploy/dashboard.yaml
-        sleep 10
-        kubectl get pods --namespace polaris
-        kubectl port-forward --namespace polaris svc/polaris-dashboard 3000:80 &
-        sleep 5
-        curl -f http://localhost:3000 > /dev/null
-        curl -f http://localhost:3000/health > /dev/null
-        curl -f http://localhost:3000/favicon.ico > /dev/null
-        curl -f http://localhost:3000/static/css/main.css > /dev/null
-        curl -f http://localhost:3000/results.json > /dev/null
-        curl -f http://localhost:3000/details/security > /dev/null
 
   # Release scripts
   install_goreleaser: &install_goreleaser
@@ -130,7 +114,8 @@ jobs:
     steps:
       - checkout
       - *install_k8s
-      - *test_kube_dashboard
+      - run: ./test/webhook_test.sh
+      - run: ./test/kube_dashboard_test.sh
 
   test:
     working_directory: /go/src/github.com/fairwindsops/polaris/
