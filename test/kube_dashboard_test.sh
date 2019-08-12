@@ -28,7 +28,7 @@ kubectl apply -f ./deploy/dashboard.yaml &>/dev/null
 check_dashboard_is_ready
 
 kubectl port-forward --namespace polaris svc/polaris-dashboard 3000:80 &
-sleep 5
+sleep 30
 curl -f http://localhost:3000 > /dev/null
 curl -f http://localhost:3000/health > /dev/null
 curl -f http://localhost:3000/favicon.ico > /dev/null
