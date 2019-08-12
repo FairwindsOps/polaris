@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -31,6 +32,7 @@ import (
 	fwebhook "github.com/fairwindsops/polaris/pkg/webhook"
 	"github.com/sirupsen/logrus"
 	apitypes "k8s.io/apimachinery/pkg/types"
+	yaml2 "k8s.io/apimachinery/pkg/util/yaml"
 	_ "k8s.io/client-go/plugin/pkg/client/auth" // Required for other auth providers like GKE.
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -114,19 +116,15 @@ func main() {
 				os.Exit(1)
 			}
 
-			if err != nil {
-				logrus.Errorf("deconding config failed: %v", err)
-				os.Exit(1)
-			}
-			if strings.Contains(*loadAuditFile, ".json") {
+			/*if strings.Contains(*loadAuditFile, ".json") {
 				err = json.Unmarshal(oldFileBytes, &auditData)
 			} else if strings.Contains(*loadAuditFile, ".yaml") {
 				err = yaml.Unmarshal(oldFileBytes, &auditData)
 			} else {
 				logrus.Errorf("Invalid configuration type")
 				os.Exit(1)
-			}
-
+			}*/
+			auditData, err = decode(oldFileBytes)
 			if err != nil {
 				logrus.Errorf("Error parsing file contents into auditData: %v", err)
 				os.Exit(1)
@@ -315,4 +313,18 @@ func runAndReportAudit(c conf.Configuration, auditPath string, outputFile string
 		}
 	}
 	return auditData
+}
+func decode(oldFileBytes []byte) (validator.AuditData, error) {
+	// Decodes either a YAML or JSON file and returns AuditData.
+	reader := bytes.NewReader(oldFileBytes)
+	conf := validator.AuditData{}
+	d := yaml2.NewYAMLOrJSONDecoder(reader, 4096)
+	for {
+		if err := d.Decode(&conf); err != nil {
+			if err == io.EOF {
+				return conf, nil
+			}
+			return conf, fmt.Errorf("Decoding config failed: %v", err)
+		}
+	}
 }

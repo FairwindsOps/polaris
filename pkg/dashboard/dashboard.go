@@ -159,11 +159,12 @@ func GetRouter(c conf.Configuration, auditPath string, port int, basePath string
 				return
 			}
 
-			*auditData, err = validator.RunAudit(c, k)
+			auditDataObj, err := validator.RunAudit(c, k)
 			if err != nil {
 				http.Error(w, "Error Fetching Deployments", http.StatusInternalServerError)
 				return
 			}
+			auditData = &auditDataObj
 		}
 
 		JSONHandler(w, r, auditData)
