@@ -118,9 +118,9 @@ func main() {
 				logrus.Errorf("deconding config failed: %v", err)
 				os.Exit(1)
 			}
-			if strings.Contains(*loadAuditFile, "json") {
+			if strings.Contains(*loadAuditFile, ".json") {
 				err = json.Unmarshal(oldFileBytes, &auditData)
-			} else if strings.Contains(*loadAuditFile, "yaml") {
+			} else if strings.Contains(*loadAuditFile, ".yaml") {
 				err = yaml.Unmarshal(oldFileBytes, &auditData)
 			} else {
 				logrus.Errorf("Invalid configuration type")
