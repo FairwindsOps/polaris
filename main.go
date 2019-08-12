@@ -115,15 +115,6 @@ func main() {
 				logrus.Errorf("Unable to read contents of loaded file: %v", err)
 				os.Exit(1)
 			}
-
-			/*if strings.Contains(*loadAuditFile, ".json") {
-				err = json.Unmarshal(oldFileBytes, &auditData)
-			} else if strings.Contains(*loadAuditFile, ".yaml") {
-				err = yaml.Unmarshal(oldFileBytes, &auditData)
-			} else {
-				logrus.Errorf("Invalid configuration type")
-				os.Exit(1)
-			}*/
 			auditData, err = decode(oldFileBytes)
 			if err != nil {
 				logrus.Errorf("Error parsing file contents into auditData: %v", err)
