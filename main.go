@@ -113,9 +113,19 @@ func main() {
 				logrus.Errorf("Unable to read contents of loaded file: %v", err)
 				os.Exit(1)
 			}
-			c, err = conf.Parse(oldFileBytes)
-			fmt.Printf("Conf output %s", c)
-			err = json.Unmarshal(oldFileBytes, &auditData)
+
+			if err != nil {
+				logrus.Errorf("deconding config failed: %v", err)
+				os.Exit(1)
+			}
+			if strings.Contains(*loadAuditFile, "json") {
+				err = json.Unmarshal(oldFileBytes, &auditData)
+			} else if strings.Contains(*loadAuditFile, "yaml") {
+				err = yaml.Unmarshal(oldFileBytes, &auditData)
+			} else {
+				logrus.Errorf("Invalid configuration type")
+				os.Exit(1)
+			}
 
 			if err != nil {
 				logrus.Errorf("Error parsing file contents into auditData: %v", err)
