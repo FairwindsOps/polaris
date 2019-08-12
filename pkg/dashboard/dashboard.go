@@ -159,8 +159,15 @@ func GetRouter(c conf.Configuration, auditPath string, port int, basePath string
 				return
 			}
 
-			JSONHandler(w, r, c, k)
+			*auditData, err = validator.RunAudit(c, k)
+			if err != nil {
+				http.Error(w, "Error Fetching Deployments", http.StatusInternalServerError)
+				return
+			}
 		}
+
+		JSONHandler(w, r, auditData)
+
 	})
 	router.HandleFunc("/details/{category}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -222,13 +229,7 @@ func MainHandler(w http.ResponseWriter, r *http.Request, auditData validator.Aud
 }
 
 // JSONHandler gets template data and renders json with it.
-func JSONHandler(w http.ResponseWriter, r *http.Request, c conf.Configuration, kubeResources *kube.ResourceProvider) {
-	auditData, err := validator.RunAudit(c, kubeResources)
-	if err != nil {
-		http.Error(w, "Error Fetching Deployments", http.StatusInternalServerError)
-		return
-	}
-
+func JSONHandler(w http.ResponseWriter, r *http.Request, auditData *validator.AuditData) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(auditData)

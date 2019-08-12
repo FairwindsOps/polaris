@@ -31,12 +31,13 @@ import (
 	fwebhook "github.com/fairwindsops/polaris/pkg/webhook"
 	"github.com/sirupsen/logrus"
 	apitypes "k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	_ "k8s.io/client-go/plugin/pkg/client/auth" // Required for other auth providers like GKE.
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
-	"sigs.k8s.io/yaml"
+	//"sigs.k8s.io/yaml"
 )
 
 const (
@@ -113,9 +114,12 @@ func main() {
 				logrus.Errorf("Unable to read contents of loaded file: %v", err)
 				os.Exit(1)
 			}
+			c, err = conf.Parse(oldFileBytes)
+			fmt.Printf("Conf output %s", c)
 			err = json.Unmarshal(oldFileBytes, &auditData)
+
 			if err != nil {
-				logrus.Errorf("Error parsing file contents into AuditData: %v", err)
+				logrus.Errorf("Error parsing file contents into auditData: %v", err)
 				os.Exit(1)
 			}
 			startDashboardServer(c, *auditPath, *dashboardPort, *dashboardBasePath, &auditData)
