@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -32,7 +31,6 @@ import (
 	fwebhook "github.com/fairwindsops/polaris/pkg/webhook"
 	"github.com/sirupsen/logrus"
 	apitypes "k8s.io/apimachinery/pkg/types"
-	yaml2 "k8s.io/apimachinery/pkg/util/yaml"
 	_ "k8s.io/client-go/plugin/pkg/client/auth" // Required for other auth providers like GKE.
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -106,24 +104,7 @@ func main() {
 	if *webhook {
 		startWebhookServer(c, *disableWebhookConfigInstaller, *webhookPort)
 	} else if *dashboard {
-		if *loadAuditFile == "" {
-			startDashboardServer(c, *auditPath, *dashboardPort, *dashboardBasePath, nil)
-		} else {
-			auditData := validator.AuditData{}
-			oldFileBytes, err := ioutil.ReadFile(*loadAuditFile)
-			if err != nil {
-				logrus.Errorf("Unable to read contents of loaded file: %v", err)
-				os.Exit(1)
-			}
-			auditData, err = decode(oldFileBytes)
-			if err != nil {
-				logrus.Errorf("Error parsing file contents into auditData: %v", err)
-				os.Exit(1)
-			}
-			startDashboardServer(c, *auditPath, *dashboardPort, *dashboardBasePath, &auditData)
-
-		}
-
+		startDashboardServer(c, *auditPath, *loadAuditFile, *dashboardPort, *dashboardBasePath)
 	} else if *audit {
 		auditData := runAndReportAudit(c, *auditPath, *auditOutputFile, *auditOutputURL, *auditOutputFormat)
 
@@ -138,8 +119,12 @@ func main() {
 	}
 }
 
-func startDashboardServer(c conf.Configuration, auditPath string, port int, basePath string, auditData *validator.AuditData) {
-	router := dashboard.GetRouter(c, auditPath, port, basePath, auditData)
+func startDashboardServer(c conf.Configuration, auditPath string, loadAuditFile string, port int, basePath string) {
+	var auditData validator.AuditData
+	if loadAuditFile != "" {
+		auditData = validator.ReadAuditFromFile(loadAuditFile)
+	}
+	router := dashboard.GetRouter(c, auditPath, port, basePath, &auditData)
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
@@ -304,18 +289,4 @@ func runAndReportAudit(c conf.Configuration, auditPath string, outputFile string
 		}
 	}
 	return auditData
-}
-func decode(oldFileBytes []byte) (validator.AuditData, error) {
-	// Decodes either a YAML or JSON file and returns AuditData.
-	reader := bytes.NewReader(oldFileBytes)
-	conf := validator.AuditData{}
-	d := yaml2.NewYAMLOrJSONDecoder(reader, 4096)
-	for {
-		if err := d.Decode(&conf); err != nil {
-			if err == io.EOF {
-				return conf, nil
-			}
-			return conf, fmt.Errorf("Decoding config failed: %v", err)
-		}
-	}
 }

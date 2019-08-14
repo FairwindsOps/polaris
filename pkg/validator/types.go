@@ -15,11 +15,18 @@
 package validator
 
 import (
+	"bytes"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/fairwindsops/polaris/pkg/config"
 	conf "github.com/fairwindsops/polaris/pkg/config"
 	corev1 "k8s.io/api/core/v1"
+	apiMachineryYAML "k8s.io/apimachinery/pkg/util/yaml"
 )
 
 // MessageType represents the type of Message
@@ -196,4 +203,35 @@ type ResultMessage struct {
 	Message  string
 	Type     MessageType
 	Category string
+}
+
+// ReadAuditFromFile reads the data from a past audit stored in a JSON or YAML file.
+func ReadAuditFromFile(fileName string) AuditData {
+	auditData := AuditData{}
+	oldFileBytes, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		logrus.Errorf("Unable to read contents of loaded file: %v", err)
+		os.Exit(1)
+	}
+	auditData, err = ParseAudit(oldFileBytes)
+	if err != nil {
+		logrus.Errorf("Error parsing file contents into auditData: %v", err)
+		os.Exit(1)
+	}
+	return auditData
+}
+
+// ParseAudit decodes either a YAML or JSON file and returns AuditData.
+func ParseAudit(oldFileBytes []byte) (AuditData, error) {
+	reader := bytes.NewReader(oldFileBytes)
+	conf := AuditData{}
+	d := apiMachineryYAML.NewYAMLOrJSONDecoder(reader, 4096)
+	for {
+		if err := d.Decode(&conf); err != nil {
+			if err == io.EOF {
+				return conf, nil
+			}
+			return conf, fmt.Errorf("Decoding config failed: %v", err)
+		}
+	}
 }
