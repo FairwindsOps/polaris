@@ -59,7 +59,7 @@ kubectl apply -f ./deploy/webhook.yaml &> /dev/null
 
 # wait for the webhook to come online
 check_webhook_is_ready
-
+sleep 30
 
 # Webhook started, setting all tests as passed initially.
 ALL_TESTS_PASSED=1
