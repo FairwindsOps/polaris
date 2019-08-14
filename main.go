@@ -59,6 +59,7 @@ func main() {
 	auditOutputURL := flag.String("output-url", "", "Destination URL to send audit results")
 	auditOutputFile := flag.String("output-file", "", "Destination file for audit results")
 	auditOutputFormat := flag.String("output-format", "json", "Output format for results - json, yaml, or score")
+	loadAuditFile := flag.String("load-audit-file", "", "Runs the dashboard with data saved from a past audit.")
 	displayName := flag.String("display-name", "", "An optional identifier for the audit")
 	configPath := flag.String("config", "", "Location of Polaris configuration file")
 	logLevel := flag.String("log-level", logrus.InfoLevel.String(), "Logrus log level")
@@ -103,7 +104,7 @@ func main() {
 	if *webhook {
 		startWebhookServer(c, *disableWebhookConfigInstaller, *webhookPort)
 	} else if *dashboard {
-		startDashboardServer(c, *auditPath, *dashboardPort, *dashboardBasePath)
+		startDashboardServer(c, *auditPath, *loadAuditFile, *dashboardPort, *dashboardBasePath)
 	} else if *audit {
 		auditData := runAndReportAudit(c, *auditPath, *auditOutputFile, *auditOutputURL, *auditOutputFormat)
 
@@ -118,8 +119,12 @@ func main() {
 	}
 }
 
-func startDashboardServer(c conf.Configuration, auditPath string, port int, basePath string) {
-	router := dashboard.GetRouter(c, auditPath, port, basePath)
+func startDashboardServer(c conf.Configuration, auditPath string, loadAuditFile string, port int, basePath string) {
+	var auditData validator.AuditData
+	if loadAuditFile != "" {
+		auditData = validator.ReadAuditFromFile(loadAuditFile)
+	}
+	router := dashboard.GetRouter(c, auditPath, port, basePath, &auditData)
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
