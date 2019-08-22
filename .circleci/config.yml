@@ -19,6 +19,7 @@ references:
     run:
       name: Install K8s
       command: |
+        sudo apt-get update
         echo "Installing git and jq"
         sudo apt-get install -yqq jq git
 
