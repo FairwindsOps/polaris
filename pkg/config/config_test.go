@@ -58,6 +58,15 @@ resources:
     warning:
       below: 300M
       above: 4G
+images:
+  tagNotSpecified: error
+  pullPolicyNotAlways: warning
+  whitelist:
+    error:
+      - gcr.io/*
+  blacklist:
+    warning:
+      - docker.io/*
 controllers_to_scan:
   - Deployments
   - StatefulSets
@@ -69,49 +78,70 @@ controllers_to_scan:
 
 var resourceConfJSON1 = `{
 	"resources": {
-		"cpuRequestRanges": {
-			"error": {
-				"below": "100m",
-				"above": 1
-			},
-			"warning": {
-				"below": "200m",
-				"above": "800m"
-			}
-		},
-		"memoryRequestRanges": {
-			"error": {
-				"below": "100M",
-				"above": "3G"
-			},
-			"warning": {
-				"below": "200M",
-				"above": "2G"
-			}
-		},
-		"cpuLimitRanges": {
-			"error": {
-				"below": "100m",
-				"above": 2
-			},
-			"warning": {
-				"below": "300m",
-				"above": "1800m"
-			}
-		},
-		"memoryLimitRanges": {
-			"error": {
-				"below": "200M",
-				"above": "6G"
-			},
-			"warning": {
-				"below": "300M",
-				"above": "4G"
-			}
-		}
+	   "cpuRequestRanges": {
+		  "error": {
+			 "below": "100m",
+			 "above": 1
+		  },
+		  "warning": {
+			 "below": "200m",
+			 "above": "800m"
+		  }
+	   },
+	   "memoryRequestRanges": {
+		  "error": {
+			 "below": "100M",
+			 "above": "3G"
+		  },
+		  "warning": {
+			 "below": "200M",
+			 "above": "2G"
+		  }
+	   },
+	   "cpuLimitRanges": {
+		  "error": {
+			 "below": "100m",
+			 "above": 2
+		  },
+		  "warning": {
+			 "below": "300m",
+			 "above": "1800m"
+		  }
+	   },
+	   "memoryLimitRanges": {
+		  "error": {
+			 "below": "200M",
+			 "above": "6G"
+		  },
+		  "warning": {
+			 "below": "300M",
+			 "above": "4G"
+		  }
+	   }
 	},
-	"controllers_to_scan": ["Deployments", "StatefulSets", "Jobs", "CronJobs", "DaemonSets", "ReplicationControllers"]
-}`
+	"images": {
+	   "tagNotSpecified": "error",
+	   "pullPolicyNotAlways": "warning",
+	   "whitelist": {
+		  "error": [
+			 "gcr.io/*"
+		  ]
+	   },
+	   "blacklist": {
+		  "warning": [
+			 "docker.io/*"
+		  ]
+	   }
+	},
+	"controllers_to_scan": [
+	   "Deployments",
+	   "StatefulSets",
+	   "Jobs",
+	   "CronJobs",
+	   "DaemonSets",
+	   "ReplicationControllers"
+	]
+ }`
 
 func TestParseError(t *testing.T) {
 	_, err := Parse([]byte(resourceConfInvalid1))
