@@ -50,7 +50,6 @@ references:
       name: Update Coverage
       command: |
         if [[ -z $CIRCLE_PR_NUMBER ]]; then
-          go test ./pkg/... -coverprofile=coverage.txt -covermode=count
           bash <(curl -s https://codecov.io/bash)
         else
           echo "Skipping coverage for forked PR"
@@ -127,6 +126,8 @@ jobs:
       - run: go get -u golang.org/x/lint/golint
       - run: go list ./... | grep -v vendor | xargs golint -set_exit_status
       - run: go list ./... | grep -v vendor | xargs go vet
+      - run: go test ./pkg/... -coverprofile=coverage.txt -covermode=count
+      - run: go run main.go --audit-path ./deploy --set-exit-code-below-score 100 --set-exit-code-on-error
       - *update_coverage
       - *test_binary_dashboard
 
