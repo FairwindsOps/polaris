@@ -71,34 +71,37 @@ func (rv *ResourceValidation) addMessage(message ResultMessage) {
 	}
 }
 
-func (rv *ResourceValidation) addFailure(message string, severity conf.Severity, category string) {
+func (rv *ResourceValidation) addFailure(message string, severity conf.Severity, category string, id string) {
 	if severity == conf.SeverityError {
-		rv.addError(message, category)
+		rv.addError(message, category, id)
 	} else if severity == conf.SeverityWarning {
-		rv.addWarning(message, category)
+		rv.addWarning(message, category, id)
 	} else {
 		logrus.Errorf("Invalid severity: %s", severity)
 	}
 }
 
-func (rv *ResourceValidation) addError(message string, category string) {
+func (rv *ResourceValidation) addError(message string, category string, id string) {
 	rv.Errors = append(rv.Errors, &ResultMessage{
+		ID:       id,
 		Message:  message,
 		Type:     MessageTypeError,
 		Category: category,
 	})
 }
 
-func (rv *ResourceValidation) addWarning(message string, category string) {
+func (rv *ResourceValidation) addWarning(message string, category string, id string) {
 	rv.Warnings = append(rv.Warnings, &ResultMessage{
+		ID:       id,
 		Message:  message,
 		Type:     MessageTypeWarning,
 		Category: category,
 	})
 }
 
-func (rv *ResourceValidation) addSuccess(message string, category string) {
+func (rv *ResourceValidation) addSuccess(message string, category string, id string) {
 	rv.Successes = append(rv.Successes, &ResultMessage{
+		ID:       id,
 		Message:  message,
 		Type:     MessageTypeSuccess,
 		Category: category,

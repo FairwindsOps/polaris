@@ -94,7 +94,7 @@ type Security struct {
 	HostIPCSet                 Severity             `json:"hostIPCSet"`
 	HostPIDSet                 Severity             `json:"hostPIDSet"`
 	RunAsRootAllowed           Severity             `json:"runAsRootAllowed"`
-	RunAsPrivileged            Severity             `json:"RunAsPrivileged"`
+	RunAsPrivileged            Severity             `json:"runAsPrivileged"`
 	NotReadOnlyRootFileSystem  Severity             `json:"notReadOnlyRootFileSystem"`
 	PrivilegeEscalationAllowed Severity             `json:"privilegeEscalationAllowed"`
 	Capabilities               SecurityCapabilities `json:"capabilities"`
