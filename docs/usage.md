@@ -20,19 +20,6 @@ Polaris validation checks fall into several different categories:
 # Installing
 There are several ways to install and use Polaris. Below outline ways to install using `go get`, `kubectl`, `helm` and `local binary`.
 
-## `go get`
-
-Polaris is written in Go and can easily be installed and updated by issuing the
-following command which will place the `polaris` binary in your `${GOPATH}/bin`
-directory.
-
-```
-$ go get -u github.com/fairwindsops/polaris
-```
-
-If your environment it setup to search `${GOPATH}/bin`, `polaris` will be
-immediately runnable from the commandline.
-
 ## Dashboard
 The dashboard can be installed on a cluster using kubectl or Helm. It can also be run locally,
 connecting to your cluster using the credentials stored in your `KUBECONFIG`.
@@ -51,6 +38,21 @@ kubectl port-forward --namespace polaris svc/polaris-dashboard 8080:80
 
 ### Local Binary
 You'll need a valid `KUBECONFIG` set up for the dashboard to connect to your cluster.
+
+#### Installing from Source
+
+Polaris is written in Go and can easily be installed and updated by issuing the
+following command which will place the `polaris` binary in your `${GOPATH}/bin`
+directory.
+
+```
+$ go get -u github.com/fairwindsops/polaris
+```
+
+If your environment it setup to search `${GOPATH}/bin`, `polaris` will be
+immediately runnable from the commandline.
+
+#### Binary Releases
 
 Binary releases can be dowloaded from the [releases page](https://github.com/fairwindsops/polaris/releases)
 or can be installed with [Homebrew](https://brew.sh/):
