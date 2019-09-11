@@ -22,14 +22,15 @@ There are several ways to install and use Polaris. Below outline ways to install
 
 ## `go get`
 
-`polaris` is a go program and can easily be installed by simply issuing the following command:
+Polaris is written in Go and can easily be installed and updated by issuing the
+following command which will place the `polaris` binary in your `${GOPATH}/bin`
+directory.
 
 ```
-$ go get github.com/fairwindsops/polaris
+$ go get -u github.com/fairwindsops/polaris
 ```
 
-Which will place the `poliars` binary in your `${GOPATH}/bin` directory.  If
-your environment it setup to search `${GOPATH}/bin`, `polaris` will be
+If your environment it setup to search `${GOPATH}/bin`, `polaris` will be
 immediately runnable from the commandline.
 
 ## Dashboard
