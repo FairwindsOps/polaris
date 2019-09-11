@@ -64,18 +64,20 @@ func (pv *PodValidation) validateSecurity(securityConf *conf.Security) {
 	category := messages.CategorySecurity
 
 	if securityConf.HostIPCSet.IsActionable() {
+		id := getIDFromField(*securityConf, "HostIPCSet")
 		if pv.Pod.HostIPC {
-			pv.addFailure(messages.HostIPCFailure, securityConf.HostIPCSet, category)
+			pv.addFailure(messages.HostIPCFailure, securityConf.HostIPCSet, category, id)
 		} else {
-			pv.addSuccess(messages.HostIPCSuccess, category)
+			pv.addSuccess(messages.HostIPCSuccess, category, id)
 		}
 	}
 
 	if securityConf.HostPIDSet.IsActionable() {
+		id := getIDFromField(*securityConf, "HostPIDSet")
 		if pv.Pod.HostPID {
-			pv.addFailure(messages.HostPIDFailure, securityConf.HostPIDSet, category)
+			pv.addFailure(messages.HostPIDFailure, securityConf.HostPIDSet, category, id)
 		} else {
-			pv.addSuccess(messages.HostPIDSuccess, category)
+			pv.addSuccess(messages.HostPIDSuccess, category, id)
 		}
 	}
 }
@@ -84,10 +86,11 @@ func (pv *PodValidation) validateNetworking(networkConf *conf.Networking) {
 	category := messages.CategoryNetworking
 
 	if networkConf.HostNetworkSet.IsActionable() {
+		id := getIDFromField(*networkConf, "HostNetworkSet")
 		if pv.Pod.HostNetwork {
-			pv.addFailure(messages.HostNetworkFailure, networkConf.HostNetworkSet, category)
+			pv.addFailure(messages.HostNetworkFailure, networkConf.HostNetworkSet, category, id)
 		} else {
-			pv.addSuccess(messages.HostNetworkSuccess, category)
+			pv.addSuccess(messages.HostNetworkSuccess, category, id)
 		}
 	}
 }
