@@ -18,7 +18,19 @@ Polaris validation checks fall into several different categories:
 - [Security](check-documentation/security.md)
 
 # Installing
-There are several ways to install and use Polaris. Below outline ways to install using `kubectl`, `helm` and `local binary`.
+There are several ways to install and use Polaris. Below outline ways to install using `go get`, `kubectl`, `helm` and `local binary`.
+
+## `go get`
+
+`polaris` is a go program and can easily be installed by simply issuing the following command:
+
+```
+$ go get github.com/fairwindsops/polaris
+```
+
+Which will place the `poliars` binary in your `${GOPATH}/bin` directory.  If
+your environment it setup to search `${GOPATH}/bin`, `polaris` will be
+immediately runnable from the commandline.
 
 ## Dashboard
 The dashboard can be installed on a cluster using kubectl or Helm. It can also be run locally,
