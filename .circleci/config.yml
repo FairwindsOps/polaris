@@ -66,6 +66,16 @@ references:
         curl -f http://localhost:3000/static/css/main.css > /dev/null
         curl -f http://localhost:3000/results.json > /dev/null
         curl -f http://localhost:3000/details/security > /dev/null
+  test_k8s: &test_k8s
+    run:
+      name: Test Kubernetes Deployments
+      command: |
+        if [[ -z $CIRCLE_PR_NUMBER ]]; then
+          ./test/webhook_test.sh
+          ./test/kube_dashboard_test.sh
+        else
+          echo "Skipping Kubernetes tests for forked PR"
+        fi
 
   # Release scripts
   install_goreleaser: &install_goreleaser
@@ -114,8 +124,7 @@ jobs:
     steps:
       - checkout
       - *install_k8s
-      - run: ./test/webhook_test.sh
-      - run: ./test/kube_dashboard_test.sh
+      - *test_k8s
 
   test:
     working_directory: /go/src/github.com/fairwindsops/polaris/
