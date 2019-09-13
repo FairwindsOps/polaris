@@ -120,11 +120,12 @@ func main() {
 }
 
 func startDashboardServer(c conf.Configuration, auditPath string, loadAuditFile string, port int, basePath string) {
-	var auditData validator.AuditData
+	var auditDataPtr *validator.AuditData
 	if loadAuditFile != "" {
-		auditData = validator.ReadAuditFromFile(loadAuditFile)
+		auditData := validator.ReadAuditFromFile(loadAuditFile)
+		auditDataPtr = &auditData
 	}
-	router := dashboard.GetRouter(c, auditPath, port, basePath, &auditData)
+	router := dashboard.GetRouter(c, auditPath, port, basePath, auditDataPtr)
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
