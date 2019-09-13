@@ -37,6 +37,13 @@ type Configuration struct {
 	Networking        Networking            `json:"networking"`
 	Security          Security              `json:"security"`
 	ControllersToScan []SupportedController `json:"controllers_to_scan"`
+	Exemptions        []Exemption           `json:"exemptions"`
+}
+
+// Exemption represents an exemption to normal rules
+type Exemption struct {
+	Rules           []string `json:"rules"`
+	ControllerNames []string `json:"controllerNames"`
 }
 
 // Resources contains config for resource requests and limits.

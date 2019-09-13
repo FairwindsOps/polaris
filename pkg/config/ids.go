@@ -1,10 +1,10 @@
-package validator
+package config
 
 import (
 	"reflect"
 )
 
-func getIDFromField(config interface{}, name string) string {
+func GetIDFromField(config interface{}, name string) string {
 	t := reflect.TypeOf(config)
 	field, ok := t.FieldByName(name)
 	if !ok {

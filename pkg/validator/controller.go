@@ -25,7 +25,7 @@ import (
 // ValidateController validates a single controller, returns a ControllerResult.
 func ValidateController(conf conf.Configuration, controller controller.Interface) ControllerResult {
 	pod := controller.GetPodSpec()
-	podResult := ValidatePod(conf, pod)
+	podResult := ValidatePod(conf, controller.GetName(), pod)
 	return ControllerResult{
 		Type:      controller.GetType().String(),
 		Name:      controller.GetName(),

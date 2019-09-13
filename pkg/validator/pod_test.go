@@ -68,7 +68,7 @@ func TestValidatePod(t *testing.T) {
 		{ID: "hostNetworkSet", Message: "Host network is not configured", Type: "success", Category: "Networking"},
 	}
 
-	actualPodResult := ValidatePod(c, &pod.Spec)
+	actualPodResult := ValidatePod(c, "", &pod.Spec)
 
 	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, &expectedSum, actualPodResult.Summary)
@@ -121,7 +121,7 @@ func TestInvalidIPCPod(t *testing.T) {
 		{ID: "hostNetworkSet", Message: "Host network is not configured", Type: "success", Category: "Networking"},
 	}
 
-	actualPodResult := ValidatePod(c, &pod.Spec)
+	actualPodResult := ValidatePod(c, "", &pod.Spec)
 
 	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, &expectedSum, actualPodResult.Summary)
@@ -177,8 +177,7 @@ func TestInvalidNeworkPod(t *testing.T) {
 		{ID: "hostPIDSet", Message: "Host PID is not configured", Type: "success", Category: "Security"},
 	}
 
-	actualPodResult := ValidatePod(c, &pod.Spec)
-
+	actualPodResult := ValidatePod(c, "", &pod.Spec)
 	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, &expectedSum, actualPodResult.Summary)
 	assert.EqualValues(t, expectedMessages, actualPodResult.Messages)
@@ -231,7 +230,65 @@ func TestInvalidPIDPod(t *testing.T) {
 		{ID: "hostNetworkSet", Message: "Host network is not configured", Type: "success", Category: "Networking"},
 	}
 
-	actualPodResult := ValidatePod(c, &pod.Spec)
+	actualPodResult := ValidatePod(c, "", &pod.Spec)
+
+	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
+	assert.EqualValues(t, &expectedSum, actualPodResult.Summary)
+	assert.EqualValues(t, expectedMessages, actualPodResult.Messages)
+}
+
+func TestExemption(t *testing.T) {
+	c := conf.Configuration{
+		Security: conf.Security{
+			HostIPCSet: conf.SeverityError,
+			HostPIDSet: conf.SeverityError,
+		},
+		Networking: conf.Networking{
+			HostNetworkSet: conf.SeverityWarning,
+			HostPortSet:    conf.SeverityError,
+		},
+		Exemptions: []conf.Exemption{
+			conf.Exemption{
+				Rules:           []string{"hostIPCSet"},
+				ControllerNames: []string{"foo"},
+			},
+		},
+	}
+
+	k8s := test.SetupTestAPI()
+	k8s = test.SetupAddControllers(k8s, "test")
+	pod := test.MockPod()
+	pod.Spec.HostIPC = true
+
+	expectedSum := ResultSummary{
+		Totals: CountSummary{
+			Successes: uint(7),
+			Warnings:  uint(0),
+			Errors:    uint(0),
+		},
+		ByCategory: make(map[string]*CountSummary),
+	}
+	expectedSum.ByCategory["Networking"] = &CountSummary{
+		Successes: uint(2),
+		Warnings:  uint(0),
+		Errors:    uint(0),
+	}
+	expectedSum.ByCategory["Resources"] = &CountSummary{
+		Successes: uint(4),
+		Warnings:  uint(0),
+		Errors:    uint(0),
+	}
+	expectedSum.ByCategory["Security"] = &CountSummary{
+		Successes: uint(1),
+		Warnings:  uint(0),
+		Errors:    uint(0),
+	}
+	expectedMessages := []*ResultMessage{
+		{ID: "hostPIDSet", Message: "Host PID is not configured", Type: "success", Category: "Security"},
+		{ID: "hostNetworkSet", Message: "Host network is not configured", Type: "success", Category: "Networking"},
+	}
+
+	actualPodResult := ValidatePod(c, "foo", &pod.Spec)
 
 	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, &expectedSum, actualPodResult.Summary)
