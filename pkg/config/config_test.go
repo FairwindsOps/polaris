@@ -220,4 +220,7 @@ func testParsedConfig(t *testing.T, config *Configuration) {
 
 	controllersToScan := config.ControllersToScan
 	assert.ElementsMatch(t, []SupportedController{Deployments, StatefulSets, Jobs, CronJobs, DaemonSets, ReplicationControllers}, controllersToScan)
+
+	images := config.Images
+	assert.Equal(t, SeverityWarning, images.PullPolicyNotAlways, images.PullPolicyNotAlways, images.Whitelist, images.Blacklist) // tests that we loaded SeverityWarning from images.PullPolicyNotAlways
 }
