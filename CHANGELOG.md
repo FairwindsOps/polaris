@@ -1,5 +1,9 @@
 # x.x.x (next release)
 
+# 0.5.0
+* Added `--load-audit-file` flag to run the dashboard from an existing audit
+* Added an `ID` field to each check in the output
+
 # 0.4.0
 * Added additional Pod Controllers to scan PodSpec (`jobs`, `cronjobs`, `daemonsets`, `replicationcontrollers`)
 
