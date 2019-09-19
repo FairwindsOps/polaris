@@ -7,38 +7,6 @@ import (
 	"github.com/fairwindsops/polaris/pkg/kube"
 )
 
-const (
-	// PolarisOutputVersion is the version of the current output structure
-	PolarisOutputVersion = "0.2"
-)
-
-// ClusterSummary contains Polaris results as well as some high-level stats
-type ClusterSummary struct {
-	Results                ResultSummary
-	Version                string
-	Nodes                  int
-	Pods                   int
-	Namespaces             int
-	Deployments            int
-	StatefulSets           int
-	DaemonSets             int
-	Jobs                   int
-	CronJobs               int
-	ReplicationControllers int
-	Score                  uint
-}
-
-// AuditData contains all the data from a full Polaris audit
-type AuditData struct {
-	PolarisOutputVersion string
-	AuditTime            string
-	SourceType           string
-	SourceName           string
-	DisplayName          string
-	ClusterSummary       ClusterSummary
-	NamespacedResults    NamespacedResults
-}
-
 // RunAudit runs a full Polaris audit and returns an AuditData object
 func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider) (AuditData, error) {
 	nsResults := NamespacedResults{}

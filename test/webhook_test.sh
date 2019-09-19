@@ -38,7 +38,7 @@ function check_timeout() {
 # Clean up all your stuff
 function clean_up() {
     # Clean up files you've installed (helps with local testing)
-    for filename in test/*yaml; do
+    for filename in test/webhook_cases/*.yaml; do
         # || true to avoid issues when we cannot delete
         kubectl delete -f $filename &>/dev/null ||true
     done
@@ -65,7 +65,7 @@ sleep 30
 ALL_TESTS_PASSED=1
 
 # Run tests against correctly configured objects
-for filename in test/passing_test.*.yaml; do
+for filename in test/webhook_cases/passing_test.*.yaml; do
     echo $filename
     if ! kubectl apply -f $filename &> /dev/null; then
         ALL_TESTS_PASSED=0
@@ -74,7 +74,7 @@ for filename in test/passing_test.*.yaml; do
 done
 
 # Run tests against incorrectly configured objects
-for filename in test/failing_test.*.yaml; do
+for filename in test/webhook_cases/failing_test.*.yaml; do
     echo $filename
     if kubectl apply -f $filename &> /dev/null; then
         ALL_TESTS_PASSED=0
