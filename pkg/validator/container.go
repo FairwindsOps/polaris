@@ -266,11 +266,10 @@ func (cv *ContainerValidation) validateSecurity(securityConf *conf.Security) {
 		}
 	}
 
-	id := getIDFromField(*securityConf, "Capabilities")
 	hasSecurityError :=
-		!cv.validateCapabilities(id, securityConf.Capabilities.Error, conf.SeverityError)
+		!cv.validateCapabilities(securityConf.Capabilities.Error, conf.SeverityError)
 	hasSecurityWarning :=
-		!cv.validateCapabilities(id, securityConf.Capabilities.Warning, conf.SeverityWarning)
+		!cv.validateCapabilities(securityConf.Capabilities.Warning, conf.SeverityWarning)
 	hasSecurityCheck := func(confLists conf.SecurityCapabilityLists) bool {
 		return len(confLists.IfAnyAdded) > 0 ||
 			len(confLists.IfAnyAddedBeyond) > 0 ||
@@ -279,11 +278,13 @@ func (cv *ContainerValidation) validateSecurity(securityConf *conf.Security) {
 	if !hasSecurityError && !hasSecurityWarning &&
 		(hasSecurityCheck(securityConf.Capabilities.Error) ||
 			hasSecurityCheck(securityConf.Capabilities.Warning)) {
+		id := getIDFromField(*securityConf, "Capabilities")
 		cv.addSuccess(messages.SecurityCapabilitiesSuccess, category, id)
 	}
 }
 
-func (cv *ContainerValidation) validateCapabilities(id string, confLists conf.SecurityCapabilityLists, severity conf.Severity) bool {
+// TODO: consolidate capabilities checks, so that the IDs for failures match up with IDs for success
+func (cv *ContainerValidation) validateCapabilities(confLists conf.SecurityCapabilityLists, severity conf.Severity) bool {
 	category := messages.CategorySecurity
 	capabilities := &corev1.Capabilities{}
 	if cv.Container.SecurityContext != nil && cv.Container.SecurityContext.Capabilities != nil {
@@ -293,6 +294,7 @@ func (cv *ContainerValidation) validateCapabilities(id string, confLists conf.Se
 	everythingOK := true
 	if len(confLists.IfAnyAdded) > 0 {
 		intersectAdds := capIntersection(capabilities.Add, confLists.IfAnyAdded)
+		id := "capabilitiesAdded"
 		if len(intersectAdds) > 0 {
 			capsString := commaSeparatedCapabilities(intersectAdds)
 			cv.addFailure(fmt.Sprintf(messages.SecurityCapabilitiesAddedFailure, capsString), severity, category, id)
@@ -305,6 +307,7 @@ func (cv *ContainerValidation) validateCapabilities(id string, confLists conf.Se
 
 	if len(confLists.IfAnyAddedBeyond) > 0 {
 		differentAdds := capDifference(capabilities.Add, confLists.IfAnyAddedBeyond)
+		id := "capabilitiesAddedBeyond"
 		if len(differentAdds) > 0 {
 			capsString := commaSeparatedCapabilities(differentAdds)
 			cv.addFailure(fmt.Sprintf(messages.SecurityCapabilitiesAddedFailure, capsString), severity, category, id)
@@ -317,6 +320,7 @@ func (cv *ContainerValidation) validateCapabilities(id string, confLists conf.Se
 
 	if len(confLists.IfAnyNotDropped) > 0 {
 		missingDrops := capDifference(confLists.IfAnyNotDropped, capabilities.Drop)
+		id := "capabilitiesNotDropped"
 		if len(missingDrops) > 0 && !capContains(capabilities.Drop, "ALL") {
 			capsString := commaSeparatedCapabilities(missingDrops)
 			cv.addFailure(fmt.Sprintf(messages.SecurityCapabilitiesNotDroppedFailure, capsString), severity, category, id)
