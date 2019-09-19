@@ -222,7 +222,7 @@ func testParsedConfig(t *testing.T, config *Configuration) {
 	assert.ElementsMatch(t, []SupportedController{Deployments, StatefulSets, Jobs, CronJobs, DaemonSets, ReplicationControllers}, controllersToScan)
 
 	images := config.Images
-	assert.Equal(t, SeverityWarning, images.PullPolicyNotAlways) // tests that we loaded SeverityWarning from images.PullPolicyNotAlways
+	assert.Equal(t, SeverityWarning, images.PullPolicyNotAlways) 
 	assert.Equal(t, images.TagNotSpecified, SeverityError)
 	assert.Equal(t, images.Whitelist.Error, []string{"gcr.io/*"})
 	assert.Equal(t, images.Whitelist.Warning, []string(nil))
