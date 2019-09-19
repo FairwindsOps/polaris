@@ -50,7 +50,6 @@ references:
       name: Update Coverage
       command: |
         if [[ -z $CIRCLE_PR_NUMBER ]]; then
-          go test ./pkg/... -coverprofile=coverage.txt -covermode=count
           bash <(curl -s https://codecov.io/bash)
         else
           echo "Skipping coverage for forked PR"
@@ -67,6 +66,16 @@ references:
         curl -f http://localhost:3000/static/css/main.css > /dev/null
         curl -f http://localhost:3000/results.json > /dev/null
         curl -f http://localhost:3000/details/security > /dev/null
+  test_k8s: &test_k8s
+    run:
+      name: Test Kubernetes Deployments
+      command: |
+        if [[ -z $CIRCLE_PR_NUMBER ]]; then
+          ./test/webhook_test.sh
+          ./test/kube_dashboard_test.sh
+        else
+          echo "Skipping Kubernetes tests for forked PR"
+        fi
 
   # Release scripts
   install_goreleaser: &install_goreleaser
@@ -115,8 +124,7 @@ jobs:
     steps:
       - checkout
       - *install_k8s
-      - run: ./test/webhook_test.sh
-      - run: ./test/kube_dashboard_test.sh
+      - *test_k8s
 
   test:
     working_directory: /go/src/github.com/fairwindsops/polaris/
@@ -127,6 +135,8 @@ jobs:
       - run: go get -u golang.org/x/lint/golint
       - run: go list ./... | grep -v vendor | xargs golint -set_exit_status
       - run: go list ./... | grep -v vendor | xargs go vet
+      - run: go test ./pkg/... -coverprofile=coverage.txt -covermode=count
+      - run: go run main.go --audit-path ./deploy --set-exit-code-below-score 100 --set-exit-code-on-error
       - *update_coverage
       - *test_binary_dashboard
 

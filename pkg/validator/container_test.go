@@ -86,11 +86,13 @@ func TestValidateResourcesEmptyContainer(t *testing.T) {
 
 	expectedWarnings := []*ResultMessage{
 		{
+			ID:       "cpuRequestsMissing",
 			Type:     "warning",
 			Message:  "CPU requests should be set",
 			Category: "Resources",
 		},
 		{
+			ID:       "memoryRequestsMissing",
 			Type:     "warning",
 			Message:  "Memory requests should be set",
 			Category: "Resources",
@@ -99,11 +101,13 @@ func TestValidateResourcesEmptyContainer(t *testing.T) {
 
 	expectedErrors := []*ResultMessage{
 		{
+			ID:       "cpuLimitsMissing",
 			Type:     "error",
 			Message:  "CPU limits should be set",
 			Category: "Resources",
 		},
 		{
+			ID:       "memoryLimitsMissing",
 			Type:     "error",
 			Message:  "Memory limits should be set",
 			Category: "Resources",
@@ -134,11 +138,13 @@ func TestValidateResourcesPartiallyValid(t *testing.T) {
 
 	expectedWarnings := []*ResultMessage{
 		{
+			ID:       "cpuRequestRanges",
 			Type:     "warning",
 			Message:  "CPU requests should be higher than 200m",
 			Category: "Resources",
 		},
 		{
+			ID:       "cpuLimitRanges",
 			Type:     "warning",
 			Message:  "CPU limits should be higher than 300m",
 			Category: "Resources",
@@ -147,11 +153,13 @@ func TestValidateResourcesPartiallyValid(t *testing.T) {
 
 	expectedErrors := []*ResultMessage{
 		{
+			ID:       "memoryRequestRanges",
 			Type:     "error",
 			Message:  "Memory requests should be higher than 100M",
 			Category: "Resources",
 		},
 		{
+			ID:       "memoryLimitRanges",
 			Type:     "error",
 			Message:  "Memory limits should be higher than 200M",
 			Category: "Resources",
@@ -261,8 +269,8 @@ func TestValidateHealthChecks(t *testing.T) {
 		ResourceValidation: &ResourceValidation{},
 	}
 
-	l := &ResultMessage{Type: "warning", Message: "Liveness probe should be configured", Category: "Health Checks"}
-	r := &ResultMessage{Type: "error", Message: "Readiness probe should be configured", Category: "Health Checks"}
+	l := &ResultMessage{ID: "livenessProbeMissing", Type: "warning", Message: "Liveness probe should be configured", Category: "Health Checks"}
+	r := &ResultMessage{ID: "readinessProbeMissing", Type: "error", Message: "Readiness probe should be configured", Category: "Health Checks"}
 	f1 := []*ResultMessage{}
 	f2 := []*ResultMessage{r}
 	w1 := []*ResultMessage{l}
@@ -342,6 +350,7 @@ func TestValidateImage(t *testing.T) {
 			image: standardConf,
 			cv:    emptyCV,
 			expected: []*ResultMessage{{
+				ID:       "tagNotSpecified",
 				Message:  "Image tag should be specified",
 				Type:     "error",
 				Category: "Images",
@@ -352,6 +361,7 @@ func TestValidateImage(t *testing.T) {
 			image: standardConf,
 			cv:    badCV,
 			expected: []*ResultMessage{{
+				ID:       "tagNotSpecified",
 				Message:  "Image tag should be specified",
 				Type:     "error",
 				Category: "Images",
@@ -362,6 +372,7 @@ func TestValidateImage(t *testing.T) {
 			image: standardConf,
 			cv:    lessBadCV,
 			expected: []*ResultMessage{{
+				ID:       "tagNotSpecified",
 				Message:  "Image tag should be specified",
 				Type:     "error",
 				Category: "Images",
@@ -372,10 +383,12 @@ func TestValidateImage(t *testing.T) {
 			image: strongConf,
 			cv:    badCV,
 			expected: []*ResultMessage{{
+				ID:       "pullPolicyNotAlways",
 				Message:  "Image pull policy should be \"Always\"",
 				Type:     "error",
 				Category: "Images",
 			}, {
+				ID:       "tagNotSpecified",
 				Message:  "Image tag should be specified",
 				Type:     "error",
 				Category: "Images",
@@ -450,6 +463,7 @@ func TestValidateNetworking(t *testing.T) {
 			networkConf: standardConf,
 			cv:          emptyCV,
 			expectedMessages: []*ResultMessage{{
+				ID:       "hostPortSet",
 				Message:  "Host port is not configured",
 				Type:     "success",
 				Category: "Networking",
@@ -460,6 +474,7 @@ func TestValidateNetworking(t *testing.T) {
 			networkConf: standardConf,
 			cv:          emptyCV,
 			expectedMessages: []*ResultMessage{{
+				ID:       "hostPortSet",
 				Message:  "Host port is not configured",
 				Type:     "success",
 				Category: "Networking",
@@ -476,6 +491,7 @@ func TestValidateNetworking(t *testing.T) {
 			networkConf: standardConf,
 			cv:          badCV,
 			expectedMessages: []*ResultMessage{{
+				ID:       "hostPortSet",
 				Message:  "Host port should not be configured",
 				Type:     "warning",
 				Category: "Networking",
@@ -486,6 +502,7 @@ func TestValidateNetworking(t *testing.T) {
 			networkConf: standardConf,
 			cv:          goodCV,
 			expectedMessages: []*ResultMessage{{
+				ID:       "hostPortSet",
 				Message:  "Host port is not configured",
 				Type:     "success",
 				Category: "Networking",
@@ -496,6 +513,7 @@ func TestValidateNetworking(t *testing.T) {
 			networkConf: strongConf,
 			cv:          badCV,
 			expectedMessages: []*ResultMessage{{
+				ID:       "hostPortSet",
 				Message:  "Host port should not be configured",
 				Type:     "error",
 				Category: "Networking",
@@ -682,22 +700,27 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: standardConf,
 			cv:           emptyCV,
 			expectedMessages: []*ResultMessage{{
+				ID:       "runAsRootAllowed",
 				Message:  "Should not be allowed to run as root",
 				Type:     "warning",
 				Category: "Security",
 			}, {
+				ID:       "notReadOnlyRootFileSystem",
 				Message:  "Filesystem should be read only",
 				Type:     "warning",
 				Category: "Security",
 			}, {
+				ID:       "runAsPrivileged",
 				Message:  "Not running as privileged",
 				Type:     "success",
 				Category: "Security",
 			}, {
+				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation not allowed",
 				Type:     "success",
 				Category: "Security",
 			}, {
+				ID:       "capabilities",
 				Message:  "Security capabilities are within the configured limits",
 				Type:     "success",
 				Category: "Security",
@@ -708,26 +731,32 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: standardConf,
 			cv:           badCV,
 			expectedMessages: []*ResultMessage{{
+				ID:       "capabilities",
 				Message:  "The following security capabilities should not be added: SYS_ADMIN, NET_ADMIN",
 				Type:     "error",
 				Category: "Security",
 			}, {
+				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation should not be allowed",
 				Type:     "error",
 				Category: "Security",
 			}, {
+				ID:       "runAsPrivileged",
 				Message:  "Should not be running as privileged",
 				Type:     "error",
 				Category: "Security",
 			}, {
+				ID:       "capabilities",
 				Message:  "The following security capabilities should not be added: AUDIT_CONTROL, SYS_ADMIN, NET_ADMIN",
 				Type:     "warning",
 				Category: "Security",
 			}, {
+				ID:       "runAsRootAllowed",
 				Message:  "Should not be allowed to run as root",
 				Type:     "warning",
 				Category: "Security",
 			}, {
+				ID:       "notReadOnlyRootFileSystem",
 				Message:  "Filesystem should be read only",
 				Type:     "warning",
 				Category: "Security",
@@ -738,26 +767,32 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: standardConf,
 			cv:           badCVWithGoodPodSpec,
 			expectedMessages: []*ResultMessage{{
+				ID:       "capabilities",
 				Message:  "The following security capabilities should not be added: SYS_ADMIN, NET_ADMIN",
 				Type:     "error",
 				Category: "Security",
 			}, {
+				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation should not be allowed",
 				Type:     "error",
 				Category: "Security",
 			}, {
+				ID:       "runAsPrivileged",
 				Message:  "Should not be running as privileged",
 				Type:     "error",
 				Category: "Security",
 			}, {
+				ID:       "capabilities",
 				Message:  "The following security capabilities should not be added: AUDIT_CONTROL, SYS_ADMIN, NET_ADMIN",
 				Type:     "warning",
 				Category: "Security",
 			}, {
+				ID:       "runAsRootAllowed",
 				Message:  "Should not be allowed to run as root",
 				Type:     "warning",
 				Category: "Security",
 			}, {
+				ID:       "notReadOnlyRootFileSystem",
 				Message:  "Filesystem should be read only",
 				Type:     "warning",
 				Category: "Security",
@@ -768,26 +803,32 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: standardConf,
 			cv:           badCVWithBadPodSpec,
 			expectedMessages: []*ResultMessage{{
+				ID:       "capabilities",
 				Message:  "The following security capabilities should not be added: SYS_ADMIN, NET_ADMIN",
 				Type:     "error",
 				Category: "Security",
 			}, {
+				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation should not be allowed",
 				Type:     "error",
 				Category: "Security",
 			}, {
+				ID:       "runAsPrivileged",
 				Message:  "Should not be running as privileged",
 				Type:     "error",
 				Category: "Security",
 			}, {
+				ID:       "capabilities",
 				Message:  "The following security capabilities should not be added: AUDIT_CONTROL, SYS_ADMIN, NET_ADMIN",
 				Type:     "warning",
 				Category: "Security",
 			}, {
+				ID:       "runAsRootAllowed",
 				Message:  "Should not be allowed to run as root",
 				Type:     "warning",
 				Category: "Security",
 			}, {
+				ID:       "notReadOnlyRootFileSystem",
 				Message:  "Filesystem should be read only",
 				Type:     "warning",
 				Category: "Security",
@@ -798,22 +839,27 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: standardConf,
 			cv:           goodCV,
 			expectedMessages: []*ResultMessage{{
+				ID:       "runAsRootAllowed",
 				Message:  "Is not allowed to run as root",
 				Type:     "success",
 				Category: "Security",
 			}, {
+				ID:       "notReadOnlyRootFileSystem",
 				Message:  "Filesystem is read only",
 				Type:     "success",
 				Category: "Security",
 			}, {
+				ID:       "runAsPrivileged",
 				Message:  "Not running as privileged",
 				Type:     "success",
 				Category: "Security",
 			}, {
+				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation not allowed",
 				Type:     "success",
 				Category: "Security",
 			}, {
+				ID:       "capabilities",
 				Message:  "Security capabilities are within the configured limits",
 				Type:     "success",
 				Category: "Security",
@@ -824,22 +870,27 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: strongConf,
 			cv:           goodCV,
 			expectedMessages: []*ResultMessage{{
+				ID:       "capabilities",
 				Message:  "The following security capabilities should be dropped: DAC_OVERRIDE, SYS_CHROOT",
 				Type:     "error",
 				Category: "Security",
 			}, {
+				ID:       "runAsRootAllowed",
 				Message:  "Is not allowed to run as root",
 				Type:     "success",
 				Category: "Security",
 			}, {
+				ID:       "notReadOnlyRootFileSystem",
 				Message:  "Filesystem is read only",
 				Type:     "success",
 				Category: "Security",
 			}, {
+				ID:       "runAsPrivileged",
 				Message:  "Not running as privileged",
 				Type:     "success",
 				Category: "Security",
 			}, {
+				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation not allowed",
 				Type:     "success",
 				Category: "Security",
@@ -850,22 +901,27 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: strongConf,
 			cv:           strongCV,
 			expectedMessages: []*ResultMessage{{
+				ID:       "runAsRootAllowed",
 				Message:  "Is not allowed to run as root",
 				Type:     "success",
 				Category: "Security",
 			}, {
+				ID:       "notReadOnlyRootFileSystem",
 				Message:  "Filesystem is read only",
 				Type:     "success",
 				Category: "Security",
 			}, {
+				ID:       "runAsPrivileged",
 				Message:  "Not running as privileged",
 				Type:     "success",
 				Category: "Security",
 			}, {
+				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation not allowed",
 				Type:     "success",
 				Category: "Security",
 			}, {
+				ID:       "capabilities",
 				Message:  "Security capabilities are within the configured limits",
 				Type:     "success",
 				Category: "Security",
@@ -876,22 +932,27 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: strongConf,
 			cv:           strongCVWithPodSpecSecurityContext,
 			expectedMessages: []*ResultMessage{{
+				ID:       "runAsRootAllowed",
 				Message:  "Is not allowed to run as root",
 				Type:     "success",
 				Category: "Security",
 			}, {
+				ID:       "notReadOnlyRootFileSystem",
 				Message:  "Filesystem is read only",
 				Type:     "success",
 				Category: "Security",
 			}, {
+				ID:       "runAsPrivileged",
 				Message:  "Not running as privileged",
 				Type:     "success",
 				Category: "Security",
 			}, {
+				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation not allowed",
 				Type:     "success",
 				Category: "Security",
 			}, {
+				ID:       "capabilities",
 				Message:  "Security capabilities are within the configured limits",
 				Type:     "success",
 				Category: "Security",
@@ -902,22 +963,27 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: strongConf,
 			cv:           strongCVWithBadPodSpecSecurityContext,
 			expectedMessages: []*ResultMessage{{
+				ID:       "runAsRootAllowed",
 				Message:  "Is not allowed to run as root",
 				Type:     "success",
 				Category: "Security",
 			}, {
+				ID:       "notReadOnlyRootFileSystem",
 				Message:  "Filesystem is read only",
 				Type:     "success",
 				Category: "Security",
 			}, {
+				ID:       "runAsPrivileged",
 				Message:  "Not running as privileged",
 				Type:     "success",
 				Category: "Security",
 			}, {
+				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation not allowed",
 				Type:     "success",
 				Category: "Security",
 			}, {
+				ID:       "capabilities",
 				Message:  "Security capabilities are within the configured limits",
 				Type:     "success",
 				Category: "Security",

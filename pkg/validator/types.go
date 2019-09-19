@@ -29,6 +29,38 @@ import (
 	apiMachineryYAML "k8s.io/apimachinery/pkg/util/yaml"
 )
 
+const (
+	// PolarisOutputVersion is the version of the current output structure
+	PolarisOutputVersion = "0.3"
+)
+
+// AuditData contains all the data from a full Polaris audit
+type AuditData struct {
+	PolarisOutputVersion string
+	AuditTime            string
+	SourceType           string
+	SourceName           string
+	DisplayName          string
+	ClusterSummary       ClusterSummary
+	NamespacedResults    NamespacedResults
+}
+
+// ClusterSummary contains Polaris results as well as some high-level stats
+type ClusterSummary struct {
+	Results                ResultSummary
+	Version                string
+	Nodes                  int
+	Pods                   int
+	Namespaces             int
+	Deployments            int
+	StatefulSets           int
+	DaemonSets             int
+	Jobs                   int
+	CronJobs               int
+	ReplicationControllers int
+	Score                  uint
+}
+
 // MessageType represents the type of Message
 type MessageType string
 
@@ -200,6 +232,7 @@ type PodResult struct {
 
 // ResultMessage contains a message and a type indicator (success, warning, or error).
 type ResultMessage struct {
+	ID       string
 	Message  string
 	Type     MessageType
 	Category string
