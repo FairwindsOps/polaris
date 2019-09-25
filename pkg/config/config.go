@@ -77,6 +77,12 @@ type Images struct {
 	Blacklist           ErrorWarningLists `json:"blacklist"`
 }
 
+// Registry contains a whitelist of registries that are allowed and a blacklist of registries that cannot be used.
+type Registry struct {
+	Whitelist []string `json:"quay.io/fairwinds"`
+	Blacklist []string `json:"docker.io"`
+}
+
 // ErrorWarningLists provides lists of patterns to match or avoid in image tags.
 type ErrorWarningLists struct {
 	Error   []string `json:"error"`

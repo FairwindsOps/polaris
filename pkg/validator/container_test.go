@@ -89,7 +89,10 @@ func TestValidateContainer(t *testing.T) {
 		Container: &container,
 	}
 
-	assert.Equal(t, cv.Container.Image, "docker.io")
+	expected := conf.Registry{}
+
+	assert.Equal(t, cv.Container.Image, "docker.io/lkjsdflkj/imagehere")
+	assert.Len(t, expected.Blacklist, 0)
 }
 
 func TestValidateResourcesEmptyContainer(t *testing.T) {
