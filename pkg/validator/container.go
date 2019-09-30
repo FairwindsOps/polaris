@@ -185,14 +185,14 @@ func (cv *ContainerValidation) validateImage(imageConf *conf.Images) {
 		}
 	}
 
-	// create a variable named imageLists that is list whitelist errors and warnings
-	imageLists := [][]string{imageConf.Whitelist.Error, imageConf.Whitelist.Warning}
-	// a boolean
+	// Check the container image against the user-defined image registry whitelist and blacklist.
+	imageLists := [][]string{imageConf.Whitelist.Error, imageConf.Whitelist.Warning, imageConf.Blacklist.Error, imageConf.Blacklist.Warning}
 	hasWhitelistCheck := false
-	// a boolean
 	hasWhitelistFailure := false
-	// a string that acts as an ID?
 	whitelistCheckID := "imageWhitelist"
+	hasBlacklistCheck := false
+	hasBlacklistFailure := false
+	blacklistCheckID := "imageBlacklist"
 
 	for _, imageList := range imageLists {
 		var severity config.Severity
@@ -205,13 +205,32 @@ func (cv *ContainerValidation) validateImage(imageConf *conf.Images) {
 			hasWhitelistCheck = true
 			if !regexp.MustCompile(imagePattern).MatchString(cv.Container.Image) {
 				hasWhitelistFailure = true
-				cv.addFailure(messages.RegistryFailure, severity, category, whitelistCheckID)
+				cv.addFailure(messages.ImageRegistryFailure, severity, category, whitelistCheckID)
 			}
 		}
 
 	}
-	if hasWhitelistCheck && hasWhitelistFailure == false {
-		cv.addSuccess(messages.RegistrySuccess, category, whitelistCheckID)
+	if hasBlacklistCheck && hasBlacklistFailure == false {
+		cv.addSuccess(messages.ImageRegistrySuccess, category, blacklistCheckID)
+	}
+	for _, imageList := range imageLists {
+		var severity config.Severity
+		if &imageList == &imageConf.Blacklist.Error {
+			severity = config.SeverityError
+		} else {
+			severity = config.SeverityWarning
+		}
+		for _, imagePattern := range imageList {
+			hasBlacklistCheck = true
+			if !regexp.MustCompile(imagePattern).MatchString(cv.Container.Image) {
+				hasWhitelistFailure = true
+				cv.addFailure(messages.ImageRegistryFailure, severity, category, blacklistCheckID)
+			}
+		}
+
+	}
+	if hasBlacklistCheck && hasBlacklistFailure == false {
+		cv.addSuccess(messages.ImageRegistrySuccess, category, blacklistCheckID)
 	}
 }
 

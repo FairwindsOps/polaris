@@ -6,11 +6,14 @@ key | default | description
 ----|---------|------------
 `images.tagNotSpecified` | `error` | Fails when an image tag is either not specified or `latest`.
 `images.pullPolicyNotAlways` | `ignore` | Fails when an image pull policy is not `always`.
+`images.whitelist` | `error` | If the container image does not match the pattern in the whitelist, it will fail with an error.
+`images.blacklist` | `warning` | If the container image matches a pattern in the black list, it will show a warning. 
 
 ## Background
-
+### tagNotSpecified 
 Docker's `latest` tag is applied by default to images where a tag hasn't been specified. Not specifying a specific version of an image can lead to a wide variety of problems. The underlying image could include unexpected breaking changes that break your application whenever the latest image is pulled. Reusing the same tag for multiple versions of an image can lead to different nodes in the same cluster having different versions of an image, even if the tag is identical.
 
+### pullPolicyNotAlways
 Related to that, relying on cached versions of a Docker image can become a security vulnerability. By default, an image will be pulled if it isn't already cached on the node attempting to run it. This can result in variations in images that are running per node, or potentially provide a way to gain access to an image without having direct access to the ImagePullSecret. With that in mind, it's often better to ensure the a pod has `pullPolicy: Always` specified, so images are always pulled directly from their source. This is not a check enabled by default with Polaris as organizations may not wish to add the overhead involved with pulling images for each pod.
 
 ## Further Reading

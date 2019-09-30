@@ -79,22 +79,6 @@ func TestValidateResourcesEmptyConfig(t *testing.T) {
 	assert.Len(t, cv.Errors, 0)
 }
 
-//move this test to a more sensible location once it works
-func TestValidateContainer(t *testing.T) {
-	container := corev1.Container{
-		Image: "docker.io/lkjsdflkj/imagehere",
-	}
-
-	cv := ContainerValidation{
-		Container: &container,
-	}
-
-	expected := conf.Registry{}
-
-	assert.Equal(t, cv.Container.Image, "docker.io/lkjsdflkj/imagehere")
-	assert.Len(t, expected.Blacklist, 0)
-}
-
 func TestValidateResourcesEmptyContainer(t *testing.T) {
 	container := corev1.Container{
 		Name: "Empty",

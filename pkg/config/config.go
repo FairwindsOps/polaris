@@ -71,10 +71,10 @@ type HealthChecks struct {
 
 // Images contains the config for images.
 type Images struct {
-	TagNotSpecified     Severity `json:"tagNotSpecified"`
-	PullPolicyNotAlways Severity `json:"pullPolicyNotAlways"`
-	Whitelist           Severity `json:"whitelist"`
-	Blacklist           Severity `json:"blacklist"`
+	TagNotSpecified     Severity          `json:"tagNotSpecified"`
+	PullPolicyNotAlways Severity          `json:"pullPolicyNotAlways"`
+	Whitelist           ErrorWarningLists `json:"whitelist"`
+	Blacklist           ErrorWarningLists `json:"blacklist"`
 }
 
 // ErrorWarningLists provides lists of patterns to match or avoid in image tags.
