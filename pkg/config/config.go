@@ -71,16 +71,10 @@ type HealthChecks struct {
 
 // Images contains the config for images.
 type Images struct {
-	TagNotSpecified     Severity          `json:"tagNotSpecified"`
-	PullPolicyNotAlways Severity          `json:"pullPolicyNotAlways"`
-	Whitelist           ErrorWarningLists `json:"whitelist"`
-	Blacklist           ErrorWarningLists `json:"blacklist"`
-}
-
-// Registry contains a whitelist of registries that are allowed and a blacklist of registries that cannot be used.
-type Registry struct {
-	Whitelist []string `json:"quay.io/fairwinds"`
-	Blacklist []string `json:"docker.io"`
+	TagNotSpecified     Severity `json:"tagNotSpecified"`
+	PullPolicyNotAlways Severity `json:"pullPolicyNotAlways"`
+	Whitelist           Severity `json:"whitelist"`
+	Blacklist           Severity `json:"blacklist"`
 }
 
 // ErrorWarningLists provides lists of patterns to match or avoid in image tags.

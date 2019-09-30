@@ -16,8 +16,10 @@ package validator
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
+	"github.com/fairwindsops/polaris/pkg/config"
 	conf "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/validator/messages"
 	corev1 "k8s.io/api/core/v1"
@@ -181,6 +183,35 @@ func (cv *ContainerValidation) validateImage(imageConf *conf.Images) {
 		} else {
 			cv.addSuccess(messages.ImageTagSuccess, category, id)
 		}
+	}
+
+	// create a variable named imageLists that is list whitelist errors and warnings
+	imageLists := [][]string{imageConf.Whitelist.Error, imageConf.Whitelist.Warning}
+	// a boolean
+	hasWhitelistCheck := false
+	// a boolean
+	hasWhitelistFailure := false
+	// a string that acts as an ID?
+	whitelistCheckID := "imageWhitelist"
+
+	for _, imageList := range imageLists {
+		var severity config.Severity
+		if &imageList == &imageConf.Whitelist.Error {
+			severity = config.SeverityError
+		} else {
+			severity = config.SeverityWarning
+		}
+		for _, imagePattern := range imageList {
+			hasWhitelistCheck = true
+			if !regexp.MustCompile(imagePattern).MatchString(cv.Container.Image) {
+				hasWhitelistFailure = true
+				cv.addFailure(messages.RegistryFailure, severity, category, whitelistCheckID)
+			}
+		}
+
+	}
+	if hasWhitelistCheck && hasWhitelistFailure == false {
+		cv.addSuccess(messages.RegistrySuccess, category, whitelistCheckID)
 	}
 }
 

@@ -96,4 +96,8 @@ const (
 	HostNetworkFailure = "Host network should not be configured"
 	// HostNetworkSuccess message
 	HostNetworkSuccess = "Host network is not configured"
+	// RegistryFailure message
+	RegistryFailure = "An image registry in the project has been flagged as blocked"
+	// RegistrySuccess message
+	RegistrySuccess = "All image registries in the project are allowed"
 )
