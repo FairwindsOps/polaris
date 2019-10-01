@@ -96,8 +96,12 @@ const (
 	HostNetworkFailure = "Host network should not be configured"
 	// HostNetworkSuccess message
 	HostNetworkSuccess = "Host network is not configured"
-	// ImageRegistryFailure message
-	ImageRegistryFailure = "The image registry is not allowed or must match the allowed registries list"
-	// ImageRegistrySuccess message
-	ImageRegistrySuccess = "The image registry in the container is allowed"
+	// RegistryWhitelistFailure message
+	RegistryWhitelistFailure = "The image registry must match the allowed registries list"
+	// RegistryWhitelistSuccess message
+	RegistryWhitelistSuccess = "The image registry is allowed"
+	// RegistryBlacklistFailure message
+	RegistryBlacklistFailure = "The image registry is not allowed"
+	// RegistryBlacklistSuccess message
+	RegistryBlacklistSuccess = "The image registry is allowed"
 )

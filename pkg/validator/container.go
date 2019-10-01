@@ -194,6 +194,7 @@ func (cv *ContainerValidation) validateImage(imageConf *conf.Images) {
 	hasBlacklistFailure := false
 	blacklistCheckID := "imageBlacklist"
 
+	// Check whitelist
 	for _, imageList := range imageLists {
 		var severity config.Severity
 		if &imageList == &imageConf.Whitelist.Error {
@@ -205,14 +206,15 @@ func (cv *ContainerValidation) validateImage(imageConf *conf.Images) {
 			hasWhitelistCheck = true
 			if !regexp.MustCompile(imagePattern).MatchString(cv.Container.Image) {
 				hasWhitelistFailure = true
-				cv.addFailure(messages.ImageRegistryFailure, severity, category, whitelistCheckID)
+				cv.addFailure(messages.RegistryWhitelistFailure, severity, category, whitelistCheckID)
 			}
 		}
 
 	}
-	if hasBlacklistCheck && hasBlacklistFailure == false {
-		cv.addSuccess(messages.ImageRegistrySuccess, category, blacklistCheckID)
+	if hasWhitelistCheck && hasWhitelistFailure == false {
+		cv.addSuccess(messages.RegistryWhitelistSuccess, category, whitelistCheckID)
 	}
+	// Check blacklist
 	for _, imageList := range imageLists {
 		var severity config.Severity
 		if &imageList == &imageConf.Blacklist.Error {
@@ -223,14 +225,14 @@ func (cv *ContainerValidation) validateImage(imageConf *conf.Images) {
 		for _, imagePattern := range imageList {
 			hasBlacklistCheck = true
 			if !regexp.MustCompile(imagePattern).MatchString(cv.Container.Image) {
-				hasWhitelistFailure = true
-				cv.addFailure(messages.ImageRegistryFailure, severity, category, blacklistCheckID)
+				hasBlacklistFailure = true
+				cv.addFailure(messages.RegistryBlacklistFailure, severity, category, blacklistCheckID)
 			}
 		}
 
 	}
 	if hasBlacklistCheck && hasBlacklistFailure == false {
-		cv.addSuccess(messages.ImageRegistrySuccess, category, blacklistCheckID)
+		cv.addSuccess(messages.RegistryBlacklistSuccess, category, blacklistCheckID)
 	}
 }
 
