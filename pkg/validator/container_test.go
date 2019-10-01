@@ -315,7 +315,18 @@ func TestValidateImage(t *testing.T) {
 		TagNotSpecified:     conf.SeverityError,
 		PullPolicyNotAlways: conf.SeverityError,
 	}
-
+	whiteListWarningConf := conf.Images{
+		Whitelist: conf.ErrorWarningLists{Warning: []string{"quay.io/.*"}},
+	}
+	blackListConf := conf.Images{
+		Blacklist: conf.ErrorWarningLists{Warning: []string{"docker.io/.*"}},
+	}
+	whiteListErrorConf := conf.Images{
+		Whitelist: conf.ErrorWarningLists{Error: []string{"quay.io/.*"}},
+	}
+	blackListErrorConf := conf.Images{
+		Blacklist: conf.ErrorWarningLists{Error: []string{"docker.io/.*"}},
+	}
 	emptyCV := ContainerValidation{
 		Container:          &corev1.Container{},
 		ResourceValidation: &ResourceValidation{},
@@ -332,24 +343,32 @@ func TestValidateImage(t *testing.T) {
 		Container:          &corev1.Container{Image: "test:0.1.0", ImagePullPolicy: "Always"},
 		ResourceValidation: &ResourceValidation{},
 	}
+	dockerImageCV := ContainerValidation{
+		Container:          &corev1.Container{Image: "docker.io/test:1.0", ImagePullPolicy: "Always"},
+		ResourceValidation: &ResourceValidation{},
+	}
+	quayImageCV := ContainerValidation{
+		Container:          &corev1.Container{Image: "quay.io/test:1.0", ImagePullPolicy: "Always"},
+		ResourceValidation: &ResourceValidation{},
+	}
 
 	var testCases = []struct {
-		name     string
-		image    conf.Images
-		cv       ContainerValidation
-		expected []*ResultMessage
+		name             string
+		image            conf.Images
+		cv               ContainerValidation
+		expectedErrors   []*ResultMessage
+		expectedWarnings []*ResultMessage
 	}{
 		{
-			name:     "emptyConf + emptyCV",
-			image:    emptyConf,
-			cv:       emptyCV,
-			expected: []*ResultMessage{},
+			name:  "emptyConf + emptyCV",
+			image: emptyConf,
+			cv:    emptyCV,
 		},
 		{
 			name:  "standardConf + emptyCV",
 			image: standardConf,
 			cv:    emptyCV,
-			expected: []*ResultMessage{{
+			expectedErrors: []*ResultMessage{{
 				ID:       "tagNotSpecified",
 				Message:  "Image tag should be specified",
 				Type:     "error",
@@ -360,7 +379,7 @@ func TestValidateImage(t *testing.T) {
 			name:  "standardConf + badCV",
 			image: standardConf,
 			cv:    badCV,
-			expected: []*ResultMessage{{
+			expectedErrors: []*ResultMessage{{
 				ID:       "tagNotSpecified",
 				Message:  "Image tag should be specified",
 				Type:     "error",
@@ -371,7 +390,7 @@ func TestValidateImage(t *testing.T) {
 			name:  "standardConf + lessBadCV",
 			image: standardConf,
 			cv:    lessBadCV,
-			expected: []*ResultMessage{{
+			expectedErrors: []*ResultMessage{{
 				ID:       "tagNotSpecified",
 				Message:  "Image tag should be specified",
 				Type:     "error",
@@ -382,7 +401,7 @@ func TestValidateImage(t *testing.T) {
 			name:  "strongConf + badCV",
 			image: strongConf,
 			cv:    badCV,
-			expected: []*ResultMessage{{
+			expectedErrors: []*ResultMessage{{
 				ID:       "pullPolicyNotAlways",
 				Message:  "Image pull policy should be \"Always\"",
 				Type:     "error",
@@ -395,10 +414,60 @@ func TestValidateImage(t *testing.T) {
 			}},
 		},
 		{
-			name:     "strongConf + goodCV",
-			image:    strongConf,
-			cv:       goodCV,
-			expected: []*ResultMessage{},
+			name:           "strongConf + goodCV",
+			image:          strongConf,
+			cv:             goodCV,
+			expectedErrors: []*ResultMessage{},
+		},
+		{
+			name:  "whiteListWarningConf+ DockerImageCV",
+			image: whiteListWarningConf,
+			cv:    dockerImageCV,
+			expectedWarnings: []*ResultMessage{{
+				ID:       "imageWhitelist",
+				Message:  "The image registry must match the allowed registry whitelist",
+				Type:     "warning",
+				Category: "Images",
+			}},
+		},
+		{
+			name:  "Blacklistconf+ DockerImageCV",
+			image: blackListConf,
+			cv:    dockerImageCV,
+			expectedWarnings: []*ResultMessage{{
+				ID:       "imageBlacklist",
+				Message:  "The image registry is not allowed",
+				Type:     "warning",
+				Category: "Images",
+			}},
+		},
+		{
+			name:  "BlacklistErrorConf + DockerImageCV",
+			image: blackListErrorConf,
+			cv:    dockerImageCV,
+			expectedErrors: []*ResultMessage{{
+				ID:       "imageBlacklist",
+				Message:  "The image registry is not allowed",
+				Type:     "error",
+				Category: "Images",
+			}},
+		},
+		{
+			name:  "WhitelistErrorConf + DockerImageCV",
+			image: whiteListErrorConf,
+			cv:    dockerImageCV,
+			expectedErrors: []*ResultMessage{{
+				ID:       "imageWhitelist",
+				Message:  "The image registry must match the allowed registry whitelist",
+				Type:     "error",
+				Category: "Images",
+			}},
+		},
+		{
+			name:           "whiteListWarningConf + QuayImageCV",
+			image:          whiteListWarningConf,
+			cv:             quayImageCV,
+			expectedErrors: []*ResultMessage{},
 		},
 	}
 
@@ -406,8 +475,10 @@ func TestValidateImage(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.cv = resetCV(tt.cv)
 			tt.cv.validateImage(&tt.image)
-			assert.Len(t, tt.cv.Errors, len(tt.expected))
-			assert.ElementsMatch(t, tt.cv.Errors, tt.expected)
+			assert.Len(t, tt.cv.Errors, len(tt.expectedErrors))
+			assert.ElementsMatch(t, tt.cv.Errors, tt.expectedErrors)
+			assert.Len(t, tt.cv.Warnings, len(tt.expectedWarnings))
+			assert.ElementsMatch(t, tt.cv.Warnings, tt.expectedWarnings)
 		})
 	}
 }

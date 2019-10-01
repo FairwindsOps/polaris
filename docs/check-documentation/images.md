@@ -6,8 +6,8 @@ key | default | description
 ----|---------|------------
 `images.tagNotSpecified` | `error` | Fails when an image tag is either not specified or `latest`.
 `images.pullPolicyNotAlways` | `ignore` | Fails when an image pull policy is not `always`.
-`images.whitelist` | `error` | If the container image does not match the pattern in the whitelist, it will fail with an error.
-`images.blacklist` | `warning` | If the container image matches a pattern in the black list, it will show a warning. 
+`images.whitelist` | `error` or `warning` (configurable)| The user can add and configure an image registry whitelist. If the user adds a list of images to the `whitelist`, all container images will be checked, and any that do not match the pattern(s) will result in an warning or error message. See an example of this configuration in [config-full.yaml](./examples/config-full.yaml).
+`images.blacklist` | `error` or `warning` (configurable) | The user can add and configure an image registry blacklist. If the user adds a list of images to the `blacklist`, all container images will be checked, and any that match the pattern(s) will result in an warning or error message. See an example of this configuration in [config-full.yaml](./examples/config-full.yaml).
 
 ## Background
 ### tagNotSpecified 

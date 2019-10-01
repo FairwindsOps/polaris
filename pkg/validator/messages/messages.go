@@ -97,7 +97,7 @@ const (
 	// HostNetworkSuccess message
 	HostNetworkSuccess = "Host network is not configured"
 	// RegistryWhitelistFailure message
-	RegistryWhitelistFailure = "The image registry must match the allowed registries list"
+	RegistryWhitelistFailure = "The image registry must match the allowed registry whitelist"
 	// RegistryWhitelistSuccess message
 	RegistryWhitelistSuccess = "The image registry is allowed"
 	// RegistryBlacklistFailure message
