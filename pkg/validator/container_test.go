@@ -720,8 +720,8 @@ func TestValidateSecurity(t *testing.T) {
 				Type:     "success",
 				Category: "Security",
 			}, {
-				ID:       "capabilities",
-				Message:  "Security capabilities are within the configured limits",
+				ID:       "capabilitiesAdded",
+				Message:  "Disallowed security capabilities have not been added",
 				Type:     "success",
 				Category: "Security",
 			}},
@@ -731,7 +731,7 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: standardConf,
 			cv:           badCV,
 			expectedMessages: []*ResultMessage{{
-				ID:       "capabilities",
+				ID:       "capabilitiesAdded",
 				Message:  "The following security capabilities should not be added: SYS_ADMIN, NET_ADMIN",
 				Type:     "error",
 				Category: "Security",
@@ -746,7 +746,7 @@ func TestValidateSecurity(t *testing.T) {
 				Type:     "error",
 				Category: "Security",
 			}, {
-				ID:       "capabilities",
+				ID:       "capabilitiesAdded",
 				Message:  "The following security capabilities should not be added: AUDIT_CONTROL, SYS_ADMIN, NET_ADMIN",
 				Type:     "warning",
 				Category: "Security",
@@ -767,7 +767,7 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: standardConf,
 			cv:           badCVWithGoodPodSpec,
 			expectedMessages: []*ResultMessage{{
-				ID:       "capabilities",
+				ID:       "capabilitiesAdded",
 				Message:  "The following security capabilities should not be added: SYS_ADMIN, NET_ADMIN",
 				Type:     "error",
 				Category: "Security",
@@ -782,7 +782,7 @@ func TestValidateSecurity(t *testing.T) {
 				Type:     "error",
 				Category: "Security",
 			}, {
-				ID:       "capabilities",
+				ID:       "capabilitiesAdded",
 				Message:  "The following security capabilities should not be added: AUDIT_CONTROL, SYS_ADMIN, NET_ADMIN",
 				Type:     "warning",
 				Category: "Security",
@@ -803,7 +803,7 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: standardConf,
 			cv:           badCVWithBadPodSpec,
 			expectedMessages: []*ResultMessage{{
-				ID:       "capabilities",
+				ID:       "capabilitiesAdded",
 				Message:  "The following security capabilities should not be added: SYS_ADMIN, NET_ADMIN",
 				Type:     "error",
 				Category: "Security",
@@ -818,7 +818,7 @@ func TestValidateSecurity(t *testing.T) {
 				Type:     "error",
 				Category: "Security",
 			}, {
-				ID:       "capabilities",
+				ID:       "capabilitiesAdded",
 				Message:  "The following security capabilities should not be added: AUDIT_CONTROL, SYS_ADMIN, NET_ADMIN",
 				Type:     "warning",
 				Category: "Security",
@@ -859,8 +859,8 @@ func TestValidateSecurity(t *testing.T) {
 				Type:     "success",
 				Category: "Security",
 			}, {
-				ID:       "capabilities",
-				Message:  "Security capabilities are within the configured limits",
+				ID:       "capabilitiesAdded",
+				Message:  "Disallowed security capabilities have not been added",
 				Type:     "success",
 				Category: "Security",
 			}},
@@ -870,9 +870,14 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: strongConf,
 			cv:           goodCV,
 			expectedMessages: []*ResultMessage{{
-				ID:       "capabilities",
+				ID:       "capabilitiesNotDropped",
 				Message:  "The following security capabilities should be dropped: DAC_OVERRIDE, SYS_CHROOT",
 				Type:     "error",
+				Category: "Security",
+			}, {
+				ID:       "capabilitiesAdded",
+				Message:  "Disallowed security capabilities have not been added",
+				Type:     "success",
 				Category: "Security",
 			}, {
 				ID:       "runAsRootAllowed",
@@ -921,8 +926,13 @@ func TestValidateSecurity(t *testing.T) {
 				Type:     "success",
 				Category: "Security",
 			}, {
-				ID:       "capabilities",
-				Message:  "Security capabilities are within the configured limits",
+				ID:       "capabilitiesAdded",
+				Message:  "Disallowed security capabilities have not been added",
+				Type:     "success",
+				Category: "Security",
+			}, {
+				ID:       "capabilitiesDropped",
+				Message:  "All disallowed security capabilities have been dropped",
 				Type:     "success",
 				Category: "Security",
 			}},
@@ -952,8 +962,13 @@ func TestValidateSecurity(t *testing.T) {
 				Type:     "success",
 				Category: "Security",
 			}, {
-				ID:       "capabilities",
-				Message:  "Security capabilities are within the configured limits",
+				ID:       "capabilitiesAdded",
+				Message:  "Disallowed security capabilities have not been added",
+				Type:     "success",
+				Category: "Security",
+			}, {
+				ID:       "capabilitiesDropped",
+				Message:  "All disallowed security capabilities have been dropped",
 				Type:     "success",
 				Category: "Security",
 			}},
@@ -983,8 +998,13 @@ func TestValidateSecurity(t *testing.T) {
 				Type:     "success",
 				Category: "Security",
 			}, {
-				ID:       "capabilities",
-				Message:  "Security capabilities are within the configured limits",
+				ID:       "capabilitiesAdded",
+				Message:  "Disallowed security capabilities have not been added",
+				Type:     "success",
+				Category: "Security",
+			}, {
+				ID:       "capabilitiesDropped",
+				Message:  "All disallowed security capabilities have been dropped",
 				Type:     "success",
 				Category: "Security",
 			}},

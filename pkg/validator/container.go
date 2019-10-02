@@ -266,65 +266,79 @@ func (cv *ContainerValidation) validateSecurity(securityConf *conf.Security) {
 		}
 	}
 
-	id := getIDFromField(*securityConf, "Capabilities")
-	hasSecurityError :=
-		!cv.validateCapabilities(id, securityConf.Capabilities.Error, conf.SeverityError)
-	hasSecurityWarning :=
-		!cv.validateCapabilities(id, securityConf.Capabilities.Warning, conf.SeverityWarning)
-	hasSecurityCheck := func(confLists conf.SecurityCapabilityLists) bool {
-		return len(confLists.IfAnyAdded) > 0 ||
-			len(confLists.IfAnyAddedBeyond) > 0 ||
-			len(confLists.IfAnyNotDropped) > 0
-	}
-	if !hasSecurityError && !hasSecurityWarning &&
-		(hasSecurityCheck(securityConf.Capabilities.Error) ||
-			hasSecurityCheck(securityConf.Capabilities.Warning)) {
-		cv.addSuccess(messages.SecurityCapabilitiesSuccess, category, id)
-	}
+	cv.validateCapabilities(&securityConf.Capabilities.Warning, &securityConf.Capabilities.Error)
 }
 
-func (cv *ContainerValidation) validateCapabilities(id string, confLists conf.SecurityCapabilityLists, severity conf.Severity) bool {
+func (cv *ContainerValidation) validateCapabilities(warningLists *conf.SecurityCapabilityLists, errorLists *conf.SecurityCapabilityLists) {
 	category := messages.CategorySecurity
 	capabilities := &corev1.Capabilities{}
 	if cv.Container.SecurityContext != nil && cv.Container.SecurityContext.Capabilities != nil {
 		capabilities = cv.Container.SecurityContext.Capabilities
 	}
+	allLists := []*conf.SecurityCapabilityLists{warningLists, errorLists}
 
-	everythingOK := true
-	if len(confLists.IfAnyAdded) > 0 {
-		intersectAdds := capIntersection(capabilities.Add, confLists.IfAnyAdded)
-		if len(intersectAdds) > 0 {
-			capsString := commaSeparatedCapabilities(intersectAdds)
-			cv.addFailure(fmt.Sprintf(messages.SecurityCapabilitiesAddedFailure, capsString), severity, category, id)
-			everythingOK = false
-		} else if capContains(capabilities.Add, "ALL") {
-			cv.addFailure(fmt.Sprintf(messages.SecurityCapabilitiesAddedFailure, "ALL"), severity, category, id)
-			everythingOK = false
+	addID := "capabilitiesAdded"
+	hasAddFailure := false
+	hasAddCheck := false
+	for _, confLists := range allLists {
+		if len(confLists.IfAnyAdded) == 0 && len(confLists.IfAnyAddedBeyond) == 0 {
+			continue
+		}
+		hasAddCheck = true
+		var severity conf.Severity
+		if confLists == warningLists {
+			severity = conf.SeverityWarning
+		} else {
+			severity = conf.SeverityError
+		}
+		badAdds := make([]corev1.Capability, 0)
+		if len(confLists.IfAnyAdded) > 0 {
+			intersectAdds := capIntersection(capabilities.Add, confLists.IfAnyAdded)
+			badAdds = append(badAdds, intersectAdds...)
+		}
+		if len(confLists.IfAnyAddedBeyond) > 0 {
+			differentAdds := capDifference(capabilities.Add, confLists.IfAnyAddedBeyond)
+			differentAdds = capDifference(differentAdds, badAdds)
+			badAdds = append(badAdds, differentAdds...)
+		}
+		if capContains(capabilities.Add, "ALL") && !capContains(badAdds, "ALL") {
+			badAdds = append(badAdds, "ALL")
+		}
+		if len(badAdds) > 0 {
+			hasAddFailure = true
+			capsString := commaSeparatedCapabilities(badAdds)
+			cv.addFailure(fmt.Sprintf(messages.SecurityCapabilitiesAddedFailure, capsString), severity, category, addID)
 		}
 	}
-
-	if len(confLists.IfAnyAddedBeyond) > 0 {
-		differentAdds := capDifference(capabilities.Add, confLists.IfAnyAddedBeyond)
-		if len(differentAdds) > 0 {
-			capsString := commaSeparatedCapabilities(differentAdds)
-			cv.addFailure(fmt.Sprintf(messages.SecurityCapabilitiesAddedFailure, capsString), severity, category, id)
-			everythingOK = false
-		} else if capContains(capabilities.Add, "ALL") {
-			cv.addFailure(fmt.Sprintf(messages.SecurityCapabilitiesAddedFailure, "ALL"), severity, category, id)
-			everythingOK = false
-		}
+	if hasAddCheck && !hasAddFailure {
+		cv.addSuccess(messages.SecurityCapabilitiesAddedSuccess, category, addID)
 	}
 
-	if len(confLists.IfAnyNotDropped) > 0 {
+	dropID := "capabilitiesDropped"
+	hasDropCheck := false
+	hasDropFailure := false
+	for _, confLists := range allLists {
+		if len(confLists.IfAnyNotDropped) == 0 {
+			continue
+		}
+		hasDropCheck = true
+		var severity conf.Severity
+		if confLists == warningLists {
+			severity = conf.SeverityWarning
+		} else {
+			severity = conf.SeverityError
+		}
 		missingDrops := capDifference(confLists.IfAnyNotDropped, capabilities.Drop)
+		id := "capabilitiesNotDropped"
 		if len(missingDrops) > 0 && !capContains(capabilities.Drop, "ALL") {
+			hasDropFailure = true
 			capsString := commaSeparatedCapabilities(missingDrops)
 			cv.addFailure(fmt.Sprintf(messages.SecurityCapabilitiesNotDroppedFailure, capsString), severity, category, id)
-			everythingOK = false
 		}
 	}
-
-	return everythingOK
+	if hasDropCheck && !hasDropFailure {
+		cv.addSuccess(messages.SecurityCapabilitiesNotDroppedSuccess, category, dropID)
+	}
 }
 
 func commaSeparatedCapabilities(caps []corev1.Capability) string {

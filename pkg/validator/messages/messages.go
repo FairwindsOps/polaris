@@ -73,12 +73,14 @@ const (
 	PrivilegeEscalationFailure = "Privilege escalation should not be allowed"
 	// PrivilegeEscalationSuccess message
 	PrivilegeEscalationSuccess = "Privilege escalation not allowed"
+	// SecurityCapabilitiesAddedSuccess message
+	SecurityCapabilitiesAddedSuccess = "Disallowed security capabilities have not been added"
 	// SecurityCapabilitiesAddedFailure message
 	SecurityCapabilitiesAddedFailure = "The following security capabilities should not be added: %v"
+	// SecurityCapabilitiesNotDroppedSuccess message
+	SecurityCapabilitiesNotDroppedSuccess = "All disallowed security capabilities have been dropped"
 	// SecurityCapabilitiesNotDroppedFailure message
 	SecurityCapabilitiesNotDroppedFailure = "The following security capabilities should be dropped: %v"
-	// SecurityCapabilitiesSuccess message
-	SecurityCapabilitiesSuccess = "Security capabilities are within the configured limits"
 
 	// HostAliasFailure message
 	HostAliasFailure = "Host alias should not be configured"
