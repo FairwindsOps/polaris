@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"html/template"
 	"net/http"
+	"path"
 	"strings"
 
 	conf "github.com/fairwindsops/polaris/pkg/config"
@@ -137,7 +138,7 @@ func writeTemplate(tmpl *template.Template, data *templateData, w http.ResponseW
 
 // GetRouter returns a mux router serving all routes necessary for the dashboard
 func GetRouter(c conf.Configuration, auditPath string, port int, basePath string, auditData *validator.AuditData) *mux.Router {
-	router := mux.NewRouter()
+	router := mux.NewRouter().PathPrefix(basePath).Subrouter()
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
@@ -177,9 +178,9 @@ func GetRouter(c conf.Configuration, auditPath string, port int, basePath string
 		DetailsHandler(w, r, category, basePath)
 	})
 	fileServer := http.FileServer(GetAssetBox())
-	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fileServer))
+	router.PathPrefix("/static/").Handler(http.StripPrefix(path.Join(basePath, "/static/"), fileServer))
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/" {
+		if r.URL.Path != "/" && r.URL.Path != basePath {
 			http.NotFound(w, r)
 			return
 		}
