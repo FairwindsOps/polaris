@@ -48,7 +48,7 @@ controllers_to_scan:
   - CronJobs
   - Jobs
   - ReplicationControllers
-exemptions2:
+exemptions:
   - controllerNames:
     - dns-controller
     - datadog-datadog
