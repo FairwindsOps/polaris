@@ -1084,6 +1084,40 @@ func TestValidateResourcesExemption(t *testing.T) {
 	expectedErrors := []*ResultMessage{}
 
 	testValidateResources(t, &container, &resourceConfExemptions, "foo", &expectedErrors, &expectedWarnings)
+
+	expectedWarnings = []*ResultMessage{
+		{
+			ID:       "cpuRequestsMissing",
+			Type:     "warning",
+			Message:  "CPU requests should be set",
+			Category: "Resources",
+		},
+		{
+			ID:       "memoryRequestsMissing",
+			Type:     "warning",
+			Message:  "Memory requests should be set",
+			Category: "Resources",
+		},
+	}
+
+	expectedErrors = []*ResultMessage{
+		{
+			ID:       "cpuLimitsMissing",
+			Type:     "error",
+			Message:  "CPU limits should be set",
+			Category: "Resources",
+		},
+		{
+			ID:       "memoryLimitsMissing",
+			Type:     "error",
+			Message:  "Memory limits should be set",
+			Category: "Resources",
+		},
+	}
+
+	disallowExemptionsConf := resourceConfExemptions + "\ndisallowExemptions: true"
+
+	testValidateResources(t, &container, &disallowExemptionsConf, "foo", &expectedErrors, &expectedWarnings)
 }
 
 func TestValidateResourceRangeExemption(t *testing.T) {

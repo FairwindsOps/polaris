@@ -11,6 +11,9 @@ func IsActionable(conf *Configuration, subConf interface{}, ruleName, controller
 	if ok && !severity.IsActionable() {
 		return false
 	}
+	if conf.DisallowExemptions {
+		return true
+	}
 	for _, example := range conf.Exemptions {
 		for _, rule := range example.Rules {
 			if rule != ruleID {

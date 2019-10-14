@@ -30,14 +30,15 @@ import (
 
 // Configuration contains all of the config for the validation checks.
 type Configuration struct {
-	DisplayName       string                `json:"displayName"`
-	Resources         Resources             `json:"resources"`
-	HealthChecks      HealthChecks          `json:"healthChecks"`
-	Images            Images                `json:"images"`
-	Networking        Networking            `json:"networking"`
-	Security          Security              `json:"security"`
-	ControllersToScan []SupportedController `json:"controllers_to_scan"`
-	Exemptions        []Exemption           `json:"exemptions"`
+	DisallowExemptions bool                  `json:"disallowExemptions"`
+	DisplayName        string                `json:"displayName"`
+	Resources          Resources             `json:"resources"`
+	HealthChecks       HealthChecks          `json:"healthChecks"`
+	Images             Images                `json:"images"`
+	Networking         Networking            `json:"networking"`
+	Security           Security              `json:"security"`
+	ControllersToScan  []SupportedController `json:"controllers_to_scan"`
+	Exemptions         []Exemption           `json:"exemptions"`
 }
 
 // Exemption represents an exemption to normal rules
