@@ -184,13 +184,13 @@ func GetRouter(c conf.Configuration, auditPath string, port int, basePath string
 			http.NotFound(w, r)
 			return
 		}
-		k, err := kube.CreateResourceProvider(auditPath)
-		if err != nil {
-			logrus.Errorf("Error fetching Kubernetes resources %v", err)
-			http.Error(w, "Error fetching Kubernetes resources", http.StatusInternalServerError)
-			return
-		}
 		if auditData == nil {
+			k, err := kube.CreateResourceProvider(auditPath)
+			if err != nil {
+				logrus.Errorf("Error fetching Kubernetes resources %v", err)
+				http.Error(w, "Error fetching Kubernetes resources", http.StatusInternalServerError)
+				return
+			}
 			auditData, err := validator.RunAudit(c, k)
 
 			if err != nil {
