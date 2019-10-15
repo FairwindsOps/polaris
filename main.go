@@ -62,7 +62,7 @@ func main() {
 	loadAuditFile := flag.String("load-audit-file", "", "Runs the dashboard with data saved from a past audit.")
 	displayName := flag.String("display-name", "", "An optional identifier for the audit")
 	configPath := flag.String("config", "", "Location of Polaris configuration file")
-	disallowExemptions := flag.String("disallow-exemptions", false, "Location of Polaris configuration file")
+	disallowExemptions := flag.Bool("disallow-exemptions", false, "Location of Polaris configuration file")
 	logLevel := flag.String("log-level", logrus.InfoLevel.String(), "Logrus log level")
 	version := flag.Bool("version", false, "Prints the version of Polaris")
 	disableWebhookConfigInstaller := flag.Bool("disable-webhook-config-installer", false,
