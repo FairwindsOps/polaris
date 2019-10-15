@@ -153,9 +153,13 @@ func getConfigForQuery(base config.Configuration, query url.Values) config.Confi
 // GetRouter returns a mux router serving all routes necessary for the dashboard
 func GetRouter(c config.Configuration, auditPath string, port int, basePath string, auditData *validator.AuditData) *mux.Router {
 	router := mux.NewRouter().PathPrefix(basePath).Subrouter()
+	fileServer := http.FileServer(GetAssetBox())
+	router.PathPrefix("/static/").Handler(http.StripPrefix(path.Join(basePath, "/static/"), fileServer))
+
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
+
 	router.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		favicon, err := GetAssetBox().Find("favicon-32x32.png")
 		if err != nil {
@@ -165,9 +169,10 @@ func GetRouter(c config.Configuration, auditPath string, port int, basePath stri
 		}
 		w.Write(favicon)
 	})
+
 	router.HandleFunc("/results.json", func(w http.ResponseWriter, r *http.Request) {
+		adjustedConf := getConfigForQuery(c, r.URL.Query())
 		if auditData == nil {
-			adjustedConf := getConfigForQuery(c, r.URL.Query())
 			k, err := kube.CreateResourceProvider(auditPath)
 			if err != nil {
 				logrus.Errorf("Error fetching Kubernetes resources %v", err)
@@ -184,31 +189,31 @@ func GetRouter(c config.Configuration, auditPath string, port int, basePath stri
 		}
 
 		JSONHandler(w, r, auditData)
-
 	})
+
 	router.HandleFunc("/details/{category}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		category := vars["category"]
 		category = strings.Replace(category, ".md", "", -1)
 		DetailsHandler(w, r, category, basePath)
 	})
-	fileServer := http.FileServer(GetAssetBox())
-	router.PathPrefix("/static/").Handler(http.StripPrefix(path.Join(basePath, "/static/"), fileServer))
+
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" && r.URL.Path != basePath {
 			http.NotFound(w, r)
 			return
 		}
-		k, err := kube.CreateResourceProvider(auditPath)
-		if err != nil {
-			logrus.Errorf("Error fetching Kubernetes resources %v", err)
-			http.Error(w, "Error fetching Kubernetes resources", http.StatusInternalServerError)
-			return
-		}
-		if auditData == nil {
-			adjustedConf := getConfigForQuery(c, r.URL.Query())
-			auditData, err := validator.RunAudit(adjustedConf, k)
+		adjustedConf := getConfigForQuery(c, r.URL.Query())
 
+		if auditData == nil {
+			k, err := kube.CreateResourceProvider(auditPath)
+			if err != nil {
+				logrus.Errorf("Error fetching Kubernetes resources %v", err)
+				http.Error(w, "Error fetching Kubernetes resources", http.StatusInternalServerError)
+				return
+			}
+
+			auditData, err := validator.RunAudit(adjustedConf, k)
 			if err != nil {
 				logrus.Errorf("Error getting audit data: %v", err)
 				http.Error(w, "Error running audit", 500)
@@ -216,7 +221,7 @@ func GetRouter(c config.Configuration, auditPath string, port int, basePath stri
 			}
 			MainHandler(w, r, adjustedConf, auditData, basePath)
 		} else {
-			MainHandler(w, r, c, *auditData, basePath)
+			MainHandler(w, r, adjustedConf, *auditData, basePath)
 		}
 
 	})

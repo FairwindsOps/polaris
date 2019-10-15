@@ -64,7 +64,7 @@ func (pv *PodValidation) validateSecurity(conf *config.Configuration, controller
 	category := messages.CategorySecurity
 
 	name := "HostIPCSet"
-	if config.IsActionable(conf, conf.Security, name, controllerName) {
+	if conf.IsActionable(conf.Security, name, controllerName) {
 		id := config.GetIDFromField(conf.Security, name)
 		if pv.Pod.HostIPC {
 			pv.addFailure(messages.HostIPCFailure, conf.Security.HostIPCSet, category, id)
@@ -74,7 +74,7 @@ func (pv *PodValidation) validateSecurity(conf *config.Configuration, controller
 	}
 
 	name = "HostPIDSet"
-	if config.IsActionable(conf, conf.Security, name, controllerName) {
+	if conf.IsActionable(conf.Security, name, controllerName) {
 		id := config.GetIDFromField(conf.Security, name)
 		if pv.Pod.HostPID {
 			pv.addFailure(messages.HostPIDFailure, conf.Security.HostPIDSet, category, id)
@@ -88,7 +88,7 @@ func (pv *PodValidation) validateNetworking(conf *config.Configuration, controll
 	category := messages.CategoryNetworking
 
 	name := "HostNetworkSet"
-	if config.IsActionable(conf, conf.Networking, name, controllerName) {
+	if conf.IsActionable(conf.Networking, name, controllerName) {
 		id := config.GetIDFromField(conf.Networking, name)
 		if pv.Pod.HostNetwork {
 			pv.addFailure(messages.HostNetworkFailure, conf.Networking.HostNetworkSet, category, id)

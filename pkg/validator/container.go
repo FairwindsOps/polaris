@@ -84,40 +84,40 @@ func (cv *ContainerValidation) validateResources(conf *config.Configuration, con
 
 	missingName := "CPURequestsMissing"
 	rangeName := "CPURequestRanges"
-	if config.IsActionable(conf, conf.Resources, missingName, controllerName) && res.Requests.Cpu().MilliValue() == 0 {
+	if conf.IsActionable(conf.Resources, missingName, controllerName) && res.Requests.Cpu().MilliValue() == 0 {
 		id := config.GetIDFromField(conf.Resources, missingName)
 		cv.addFailure(messages.CPURequestsFailure, conf.Resources.CPURequestsMissing, category, id)
-	} else if config.IsActionable(conf, conf.Resources, rangeName, controllerName) {
+	} else if conf.IsActionable(conf.Resources, rangeName, controllerName) {
 		id := config.GetIDFromField(conf.Resources, rangeName)
 		cv.validateResourceRange(id, messages.CPURequestsLabel, &conf.Resources.CPURequestRanges, res.Requests.Cpu())
 	}
 
 	missingName = "CPULimitsMissing"
 	rangeName = "CPULimitRanges"
-	if config.IsActionable(conf, conf.Resources, missingName, controllerName) && res.Limits.Cpu().MilliValue() == 0 {
+	if conf.IsActionable(conf.Resources, missingName, controllerName) && res.Limits.Cpu().MilliValue() == 0 {
 		id := config.GetIDFromField(conf.Resources, missingName)
 		cv.addFailure(messages.CPULimitsFailure, conf.Resources.CPULimitsMissing, category, id)
-	} else if config.IsActionable(conf, conf.Resources, rangeName, controllerName) {
+	} else if conf.IsActionable(conf.Resources, rangeName, controllerName) {
 		id := config.GetIDFromField(conf.Resources, rangeName)
 		cv.validateResourceRange(id, messages.CPULimitsLabel, &conf.Resources.CPULimitRanges, res.Requests.Cpu())
 	}
 
 	missingName = "MemoryRequestsMissing"
 	rangeName = "MemoryRequestRanges"
-	if config.IsActionable(conf, conf.Resources, missingName, controllerName) && res.Requests.Memory().MilliValue() == 0 {
+	if conf.IsActionable(conf.Resources, missingName, controllerName) && res.Requests.Memory().MilliValue() == 0 {
 		id := config.GetIDFromField(conf.Resources, missingName)
 		cv.addFailure(messages.MemoryRequestsFailure, conf.Resources.MemoryRequestsMissing, category, id)
-	} else if config.IsActionable(conf, conf.Resources, rangeName, controllerName) {
+	} else if conf.IsActionable(conf.Resources, rangeName, controllerName) {
 		id := config.GetIDFromField(conf.Resources, rangeName)
 		cv.validateResourceRange(id, messages.MemoryRequestsLabel, &conf.Resources.MemoryRequestRanges, res.Requests.Memory())
 	}
 
 	missingName = "MemoryLimitsMissing"
 	rangeName = "MemoryLimitRanges"
-	if config.IsActionable(conf, conf.Resources, missingName, controllerName) && res.Limits.Memory().MilliValue() == 0 {
+	if conf.IsActionable(conf.Resources, missingName, controllerName) && res.Limits.Memory().MilliValue() == 0 {
 		id := config.GetIDFromField(conf.Resources, missingName)
 		cv.addFailure(messages.MemoryLimitsFailure, conf.Resources.MemoryLimitsMissing, category, id)
-	} else if config.IsActionable(conf, conf.Resources, rangeName, controllerName) {
+	} else if conf.IsActionable(conf.Resources, rangeName, controllerName) {
 		id := config.GetIDFromField(conf.Resources, rangeName)
 		cv.validateResourceRange(id, messages.MemoryLimitsLabel, &conf.Resources.MemoryLimitRanges, res.Limits.Memory())
 	}
@@ -152,7 +152,7 @@ func (cv *ContainerValidation) validateHealthChecks(conf *config.Configuration, 
 
 	name := "ReadinessProbeMissing"
 	// Don't validate readiness probes on init containers
-	if !cv.IsInitContainer && config.IsActionable(conf, conf.HealthChecks, name, controllerName) {
+	if !cv.IsInitContainer && conf.IsActionable(conf.HealthChecks, name, controllerName) {
 		id := config.GetIDFromField(conf.HealthChecks, name)
 		if cv.Container.ReadinessProbe == nil {
 			cv.addFailure(messages.ReadinessProbeFailure, conf.HealthChecks.ReadinessProbeMissing, category, id)
@@ -162,7 +162,7 @@ func (cv *ContainerValidation) validateHealthChecks(conf *config.Configuration, 
 	}
 
 	name = "LivenessProbeMissing"
-	if config.IsActionable(conf, conf.HealthChecks, name, controllerName) {
+	if conf.IsActionable(conf.HealthChecks, name, controllerName) {
 		id := config.GetIDFromField(conf.HealthChecks, "LivenessProbeMissing")
 		if cv.Container.LivenessProbe == nil {
 			cv.addFailure(messages.LivenessProbeFailure, conf.HealthChecks.LivenessProbeMissing, category, id)
@@ -176,7 +176,7 @@ func (cv *ContainerValidation) validateImage(conf *config.Configuration, control
 	category := messages.CategoryImages
 
 	name := "PullPolicyNotAlways"
-	if config.IsActionable(conf, conf.Images, name, controllerName) {
+	if conf.IsActionable(conf.Images, name, controllerName) {
 		id := config.GetIDFromField(conf.Images, name)
 		if cv.Container.ImagePullPolicy != corev1.PullAlways {
 			cv.addFailure(messages.ImagePullPolicyFailure, conf.Images.PullPolicyNotAlways, category, id)
@@ -186,7 +186,7 @@ func (cv *ContainerValidation) validateImage(conf *config.Configuration, control
 	}
 
 	name = "TagNotSpecified"
-	if config.IsActionable(conf, conf.Images, name, controllerName) {
+	if conf.IsActionable(conf.Images, name, controllerName) {
 		id := config.GetIDFromField(conf.Images, name)
 		img := strings.Split(cv.Container.Image, ":")
 		if len(img) == 1 || img[1] == "latest" {
@@ -201,7 +201,7 @@ func (cv *ContainerValidation) validateNetworking(conf *config.Configuration, co
 	category := messages.CategoryNetworking
 
 	name := "HostPortSet"
-	if config.IsActionable(conf, conf.Networking, name, controllerName) {
+	if conf.IsActionable(conf.Networking, name, controllerName) {
 		hostPortSet := false
 		for _, port := range cv.Container.Ports {
 			if port.HostPort != 0 {
@@ -235,7 +235,7 @@ func (cv *ContainerValidation) validateSecurity(conf *config.Configuration, cont
 	}
 
 	name := "RunAsRootAllowed"
-	if config.IsActionable(conf, conf.Security, name, controllerName) {
+	if conf.IsActionable(conf.Security, name, controllerName) {
 		id := config.GetIDFromField(conf.Security, name)
 		if getBoolValue(securityContext.RunAsNonRoot) {
 			// Check if the container is explicitly set to True (pass)
@@ -256,7 +256,7 @@ func (cv *ContainerValidation) validateSecurity(conf *config.Configuration, cont
 	}
 
 	name = "RunAsPrivileged"
-	if config.IsActionable(conf, conf.Security, name, controllerName) {
+	if conf.IsActionable(conf.Security, name, controllerName) {
 		id := config.GetIDFromField(conf.Security, name)
 		if getBoolValue(securityContext.Privileged) {
 			cv.addFailure(messages.RunAsPrivilegedFailure, conf.Security.RunAsPrivileged, category, id)
@@ -266,7 +266,7 @@ func (cv *ContainerValidation) validateSecurity(conf *config.Configuration, cont
 	}
 
 	name = "NotReadOnlyRootFileSystem"
-	if config.IsActionable(conf, conf.Security, name, controllerName) {
+	if conf.IsActionable(conf.Security, name, controllerName) {
 		id := config.GetIDFromField(conf.Security, name)
 		if getBoolValue(securityContext.ReadOnlyRootFilesystem) {
 			cv.addSuccess(messages.ReadOnlyFilesystemSuccess, category, id)
@@ -276,7 +276,7 @@ func (cv *ContainerValidation) validateSecurity(conf *config.Configuration, cont
 	}
 
 	name = "PrivilegeEscalationAllowed"
-	if config.IsActionable(conf, conf.Security, name, controllerName) {
+	if conf.IsActionable(conf.Security, name, controllerName) {
 		id := config.GetIDFromField(conf.Security, name)
 		if getBoolValue(securityContext.AllowPrivilegeEscalation) {
 			cv.addFailure(messages.PrivilegeEscalationFailure, conf.Security.PrivilegeEscalationAllowed, category, id)
@@ -286,7 +286,7 @@ func (cv *ContainerValidation) validateSecurity(conf *config.Configuration, cont
 	}
 
 	name = "Capabilities"
-	if config.IsActionable(conf, conf.Security, name, controllerName) {
+	if conf.IsActionable(conf.Security, name, controllerName) {
 		cv.validateCapabilities(&conf.Security.Capabilities.Warning, &conf.Security.Capabilities.Error)
 	}
 }
