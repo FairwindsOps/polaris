@@ -4,6 +4,7 @@ import (
 	"reflect"
 )
 
+// IsActionable determines whether a check is actionable given the current configuration
 func IsActionable(conf *Configuration, subConf interface{}, ruleName, controllerName string) bool {
 	ruleID := GetIDFromField(subConf, ruleName)
 	subConfRef := reflect.ValueOf(subConf)
