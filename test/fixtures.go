@@ -11,7 +11,8 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
-func mockContainer(name string) corev1.Container {
+// MockContainer creates a container object
+func MockContainer(name string) corev1.Container {
 	c := corev1.Container{
 		Name: name,
 	}
@@ -20,7 +21,7 @@ func mockContainer(name string) corev1.Container {
 
 // MockPod creates a pod object.
 func MockPod() corev1.PodTemplateSpec {
-	c1 := mockContainer("test")
+	c1 := MockContainer("test")
 	p := corev1.PodTemplateSpec{
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
@@ -31,7 +32,8 @@ func MockPod() corev1.PodTemplateSpec {
 	return p
 }
 
-func mockDeploy() appsv1.Deployment {
+// MockDeploy creates a Deployment object.
+func MockDeploy() appsv1.Deployment {
 	p := MockPod()
 	d := appsv1.Deployment{
 		Spec: appsv1.DeploymentSpec{
@@ -41,7 +43,8 @@ func mockDeploy() appsv1.Deployment {
 	return d
 }
 
-func mockStatefulSet() appsv1.StatefulSet {
+// MockStatefulSet creates a StatefulSet object.
+func MockStatefulSet() appsv1.StatefulSet {
 	p := MockPod()
 	s := appsv1.StatefulSet{
 		Spec: appsv1.StatefulSetSpec{
@@ -51,7 +54,8 @@ func mockStatefulSet() appsv1.StatefulSet {
 	return s
 }
 
-func mockDaemonSet() appsv1.DaemonSet {
+// MockDaemonSet creates a DaemonSet object.
+func MockDaemonSet() appsv1.DaemonSet {
 	return appsv1.DaemonSet{
 		Spec: appsv1.DaemonSetSpec{
 			Template: MockPod(),
@@ -59,7 +63,8 @@ func mockDaemonSet() appsv1.DaemonSet {
 	}
 }
 
-func mockJob() batchv1.Job {
+// MockJob creates a Job object.
+func MockJob() batchv1.Job {
 	return batchv1.Job{
 		Spec: batchv1.JobSpec{
 			Template: MockPod(),
@@ -67,7 +72,8 @@ func mockJob() batchv1.Job {
 	}
 }
 
-func mockCronJob() batchv1beta1.CronJob {
+// MockCronJob creates a CronJob object.
+func MockCronJob() batchv1beta1.CronJob {
 	return batchv1beta1.CronJob{
 		Spec: batchv1beta1.CronJobSpec{
 			JobTemplate: batchv1beta1.JobTemplateSpec{
@@ -79,7 +85,8 @@ func mockCronJob() batchv1beta1.CronJob {
 	}
 }
 
-func mockReplicationController() corev1.ReplicationController {
+// MockReplicationController creates a ReplicationController object.
+func MockReplicationController() corev1.ReplicationController {
 	p := MockPod()
 	return corev1.ReplicationController{
 		Spec: corev1.ReplicationControllerSpec{
@@ -95,32 +102,32 @@ func SetupTestAPI() kubernetes.Interface {
 
 // SetupAddControllers creates mock controllers and adds them to the test clientset.
 func SetupAddControllers(k kubernetes.Interface, namespace string) kubernetes.Interface {
-	d1 := mockDeploy()
+	d1 := MockDeploy()
 	if _, err := k.AppsV1().Deployments(namespace).Create(&d1); err != nil {
 		fmt.Println(err)
 	}
 
-	s1 := mockStatefulSet()
+	s1 := MockStatefulSet()
 	if _, err := k.AppsV1().StatefulSets(namespace).Create(&s1); err != nil {
 		fmt.Println(err)
 	}
 
-	ds1 := mockDaemonSet()
+	ds1 := MockDaemonSet()
 	if _, err := k.AppsV1().DaemonSets(namespace).Create(&ds1); err != nil {
 		fmt.Println(err)
 	}
 
-	j1 := mockJob()
+	j1 := MockJob()
 	if _, err := k.BatchV1().Jobs(namespace).Create(&j1); err != nil {
 		fmt.Println(err)
 	}
 
-	cj1 := mockCronJob()
+	cj1 := MockCronJob()
 	if _, err := k.BatchV1beta1().CronJobs(namespace).Create(&cj1); err != nil {
 		fmt.Println(err)
 	}
 
-	rc1 := mockReplicationController()
+	rc1 := MockReplicationController()
 	if _, err := k.CoreV1().ReplicationControllers(namespace).Create(&rc1); err != nil {
 		fmt.Println(err)
 	}

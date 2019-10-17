@@ -24,10 +24,11 @@ import (
 
 // ValidateController validates a single controller, returns a ControllerResult.
 func ValidateController(conf conf.Configuration, controller controller.Interface) ControllerResult {
+	controllerType := controller.GetType()
 	pod := controller.GetPodSpec()
-	podResult := ValidatePod(conf, controller.GetName(), pod)
+	podResult := ValidatePod(conf, pod, controller.GetName(), controllerType)
 	return ControllerResult{
-		Type:      controller.GetType().String(),
+		Type:      controllerType.String(),
 		Name:      controller.GetName(),
 		PodResult: podResult,
 	}

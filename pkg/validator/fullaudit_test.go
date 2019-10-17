@@ -33,21 +33,16 @@ func TestGetTemplateData(t *testing.T) {
 	// TODO: split out the logic for calculating summaries into another set of tests
 	sum := ResultSummary{
 		Totals: CountSummary{
-			Successes: uint(24),
-			Warnings:  uint(6),
-			Errors:    uint(6),
+			Successes: uint(0),
+			Warnings:  uint(4),
+			Errors:    uint(4),
 		},
 		ByCategory: CategorySummary{},
 	}
 	sum.ByCategory["Health Checks"] = &CountSummary{
 		Successes: uint(0),
-		Warnings:  uint(6),
-		Errors:    uint(6),
-	}
-	sum.ByCategory["Resources"] = &CountSummary{
-		Successes: uint(24),
-		Warnings:  uint(0),
-		Errors:    uint(0),
+		Warnings:  uint(4),
+		Errors:    uint(4),
 	}
 
 	actualAudit, err := RunAudit(c, resources)
@@ -60,10 +55,10 @@ func TestGetTemplateData(t *testing.T) {
 	assert.Equal(t, 1, len(actualAudit.NamespacedResults["test"].DeploymentResults), "should be equal")
 	assert.Equal(t, 1, len(actualAudit.NamespacedResults["test"].DeploymentResults), "should be equal")
 	assert.Equal(t, 1, len(actualAudit.NamespacedResults["test"].DeploymentResults[0].PodResult.ContainerResults), "should be equal")
-	assert.Equal(t, 6, len(actualAudit.NamespacedResults["test"].DeploymentResults[0].PodResult.ContainerResults[0].Messages), "should be equal")
+	assert.Equal(t, 2, len(actualAudit.NamespacedResults["test"].DeploymentResults[0].PodResult.ContainerResults[0].Messages), "should be equal")
 
 	assert.Equal(t, 1, len(actualAudit.NamespacedResults["test"].StatefulSetResults), "should be equal")
 	assert.Equal(t, 1, len(actualAudit.NamespacedResults["test"].StatefulSetResults), "should be equal")
 	assert.Equal(t, 1, len(actualAudit.NamespacedResults["test"].StatefulSetResults[0].PodResult.ContainerResults), "should be equal")
-	assert.Equal(t, 6, len(actualAudit.NamespacedResults["test"].StatefulSetResults[0].PodResult.ContainerResults[0].Messages), "should be equal")
+	assert.Equal(t, 2, len(actualAudit.NamespacedResults["test"].StatefulSetResults[0].PodResult.ContainerResults[0].Messages), "should be equal")
 }
