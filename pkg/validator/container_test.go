@@ -63,6 +63,62 @@ resources:
   memoryLimitsMissing: error
 `
 
+var resourceConfExemptions = `---
+resources:
+  cpuRequestsMissing: warning
+  memoryRequestsMissing: warning
+  cpuLimitsMissing: error
+  memoryLimitsMissing: error
+exemptions:
+  - rules:
+    - cpuRequestsMissing
+    - memoryRequestsMissing
+    - cpuLimitsMissing
+    - memoryLimitsMissing
+    controllerNames:
+    - foo
+`
+
+var resourceConfRangeExemptions = `---
+resources:
+  cpuRequestRanges:
+    error:
+      below: 100m
+      above: 1
+    warning:
+      below: 200m
+      above: 800m
+  memoryRequestRanges:
+    error:
+      below: 100M
+      above: 3G
+    warning:
+      below: 200M
+      above: 2G
+  cpuLimitRanges:
+    error:
+      below: 100m
+      above: 2
+    warning:
+      below: 300m
+      above: 1800m
+  memoryLimitRanges:
+    error:
+      below: 200M
+      above: 6G
+    warning:
+      below: 300M
+      above: 4G
+exemptions:
+  - rules:
+    - cpuRequestRanges
+    - memoryRequestRanges
+    - cpuLimitRanges
+    - memoryLimitRanges
+    controllerNames:
+    - foo
+`
+
 func TestValidateResourcesEmptyConfig(t *testing.T) {
 	container := corev1.Container{
 		Name: "Empty",
@@ -73,9 +129,7 @@ func TestValidateResourcesEmptyConfig(t *testing.T) {
 		ResourceValidation: &ResourceValidation{},
 	}
 
-	expected := conf.Resources{}
-
-	cv.validateResources(&expected)
+	cv.validateResources(&conf.Configuration{}, "")
 	assert.Len(t, cv.Errors, 0)
 }
 
@@ -114,7 +168,7 @@ func TestValidateResourcesEmptyContainer(t *testing.T) {
 		},
 	}
 
-	testValidateResources(t, &container, &resourceConf2, &expectedErrors, &expectedWarnings)
+	testValidateResources(t, &container, &resourceConf2, "foo", &expectedErrors, &expectedWarnings)
 }
 
 func TestValidateResourcesPartiallyValid(t *testing.T) {
@@ -166,7 +220,7 @@ func TestValidateResourcesPartiallyValid(t *testing.T) {
 		},
 	}
 
-	testValidateResources(t, &container, &resourceConf1, &expectedErrors, &expectedWarnings)
+	testValidateResources(t, &container, &resourceConf1, "foo", &expectedErrors, &expectedWarnings)
 }
 
 func TestValidateResourcesInit(t *testing.T) {
@@ -183,10 +237,10 @@ func TestValidateResourcesInit(t *testing.T) {
 	parsedConf, err := conf.Parse([]byte(resourceConf1))
 	assert.NoError(t, err, "Expected no error when parsing config")
 
-	cvEmpty.validateResources(&parsedConf.Resources)
+	cvEmpty.validateResources(&parsedConf, "")
 	assert.Len(t, cvEmpty.Errors, 4)
 
-	cvInit.validateResources(&parsedConf.Resources)
+	cvInit.validateResources(&parsedConf, "")
 	assert.Len(t, cvInit.Errors, 0)
 }
 
@@ -217,10 +271,10 @@ func TestValidateResourcesFullyValid(t *testing.T) {
 		},
 	}
 
-	testValidateResources(t, &container, &resourceConf1, &[]*ResultMessage{}, &[]*ResultMessage{})
+	testValidateResources(t, &container, &resourceConf1, "foo", &[]*ResultMessage{}, &[]*ResultMessage{})
 }
 
-func testValidateResources(t *testing.T, container *corev1.Container, resourceConf *string, expectedErrors *[]*ResultMessage, expectedWarnings *[]*ResultMessage) {
+func testValidateResources(t *testing.T, container *corev1.Container, resourceConf *string, controllerName string, expectedErrors *[]*ResultMessage, expectedWarnings *[]*ResultMessage) {
 	cv := ContainerValidation{
 		Container:          container,
 		ResourceValidation: &ResourceValidation{},
@@ -229,7 +283,7 @@ func testValidateResources(t *testing.T, container *corev1.Container, resourceCo
 	parsedConf, err := conf.Parse([]byte(*resourceConf))
 	assert.NoError(t, err, "Expected no error when parsing config")
 
-	cv.validateResources(&parsedConf.Resources)
+	cv.validateResources(&parsedConf, controllerName)
 	assert.Len(t, cv.Warnings, len(*expectedWarnings))
 	assert.ElementsMatch(t, cv.Warnings, *expectedWarnings)
 
@@ -292,7 +346,7 @@ func TestValidateHealthChecks(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.cv.validateHealthChecks(&tt.probes)
+			tt.cv.validateHealthChecks(&conf.Configuration{HealthChecks: tt.probes}, "")
 
 			if tt.warnings != nil {
 				assert.Len(t, tt.cv.Warnings, len(*tt.warnings))
@@ -405,7 +459,7 @@ func TestValidateImage(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.cv = resetCV(tt.cv)
-			tt.cv.validateImage(&tt.image)
+			tt.cv.validateImage(&conf.Configuration{Images: tt.image}, "")
 			assert.Len(t, tt.cv.Errors, len(tt.expected))
 			assert.ElementsMatch(t, tt.cv.Errors, tt.expected)
 		})
@@ -524,7 +578,7 @@ func TestValidateNetworking(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.cv = resetCV(tt.cv)
-			tt.cv.validateNetworking(&tt.networkConf)
+			tt.cv.validateNetworking(&conf.Configuration{Networking: tt.networkConf}, "")
 			assert.Len(t, tt.cv.messages(), len(tt.expectedMessages))
 			assert.ElementsMatch(t, tt.cv.messages(), tt.expectedMessages)
 		})
@@ -1014,11 +1068,67 @@ func TestValidateSecurity(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.cv = resetCV(tt.cv)
-			tt.cv.validateSecurity(&tt.securityConf)
+			tt.cv.validateSecurity(&conf.Configuration{Security: tt.securityConf}, "")
 			assert.Len(t, tt.cv.messages(), len(tt.expectedMessages))
 			assert.ElementsMatch(t, tt.cv.messages(), tt.expectedMessages)
 		})
 	}
+}
+
+func TestValidateResourcesExemption(t *testing.T) {
+	container := corev1.Container{
+		Name: "Empty",
+	}
+
+	expectedWarnings := []*ResultMessage{}
+	expectedErrors := []*ResultMessage{}
+
+	testValidateResources(t, &container, &resourceConfExemptions, "foo", &expectedErrors, &expectedWarnings)
+
+	expectedWarnings = []*ResultMessage{
+		{
+			ID:       "cpuRequestsMissing",
+			Type:     "warning",
+			Message:  "CPU requests should be set",
+			Category: "Resources",
+		},
+		{
+			ID:       "memoryRequestsMissing",
+			Type:     "warning",
+			Message:  "Memory requests should be set",
+			Category: "Resources",
+		},
+	}
+
+	expectedErrors = []*ResultMessage{
+		{
+			ID:       "cpuLimitsMissing",
+			Type:     "error",
+			Message:  "CPU limits should be set",
+			Category: "Resources",
+		},
+		{
+			ID:       "memoryLimitsMissing",
+			Type:     "error",
+			Message:  "Memory limits should be set",
+			Category: "Resources",
+		},
+	}
+
+	disallowExemptionsConf := resourceConfExemptions + "\ndisallowExemptions: true"
+
+	testValidateResources(t, &container, &disallowExemptionsConf, "foo", &expectedErrors, &expectedWarnings)
+}
+
+func TestValidateResourceRangeExemption(t *testing.T) {
+	container := corev1.Container{
+		Name: "Empty",
+	}
+
+	expectedWarnings := []*ResultMessage{}
+	expectedErrors := []*ResultMessage{}
+
+	testValidateResources(t, &container, &resourceConfRangeExemptions, "foo", &expectedErrors, &expectedWarnings)
 }
 
 func resetCV(cv ContainerValidation) ContainerValidation {

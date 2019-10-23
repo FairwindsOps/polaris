@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -146,6 +147,7 @@ func TestConfigFromURL(t *testing.T) {
 			log.Fatalf("ListenAndServe(): %s", err)
 		}
 	}()
+	time.Sleep(time.Second)
 
 	parsedConf, err = ParseFile("http://localhost:8081/exampleURL")
 	assert.NoError(t, err, "Expected no error when parsing YAML from URL")

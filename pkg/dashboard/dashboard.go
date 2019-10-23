@@ -19,10 +19,11 @@ import (
 	"encoding/json"
 	"html/template"
 	"net/http"
+	"net/url"
 	"path"
 	"strings"
 
-	conf "github.com/fairwindsops/polaris/pkg/config"
+	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
 	"github.com/fairwindsops/polaris/pkg/validator"
 	packr "github.com/gobuffalo/packr/v2"
@@ -81,6 +82,7 @@ func GetMarkdownBox() *packr.Box {
 // templateData is passed to the dashboard HTML template
 type templateData struct {
 	BasePath  string
+	Config    config.Configuration
 	AuditData validator.AuditData
 	JSON      template.JS
 }
@@ -136,12 +138,28 @@ func writeTemplate(tmpl *template.Template, data *templateData, w http.ResponseW
 	buf.WriteTo(w)
 }
 
+func getConfigForQuery(base config.Configuration, query url.Values) config.Configuration {
+	c := base
+	exemptions := query.Get("disallowExemptions")
+	if exemptions == "false" {
+		c.DisallowExemptions = false
+	}
+	if exemptions == "true" {
+		c.DisallowExemptions = true
+	}
+	return c
+}
+
 // GetRouter returns a mux router serving all routes necessary for the dashboard
-func GetRouter(c conf.Configuration, auditPath string, port int, basePath string, auditData *validator.AuditData) *mux.Router {
+func GetRouter(c config.Configuration, auditPath string, port int, basePath string, auditData *validator.AuditData) *mux.Router {
 	router := mux.NewRouter().PathPrefix(basePath).Subrouter()
+	fileServer := http.FileServer(GetAssetBox())
+	router.PathPrefix("/static/").Handler(http.StripPrefix(path.Join(basePath, "/static/"), fileServer))
+
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
+
 	router.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		favicon, err := GetAssetBox().Find("favicon-32x32.png")
 		if err != nil {
@@ -151,7 +169,9 @@ func GetRouter(c conf.Configuration, auditPath string, port int, basePath string
 		}
 		w.Write(favicon)
 	})
+
 	router.HandleFunc("/results.json", func(w http.ResponseWriter, r *http.Request) {
+		adjustedConf := getConfigForQuery(c, r.URL.Query())
 		if auditData == nil {
 			k, err := kube.CreateResourceProvider(auditPath)
 			if err != nil {
@@ -160,7 +180,7 @@ func GetRouter(c conf.Configuration, auditPath string, port int, basePath string
 				return
 			}
 
-			auditDataObj, err := validator.RunAudit(c, k)
+			auditDataObj, err := validator.RunAudit(adjustedConf, k)
 			if err != nil {
 				http.Error(w, "Error Fetching Deployments", http.StatusInternalServerError)
 				return
@@ -169,38 +189,39 @@ func GetRouter(c conf.Configuration, auditPath string, port int, basePath string
 		}
 
 		JSONHandler(w, r, auditData)
-
 	})
+
 	router.HandleFunc("/details/{category}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		category := vars["category"]
 		category = strings.Replace(category, ".md", "", -1)
 		DetailsHandler(w, r, category, basePath)
 	})
-	fileServer := http.FileServer(GetAssetBox())
-	router.PathPrefix("/static/").Handler(http.StripPrefix(path.Join(basePath, "/static/"), fileServer))
+
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" && r.URL.Path != basePath {
 			http.NotFound(w, r)
 			return
 		}
-		k, err := kube.CreateResourceProvider(auditPath)
-		if err != nil {
-			logrus.Errorf("Error fetching Kubernetes resources %v", err)
-			http.Error(w, "Error fetching Kubernetes resources", http.StatusInternalServerError)
-			return
-		}
-		if auditData == nil {
-			auditData, err := validator.RunAudit(c, k)
+		adjustedConf := getConfigForQuery(c, r.URL.Query())
 
+		if auditData == nil {
+			k, err := kube.CreateResourceProvider(auditPath)
+			if err != nil {
+				logrus.Errorf("Error fetching Kubernetes resources %v", err)
+				http.Error(w, "Error fetching Kubernetes resources", http.StatusInternalServerError)
+				return
+			}
+
+			auditData, err := validator.RunAudit(adjustedConf, k)
 			if err != nil {
 				logrus.Errorf("Error getting audit data: %v", err)
 				http.Error(w, "Error running audit", 500)
 				return
 			}
-			MainHandler(w, r, auditData, basePath)
+			MainHandler(w, r, adjustedConf, auditData, basePath)
 		} else {
-			MainHandler(w, r, *auditData, basePath)
+			MainHandler(w, r, adjustedConf, *auditData, basePath)
 		}
 
 	})
@@ -208,7 +229,7 @@ func GetRouter(c conf.Configuration, auditPath string, port int, basePath string
 }
 
 // MainHandler gets template data and renders the dashboard with it.
-func MainHandler(w http.ResponseWriter, r *http.Request, auditData validator.AuditData, basePath string) {
+func MainHandler(w http.ResponseWriter, r *http.Request, c config.Configuration, auditData validator.AuditData, basePath string) {
 	jsonData, err := json.Marshal(auditData)
 
 	if err != nil {
@@ -220,6 +241,7 @@ func MainHandler(w http.ResponseWriter, r *http.Request, auditData validator.Aud
 		BasePath:  basePath,
 		AuditData: auditData,
 		JSON:      template.JS(jsonData),
+		Config:    c,
 	}
 	tmpl, err := GetBaseTemplate("main")
 	if err != nil {
