@@ -285,10 +285,10 @@ func testValidateResources(t *testing.T, container *corev1.Container, resourceCo
 
 	cv.validateResources(&parsedConf, controllerName)
 	assert.Len(t, cv.Warnings, len(*expectedWarnings))
-	assert.ElementsMatch(t, cv.Warnings, *expectedWarnings)
+	assert.ElementsMatch(t, *expectedWarnings, cv.Warnings)
 
 	assert.Len(t, cv.Errors, len(*expectedErrors))
-	assert.ElementsMatch(t, cv.Errors, *expectedErrors)
+	assert.ElementsMatch(t, *expectedErrors, cv.Errors)
 }
 
 func TestValidateHealthChecks(t *testing.T) {

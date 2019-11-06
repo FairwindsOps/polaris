@@ -40,7 +40,7 @@ func TestValidatePod(t *testing.T) {
 
 	expectedSum := ResultSummary{
 		Totals: CountSummary{
-			Successes: uint(8),
+			Successes: uint(4),
 			Warnings:  uint(0),
 			Errors:    uint(0),
 		},
@@ -48,11 +48,6 @@ func TestValidatePod(t *testing.T) {
 	}
 	expectedSum.ByCategory["Networking"] = &CountSummary{
 		Successes: uint(2),
-		Warnings:  uint(0),
-		Errors:    uint(0),
-	}
-	expectedSum.ByCategory["Resources"] = &CountSummary{
-		Successes: uint(4),
 		Warnings:  uint(0),
 		Errors:    uint(0),
 	}
@@ -68,7 +63,7 @@ func TestValidatePod(t *testing.T) {
 		{ID: "hostNetworkSet", Message: "Host network is not configured", Type: "success", Category: "Networking"},
 	}
 
-	actualPodResult := ValidatePod(c, "", &pod.Spec)
+	actualPodResult := ValidatePod(c, &pod.Spec, "", conf.Deployments)
 
 	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, &expectedSum, actualPodResult.Summary)
@@ -94,7 +89,7 @@ func TestInvalidIPCPod(t *testing.T) {
 
 	expectedSum := ResultSummary{
 		Totals: CountSummary{
-			Successes: uint(7),
+			Successes: uint(3),
 			Warnings:  uint(0),
 			Errors:    uint(1),
 		},
@@ -102,11 +97,6 @@ func TestInvalidIPCPod(t *testing.T) {
 	}
 	expectedSum.ByCategory["Networking"] = &CountSummary{
 		Successes: uint(2),
-		Warnings:  uint(0),
-		Errors:    uint(0),
-	}
-	expectedSum.ByCategory["Resources"] = &CountSummary{
-		Successes: uint(4),
 		Warnings:  uint(0),
 		Errors:    uint(0),
 	}
@@ -121,7 +111,7 @@ func TestInvalidIPCPod(t *testing.T) {
 		{ID: "hostNetworkSet", Message: "Host network is not configured", Type: "success", Category: "Networking"},
 	}
 
-	actualPodResult := ValidatePod(c, "", &pod.Spec)
+	actualPodResult := ValidatePod(c, &pod.Spec, "", conf.Deployments)
 
 	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, &expectedSum, actualPodResult.Summary)
@@ -147,7 +137,7 @@ func TestInvalidNeworkPod(t *testing.T) {
 
 	expectedSum := ResultSummary{
 		Totals: CountSummary{
-			Successes: uint(7),
+			Successes: uint(3),
 			Warnings:  uint(1),
 			Errors:    uint(0),
 		},
@@ -156,12 +146,6 @@ func TestInvalidNeworkPod(t *testing.T) {
 	expectedSum.ByCategory["Networking"] = &CountSummary{
 		Successes: uint(1),
 		Warnings:  uint(1),
-		Errors:    uint(0),
-	}
-
-	expectedSum.ByCategory["Resources"] = &CountSummary{
-		Successes: uint(4),
-		Warnings:  uint(0),
 		Errors:    uint(0),
 	}
 
@@ -177,7 +161,8 @@ func TestInvalidNeworkPod(t *testing.T) {
 		{ID: "hostPIDSet", Message: "Host PID is not configured", Type: "success", Category: "Security"},
 	}
 
-	actualPodResult := ValidatePod(c, "", &pod.Spec)
+	actualPodResult := ValidatePod(c, &pod.Spec, "", conf.Deployments)
+
 	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, &expectedSum, actualPodResult.Summary)
 	assert.EqualValues(t, expectedMessages, actualPodResult.Messages)
@@ -202,7 +187,7 @@ func TestInvalidPIDPod(t *testing.T) {
 
 	expectedSum := ResultSummary{
 		Totals: CountSummary{
-			Successes: uint(7),
+			Successes: uint(3),
 			Warnings:  uint(0),
 			Errors:    uint(1),
 		},
@@ -210,11 +195,6 @@ func TestInvalidPIDPod(t *testing.T) {
 	}
 	expectedSum.ByCategory["Networking"] = &CountSummary{
 		Successes: uint(2),
-		Warnings:  uint(0),
-		Errors:    uint(0),
-	}
-	expectedSum.ByCategory["Resources"] = &CountSummary{
-		Successes: uint(4),
 		Warnings:  uint(0),
 		Errors:    uint(0),
 	}
@@ -230,7 +210,7 @@ func TestInvalidPIDPod(t *testing.T) {
 		{ID: "hostNetworkSet", Message: "Host network is not configured", Type: "success", Category: "Networking"},
 	}
 
-	actualPodResult := ValidatePod(c, "", &pod.Spec)
+	actualPodResult := ValidatePod(c, &pod.Spec, "", conf.Deployments)
 
 	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, &expectedSum, actualPodResult.Summary)
@@ -262,7 +242,7 @@ func TestExemption(t *testing.T) {
 
 	expectedSum := ResultSummary{
 		Totals: CountSummary{
-			Successes: uint(7),
+			Successes: uint(3),
 			Warnings:  uint(0),
 			Errors:    uint(0),
 		},
@@ -270,11 +250,6 @@ func TestExemption(t *testing.T) {
 	}
 	expectedSum.ByCategory["Networking"] = &CountSummary{
 		Successes: uint(2),
-		Warnings:  uint(0),
-		Errors:    uint(0),
-	}
-	expectedSum.ByCategory["Resources"] = &CountSummary{
-		Successes: uint(4),
 		Warnings:  uint(0),
 		Errors:    uint(0),
 	}
@@ -288,7 +263,7 @@ func TestExemption(t *testing.T) {
 		{ID: "hostNetworkSet", Message: "Host network is not configured", Type: "success", Category: "Networking"},
 	}
 
-	actualPodResult := ValidatePod(c, "foo", &pod.Spec)
+	actualPodResult := ValidatePod(c, &pod.Spec, "foo", conf.Deployments)
 
 	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, &expectedSum, actualPodResult.Summary)

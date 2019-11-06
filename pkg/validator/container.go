@@ -38,7 +38,7 @@ type ContainerValidation struct {
 //       relevant podSpec in order to check certain aspects of a containerSpec.
 //       Perhaps there is a more ideal solution instead of attaching a parent
 //       podSpec to every container Validation struct...
-func ValidateContainer(container *corev1.Container, parentPodResult *PodResult, controllerName string, conf *config.Configuration, isInit bool) ContainerResult {
+func ValidateContainer(container *corev1.Container, parentPodResult *PodResult, conf *config.Configuration, controllerName string, controllerType config.SupportedController, isInit bool) ContainerResult {
 	cv := ContainerValidation{
 		Container:          container,
 		ResourceValidation: &ResourceValidation{},
@@ -58,7 +58,9 @@ func ValidateContainer(container *corev1.Container, parentPodResult *PodResult, 
 	}
 
 	cv.validateResources(conf, controllerName)
-	cv.validateHealthChecks(conf, controllerName)
+	if !isInit && controllerType != config.Jobs && controllerType != config.CronJobs {
+		cv.validateHealthChecks(conf, controllerName)
+	}
 	cv.validateImage(conf, controllerName)
 	cv.validateNetworking(conf, controllerName)
 	cv.validateSecurity(conf, controllerName)
@@ -138,12 +140,8 @@ func (cv *ContainerValidation) validateResourceRange(id, resourceName string, ra
 		cv.addError(fmt.Sprintf(messages.ResourceAmountTooLowFailure, resourceName, errorBelow.String()), category, id)
 	} else if warnBelow != nil && warnBelow.MilliValue() > res.MilliValue() {
 		cv.addWarning(fmt.Sprintf(messages.ResourceAmountTooLowFailure, resourceName, warnBelow.String()), category, id)
-	} else {
-		if warnAbove != nil || warnBelow != nil || errorAbove != nil || errorBelow != nil {
-			cv.addSuccess(fmt.Sprintf(messages.ResourceAmountSuccess, resourceName), category, id)
-		} else {
-			cv.addSuccess(fmt.Sprintf(messages.ResourcePresentSuccess, resourceName), category, id)
-		}
+	} else if errorAbove != nil && warnAbove != nil && errorBelow != nil && warnBelow != nil {
+		cv.addSuccess(fmt.Sprintf(messages.ResourceAmountSuccess, resourceName), category, id)
 	}
 }
 
