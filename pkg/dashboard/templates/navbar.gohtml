@@ -9,6 +9,16 @@
           <img class="fw-logo" src="static/images/oss-logo.png" alt="Fairwinds" />
         </a>
       </div>
+      {{ if and (not .Config.DisallowExemptions) (gt (len .Config.Exemptions) 0) }}
+      <div class="exemption-alert">
+        <i class="fas fa-exclamation"></i>
+        <span>
+          Some checks were skipped based on configured exemptions.
+          <a href="?disallowExemptions=true">Click here</a>
+          to view the report with these checks included.
+        </span>
+      </div>
+      {{ end }}
     </div>
   </div>
 {{end}}

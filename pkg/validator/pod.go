@@ -15,7 +15,7 @@
 package validator
 
 import (
-	conf "github.com/fairwindsops/polaris/pkg/config"
+	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/validator/messages"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -27,14 +27,14 @@ type PodValidation struct {
 }
 
 // ValidatePod validates that each pod conforms to the Polaris config, returns a ResourceResult.
-func ValidatePod(podConf conf.Configuration, pod *corev1.PodSpec) PodResult {
+func ValidatePod(conf config.Configuration, controllerName string, pod *corev1.PodSpec) PodResult {
 	pv := PodValidation{
 		Pod:                pod,
 		ResourceValidation: &ResourceValidation{},
 	}
 
-	pv.validateSecurity(&podConf.Security)
-	pv.validateNetworking(&podConf.Networking)
+	pv.validateSecurity(&conf, controllerName)
+	pv.validateNetworking(&conf, controllerName)
 
 	pRes := PodResult{
 		Messages:         pv.messages(),
@@ -43,8 +43,8 @@ func ValidatePod(podConf conf.Configuration, pod *corev1.PodSpec) PodResult {
 		podSpec:          *pod,
 	}
 
-	pv.validateContainers(pod.InitContainers, &pRes, &podConf, true)
-	pv.validateContainers(pod.Containers, &pRes, &podConf, false)
+	pv.validateContainers(pod.InitContainers, &pRes, controllerName, &conf, true)
+	pv.validateContainers(pod.Containers, &pRes, controllerName, &conf, false)
 
 	for _, cRes := range pRes.ContainerResults {
 		pRes.Summary.appendResults(*cRes.Summary)
@@ -53,42 +53,45 @@ func ValidatePod(podConf conf.Configuration, pod *corev1.PodSpec) PodResult {
 	return pRes
 }
 
-func (pv *PodValidation) validateContainers(containers []corev1.Container, pRes *PodResult, podConf *conf.Configuration, isInit bool) {
+func (pv *PodValidation) validateContainers(containers []corev1.Container, pRes *PodResult, controllerName string, conf *config.Configuration, isInit bool) {
 	for _, container := range containers {
-		cRes := ValidateContainer(&container, pRes, podConf, isInit)
+		cRes := ValidateContainer(&container, pRes, controllerName, conf, isInit)
 		pRes.ContainerResults = append(pRes.ContainerResults, cRes)
 	}
 }
 
-func (pv *PodValidation) validateSecurity(securityConf *conf.Security) {
+func (pv *PodValidation) validateSecurity(conf *config.Configuration, controllerName string) {
 	category := messages.CategorySecurity
 
-	if securityConf.HostIPCSet.IsActionable() {
-		id := getIDFromField(*securityConf, "HostIPCSet")
+	name := "HostIPCSet"
+	if conf.IsActionable(conf.Security, name, controllerName) {
+		id := config.GetIDFromField(conf.Security, name)
 		if pv.Pod.HostIPC {
-			pv.addFailure(messages.HostIPCFailure, securityConf.HostIPCSet, category, id)
+			pv.addFailure(messages.HostIPCFailure, conf.Security.HostIPCSet, category, id)
 		} else {
 			pv.addSuccess(messages.HostIPCSuccess, category, id)
 		}
 	}
 
-	if securityConf.HostPIDSet.IsActionable() {
-		id := getIDFromField(*securityConf, "HostPIDSet")
+	name = "HostPIDSet"
+	if conf.IsActionable(conf.Security, name, controllerName) {
+		id := config.GetIDFromField(conf.Security, name)
 		if pv.Pod.HostPID {
-			pv.addFailure(messages.HostPIDFailure, securityConf.HostPIDSet, category, id)
+			pv.addFailure(messages.HostPIDFailure, conf.Security.HostPIDSet, category, id)
 		} else {
 			pv.addSuccess(messages.HostPIDSuccess, category, id)
 		}
 	}
 }
 
-func (pv *PodValidation) validateNetworking(networkConf *conf.Networking) {
+func (pv *PodValidation) validateNetworking(conf *config.Configuration, controllerName string) {
 	category := messages.CategoryNetworking
 
-	if networkConf.HostNetworkSet.IsActionable() {
-		id := getIDFromField(*networkConf, "HostNetworkSet")
+	name := "HostNetworkSet"
+	if conf.IsActionable(conf.Networking, name, controllerName) {
+		id := config.GetIDFromField(conf.Networking, name)
 		if pv.Pod.HostNetwork {
-			pv.addFailure(messages.HostNetworkFailure, networkConf.HostNetworkSet, category, id)
+			pv.addFailure(messages.HostNetworkFailure, conf.Networking.HostNetworkSet, category, id)
 		} else {
 			pv.addSuccess(messages.HostNetworkSuccess, category, id)
 		}

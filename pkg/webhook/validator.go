@@ -20,7 +20,7 @@ import (
 	"net/http"
 	"os"
 
-	conf "github.com/fairwindsops/polaris/pkg/config"
+	"github.com/fairwindsops/polaris/pkg/config"
 	validator "github.com/fairwindsops/polaris/pkg/validator"
 	"github.com/fairwindsops/polaris/pkg/validator/controllers"
 	"github.com/sirupsen/logrus"
@@ -42,7 +42,7 @@ import (
 type Validator struct {
 	client  client.Client
 	decoder types.Decoder
-	Config  conf.Configuration
+	Config  config.Configuration
 }
 
 var _ inject.Client = &Validator{}
@@ -94,7 +94,7 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 	if req.AdmissionRequest.Kind.Kind == "Pod" {
 		pod := corev1.Pod{}
 		err = v.decoder.Decode(req, &pod)
-		podResult = validator.ValidatePod(v.Config, &pod.Spec)
+		podResult = validator.ValidatePod(v.Config, "", &pod.Spec)
 	} else {
 		var controller controllers.Interface
 		if yes := v.Config.CheckIfKindIsConfiguredForValidation(req.AdmissionRequest.Kind.Kind); !yes {
@@ -103,7 +103,7 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 		}
 
 		// We should never hit this case unless something is misconfiured in CheckIfKindIsConfiguredForValidation
-		controllerType, err := conf.GetSupportedControllerFromString(req.AdmissionRequest.Kind.Kind)
+		controllerType, err := config.GetSupportedControllerFromString(req.AdmissionRequest.Kind.Kind)
 		if err != nil {
 			msg := fmt.Errorf("Unexpected error occurred. Expected Kind to be a supported type (%s)", req.AdmissionRequest.Kind.Kind)
 			logrus.Error(msg)
@@ -113,27 +113,27 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 		// For each type, perform the scan
 		// TODO: This isn't really that elegant due to the decoder and NewXXXController setup :( could use love
 		switch controllerType {
-		case conf.Deployments:
+		case config.Deployments:
 			deploy := appsv1.Deployment{}
 			err = v.decoder.Decode(req, &deploy)
 			controller = controllers.NewDeploymentController(deploy)
-		case conf.StatefulSets:
+		case config.StatefulSets:
 			statefulSet := appsv1.StatefulSet{}
 			err = v.decoder.Decode(req, &statefulSet)
 			controller = controllers.NewStatefulSetController(statefulSet)
-		case conf.DaemonSets:
+		case config.DaemonSets:
 			daemonSet := appsv1.DaemonSet{}
 			err = v.decoder.Decode(req, &daemonSet)
 			controller = controllers.NewDaemonSetController(daemonSet)
-		case conf.Jobs:
+		case config.Jobs:
 			job := batchv1.Job{}
 			err = v.decoder.Decode(req, &job)
 			controller = controllers.NewJobController(job)
-		case conf.CronJobs:
+		case config.CronJobs:
 			cronJob := batchv1beta1.CronJob{}
 			err = v.decoder.Decode(req, &cronJob)
 			controller = controllers.NewCronJobController(cronJob)
-		case conf.ReplicationControllers:
+		case config.ReplicationControllers:
 			replicationController := corev1.ReplicationController{}
 			err = v.decoder.Decode(req, &replicationController)
 			controller = controllers.NewReplicationControllerController(replicationController)

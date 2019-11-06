@@ -62,6 +62,7 @@ func main() {
 	loadAuditFile := flag.String("load-audit-file", "", "Runs the dashboard with data saved from a past audit.")
 	displayName := flag.String("display-name", "", "An optional identifier for the audit")
 	configPath := flag.String("config", "", "Location of Polaris configuration file")
+	disallowExemptions := flag.Bool("disallow-exemptions", false, "Location of Polaris configuration file")
 	logLevel := flag.String("log-level", logrus.InfoLevel.String(), "Logrus log level")
 	version := flag.Bool("version", false, "Prints the version of Polaris")
 	disableWebhookConfigInstaller := flag.Bool("disable-webhook-config-installer", false,
@@ -69,13 +70,11 @@ func main() {
 
 	flag.Parse()
 
-	// if version is specified anywhere, print and exit
 	if *version {
 		fmt.Printf("Polaris version %s\n", Version)
 		os.Exit(0)
 	}
 
-	// Set logging level
 	parsedLevel, err := logrus.ParseLevel(*logLevel)
 	if err != nil {
 		logrus.Errorf("log-level flag has invalid value %s", *logLevel)
@@ -83,24 +82,24 @@ func main() {
 		logrus.SetLevel(parsedLevel)
 	}
 
-	// Parse the config file
 	c, err := conf.ParseFile(*configPath)
 	if err != nil {
 		logrus.Errorf("Error parsing config at %s: %v", *configPath, err)
 		os.Exit(1)
 	}
 
-	// Override display name on reports if defined in CLI flags
 	if *displayName != "" {
 		c.DisplayName = *displayName
 	}
 
-	// default to run as audit if no "run-mode" is defined
+	if *disallowExemptions {
+		c.DisallowExemptions = true
+	}
+
 	if !*dashboard && !*webhook && !*audit {
 		*audit = true
 	}
 
-	// perform the action for the desired "run-mode"
 	if *webhook {
 		startWebhookServer(c, *disableWebhookConfigInstaller, *webhookPort)
 	} else if *dashboard {
@@ -108,7 +107,6 @@ func main() {
 	} else if *audit {
 		auditData := runAndReportAudit(c, *auditPath, *auditOutputFile, *auditOutputURL, *auditOutputFormat)
 
-		// exit code 3 if any errors in the audit else if score is under desired minimum, exit 4
 		if *setExitCode && auditData.ClusterSummary.Results.Totals.Errors > 0 {
 			logrus.Infof("%d errors found in audit", auditData.ClusterSummary.Results.Totals.Errors)
 			os.Exit(3)
