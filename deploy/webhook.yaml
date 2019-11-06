@@ -6,6 +6,7 @@ metadata:
   name: polaris
 ---
 # Source: polaris/templates/webhook.secret.yaml
+# The name of this secret is static as it is populated by the webhook pod.
 apiVersion: v1
 kind: Secret
 metadata:
@@ -212,8 +213,6 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  annotations:
-    checksum/config: '8aa5a565fba7a2db98d46752087de8c1dcc83b70cd762c5829d5ba01270d54a2'
   name: polaris-webhook
   namespace: polaris
   labels:
@@ -227,6 +226,8 @@ spec:
       component: webhook
   template:
     metadata:
+      annotations:
+        checksum/config: '8aa5a565fba7a2db98d46752087de8c1dcc83b70cd762c5829d5ba01270d54a2'
       labels:
         app: polaris
         component: webhook
@@ -238,7 +239,7 @@ spec:
             - --webhook
             - --config
             - /opt/app/config.yaml
-          image: 'quay.io/reactiveops/polaris:0.4'
+          image: 'quay.io/reactiveops/polaris:0.5'
           imagePullPolicy: 'Always'
           ports:
             - containerPort: 9876
@@ -288,8 +289,8 @@ spec:
               mountPath: /tmp/
               readOnly: false
       serviceAccountName:  polaris-webhook
-      nodeSelector: {}
-      tolerations: []
+      nodeSelector:
+      tolerations:
       volumes:
         - name: config
           configMap:

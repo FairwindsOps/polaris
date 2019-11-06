@@ -134,6 +134,7 @@ metadata:
   namespace: polaris
   labels:
     app: polaris
+  annotations:
 spec:
   ports:
   - name: dashboard
@@ -149,8 +150,6 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  annotations:
-    checksum/config: '8aa5a565fba7a2db98d46752087de8c1dcc83b70cd762c5829d5ba01270d54a2'
   name: polaris-dashboard
   namespace: polaris
   labels:
@@ -164,6 +163,8 @@ spec:
       component: dashboard
   template:
     metadata:
+      annotations:
+        checksum/config: '8aa5a565fba7a2db98d46752087de8c1dcc83b70cd762c5829d5ba01270d54a2'
       labels:
         app: polaris
         component: dashboard
@@ -178,7 +179,7 @@ spec:
         - --dashboard
         - --config
         - /opt/app/config.yaml
-        image: 'quay.io/reactiveops/polaris:0.4'
+        image: 'quay.io/reactiveops/polaris:0.5'
         imagePullPolicy: 'Always'
         name: dashboard
         ports:
@@ -216,8 +217,8 @@ spec:
           subPath: config.yaml
           readOnly: true
       serviceAccountName: polaris-dashboard
-      nodeSelector: {}
-      tolerations: []
+      nodeSelector:
+      tolerations:
 ---
 # Source: polaris/templates/audit.job.yaml
 
