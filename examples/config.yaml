@@ -123,6 +123,8 @@ exemptions:
     rules:
       - hostPIDSet
   - controllerNames:
-      - kube-proxy
+      - polaris
+      - kube-hunter
+      - goldilocks
     rules:
-      - runAsPrivileged
+      - readOnlyRootFilesystem
