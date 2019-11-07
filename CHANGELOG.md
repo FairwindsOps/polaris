@@ -1,8 +1,5 @@
 # x.x.x (next release)
 
-# 0.6.0
-* Exempt polaris,kubehunter and goldilock from `readOnlyRootFilesystem` check as is required.
-
 # 0.5.0
 * Added `--load-audit-file` flag to run the dashboard from an existing audit
 * Added an `ID` field to each check in the output
