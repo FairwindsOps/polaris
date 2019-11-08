@@ -2,6 +2,7 @@ package config
 
 import (
 	"reflect"
+	"strings"
 )
 
 // IsActionable determines whether a check is actionable given the current configuration
@@ -21,7 +22,7 @@ func (conf *Configuration) IsActionable(subConf interface{}, ruleName, controlle
 				continue
 			}
 			for _, controller := range example.ControllerNames {
-				if controller == controllerName {
+				if strings.HasPrefix(controllerName, controller) {
 					return false
 				}
 			}
