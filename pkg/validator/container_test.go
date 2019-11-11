@@ -15,6 +15,7 @@
 package validator
 
 import (
+	"fmt"
 	"testing"
 
 	conf "github.com/fairwindsops/polaris/pkg/config"
@@ -1072,6 +1073,135 @@ func TestValidateSecurity(t *testing.T) {
 			assert.Len(t, tt.cv.messages(), len(tt.expectedMessages))
 			assert.ElementsMatch(t, tt.cv.messages(), tt.expectedMessages)
 		})
+	}
+}
+
+func TestValidateRunAsRoot(t *testing.T) {
+	falseVar := false
+	trueVar := true
+	nonRootUser := int64(1000)
+	rootUser := int64(0)
+	config := conf.Configuration{
+		Security: conf.Security{
+			RunAsRootAllowed: conf.SeverityWarning,
+		},
+	}
+	testCases := []struct {
+		cv      ContainerValidation
+		message ResultMessage
+	}{
+		{
+			cv: ContainerValidation{
+				ResourceValidation: &ResourceValidation{},
+				Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
+					RunAsNonRoot: nil,
+				}},
+				parentPodSpec: corev1.PodSpec{
+					SecurityContext: &corev1.PodSecurityContext{
+						RunAsNonRoot: &falseVar,
+					},
+				},
+			},
+			message: ResultMessage{
+				ID:       "runAsRootAllowed",
+				Message:  "Should not be allowed to run as root",
+				Type:     "warning",
+				Category: "Security",
+			},
+		},
+		{
+			cv: ContainerValidation{
+				ResourceValidation: &ResourceValidation{},
+				Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
+					RunAsNonRoot: &trueVar,
+				}},
+				parentPodSpec: corev1.PodSpec{
+					SecurityContext: &corev1.PodSecurityContext{
+						RunAsNonRoot: &falseVar,
+					},
+				},
+			},
+			message: ResultMessage{
+				ID:       "runAsRootAllowed",
+				Message:  "Is not allowed to run as root",
+				Type:     "success",
+				Category: "Security",
+			},
+		},
+		{
+			cv: ContainerValidation{
+				ResourceValidation: &ResourceValidation{},
+				Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
+					RunAsUser: &nonRootUser,
+				}},
+			},
+			message: ResultMessage{
+				ID:       "runAsRootAllowed",
+				Message:  "Is not allowed to run as root",
+				Type:     "success",
+				Category: "Security",
+			},
+		},
+		{
+			cv: ContainerValidation{
+				ResourceValidation: &ResourceValidation{},
+				Container:          &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{}},
+				parentPodSpec: corev1.PodSpec{
+					SecurityContext: &corev1.PodSecurityContext{
+						RunAsUser: &nonRootUser,
+					},
+				},
+			},
+			message: ResultMessage{
+				ID:       "runAsRootAllowed",
+				Message:  "Is not allowed to run as root",
+				Type:     "success",
+				Category: "Security",
+			},
+		},
+		{
+			cv: ContainerValidation{
+				ResourceValidation: &ResourceValidation{},
+				Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
+					RunAsUser: &rootUser,
+				}},
+				parentPodSpec: corev1.PodSpec{
+					SecurityContext: &corev1.PodSecurityContext{
+						RunAsUser: &nonRootUser,
+					},
+				},
+			},
+			message: ResultMessage{
+				ID:       "runAsRootAllowed",
+				Message:  "Should not be allowed to run as root",
+				Type:     "warning",
+				Category: "Security",
+			},
+		},
+		{
+			cv: ContainerValidation{
+				ResourceValidation: &ResourceValidation{},
+				Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
+					RunAsNonRoot: &falseVar,
+				}},
+				parentPodSpec: corev1.PodSpec{
+					SecurityContext: &corev1.PodSecurityContext{
+						RunAsUser: &nonRootUser,
+					},
+				},
+			},
+			message: ResultMessage{
+				ID:       "runAsRootAllowed",
+				Message:  "Should not be allowed to run as root",
+				Type:     "warning",
+				Category: "Security",
+			},
+		},
+	}
+	for idx, tt := range testCases {
+		tt.cv.validateSecurity(&config, "")
+		assert.Len(t, tt.cv.messages(), 1)
+		assert.Equal(t, &tt.message, tt.cv.messages()[0], fmt.Sprintf("Test case %d failed", idx))
 	}
 }
 
