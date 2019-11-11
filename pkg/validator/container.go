@@ -235,19 +235,16 @@ func (cv *ContainerValidation) validateSecurity(conf *config.Configuration, cont
 	name := "RunAsRootAllowed"
 	if conf.IsActionable(conf.Security, name, controllerName) {
 		id := config.GetIDFromField(conf.Security, name)
-		if getBoolValue(securityContext.RunAsNonRoot) {
+		runAsRootSuccess := false
+		if getBoolValue(securityContext.RunAsNonRoot) || (securityContext.RunAsUser != nil && *securityContext.RunAsUser > 0) {
 			// Check if the container is explicitly set to True (pass)
+			runAsRootSuccess = true
+		} else if securityContext.RunAsNonRoot == nil && securityContext.RunAsUser == nil {
+			// Or if the container values are unset, check the pod values
+			runAsRootSuccess = getBoolValue(podSecurityContext.RunAsNonRoot) || (podSecurityContext.RunAsUser != nil && *podSecurityContext.RunAsUser > 0)
+		}
+		if runAsRootSuccess {
 			cv.addSuccess(messages.RunAsRootSuccess, category, id)
-		} else if securityContext.RunAsNonRoot == nil {
-			// Check if the value in the container spec if nil (thus defaulting to the podspec)
-			// Check if the container value is not set
-			if getBoolValue(podSecurityContext.RunAsNonRoot) {
-				// if the pod spec default for containers is true, then pass
-				cv.addSuccess(messages.RunAsRootSuccess, category, id)
-			} else {
-				// else fail as RunAsNonRoot defaults to false
-				cv.addFailure(messages.RunAsRootFailure, conf.Security.RunAsRootAllowed, category, id)
-			}
 		} else {
 			cv.addFailure(messages.RunAsRootFailure, conf.Security.RunAsRootAllowed, category, id)
 		}
