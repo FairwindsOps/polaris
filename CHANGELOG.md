@@ -1,5 +1,10 @@
 # x.x.x (next release)
 
+# 0.5.1
+* Added a few more exemptions
+* Started checking exemptions based on controller name prefix
+* `runAsUser != 0` now passes the `runAsNonRoot` check
+
 # 0.5.0
 * Added `--load-audit-file` flag to run the dashboard from an existing audit
 * Added an `ID` field to each check in the output
