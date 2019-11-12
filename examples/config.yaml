@@ -128,3 +128,8 @@ exemptions:
       - goldilocks
     rules:
       - readOnlyRootFilesystem
+  - controllerNames:
+      - insights-agent-goldilocks-controller
+    rules:
+      - livenessProbeMissing
+      - readinessProbeMissing
