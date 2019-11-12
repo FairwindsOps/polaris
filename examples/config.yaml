@@ -133,3 +133,8 @@ exemptions:
     rules:
       - livenessProbeMissing
       - readinessProbeMissing
+  - controllerNames:
+      - insights-agent-goldilocks-vpa-install
+      - kube-hunter
+    rules:
+      - runAsRootAllowed
