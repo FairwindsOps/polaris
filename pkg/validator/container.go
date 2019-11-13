@@ -93,7 +93,7 @@ func (cv *ContainerValidation) validateResources(conf *config.Configuration, con
 		id := config.GetIDFromField(conf.Resources, rangeName)
 		cv.validateResourceRange(id, messages.CPURequestsLabel, &conf.Resources.CPURequestRanges, res.Requests.Cpu())
 	} else if conf.IsActionable(conf.Resources, missingName, controllerName) {
-		cv.addSuccess(fmt.Sprintf(messages.ResourcePresentSuccess, "CPU Requests"), category, id)
+		cv.addSuccess(fmt.Sprintf(messages.ResourcePresentSuccess, messages.CPURequestsLabel), category, id)
 	}
 
 	missingName = "CPULimitsMissing"
@@ -105,7 +105,7 @@ func (cv *ContainerValidation) validateResources(conf *config.Configuration, con
 		id := config.GetIDFromField(conf.Resources, rangeName)
 		cv.validateResourceRange(id, messages.CPULimitsLabel, &conf.Resources.CPULimitRanges, res.Requests.Cpu())
 	} else if conf.IsActionable(conf.Resources, missingName, controllerName) {
-		cv.addSuccess(fmt.Sprintf(messages.ResourcePresentSuccess, "CPU Limits"), category, id)
+		cv.addSuccess(fmt.Sprintf(messages.ResourcePresentSuccess, messages.CPULimitsLabel), category, id)
 	}
 
 	missingName = "MemoryRequestsMissing"
@@ -117,7 +117,7 @@ func (cv *ContainerValidation) validateResources(conf *config.Configuration, con
 		id := config.GetIDFromField(conf.Resources, rangeName)
 		cv.validateResourceRange(id, messages.MemoryRequestsLabel, &conf.Resources.MemoryRequestRanges, res.Requests.Memory())
 	} else if conf.IsActionable(conf.Resources, missingName, controllerName) {
-		cv.addSuccess(fmt.Sprintf(messages.ResourcePresentSuccess, "Memory Requests"), category, id)
+		cv.addSuccess(fmt.Sprintf(messages.ResourcePresentSuccess, messages.MemoryRequestsLabel), category, id)
 	}
 
 	missingName = "MemoryLimitsMissing"
@@ -129,7 +129,7 @@ func (cv *ContainerValidation) validateResources(conf *config.Configuration, con
 		id := config.GetIDFromField(conf.Resources, rangeName)
 		cv.validateResourceRange(id, messages.MemoryLimitsLabel, &conf.Resources.MemoryLimitRanges, res.Limits.Memory())
 	} else if conf.IsActionable(conf.Resources, missingName, controllerName) {
-		cv.addSuccess(fmt.Sprintf(messages.ResourcePresentSuccess, "Memory Limits"), category, id)
+		cv.addSuccess(fmt.Sprintf(messages.ResourcePresentSuccess, messages.MemoryLimitsLabel), category, id)
 	}
 }
 
