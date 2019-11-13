@@ -1,5 +1,8 @@
 # x.x.x (next release)
 
+# 0.5.2
+* Fixed missing success messages for resource requests/limits
+
 # 0.5.1
 * Added a few more exemptions
 * Started checking exemptions based on controller name prefix
