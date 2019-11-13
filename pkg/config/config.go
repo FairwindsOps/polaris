@@ -125,8 +125,8 @@ type SecurityCapabilityLists struct {
 func ParseFile(path string) (Configuration, error) {
 	var rawBytes []byte
 	var err error
-	configBox := packr.New("Config", "../../examples")
 	if path == "" {
+		configBox := packr.New("Config", "../../examples")
 		rawBytes, err = configBox.Find("config.yaml")
 	} else if strings.HasPrefix(path, "https://") || strings.HasPrefix(path, "http://") {
 		//path is a url
