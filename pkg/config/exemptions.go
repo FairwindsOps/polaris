@@ -9,9 +9,15 @@ import (
 func (conf *Configuration) IsActionable(subConf interface{}, ruleName, controllerName string) bool {
 	ruleID := GetIDFromField(subConf, ruleName)
 	subConfRef := reflect.ValueOf(subConf)
-	severity, ok := reflect.Indirect(subConfRef).FieldByName(ruleName).Interface().(Severity)
-	if ok && !severity.IsActionable() {
+	fieldVal := reflect.Indirect(subConfRef).FieldByName(ruleName).Interface()
+	if severity, ok := fieldVal.(Severity); ok && !severity.IsActionable() {
 		return false
+	}
+	if ranges, ok := fieldVal.(ResourceRanges); ok {
+		if ranges.Warning.Above == nil && ranges.Warning.Below == nil &&
+			ranges.Error.Above == nil && ranges.Error.Below == nil {
+			return false
+		}
 	}
 	if conf.DisallowExemptions {
 		return true
