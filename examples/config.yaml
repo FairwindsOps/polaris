@@ -109,6 +109,7 @@ exemptions:
       - kubedns
       - dnsmasq
       - autoscaler
+      - insights-agent-goldilocks-vpa-install
     rules:
       - cpuRequestsMissing
       - cpuLimitsMissing
@@ -126,5 +127,16 @@ exemptions:
       - polaris
       - kube-hunter
       - goldilocks
+      - insights-agent-goldilocks-vpa-install
     rules:
-      - readOnlyRootFilesystem
+      - notReadOnlyRootFileSystem
+  - controllerNames:
+      - insights-agent-goldilocks-controller
+    rules:
+      - livenessProbeMissing
+      - readinessProbeMissing
+  - controllerNames:
+      - insights-agent-goldilocks-vpa-install
+      - kube-hunter
+    rules:
+      - runAsRootAllowed
