@@ -117,6 +117,7 @@ exemptions:
       - memoryLimitsMissing
   - controllerNames:
       - kube2iam
+      - kube-flannel-ds
     rules:
       - runAsPrivileged
   - controllerNames:
