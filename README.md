@@ -52,7 +52,7 @@ Our default standards in Polaris are rather high, so don’t be surprised if you
 ## Webhook
 > [View installation instructions](docs/usage.md#webhook)
 
-Polaris includes experimental support for an optional validating webhook. This accepts the same configuration as the dashboard, and can run the same validations. This webhook will reject any workloads that trigger a validation error. This is indicative of the greater goal of Polaris, not just to encourage better configuration through dashboard visibility, but to actually enforce it with this webhook. *Although we are working towards greater stability and better test coverage, we do not currently consider this webhook component production ready.*
+Polaris includes an optional validating webhook. This accepts the same configuration as the dashboard, and can run the same validations. This webhook will reject any workloads that trigger a validation error. This is indicative of the greater goal of Polaris, not just to encourage better configuration through dashboard visibility, but to actually enforce it with this webhook.
 
 Unfortunately we have not found a way to display warnings as part of `kubectl` output unless we are rejecting a workload altogether. That means that any checks with a severity of `warning` will still pass webhook validation, and the only evidence of that warning will either be in the Polaris dashboard or the Polaris webhook logs.
 
