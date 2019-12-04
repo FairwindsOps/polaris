@@ -25,8 +25,8 @@ func (r ReplicationControllerController) GetPodSpec() *kubeAPICoreV1.PodSpec {
 }
 
 // GetAnnotations returns the controller's annotations
-func (c ReplicationControllerController) GetAnnotations() map[string]string {
-	return c.K8SResource.ObjectMeta.Annotations
+func (r ReplicationControllerController) GetAnnotations() map[string]string {
+	return r.K8SResource.ObjectMeta.Annotations
 }
 
 // GetType returns the supportedcontroller enum type

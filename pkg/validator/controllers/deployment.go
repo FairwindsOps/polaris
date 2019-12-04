@@ -23,8 +23,8 @@ func (d DeploymentController) GetPodSpec() *kubeAPICoreV1.PodSpec {
 }
 
 // GetAnnotations returns the controller's annotations
-func (c DeploymentController) GetAnnotations() map[string]string {
-	return c.K8SResource.ObjectMeta.Annotations
+func (d DeploymentController) GetAnnotations() map[string]string {
+	return d.K8SResource.ObjectMeta.Annotations
 }
 
 // GetType returns the supportedcontroller enum type
