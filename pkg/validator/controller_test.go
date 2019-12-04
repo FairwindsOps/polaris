@@ -17,12 +17,14 @@ package validator
 import (
 	"testing"
 
-	conf "github.com/fairwindsops/polaris/pkg/config"
-	controller "github.com/fairwindsops/polaris/pkg/validator/controllers"
+	"github.com/stretchr/testify/assert"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 
+	conf "github.com/fairwindsops/polaris/pkg/config"
+	"github.com/fairwindsops/polaris/pkg/kube"
+	controller "github.com/fairwindsops/polaris/pkg/validator/controllers"
 	"github.com/fairwindsops/polaris/test"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestValidateController(t *testing.T) {
@@ -133,4 +135,45 @@ func TestSkipHealthChecks(t *testing.T) {
 	assert.Equal(t, 1, len(actualResult.PodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, &expectedSum, actualResult.PodResult.Summary)
 	assert.EqualValues(t, expectedMessages, actualResult.PodResult.ContainerResults[0].Messages)
+}
+
+func TestControllerExemptions(t *testing.T) {
+	c := conf.Configuration{
+		HealthChecks: conf.HealthChecks{
+			ReadinessProbeMissing: conf.SeverityError,
+			LivenessProbeMissing:  conf.SeverityWarning,
+		},
+		ControllersToScan: []conf.SupportedController{
+			conf.Deployments,
+		},
+	}
+	resources := &kube.ResourceProvider{
+		Deployments: []appsv1.Deployment{test.MockDeploy()},
+	}
+
+	expectedSum := ResultSummary{
+		Totals: CountSummary{
+			Successes: uint(0),
+			Warnings:  uint(1),
+			Errors:    uint(1),
+		},
+		ByCategory: make(map[string]*CountSummary),
+	}
+	expectedSum.ByCategory["Health Checks"] = &CountSummary{
+		Successes: uint(0),
+		Warnings:  uint(1),
+		Errors:    uint(1),
+	}
+	nsResults := NamespacedResults{}
+	ValidateControllers(c, resources, &nsResults)
+	actualResult := nsResults[""].DeploymentResults[0]
+	assert.Equal(t, "Deployments", actualResult.Type)
+	assert.EqualValues(t, &expectedSum, actualResult.PodResult.Summary)
+
+	resources.Deployments[0].ObjectMeta.Annotations = map[string]string{
+		exemptionAnnotationKey: "true",
+	}
+	nsResults = NamespacedResults{}
+	ValidateControllers(c, resources, &nsResults)
+	assert.Equal(t, (*NamespaceResult)(nil), nsResults[""])
 }

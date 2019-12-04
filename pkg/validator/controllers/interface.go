@@ -15,6 +15,7 @@ type Interface interface {
 	GetPodTemplate() *kubeAPICoreV1.PodTemplateSpec
 	GetPodSpec() *kubeAPICoreV1.PodSpec
 	GetType() config.SupportedController
+	GetAnnotations() map[string]string
 }
 
 // GenericController is a base implementation with some free methods for inherited structs

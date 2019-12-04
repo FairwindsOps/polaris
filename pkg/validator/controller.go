@@ -15,12 +15,16 @@
 package validator
 
 import (
+	"strings"
+
 	conf "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
 	"github.com/fairwindsops/polaris/pkg/validator/controllers"
 	controller "github.com/fairwindsops/polaris/pkg/validator/controllers"
 	"github.com/sirupsen/logrus"
 )
+
+const exemptionAnnotationKey = "polaris.fairwinds.com/exempt"
 
 // ValidateController validates a single controller, returns a ControllerResult.
 func ValidateController(conf conf.Configuration, controller controller.Interface) ControllerResult {
@@ -44,6 +48,9 @@ func ValidateControllers(config conf.Configuration, kubeResources *kube.Resource
 	}
 
 	for _, controller := range controllersToAudit {
+		if !config.DisallowExemptions && hasExemptionAnnotation(controller) {
+			continue
+		}
 		controllerResult := ValidateController(config, controller)
 		nsResult := nsResults.getNamespaceResult(controller.GetNamespace())
 		nsResult.Summary.appendResults(*controllerResult.PodResult.Summary)
@@ -51,4 +58,10 @@ func ValidateControllers(config conf.Configuration, kubeResources *kube.Resource
 			logrus.Errorf("Internal Error: Failed to add a grouped result: %s", err)
 		}
 	}
+}
+
+func hasExemptionAnnotation(ctrl controller.Interface) bool {
+	annot := ctrl.GetAnnotations()
+	val := annot[exemptionAnnotationKey]
+	return strings.ToLower(val) == "true"
 }
