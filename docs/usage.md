@@ -4,9 +4,12 @@ be run as a local binary, which will use your kubeconfig to connect to the clust
 or run against local YAML files.
 
 ## Configuration
+Polaris supports a wide range of validations covering a number of Kubernetes best practices.
+Here's a [sample configuration file](/examples/config-full.yaml) that includes all currently supported checks.
+The [default configuration](/examples/config.yaml) contains a number of those checks.
 
-Polaris supports a wide range of validations covering a number of Kubernetes best practices. Here's a sample configuration file that includes all currently supported checks. The [default configuration](https://github.com/fairwindsops/polaris/blob/master/examples/config.yaml) contains a number of those checks. This repository also includes a sample [full configuration file](https://github.com/fairwindsops/polaris/blob/master/examples/config-full.yaml) that enables all available checks.
 
+### Checks
 Each check can be assigned a `severity`. Only checks with a severity of `error` or `warning` will be validated. The results of these validations are visible on the dashboard. In the case of the validating webhook, only failures with a severity of `error` will result in a change being rejected.
 
 Polaris validation checks fall into several different categories:
@@ -16,6 +19,23 @@ Polaris validation checks fall into several different categories:
 - [Networking](check-documentation/networking.md)
 - [Resources](check-documentation/resources.md)
 - [Security](check-documentation/security.md)
+
+### Exemptions
+Exemptions can be added two ways: by annotating a controller, or editing the Polaris config.
+
+To exempt a controller via annotations, use the annotation `polaris.fairwinds.com/exempt=true`, e.g.
+```
+kubectl annotate deployment my-deployment polaris.fairwinds.com/exempt=true
+```
+
+To exempt a controller via the config, you have to specify a list of controller names and a list of rules, e.g.
+```yaml
+exemptions:
+  - controllerNames:
+      - dns-controller
+    rules:
+      - hostNetworkSet
+```
 
 # Installing
 There are several ways to install and use Polaris. Below outline ways to install using `kubectl`, `helm` and `local binary`.
