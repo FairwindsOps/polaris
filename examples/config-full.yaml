@@ -63,6 +63,13 @@ security:
     warning:
       ifAnyAddedBeyond:
         - NONE
+controllers_to_scan:
+  - Deployments
+  - StatefulSets
+  - DaemonSets
+  - CronJobs
+  - Jobs
+  - ReplicationControllers
 exemptions:
   - controllerNames:
     - dns-controller
