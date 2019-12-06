@@ -22,6 +22,11 @@ func (d DaemonSetController) GetPodSpec() *kubeAPICoreV1.PodSpec {
 	return &d.K8SResource.Spec.Template.Spec
 }
 
+// GetAnnotations returns the controller's annotations
+func (d DaemonSetController) GetAnnotations() map[string]string {
+	return d.K8SResource.ObjectMeta.Annotations
+}
+
 // GetType returns the supportedcontroller enum type
 func (d DaemonSetController) GetType() config.SupportedController {
 	return config.DaemonSets

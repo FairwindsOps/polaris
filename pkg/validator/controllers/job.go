@@ -22,6 +22,11 @@ func (j JobController) GetPodSpec() *kubeAPICoreV1.PodSpec {
 	return &j.K8SResource.Spec.Template.Spec
 }
 
+// GetAnnotations returns the controller's annotations
+func (j JobController) GetAnnotations() map[string]string {
+	return j.K8SResource.ObjectMeta.Annotations
+}
+
 // GetType returns the supportedcontroller enum type
 func (j JobController) GetType() config.SupportedController {
 	return config.Jobs

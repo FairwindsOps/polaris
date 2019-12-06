@@ -22,6 +22,11 @@ func (s StatefulSetController) GetPodSpec() *kubeAPICoreV1.PodSpec {
 	return &s.K8SResource.Spec.Template.Spec
 }
 
+// GetAnnotations returns the controller's annotations
+func (s StatefulSetController) GetAnnotations() map[string]string {
+	return s.K8SResource.ObjectMeta.Annotations
+}
+
 // GetType returns the supportedcontroller enum type
 func (s StatefulSetController) GetType() config.SupportedController {
 	return config.StatefulSets

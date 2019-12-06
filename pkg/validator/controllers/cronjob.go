@@ -27,6 +27,11 @@ func (c CronJobController) GetType() config.SupportedController {
 	return config.CronJobs
 }
 
+// GetAnnotations returns the controller's annotations
+func (c CronJobController) GetAnnotations() map[string]string {
+	return c.K8SResource.ObjectMeta.Annotations
+}
+
 // NewCronJobController builds a new controller interface for Deployments
 func NewCronJobController(originalDeploymentResource kubeAPIBatchV1beta1.CronJob) Interface {
 	controller := CronJobController{}
