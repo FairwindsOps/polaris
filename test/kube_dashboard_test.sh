@@ -1,4 +1,4 @@
-sed -ri "s|'(quay.io/reactiveops/polaris:).+'|'\1${CIRCLE_SHA1}'|" ./deploy/dashboard.yaml
+sed -ri "s|'(quay.io/fairwinds/polaris:).+'|'\1${CIRCLE_SHA1}'|" ./deploy/dashboard.yaml
 
 
 function check_dashboard_is_ready() {
