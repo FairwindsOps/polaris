@@ -10,7 +10,6 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
-	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -99,7 +98,6 @@ func (s SupportedController) ListSupportedAPIVersions() []runtime.Object {
 	case Deployments:
 		supportedVersions = []runtime.Object{
 			&appsv1.Deployment{},
-			&extensionsv1beta1.Deployment{},
 		}
 	case StatefulSets:
 		supportedVersions = []runtime.Object{
