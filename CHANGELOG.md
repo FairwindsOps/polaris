@@ -1,5 +1,10 @@
 # x.x.x (next release)
 
+# 0.6.0
+* Fixed webhook support in Kubernetes 1.16
+  * this also removes support for 1.8
+* Added support for exemptions via controller annotations
+
 # 0.5.2
 * Fixed missing success messages for resource requests/limits
 
