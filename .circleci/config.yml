@@ -93,7 +93,7 @@ references:
         docker-pull -f .circleci/build.config
         docker-build -f .circleci/build.config
         if [[ -z $CIRCLE_PR_NUMBER ]]; then
-          docker login quay.io -u="reactiveops+circleci" -p="${quay_token}"
+          docker login quay.io -u="${fairwinds_quay_user}" -p="${fairwinds_quay_token}"
           docker-push -f .circleci/build.config
         else
           echo "Skipping docker push for forked PR"
