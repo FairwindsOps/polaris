@@ -132,7 +132,7 @@ jobs:
   test:
     working_directory: /go/src/github.com/fairwindsops/polaris/
     docker:
-      - image: circleci/golang:1.12
+      - image: circleci/golang:1.13
     steps:
       - checkout
       - *set_environment_variables
@@ -147,7 +147,7 @@ jobs:
   release_binary:
     working_directory: /go/src/github.com/fairwindsops/polaris/
     docker:
-      - image: circleci/golang:1.12
+      - image: circleci/golang:1.13
     steps:
       - checkout
       - setup_remote_docker
