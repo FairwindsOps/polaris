@@ -6,7 +6,10 @@ import (
 )
 
 // IsActionable determines whether a check is actionable given the current configuration
-func (conf *Configuration) IsActionable(subConf interface{}, ruleName, controllerName string) bool {
+func (conf Configuration) IsActionable(subConf interface{}, ruleName, controllerName string) bool {
+	if subConfStr, ok := subConf.(string); ok {
+		subConf = conf.GetCategoryConfig(subConfStr)
+	}
 	ruleID := GetIDFromField(subConf, ruleName)
 	subConfRef := reflect.ValueOf(subConf)
 	fieldVal := reflect.Indirect(subConfRef).FieldByName(ruleName).Interface()
@@ -35,4 +38,30 @@ func (conf *Configuration) IsActionable(subConf interface{}, ruleName, controlle
 		}
 	}
 	return true
+}
+
+func (conf Configuration) GetCategoryConfig(category string) interface{} {
+	if category == "Networking" {
+		return conf.Networking
+	} else if category == "Security" {
+		return conf.Security
+	} else if category == "Health Checks" {
+		return conf.HealthChecks
+	} else if category == "Resources" {
+		return conf.Resources
+	} else if category == "Images" {
+		return conf.Images
+	}
+	return nil
+}
+
+func (conf Configuration) GetSeverity(category string, name string) Severity {
+	subConf := conf.GetCategoryConfig(category)
+	subConfRef := reflect.ValueOf(subConf)
+	fieldVal := reflect.Indirect(subConfRef).FieldByName(name).Interface()
+	if severity, ok := fieldVal.(Severity); ok {
+		return severity
+	}
+	// TODO: don't panic
+	panic("Unknown severity: " + category + "/" + name)
 }

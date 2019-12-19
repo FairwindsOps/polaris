@@ -34,7 +34,7 @@ func ValidatePod(conf config.Configuration, pod *corev1.PodSpec, controllerName 
 	}
 
 	pv.validateSecurity(&conf, controllerName)
-	pv.validateNetworking(&conf, controllerName)
+	applyPodSchemaChecks(&conf, pod, controllerName, &pv)
 
 	pRes := PodResult{
 		Messages:         pv.messages(),
@@ -80,20 +80,6 @@ func (pv *PodValidation) validateSecurity(conf *config.Configuration, controller
 			pv.addFailure(messages.HostPIDFailure, conf.Security.HostPIDSet, category, id)
 		} else {
 			pv.addSuccess(messages.HostPIDSuccess, category, id)
-		}
-	}
-}
-
-func (pv *PodValidation) validateNetworking(conf *config.Configuration, controllerName string) {
-	category := messages.CategoryNetworking
-
-	name := "HostNetworkSet"
-	if conf.IsActionable(conf.Networking, name, controllerName) {
-		id := config.GetIDFromField(conf.Networking, name)
-		if pv.Pod.HostNetwork {
-			pv.addFailure(messages.HostNetworkFailure, conf.Networking.HostNetworkSet, category, id)
-		} else {
-			pv.addSuccess(messages.HostNetworkSuccess, category, id)
 		}
 	}
 }
