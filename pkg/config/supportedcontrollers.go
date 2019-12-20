@@ -84,9 +84,9 @@ func (s *SupportedController) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	*s, err = GetSupportedControllerFromString(j)
-	if err != nil {
-		return err
+	*s = GetSupportedControllerFromString(j)
+	if *s == Unsupported {
+		return fmt.Errorf("Unsupported controller kind: %s", j)
 	}
 	return nil
 }
@@ -124,21 +124,19 @@ func (s SupportedController) ListSupportedAPIVersions() []runtime.Object {
 }
 
 // GetSupportedControllerFromString fuzzy matches a string with a SupportedController Enum
-func GetSupportedControllerFromString(str string) (SupportedController, error) {
+func GetSupportedControllerFromString(str string) SupportedController {
 	lowerStr := strings.ToLower(str)
 	controller, keyFound := stringLookupForSupportedControllers[lowerStr]
-	if !keyFound || controller == Unsupported {
-		return 0, fmt.Errorf("Value ('%v') in configuration was not found in Supported Controllers: (%v)", str, strings.Join(ControllerStrings, ","))
+	if !keyFound {
+		controller = Unsupported
 	}
-	return controller, nil
+	return controller
 }
 
 // CheckIfKindIsConfiguredForValidation takes a kind (in string format) and checks if Polaris is configured to scan this type of controller
 func (c Configuration) CheckIfKindIsConfiguredForValidation(kind string) bool {
-	controller, err := GetSupportedControllerFromString(kind)
-	// if no errors then we found the kind in supported controller types
-	if err == nil {
-		// see if the kind exists in the controllers to scan config
+	controller := GetSupportedControllerFromString(kind)
+	if controller != Unsupported {
 		for _, controllerToScan := range c.ControllersToScan {
 			if controller == controllerToScan {
 				return true

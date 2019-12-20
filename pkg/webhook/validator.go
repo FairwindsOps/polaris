@@ -103,11 +103,11 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 		}
 
 		// We should never hit this case unless something is misconfiured in CheckIfKindIsConfiguredForValidation
-		controllerType, err := config.GetSupportedControllerFromString(req.AdmissionRequest.Kind.Kind)
-		if err != nil {
-			msg := fmt.Errorf("Unexpected error occurred. Expected Kind to be a supported type (%s)", req.AdmissionRequest.Kind.Kind)
+		controllerType := config.GetSupportedControllerFromString(req.AdmissionRequest.Kind.Kind)
+		if controllerType == config.Unsupported {
+			msg := fmt.Errorf("Expected Kind (%s) to be a supported type", req.AdmissionRequest.Kind.Kind)
 			logrus.Error(msg)
-			return admission.ErrorResponse(http.StatusInternalServerError, err)
+			return admission.ErrorResponse(http.StatusInternalServerError, msg)
 		}
 
 		// For each type, perform the scan
