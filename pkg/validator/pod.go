@@ -32,7 +32,11 @@ func ValidatePod(conf config.Configuration, pod *corev1.PodSpec, controllerName 
 		ResourceValidation: &ResourceValidation{},
 	}
 
-	applyPodSchemaChecks(&conf, pod, controllerName, &pv)
+	err := applyPodSchemaChecks(&conf, pod, controllerName, controllerType, &pv)
+	// FIXME: don't panic
+	if err != nil {
+		panic(err)
+	}
 
 	pRes := PodResult{
 		Messages:         pv.messages(),
