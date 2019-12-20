@@ -44,13 +44,17 @@ var (
 		TargetContainer: []SchemaCheck{},
 		TargetPod:       []SchemaCheck{},
 	}
+	checkOrder = []string{
+		"hostIPC",
+		"hostPID",
+		"hostNetwork",
+	}
 )
 
 func init() {
 	schemaBox = packr.New("Schemas", "../../checks")
-	files := schemaBox.List()
-	for _, file := range files {
-		contents, err := schemaBox.Find(file)
+	for _, file := range checkOrder {
+		contents, err := schemaBox.Find(file + ".yaml")
 		if err != nil {
 			panic(err)
 		}

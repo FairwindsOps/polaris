@@ -1,0 +1,15 @@
+name: HostIPCSet
+id: hostIPCSet
+successMessage: Host IPC is not configured
+failureMessage: Host IPC should not be configured
+category: Security
+controllers:
+  exclude: []
+target: Pod
+schema:
+  '$schema': http://json-schema.org/draft-07/schema
+  type: object
+  properties:
+    hostIPC:
+      not:
+        const: true
