@@ -1,0 +1,23 @@
+name: ReadinessProbeMissing
+id: readinessProbeMissing
+successMessage: Readiness probe is configured
+failureMessage: Readiness probe should be configured
+category: Health Checks
+controllers:
+  exclude:
+  - Job
+  - CronJob
+containers:
+  exclude:
+  - initContainer
+target: Container
+schema:
+  '$schema': http://json-schema.org/draft-07/schema
+  type: object
+  required:
+  - readinessProbe
+  properties:
+    readinessProbe:
+      type: object
+      not:
+        const: null

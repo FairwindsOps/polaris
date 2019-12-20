@@ -34,6 +34,7 @@ type SchemaCheck struct {
 	SuccessMessage string                `yaml:"success_message"`
 	FailureMessage string                `yaml:"failure_message"`
 	Controllers    IncludeExcludeList    `yaml:"controllers"`
+	Containers     IncludeExcludeList    `yaml:"containers"`
 	Target         Target                `yaml:"target"`
 	Schema         jsonschema.RootSchema `yaml:"schema"`
 }
@@ -44,10 +45,16 @@ var (
 		TargetContainer: []SchemaCheck{},
 		TargetPod:       []SchemaCheck{},
 	}
+	// We explicitly set the order to avoid thrash in the
+	// tests as we migrate toward JSON schema
 	checkOrder = []string{
+		// Pod checks
 		"hostIPC",
 		"hostPID",
 		"hostNetwork",
+		// Container checks
+		"readinessProbe",
+		"livenessProbe",
 	}
 )
 
@@ -109,9 +116,60 @@ func (check SchemaCheck) checkPod(pod *corev1.PodSpec) (bool, error) {
 	return len(errors) == 0, err
 }
 
-func applyPodSchemaChecks(conf *config.Configuration, pod *corev1.PodSpec, controllerName string, pv *PodValidation) error {
+func (check SchemaCheck) checkContainer(container *corev1.Container) (bool, error) {
+	bytes, err := json.Marshal(container)
+	if err != nil {
+		return false, err
+	}
+	errors, err := check.Schema.ValidateBytes(bytes)
+	return len(errors) == 0, err
+}
+
+func (check SchemaCheck) isActionable(target Target, controllerType config.SupportedController, isInit bool) bool {
+	if check.Target != target {
+		return false
+	}
+	isIncluded := len(check.Controllers.Include) == 0
+	for _, inclusion := range check.Controllers.Include {
+		if config.GetSupportedControllerFromString(inclusion) == controllerType {
+			isIncluded = true
+			break
+		}
+	}
+	if !isIncluded {
+		return false
+	}
+	for _, exclusion := range check.Controllers.Exclude {
+		if config.GetSupportedControllerFromString(exclusion) == controllerType {
+			return false
+		}
+	}
+	if check.Target == TargetContainer {
+		isIncluded := len(check.Containers.Include) == 0
+		for _, inclusion := range check.Containers.Include {
+			if (inclusion == "initContainer" && isInit) || (inclusion == "container" && !isInit) {
+				isIncluded = true
+				break
+			}
+		}
+		if !isIncluded {
+			return false
+		}
+		for _, exclusion := range check.Containers.Exclude {
+			if (exclusion == "initContainer" && isInit) || (exclusion == "container" && !isInit) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func applyPodSchemaChecks(conf *config.Configuration, pod *corev1.PodSpec, controllerName string, controllerType config.SupportedController, pv *PodValidation) error {
 	for _, check := range checks[TargetPod] {
 		if !conf.IsActionable(check.Category, check.Name, controllerName) {
+			continue
+		}
+		if !check.isActionable(TargetPod, controllerType, false) {
 			continue
 		}
 		severity := conf.GetSeverity(check.Category, check.Name)
@@ -123,6 +181,28 @@ func applyPodSchemaChecks(conf *config.Configuration, pod *corev1.PodSpec, contr
 			pv.addSuccess(check.SuccessMessage, check.Category, check.ID)
 		} else {
 			pv.addFailure(check.FailureMessage, severity, check.Category, check.ID)
+		}
+	}
+	return nil
+}
+
+func applyContainerSchemaChecks(conf *config.Configuration, container *corev1.Container, controllerName string, controllerType config.SupportedController, isInit bool, cv *ContainerValidation) error {
+	for _, check := range checks[TargetContainer] {
+		if !conf.IsActionable(check.Category, check.Name, controllerName) {
+			continue
+		}
+		if !check.isActionable(TargetContainer, controllerType, isInit) {
+			continue
+		}
+		severity := conf.GetSeverity(check.Category, check.Name)
+		passes, err := check.checkContainer(container)
+		if err != nil {
+			return err
+		}
+		if passes {
+			cv.addSuccess(check.SuccessMessage, check.Category, check.ID)
+		} else {
+			cv.addFailure(check.FailureMessage, severity, check.Category, check.ID)
 		}
 	}
 	return nil

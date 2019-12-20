@@ -58,9 +58,13 @@ func ValidateContainer(container *corev1.Container, parentPodResult *PodResult, 
 	}
 
 	cv.validateResources(conf, controllerName)
-	if !isInit && controllerType != config.Jobs && controllerType != config.CronJobs {
-		cv.validateHealthChecks(conf, controllerName)
+
+	err := applyContainerSchemaChecks(conf, container, controllerName, controllerType, isInit, &cv)
+	// FIXME: don't panic
+	if err != nil {
+		panic(err)
 	}
+
 	cv.validateImage(conf, controllerName)
 	cv.validateNetworking(conf, controllerName)
 	cv.validateSecurity(conf, controllerName)
@@ -150,31 +154,6 @@ func (cv *ContainerValidation) validateResourceRange(id, resourceName string, ra
 		cv.addWarning(fmt.Sprintf(messages.ResourceAmountTooLowFailure, resourceName, warnBelow.String()), category, id)
 	} else if errorAbove != nil && warnAbove != nil && errorBelow != nil && warnBelow != nil {
 		cv.addSuccess(fmt.Sprintf(messages.ResourceAmountSuccess, resourceName), category, id)
-	}
-}
-
-func (cv *ContainerValidation) validateHealthChecks(conf *config.Configuration, controllerName string) {
-	category := messages.CategoryHealthChecks
-
-	name := "ReadinessProbeMissing"
-	// Don't validate readiness probes on init containers
-	if !cv.IsInitContainer && conf.IsActionable(conf.HealthChecks, name, controllerName) {
-		id := config.GetIDFromField(conf.HealthChecks, name)
-		if cv.Container.ReadinessProbe == nil {
-			cv.addFailure(messages.ReadinessProbeFailure, conf.HealthChecks.ReadinessProbeMissing, category, id)
-		} else {
-			cv.addSuccess(messages.ReadinessProbeSuccess, category, id)
-		}
-	}
-
-	name = "LivenessProbeMissing"
-	if conf.IsActionable(conf.HealthChecks, name, controllerName) {
-		id := config.GetIDFromField(conf.HealthChecks, "LivenessProbeMissing")
-		if cv.Container.LivenessProbe == nil {
-			cv.addFailure(messages.LivenessProbeFailure, conf.HealthChecks.LivenessProbeMissing, category, id)
-		} else {
-			cv.addSuccess(messages.LivenessProbeSuccess, category, id)
-		}
 	}
 }
 

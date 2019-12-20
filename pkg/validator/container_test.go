@@ -409,17 +409,21 @@ func TestValidateHealthChecks(t *testing.T) {
 		{name: "probes configured, but not required", probes: p2, cv: goodCV, errors: &f1},
 	}
 
-	for _, tt := range testCases {
+	for idx, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.cv.validateHealthChecks(&conf.Configuration{HealthChecks: tt.probes}, "")
+			err := applyContainerSchemaChecks(&conf.Configuration{HealthChecks: tt.probes}, tt.cv.Container, "", conf.Deployments, tt.cv.IsInitContainer, &tt.cv)
+			if err != nil {
+				panic(err)
+			}
+			message := fmt.Sprintf("test case %d", idx)
 
 			if tt.warnings != nil {
-				assert.Len(t, tt.cv.Warnings, len(*tt.warnings))
-				assert.ElementsMatch(t, tt.cv.Warnings, *tt.warnings)
+				assert.Len(t, tt.cv.Warnings, len(*tt.warnings), message)
+				assert.ElementsMatch(t, tt.cv.Warnings, *tt.warnings, message)
 			}
 
-			assert.Len(t, tt.cv.Errors, len(*tt.errors))
-			assert.ElementsMatch(t, tt.cv.Errors, *tt.errors)
+			assert.Len(t, tt.cv.Errors, len(*tt.errors), message)
+			assert.ElementsMatch(t, tt.cv.Errors, *tt.errors, message)
 		})
 	}
 }

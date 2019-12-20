@@ -1,0 +1,23 @@
+name: LivenessProbeMissing
+id: livenessProbeMissing
+successMessage: Liveness probe is configured
+failureMessage: Liveness probe should be configured
+category: Health Checks
+controllers:
+  exclude:
+  - Job
+  - CronJob
+containers:
+  exclude:
+  - initContainer
+target: Container
+schema:
+  '$schema': http://json-schema.org/draft-07/schema
+  type: object
+  required:
+  - livenessProbe
+  properties:
+    livenessProbe:
+      type: object
+      not:
+        const: null
