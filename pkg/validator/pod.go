@@ -16,7 +16,6 @@ package validator
 
 import (
 	"github.com/fairwindsops/polaris/pkg/config"
-	"github.com/fairwindsops/polaris/pkg/validator/messages"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -33,7 +32,6 @@ func ValidatePod(conf config.Configuration, pod *corev1.PodSpec, controllerName 
 		ResourceValidation: &ResourceValidation{},
 	}
 
-	pv.validateSecurity(&conf, controllerName)
 	applyPodSchemaChecks(&conf, pod, controllerName, &pv)
 
 	pRes := PodResult{
@@ -57,29 +55,5 @@ func (pv *PodValidation) validateContainers(containers []corev1.Container, pRes 
 	for _, container := range containers {
 		cRes := ValidateContainer(&container, pRes, conf, controllerName, controllerType, isInit)
 		pRes.ContainerResults = append(pRes.ContainerResults, cRes)
-	}
-}
-
-func (pv *PodValidation) validateSecurity(conf *config.Configuration, controllerName string) {
-	category := messages.CategorySecurity
-
-	name := "HostIPCSet"
-	if conf.IsActionable(conf.Security, name, controllerName) {
-		id := config.GetIDFromField(conf.Security, name)
-		if pv.Pod.HostIPC {
-			pv.addFailure(messages.HostIPCFailure, conf.Security.HostIPCSet, category, id)
-		} else {
-			pv.addSuccess(messages.HostIPCSuccess, category, id)
-		}
-	}
-
-	name = "HostPIDSet"
-	if conf.IsActionable(conf.Security, name, controllerName) {
-		id := config.GetIDFromField(conf.Security, name)
-		if pv.Pod.HostPID {
-			pv.addFailure(messages.HostPIDFailure, conf.Security.HostPIDSet, category, id)
-		} else {
-			pv.addSuccess(messages.HostPIDSuccess, category, id)
-		}
 	}
 }

@@ -12,5 +12,4 @@ schema:
   properties:
     hostNetwork:
       not:
-        enum:
-        - true
+        const: true
