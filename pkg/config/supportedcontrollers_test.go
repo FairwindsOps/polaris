@@ -51,19 +51,17 @@ func TestUnmarshalSupportedControllers(t *testing.T) {
 
 func TestMarshalSupportedControllers(t *testing.T) {
 	for idx, controllerString := range ControllerStrings {
-		controllerType, err := GetSupportedControllerFromString(controllerString)
+		controllerType := GetSupportedControllerFromString(controllerString)
 		if idx == 0 {
-			if err == nil {
-				t.Errorf("Expected first element (%s) to fail as a non-valid supported controller. Reserved for 'Unsupported'", controllerString)
-			}
-		} else if err != nil {
-			t.Errorf("Unable to take the configured string (%s) and convert into Enum; Error: (%s)", controllerString, err)
+			assert.Equal(t, SupportedController(0), controllerType)
+		} else {
+			assert.NotEqual(t, SupportedController(0), controllerType)
 		}
 
 		object := checkMarshal{
 			Controllers: []SupportedController{controllerType},
 		}
-		_, err = json.Marshal(object)
+		_, err := json.Marshal(object)
 		if idx == 0 {
 			if err == nil {
 				t.Errorf("Expected (%s) to throw an error. Reserving the first element in the enum to be an invalid config", controllerString)
@@ -77,10 +75,8 @@ func TestMarshalSupportedControllers(t *testing.T) {
 func TestCheckIfControllerKindIsConfiguredForValidation(t *testing.T) {
 	config := Configuration{}
 	for _, controllerString := range ControllerStrings[1:] {
-		controllerEnum, err := GetSupportedControllerFromString(controllerString)
-		if err != nil {
-			t.Errorf("Expected controller string (%s) to be convertable into enum: (%s)", controllerString, err)
-		}
+		controllerEnum := GetSupportedControllerFromString(controllerString)
+		assert.NotEqual(t, SupportedController(0), controllerEnum)
 		config.ControllersToScan = append(config.ControllersToScan, controllerEnum)
 	}
 
@@ -116,10 +112,7 @@ func TestGetSupportedControllerFromString(t *testing.T) {
 	}
 
 	for inputString, expectedType := range fixture {
-		resolvedType, err := GetSupportedControllerFromString(inputString)
-		if expectedType == Unsupported && err == nil {
-			t.Errorf("Expected (%s) to resolve to an unsupported type and throw an error.", inputString)
-		}
+		resolvedType := GetSupportedControllerFromString(inputString)
 		assert.Equal(t, expectedType, resolvedType, fmt.Sprintf("Expected (%s) to return (%s) controller type.", inputString, expectedType))
 	}
 }
