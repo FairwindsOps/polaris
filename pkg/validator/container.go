@@ -155,7 +155,6 @@ func (cv *ContainerValidation) validateResourceRange(id, resourceName string, ra
 }
 
 func (cv *ContainerValidation) validateSecurity(conf *config.Configuration, controllerName string) {
-	category := messages.CategorySecurity
 	securityContext := cv.Container.SecurityContext
 	podSecurityContext := cv.parentPodSpec.SecurityContext
 
@@ -169,37 +168,7 @@ func (cv *ContainerValidation) validateSecurity(conf *config.Configuration, cont
 		podSecurityContext = &corev1.PodSecurityContext{}
 	}
 
-	name := "RunAsPrivileged"
-	if conf.IsActionable(conf.Security, name, controllerName) {
-		id := config.GetIDFromField(conf.Security, name)
-		if getBoolValue(securityContext.Privileged) {
-			cv.addFailure(messages.RunAsPrivilegedFailure, conf.Security.RunAsPrivileged, category, id)
-		} else {
-			cv.addSuccess(messages.RunAsPrivilegedSuccess, category, id)
-		}
-	}
-
-	name = "NotReadOnlyRootFileSystem"
-	if conf.IsActionable(conf.Security, name, controllerName) {
-		id := config.GetIDFromField(conf.Security, name)
-		if getBoolValue(securityContext.ReadOnlyRootFilesystem) {
-			cv.addSuccess(messages.ReadOnlyFilesystemSuccess, category, id)
-		} else {
-			cv.addFailure(messages.ReadOnlyFilesystemFailure, conf.Security.NotReadOnlyRootFileSystem, category, id)
-		}
-	}
-
-	name = "PrivilegeEscalationAllowed"
-	if conf.IsActionable(conf.Security, name, controllerName) {
-		id := config.GetIDFromField(conf.Security, name)
-		if getBoolValue(securityContext.AllowPrivilegeEscalation) {
-			cv.addFailure(messages.PrivilegeEscalationFailure, conf.Security.PrivilegeEscalationAllowed, category, id)
-		} else {
-			cv.addSuccess(messages.PrivilegeEscalationSuccess, category, id)
-		}
-	}
-
-	name = "Capabilities"
+	name := "Capabilities"
 	if conf.IsActionable(conf.Security, name, controllerName) {
 		cv.validateCapabilities(&conf.Security.Capabilities.Warning, &conf.Security.Capabilities.Error)
 	}
@@ -327,13 +296,4 @@ func capContains(list []corev1.Capability, val corev1.Capability) bool {
 	}
 
 	return false
-}
-
-// getBoolValue returns false if nil or returns the value of the bool pointer
-func getBoolValue(val *bool) bool {
-	if val == nil {
-		return false
-	}
-
-	return *val
 }
