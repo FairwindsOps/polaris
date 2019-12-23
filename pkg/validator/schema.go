@@ -15,36 +15,37 @@ import (
 	controller "github.com/fairwindsops/polaris/pkg/validator/controllers"
 )
 
-type IncludeExcludeList struct {
+type includeExcludeList struct {
 	Include []string `yaml:"include"`
 	Exclude []string `yaml:"exclude"`
 }
 
-type Target string
+type target string
 
 const (
-	TargetContainer Target = "Container"
-	TargetPod       Target = "Pod"
+	targetContainer target = "Container"
+	targetPod       target = "Pod"
 )
 
+// SchemaCheck is a Polaris check that runs using JSON Schema
 type SchemaCheck struct {
 	Name           string                `yaml:"name"`
 	ID             string                `yaml:"id"`
 	Category       string                `yaml:"category"`
 	SuccessMessage string                `yaml:"successMessage"`
 	FailureMessage string                `yaml:"failureMessage"`
-	Controllers    IncludeExcludeList    `yaml:"controllers"`
-	Containers     IncludeExcludeList    `yaml:"containers"`
-	Target         Target                `yaml:"target"`
-	SchemaTarget   Target                `yaml:"schemaTarget"`
+	Controllers    includeExcludeList    `yaml:"controllers"`
+	Containers     includeExcludeList    `yaml:"containers"`
+	Target         target                `yaml:"target"`
+	SchemaTarget   target                `yaml:"schemaTarget"`
 	Schema         jsonschema.RootSchema `yaml:"schema"`
 }
 
 var (
 	schemaBox = (*packr.Box)(nil)
-	checks    = map[Target][]SchemaCheck{
-		TargetContainer: []SchemaCheck{},
-		TargetPod:       []SchemaCheck{},
+	checks    = map[target][]SchemaCheck{
+		targetContainer: []SchemaCheck{},
+		targetPod:       []SchemaCheck{},
 	}
 	// We explicitly set the order to avoid thrash in the
 	// tests as we migrate toward JSON schema
@@ -97,9 +98,9 @@ func parseCheck(rawBytes []byte) (SchemaCheck, error) {
 
 func (check SchemaCheck) check(controller controller.Interface) (bool, error) {
 	pod := controller.GetPodSpec()
-	if check.Target == TargetPod {
+	if check.Target == targetPod {
 		return check.checkPod(pod)
-	} else if check.Target == TargetContainer {
+	} else if check.Target == targetContainer {
 		for _, container := range pod.Containers {
 			bytes, err := json.Marshal(container)
 			if err != nil {
@@ -132,7 +133,7 @@ func (check SchemaCheck) checkObject(obj interface{}) (bool, error) {
 	return len(errors) == 0, err
 }
 
-func (check SchemaCheck) isActionable(target Target, controllerType config.SupportedController, isInit bool) bool {
+func (check SchemaCheck) isActionable(target target, controllerType config.SupportedController, isInit bool) bool {
 	if check.Target != target {
 		return false
 	}
@@ -151,7 +152,7 @@ func (check SchemaCheck) isActionable(target Target, controllerType config.Suppo
 			return false
 		}
 	}
-	if check.Target == TargetContainer {
+	if check.Target == targetContainer {
 		isIncluded := len(check.Containers.Include) == 0
 		for _, inclusion := range check.Containers.Include {
 			if (inclusion == "initContainer" && isInit) || (inclusion == "container" && !isInit) {
@@ -172,11 +173,11 @@ func (check SchemaCheck) isActionable(target Target, controllerType config.Suppo
 }
 
 func applyPodSchemaChecks(conf *config.Configuration, pod *corev1.PodSpec, controllerName string, controllerType config.SupportedController, pv *PodValidation) error {
-	for _, check := range checks[TargetPod] {
+	for _, check := range checks[targetPod] {
 		if !conf.IsActionable(check.Category, check.Name, controllerName) {
 			continue
 		}
-		if !check.isActionable(TargetPod, controllerType, false) {
+		if !check.isActionable(targetPod, controllerType, false) {
 			continue
 		}
 		severity := conf.GetSeverity(check.Category, check.Name)
@@ -194,17 +195,17 @@ func applyPodSchemaChecks(conf *config.Configuration, pod *corev1.PodSpec, contr
 }
 
 func applyContainerSchemaChecks(conf *config.Configuration, controllerName string, controllerType config.SupportedController, cv *ContainerValidation) error {
-	for _, check := range checks[TargetContainer] {
+	for _, check := range checks[targetContainer] {
 		if !conf.IsActionable(check.Category, check.Name, controllerName) {
 			continue
 		}
-		if !check.isActionable(TargetContainer, controllerType, cv.IsInitContainer) {
+		if !check.isActionable(targetContainer, controllerType, cv.IsInitContainer) {
 			continue
 		}
 		severity := conf.GetSeverity(check.Category, check.Name)
 		var passes bool
 		var err error
-		if check.SchemaTarget == TargetPod {
+		if check.SchemaTarget == targetPod {
 			cv.parentPodSpec.Containers = []corev1.Container{*cv.Container}
 			passes, err = check.checkPod(&cv.parentPodSpec)
 			cv.parentPodSpec.Containers = []corev1.Container{}

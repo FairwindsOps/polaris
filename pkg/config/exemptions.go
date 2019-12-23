@@ -40,6 +40,7 @@ func (conf Configuration) IsActionable(subConf interface{}, ruleName, controller
 	return true
 }
 
+// GetCategoryConfig returns the configuration for a particular category name
 func (conf Configuration) GetCategoryConfig(category string) interface{} {
 	if category == "Networking" {
 		return conf.Networking
@@ -55,6 +56,7 @@ func (conf Configuration) GetCategoryConfig(category string) interface{} {
 	return nil
 }
 
+// GetSeverity returns the severity configured for a particular check
 func (conf Configuration) GetSeverity(category string, name string) Severity {
 	subConf := conf.GetCategoryConfig(category)
 	subConfRef := reflect.ValueOf(subConf)
