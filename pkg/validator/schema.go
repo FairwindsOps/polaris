@@ -12,7 +12,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/fairwindsops/polaris/pkg/config"
-	controller "github.com/fairwindsops/polaris/pkg/validator/controllers"
 )
 
 type includeExcludeList struct {
@@ -94,26 +93,6 @@ func parseCheck(rawBytes []byte) (SchemaCheck, error) {
 			return check, fmt.Errorf("Decoding schema check failed: %v", err)
 		}
 	}
-}
-
-func (check SchemaCheck) check(controller controller.Interface) (bool, error) {
-	pod := controller.GetPodSpec()
-	if check.Target == targetPod {
-		return check.checkPod(pod)
-	} else if check.Target == targetContainer {
-		for _, container := range pod.Containers {
-			bytes, err := json.Marshal(container)
-			if err != nil {
-				return false, err
-			}
-			errors, err := check.Schema.ValidateBytes(bytes)
-			if err != nil || len(errors) > 0 {
-				return false, err
-			}
-		}
-		// TODO: initcontainers
-	}
-	return true, nil
 }
 
 func (check SchemaCheck) checkPod(pod *corev1.PodSpec) (bool, error) {
