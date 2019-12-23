@@ -1,0 +1,13 @@
+name: PullPolicyNotAlways
+id: pullPolicyNotAlways
+successMessage: Image pull policy is "Always"
+failureMessage: Image pull policy should be "Always"
+category: Images
+target: Container
+schema:
+  '$schema': http://json-schema.org/draft-07/schema
+  required:
+  - imagePullPolicy
+  properties:
+    imagePullPolicy:
+      const: Always

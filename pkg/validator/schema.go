@@ -55,6 +55,8 @@ var (
 		// Container checks
 		"readinessProbe",
 		"livenessProbe",
+		"pullPolicyNotAlways",
+		"tagNotSpecified",
 	}
 )
 
