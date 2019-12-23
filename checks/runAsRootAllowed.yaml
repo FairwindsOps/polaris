@@ -3,8 +3,6 @@ id: runAsRootAllowed
 successMessage: Is not allowed to run as root
 failureMessage: Should not be allowed to run as root
 category: Security
-controllers:
-  exclude: []
 target: Container
 schemaTarget: Pod
 schema:

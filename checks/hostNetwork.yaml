@@ -3,8 +3,6 @@ id: hostNetworkSet
 successMessage: Host network is not configured
 failureMessage: Host network should not be configured
 category: Networking
-controllers:
-  exclude: []
 target: Pod
 schema:
   '$schema': http://json-schema.org/draft-07/schema
