@@ -31,11 +31,12 @@ type SchemaCheck struct {
 	Name           string                `yaml:"name"`
 	ID             string                `yaml:"id"`
 	Category       string                `yaml:"category"`
-	SuccessMessage string                `yaml:"success_message"`
-	FailureMessage string                `yaml:"failure_message"`
+	SuccessMessage string                `yaml:"successMessage"`
+	FailureMessage string                `yaml:"failureMessage"`
 	Controllers    IncludeExcludeList    `yaml:"controllers"`
 	Containers     IncludeExcludeList    `yaml:"containers"`
 	Target         Target                `yaml:"target"`
+	SchemaTarget   Target                `yaml:"schemaTarget"`
 	Schema         jsonschema.RootSchema `yaml:"schema"`
 }
 
@@ -58,6 +59,7 @@ var (
 		"pullPolicyNotAlways",
 		"tagNotSpecified",
 		"hostPortSet",
+		"runAsRootAllowed",
 	}
 )
 
@@ -111,16 +113,15 @@ func (check SchemaCheck) check(controller controller.Interface) (bool, error) {
 }
 
 func (check SchemaCheck) checkPod(pod *corev1.PodSpec) (bool, error) {
-	bytes, err := json.Marshal(pod)
-	if err != nil {
-		return false, err
-	}
-	errors, err := check.Schema.ValidateBytes(bytes)
-	return len(errors) == 0, err
+	return check.checkObject(pod)
 }
 
 func (check SchemaCheck) checkContainer(container *corev1.Container) (bool, error) {
-	bytes, err := json.Marshal(container)
+	return check.checkObject(container)
+}
+
+func (check SchemaCheck) checkObject(obj interface{}) (bool, error) {
+	bytes, err := json.Marshal(obj)
 	if err != nil {
 		return false, err
 	}
@@ -189,16 +190,24 @@ func applyPodSchemaChecks(conf *config.Configuration, pod *corev1.PodSpec, contr
 	return nil
 }
 
-func applyContainerSchemaChecks(conf *config.Configuration, container *corev1.Container, controllerName string, controllerType config.SupportedController, isInit bool, cv *ContainerValidation) error {
+func applyContainerSchemaChecks(conf *config.Configuration, controllerName string, controllerType config.SupportedController, cv *ContainerValidation) error {
 	for _, check := range checks[TargetContainer] {
 		if !conf.IsActionable(check.Category, check.Name, controllerName) {
 			continue
 		}
-		if !check.isActionable(TargetContainer, controllerType, isInit) {
+		if !check.isActionable(TargetContainer, controllerType, cv.IsInitContainer) {
 			continue
 		}
 		severity := conf.GetSeverity(check.Category, check.Name)
-		passes, err := check.checkContainer(container)
+		var passes bool
+		var err error
+		if check.SchemaTarget == TargetPod {
+			cv.parentPodSpec.Containers = []corev1.Container{*cv.Container}
+			passes, err = check.checkPod(&cv.parentPodSpec)
+			cv.parentPodSpec.Containers = []corev1.Container{}
+		} else {
+			passes, err = check.checkContainer(cv.Container)
+		}
 		if err != nil {
 			return err
 		}
