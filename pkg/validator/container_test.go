@@ -650,7 +650,10 @@ func TestValidateNetworking(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.cv = resetCV(tt.cv)
-			tt.cv.validateNetworking(&conf.Configuration{Networking: tt.networkConf}, "")
+			err := applyContainerSchemaChecks(&conf.Configuration{Networking: tt.networkConf}, tt.cv.Container, "", conf.Deployments, tt.cv.IsInitContainer, &tt.cv)
+			if err != nil {
+				panic(err)
+			}
 			assert.Len(t, tt.cv.messages(), len(tt.expectedMessages))
 			assert.ElementsMatch(t, tt.cv.messages(), tt.expectedMessages)
 		})

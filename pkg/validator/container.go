@@ -64,7 +64,6 @@ func ValidateContainer(container *corev1.Container, parentPodResult *PodResult, 
 		panic(err)
 	}
 
-	cv.validateNetworking(conf, controllerName)
 	cv.validateSecurity(conf, controllerName)
 
 	cRes := ContainerResult{
@@ -152,28 +151,6 @@ func (cv *ContainerValidation) validateResourceRange(id, resourceName string, ra
 		cv.addWarning(fmt.Sprintf(messages.ResourceAmountTooLowFailure, resourceName, warnBelow.String()), category, id)
 	} else if errorAbove != nil && warnAbove != nil && errorBelow != nil && warnBelow != nil {
 		cv.addSuccess(fmt.Sprintf(messages.ResourceAmountSuccess, resourceName), category, id)
-	}
-}
-
-func (cv *ContainerValidation) validateNetworking(conf *config.Configuration, controllerName string) {
-	category := messages.CategoryNetworking
-
-	name := "HostPortSet"
-	if conf.IsActionable(conf.Networking, name, controllerName) {
-		hostPortSet := false
-		for _, port := range cv.Container.Ports {
-			if port.HostPort != 0 {
-				hostPortSet = true
-				break
-			}
-		}
-
-		id := config.GetIDFromField(conf.Networking, name)
-		if hostPortSet {
-			cv.addFailure(messages.HostPortFailure, conf.Networking.HostPortSet, category, id)
-		} else {
-			cv.addSuccess(messages.HostPortSuccess, category, id)
-		}
 	}
 }
 

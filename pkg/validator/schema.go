@@ -57,6 +57,7 @@ var (
 		"livenessProbe",
 		"pullPolicyNotAlways",
 		"tagNotSpecified",
+		"hostPortSet",
 	}
 )
 
