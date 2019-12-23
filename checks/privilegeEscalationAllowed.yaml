@@ -1,0 +1,15 @@
+name: PrivilegeEscalationAllowed
+id: privilegeEscalationAllowed
+successMessage: Privilege escalation not allowed
+failureMessage: Privilege escalation should not be allowed
+category: Security
+target: Container
+schema:
+  '$schema': http://json-schema.org/draft-07/schema
+  type: object
+  properties:
+    securityContext:
+      properties:
+        allowPrivilegeEscalation:
+          not:
+            const: true

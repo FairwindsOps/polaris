@@ -60,6 +60,9 @@ var (
 		"tagNotSpecified",
 		"hostPortSet",
 		"runAsRootAllowed",
+		"runAsPrivileged",
+		"notReadOnlyRootFileSystem",
+		"privilegeEscalationAllowed",
 	}
 )
 
