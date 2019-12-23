@@ -58,7 +58,7 @@ func ValidateContainer(container *corev1.Container, parentPodResult *PodResult, 
 
 	cv.validateResources(conf, controllerName)
 
-	err := applyContainerSchemaChecks(conf, container, controllerName, controllerType, isInit, &cv)
+	err := applyContainerSchemaChecks(conf, controllerName, controllerType, &cv)
 	// FIXME: don't panic
 	if err != nil {
 		panic(err)
@@ -169,25 +169,7 @@ func (cv *ContainerValidation) validateSecurity(conf *config.Configuration, cont
 		podSecurityContext = &corev1.PodSecurityContext{}
 	}
 
-	name := "RunAsRootAllowed"
-	if conf.IsActionable(conf.Security, name, controllerName) {
-		id := config.GetIDFromField(conf.Security, name)
-		runAsRootSuccess := false
-		if getBoolValue(securityContext.RunAsNonRoot) || (securityContext.RunAsUser != nil && *securityContext.RunAsUser > 0) {
-			// Check if the container is explicitly set to True (pass)
-			runAsRootSuccess = true
-		} else if securityContext.RunAsNonRoot == nil && securityContext.RunAsUser == nil {
-			// Or if the container values are unset, check the pod values
-			runAsRootSuccess = getBoolValue(podSecurityContext.RunAsNonRoot) || (podSecurityContext.RunAsUser != nil && *podSecurityContext.RunAsUser > 0)
-		}
-		if runAsRootSuccess {
-			cv.addSuccess(messages.RunAsRootSuccess, category, id)
-		} else {
-			cv.addFailure(messages.RunAsRootFailure, conf.Security.RunAsRootAllowed, category, id)
-		}
-	}
-
-	name = "RunAsPrivileged"
+	name := "RunAsPrivileged"
 	if conf.IsActionable(conf.Security, name, controllerName) {
 		id := config.GetIDFromField(conf.Security, name)
 		if getBoolValue(securityContext.Privileged) {
