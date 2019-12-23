@@ -1,9 +1,16 @@
-FROM golang:1.12.9 AS build-env
+FROM golang:1.13 AS build-env
 WORKDIR /go/src/github.com/fairwindsops/polaris/
+
+ENV GO111MODULE=on
+ENV GOPROXY=https://proxy.golang.org
 
 COPY . .
 RUN go get -u github.com/gobuffalo/packr/v2/packr2
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 packr2 build -a -o polaris *.go
+
+ENV CGO_ENABLED=0
+ENV GOOS=linux
+ENV GOARCH=amd64
+RUN packr2 build -a -o polaris *.go
 
 FROM alpine:3.10
 WORKDIR /usr/local/bin

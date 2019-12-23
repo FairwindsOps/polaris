@@ -15,14 +15,15 @@ require (
 	github.com/evanphx/json-patch v4.2.0+incompatible
 	github.com/go-logr/logr v0.1.0
 	github.com/go-logr/zapr v0.1.1
-	github.com/gobuffalo/envy v1.7.0
-	github.com/gobuffalo/genny v0.1.1
-	github.com/gobuffalo/gogen v0.1.1
-	github.com/gobuffalo/logger v0.0.0-20190315122211-86e12af44bc2
-	github.com/gobuffalo/mapi v1.0.2
-	github.com/gobuffalo/packd v0.1.0
-	github.com/gobuffalo/packr/v2 v2.2.0
-	github.com/gobuffalo/syncx v0.0.0-20190224160051-33c29581e754
+	github.com/gobuffalo/depgen v0.1.0 // indirect
+	github.com/gobuffalo/envy v1.8.1
+	github.com/gobuffalo/genny v0.4.1
+	github.com/gobuffalo/gogen v0.2.0
+	github.com/gobuffalo/logger v1.0.3
+	github.com/gobuffalo/mapi v1.2.0
+	github.com/gobuffalo/packd v0.3.0
+	github.com/gobuffalo/packr/v2 v2.7.1
+	github.com/gobuffalo/syncx v0.1.0
 	github.com/gogo/protobuf v1.2.1
 	github.com/golang/groupcache v0.0.0-20190129154638-5b532d6fd5ef
 	github.com/golang/lint v0.0.0-20180702182130-06c8688daad7 // indirect
@@ -39,9 +40,9 @@ require (
 	github.com/imdario/mergo v0.3.7
 	github.com/joho/godotenv v1.3.0
 	github.com/json-iterator/go v1.1.6
-	github.com/karrick/godirwalk v1.10.3
+	github.com/karrick/godirwalk v1.13.4
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2
-	github.com/markbates/oncer v0.0.0-20181203154359-bf2de49a0be2
+	github.com/markbates/oncer v1.0.0
 	github.com/markbates/safe v1.0.1
 	github.com/matttproud/golang_protobuf_extensions v1.0.1
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
@@ -56,10 +57,10 @@ require (
 	github.com/prometheus/common v0.4.0
 	github.com/prometheus/procfs v0.0.0-20190519111021-9935e8e0588d
 	github.com/qri-io/jsonschema v0.1.1
-	github.com/rogpeppe/go-internal v1.3.0
+	github.com/rogpeppe/go-internal v1.5.1
 	github.com/sirupsen/logrus v1.4.2
-	github.com/spf13/pflag v1.0.3
-	github.com/stretchr/testify v1.3.0
+	github.com/spf13/pflag v1.0.5
+	github.com/stretchr/testify v1.4.0
 	gitlab.com/golang-commonmark/html v0.0.0-20180917080848-cfaf75183c4a
 	gitlab.com/golang-commonmark/linkify v0.0.0-20180917065525-c22b7bdb1179
 	gitlab.com/golang-commonmark/markdown v0.0.0-20181102083822-772775880e1f
@@ -69,14 +70,14 @@ require (
 	go.uber.org/atomic v1.4.0
 	go.uber.org/multierr v1.1.0
 	go.uber.org/zap v1.10.0
-	golang.org/x/crypto v0.0.0-20190513172903-22d7a77e9e5f
-	golang.org/x/net v0.0.0-20190514140710-3ec191127204
+	golang.org/x/crypto v0.0.0-20191219195013-becbf705a915
+	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
 	golang.org/x/oauth2 v0.0.0-20190517181255-950ef44c6e07
-	golang.org/x/sync v0.0.0-20190423024810-112230192c58
-	golang.org/x/sys v0.0.0-20190520161452-ad400b127469
+	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
+	golang.org/x/sys v0.0.0-20191218084908-4a24b4065292
 	golang.org/x/text v0.3.2
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
-	golang.org/x/tools v0.0.0-20190517183331-d88f79806bbd
+	golang.org/x/tools v0.0.0-20191219212307-145a1e401f50
 	google.golang.org/api v0.5.0
 	google.golang.org/appengine v1.6.0
 	google.golang.org/genproto v0.0.0-20190516172635-bb713bdc0e52
