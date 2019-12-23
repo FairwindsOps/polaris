@@ -15,6 +15,9 @@ references:
         echo 'export CI_BUILD_NUM=$CIRCLE_BUILD_NUM' >> ${BASH_ENV}
         echo 'export CI_TAG=$CIRCLE_TAG' >> ${BASH_ENV}
         echo 'export PUSH_ALL_VERSION_TAGS=true' >> ${BASH_ENV}
+        echo 'export GOPROXY=https://proxy.golang.org' >> ${BASH_ENV}
+        echo 'export GO111MODULE=on' >> ${BASH_ENV}
+
   install_k8s: &install_k8s
     run:
       name: Install K8s
@@ -129,9 +132,10 @@ jobs:
   test:
     working_directory: /go/src/github.com/fairwindsops/polaris/
     docker:
-      - image: circleci/golang:1.12
+      - image: circleci/golang:1.13
     steps:
       - checkout
+      - *set_environment_variables
       - run: go get -u golang.org/x/lint/golint
       - run: go list ./... | grep -v vendor | xargs golint -set_exit_status
       - run: go list ./... | grep -v vendor | xargs go vet
@@ -143,7 +147,7 @@ jobs:
   release_binary:
     working_directory: /go/src/github.com/fairwindsops/polaris/
     docker:
-      - image: circleci/golang:1.12
+      - image: circleci/golang:1.13
     steps:
       - checkout
       - setup_remote_docker
