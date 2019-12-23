@@ -16,7 +16,6 @@ package validator
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/validator/messages"
@@ -65,7 +64,6 @@ func ValidateContainer(container *corev1.Container, parentPodResult *PodResult, 
 		panic(err)
 	}
 
-	cv.validateImage(conf, controllerName)
 	cv.validateNetworking(conf, controllerName)
 	cv.validateSecurity(conf, controllerName)
 
@@ -154,31 +152,6 @@ func (cv *ContainerValidation) validateResourceRange(id, resourceName string, ra
 		cv.addWarning(fmt.Sprintf(messages.ResourceAmountTooLowFailure, resourceName, warnBelow.String()), category, id)
 	} else if errorAbove != nil && warnAbove != nil && errorBelow != nil && warnBelow != nil {
 		cv.addSuccess(fmt.Sprintf(messages.ResourceAmountSuccess, resourceName), category, id)
-	}
-}
-
-func (cv *ContainerValidation) validateImage(conf *config.Configuration, controllerName string) {
-	category := messages.CategoryImages
-
-	name := "PullPolicyNotAlways"
-	if conf.IsActionable(conf.Images, name, controllerName) {
-		id := config.GetIDFromField(conf.Images, name)
-		if cv.Container.ImagePullPolicy != corev1.PullAlways {
-			cv.addFailure(messages.ImagePullPolicyFailure, conf.Images.PullPolicyNotAlways, category, id)
-		} else {
-			cv.addSuccess(messages.ImagePullPolicySuccess, category, id)
-		}
-	}
-
-	name = "TagNotSpecified"
-	if conf.IsActionable(conf.Images, name, controllerName) {
-		id := config.GetIDFromField(conf.Images, name)
-		img := strings.Split(cv.Container.Image, ":")
-		if len(img) == 1 || img[1] == "latest" {
-			cv.addFailure(messages.ImageTagFailure, conf.Images.TagNotSpecified, category, id)
-		} else {
-			cv.addSuccess(messages.ImageTagSuccess, category, id)
-		}
 	}
 }
 
