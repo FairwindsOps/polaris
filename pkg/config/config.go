@@ -23,7 +23,6 @@ import (
 	"strings"
 
 	packr "github.com/gobuffalo/packr/v2"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
@@ -99,26 +98,14 @@ type Networking struct {
 
 // Security contains the config for security validations.
 type Security struct {
-	HostIPCSet                 Severity             `json:"hostIPCSet"`
-	HostPIDSet                 Severity             `json:"hostPIDSet"`
-	RunAsRootAllowed           Severity             `json:"runAsRootAllowed"`
-	RunAsPrivileged            Severity             `json:"runAsPrivileged"`
-	NotReadOnlyRootFileSystem  Severity             `json:"notReadOnlyRootFileSystem"`
-	PrivilegeEscalationAllowed Severity             `json:"privilegeEscalationAllowed"`
-	Capabilities               SecurityCapabilities `json:"capabilities"`
-}
-
-// SecurityCapabilities contains the config for security capabilities validations.
-type SecurityCapabilities struct {
-	Error   SecurityCapabilityLists `json:"error"`
-	Warning SecurityCapabilityLists `json:"warning"`
-}
-
-// SecurityCapabilityLists contains the config for security capabilitie list validations.
-type SecurityCapabilityLists struct {
-	IfAnyAdded       []corev1.Capability `json:"ifAnyAdded"`
-	IfAnyAddedBeyond []corev1.Capability `json:"ifAnyAddedBeyond"`
-	IfAnyNotDropped  []corev1.Capability `json:"ifAnyNotDropped"`
+	HostIPCSet                 Severity `json:"hostIPCSet"`
+	HostPIDSet                 Severity `json:"hostPIDSet"`
+	RunAsRootAllowed           Severity `json:"runAsRootAllowed"`
+	RunAsPrivileged            Severity `json:"runAsPrivileged"`
+	NotReadOnlyRootFileSystem  Severity `json:"notReadOnlyRootFileSystem"`
+	PrivilegeEscalationAllowed Severity `json:"privilegeEscalationAllowed"`
+	DangerousCapabilities      Severity `json:"dangerousCapabilities"`
+	InsecureCapabilities       Severity `json:"insecureCapabilities"`
 }
 
 // ParseFile parses config from a file.

@@ -63,6 +63,8 @@ var (
 		"runAsPrivileged",
 		"notReadOnlyRootFileSystem",
 		"privilegeEscalationAllowed",
+		"dangerousCapabilities",
+		"insecureCapabilities",
 	}
 )
 

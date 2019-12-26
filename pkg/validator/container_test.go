@@ -671,29 +671,16 @@ func TestValidateSecurity(t *testing.T) {
 		RunAsPrivileged:            conf.SeverityError,
 		NotReadOnlyRootFileSystem:  conf.SeverityWarning,
 		PrivilegeEscalationAllowed: conf.SeverityError,
-		Capabilities: conf.SecurityCapabilities{
-			Error: conf.SecurityCapabilityLists{
-				IfAnyAdded: []corev1.Capability{"ALL", "SYS_ADMIN", "NET_ADMIN"},
-			},
-			Warning: conf.SecurityCapabilityLists{
-				IfAnyAddedBeyond: []corev1.Capability{"NONE"},
-			},
-		},
+		DangerousCapabilities:      conf.SeverityError,
+		InsecureCapabilities:       conf.SeverityWarning,
 	}
 	strongConf := conf.Security{
 		RunAsRootAllowed:           conf.SeverityError,
 		RunAsPrivileged:            conf.SeverityError,
 		NotReadOnlyRootFileSystem:  conf.SeverityError,
 		PrivilegeEscalationAllowed: conf.SeverityError,
-		Capabilities: conf.SecurityCapabilities{
-			Error: conf.SecurityCapabilityLists{
-				IfAnyAdded:      []corev1.Capability{"ALL", "SYS_ADMIN", "NET_ADMIN"},
-				IfAnyNotDropped: []corev1.Capability{"NET_BIND_SERVICE", "DAC_OVERRIDE", "SYS_CHROOT"},
-			},
-			Warning: conf.SecurityCapabilityLists{
-				IfAnyAddedBeyond: []corev1.Capability{"NONE"},
-			},
-		},
+		DangerousCapabilities:      conf.SeverityError,
+		InsecureCapabilities:       conf.SeverityError,
 	}
 
 	emptyCV := ContainerValidation{
@@ -708,7 +695,7 @@ func TestValidateSecurity(t *testing.T) {
 			Privileged:               &trueVar,
 			AllowPrivilegeEscalation: &trueVar,
 			Capabilities: &corev1.Capabilities{
-				Add: []corev1.Capability{"AUDIT_CONTROL", "SYS_ADMIN", "NET_ADMIN"},
+				Add: []corev1.Capability{"AUDIT_WRITE", "SYS_ADMIN", "NET_ADMIN"},
 			},
 		}},
 		ResourceValidation: &ResourceValidation{},
@@ -721,7 +708,7 @@ func TestValidateSecurity(t *testing.T) {
 			Privileged:               &trueVar,
 			AllowPrivilegeEscalation: &trueVar,
 			Capabilities: &corev1.Capabilities{
-				Add: []corev1.Capability{"AUDIT_CONTROL", "SYS_ADMIN", "NET_ADMIN"},
+				Add: []corev1.Capability{"AUDIT_WRITE", "SYS_ADMIN", "NET_ADMIN"},
 			},
 		}},
 		ResourceValidation: &ResourceValidation{},
@@ -739,7 +726,7 @@ func TestValidateSecurity(t *testing.T) {
 			Privileged:               &trueVar,
 			AllowPrivilegeEscalation: &trueVar,
 			Capabilities: &corev1.Capabilities{
-				Add: []corev1.Capability{"AUDIT_CONTROL", "SYS_ADMIN", "NET_ADMIN"},
+				Add: []corev1.Capability{"AUDIT_WRITE", "SYS_ADMIN", "NET_ADMIN"},
 			},
 		}},
 		ResourceValidation: &ResourceValidation{},
@@ -849,8 +836,13 @@ func TestValidateSecurity(t *testing.T) {
 				Type:     "success",
 				Category: "Security",
 			}, {
-				ID:       "capabilitiesAdded",
-				Message:  "Disallowed security capabilities have not been added",
+				ID:       "insecureCapabilities",
+				Message:  "Container does not have any insecure capabilities",
+				Type:     "success",
+				Category: "Security",
+			}, {
+				ID:       "dangerousCapabilities",
+				Message:  "Container does not have any dangerous capabilities",
 				Type:     "success",
 				Category: "Security",
 			}},
@@ -860,8 +852,8 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: standardConf,
 			cv:           badCV,
 			expectedMessages: []*ResultMessage{{
-				ID:       "capabilitiesAdded",
-				Message:  "The following security capabilities should not be added: SYS_ADMIN, NET_ADMIN",
+				ID:       "dangerousCapabilities",
+				Message:  "Container should not have dangerous capabilities",
 				Type:     "error",
 				Category: "Security",
 			}, {
@@ -875,8 +867,8 @@ func TestValidateSecurity(t *testing.T) {
 				Type:     "error",
 				Category: "Security",
 			}, {
-				ID:       "capabilitiesAdded",
-				Message:  "The following security capabilities should not be added: AUDIT_CONTROL, SYS_ADMIN, NET_ADMIN",
+				ID:       "insecureCapabilities",
+				Message:  "Container should not have insecure capabilities",
 				Type:     "warning",
 				Category: "Security",
 			}, {
@@ -896,8 +888,8 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: standardConf,
 			cv:           badCVWithGoodPodSpec,
 			expectedMessages: []*ResultMessage{{
-				ID:       "capabilitiesAdded",
-				Message:  "The following security capabilities should not be added: SYS_ADMIN, NET_ADMIN",
+				ID:       "dangerousCapabilities",
+				Message:  "Container should not have dangerous capabilities",
 				Type:     "error",
 				Category: "Security",
 			}, {
@@ -911,8 +903,8 @@ func TestValidateSecurity(t *testing.T) {
 				Type:     "error",
 				Category: "Security",
 			}, {
-				ID:       "capabilitiesAdded",
-				Message:  "The following security capabilities should not be added: AUDIT_CONTROL, SYS_ADMIN, NET_ADMIN",
+				ID:       "insecureCapabilities",
+				Message:  "Container should not have insecure capabilities",
 				Type:     "warning",
 				Category: "Security",
 			}, {
@@ -932,9 +924,14 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: standardConf,
 			cv:           badCVWithBadPodSpec,
 			expectedMessages: []*ResultMessage{{
-				ID:       "capabilitiesAdded",
-				Message:  "The following security capabilities should not be added: SYS_ADMIN, NET_ADMIN",
+				ID:       "dangerousCapabilities",
+				Message:  "Container should not have dangerous capabilities",
 				Type:     "error",
+				Category: "Security",
+			}, {
+				ID:       "insecureCapabilities",
+				Message:  "Container should not have insecure capabilities",
+				Type:     "warning",
 				Category: "Security",
 			}, {
 				ID:       "privilegeEscalationAllowed",
@@ -945,11 +942,6 @@ func TestValidateSecurity(t *testing.T) {
 				ID:       "runAsPrivileged",
 				Message:  "Should not be running as privileged",
 				Type:     "error",
-				Category: "Security",
-			}, {
-				ID:       "capabilitiesAdded",
-				Message:  "The following security capabilities should not be added: AUDIT_CONTROL, SYS_ADMIN, NET_ADMIN",
-				Type:     "warning",
 				Category: "Security",
 			}, {
 				ID:       "runAsRootAllowed",
@@ -988,8 +980,13 @@ func TestValidateSecurity(t *testing.T) {
 				Type:     "success",
 				Category: "Security",
 			}, {
-				ID:       "capabilitiesAdded",
-				Message:  "Disallowed security capabilities have not been added",
+				ID:       "dangerousCapabilities",
+				Message:  "Container does not have any dangerous capabilities",
+				Type:     "success",
+				Category: "Security",
+			}, {
+				ID:       "insecureCapabilities",
+				Message:  "Container does not have any insecure capabilities",
 				Type:     "success",
 				Category: "Security",
 			}},
@@ -999,13 +996,13 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: strongConf,
 			cv:           goodCV,
 			expectedMessages: []*ResultMessage{{
-				ID:       "capabilitiesNotDropped",
-				Message:  "The following security capabilities should be dropped: DAC_OVERRIDE, SYS_CHROOT",
-				Type:     "error",
+				ID:       "dangerousCapabilities",
+				Message:  "Container does not have any dangerous capabilities",
+				Type:     "success",
 				Category: "Security",
 			}, {
-				ID:       "capabilitiesAdded",
-				Message:  "Disallowed security capabilities have not been added",
+				ID:       "insecureCapabilities",
+				Message:  "Container does not have any insecure capabilities",
 				Type:     "success",
 				Category: "Security",
 			}, {
@@ -1055,13 +1052,13 @@ func TestValidateSecurity(t *testing.T) {
 				Type:     "success",
 				Category: "Security",
 			}, {
-				ID:       "capabilitiesAdded",
-				Message:  "Disallowed security capabilities have not been added",
+				ID:       "dangerousCapabilities",
+				Message:  "Container does not have any dangerous capabilities",
 				Type:     "success",
 				Category: "Security",
 			}, {
-				ID:       "capabilitiesDropped",
-				Message:  "All disallowed security capabilities have been dropped",
+				ID:       "insecureCapabilities",
+				Message:  "Container does not have any insecure capabilities",
 				Type:     "success",
 				Category: "Security",
 			}},
@@ -1091,13 +1088,13 @@ func TestValidateSecurity(t *testing.T) {
 				Type:     "success",
 				Category: "Security",
 			}, {
-				ID:       "capabilitiesAdded",
-				Message:  "Disallowed security capabilities have not been added",
+				ID:       "dangerousCapabilities",
+				Message:  "Container does not have any dangerous capabilities",
 				Type:     "success",
 				Category: "Security",
 			}, {
-				ID:       "capabilitiesDropped",
-				Message:  "All disallowed security capabilities have been dropped",
+				ID:       "insecureCapabilities",
+				Message:  "Container does not have any insecure capabilities",
 				Type:     "success",
 				Category: "Security",
 			}},
@@ -1127,13 +1124,13 @@ func TestValidateSecurity(t *testing.T) {
 				Type:     "success",
 				Category: "Security",
 			}, {
-				ID:       "capabilitiesAdded",
-				Message:  "Disallowed security capabilities have not been added",
+				ID:       "dangerousCapabilities",
+				Message:  "Container does not have any dangerous capabilities",
 				Type:     "success",
 				Category: "Security",
 			}, {
-				ID:       "capabilitiesDropped",
-				Message:  "All disallowed security capabilities have been dropped",
+				ID:       "insecureCapabilities",
+				Message:  "Container does not have any insecure capabilities",
 				Type:     "success",
 				Category: "Security",
 			}},
@@ -1147,9 +1144,8 @@ func TestValidateSecurity(t *testing.T) {
 			if err != nil {
 				panic(err)
 			}
-			tt.cv.validateSecurity(&conf.Configuration{Security: tt.securityConf}, "")
 			assert.Len(t, tt.cv.messages(), len(tt.expectedMessages))
-			assert.ElementsMatch(t, tt.cv.messages(), tt.expectedMessages)
+			assert.ElementsMatch(t, tt.expectedMessages, tt.cv.messages())
 		})
 	}
 }
