@@ -1,5 +1,3 @@
-name: PullPolicyNotAlways
-id: pullPolicyNotAlways
 successMessage: Image pull policy is "Always"
 failureMessage: Image pull policy should be "Always"
 category: Images

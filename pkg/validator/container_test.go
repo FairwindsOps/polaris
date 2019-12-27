@@ -25,7 +25,7 @@ import (
 )
 
 var resourceConfMinimal = `---
-resources:
+checks:
   cpuRequestsMissing: warning
   memoryRequestsMissing: warning
   cpuLimitsMissing: error
@@ -33,7 +33,7 @@ resources:
 `
 
 var resourceConfExemptions = `---
-resources:
+checks:
   cpuRequestsMissing: warning
   memoryRequestsMissing: warning
   cpuLimitsMissing: error
@@ -338,14 +338,14 @@ func TestValidateResourcesFullyValid(t *testing.T) {
 func TestValidateHealthChecks(t *testing.T) {
 
 	// Test setup.
-	p1 := conf.HealthChecks{}
-	p2 := conf.HealthChecks{
-		ReadinessProbeMissing: conf.SeverityIgnore,
-		LivenessProbeMissing:  conf.SeverityIgnore,
+	p1 := make(map[string]conf.Severity)
+	p2 := map[string]conf.Severity{
+		"readinessProbeMissing": conf.SeverityIgnore,
+		"livenessProbeMissing":  conf.SeverityIgnore,
 	}
-	p3 := conf.HealthChecks{
-		ReadinessProbeMissing: conf.SeverityError,
-		LivenessProbeMissing:  conf.SeverityWarning,
+	p3 := map[string]conf.Severity{
+		"readinessProbeMissing": conf.SeverityError,
+		"livenessProbeMissing":  conf.SeverityWarning,
 	}
 
 	probe := corev1.Probe{}
@@ -375,7 +375,7 @@ func TestValidateHealthChecks(t *testing.T) {
 
 	var testCases = []struct {
 		name     string
-		probes   conf.HealthChecks
+		probes   map[string]conf.Severity
 		cv       ContainerValidation
 		errors   *[]*ResultMessage
 		warnings *[]*ResultMessage
@@ -390,7 +390,7 @@ func TestValidateHealthChecks(t *testing.T) {
 
 	for idx, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			err := applyContainerSchemaChecks(&conf.Configuration{HealthChecks: tt.probes}, "", conf.Deployments, &tt.cv)
+			err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.probes}, "", conf.Deployments, &tt.cv)
 			if err != nil {
 				panic(err)
 			}
@@ -408,14 +408,14 @@ func TestValidateHealthChecks(t *testing.T) {
 }
 
 func TestValidateImage(t *testing.T) {
-	emptyConf := conf.Images{}
-	standardConf := conf.Images{
-		TagNotSpecified:     conf.SeverityError,
-		PullPolicyNotAlways: conf.SeverityIgnore,
+	emptyConf := make(map[string]conf.Severity)
+	standardConf := map[string]conf.Severity{
+		"tagNotSpecified":     conf.SeverityError,
+		"pullPolicyNotAlways": conf.SeverityIgnore,
 	}
-	strongConf := conf.Images{
-		TagNotSpecified:     conf.SeverityError,
-		PullPolicyNotAlways: conf.SeverityError,
+	strongConf := map[string]conf.Severity{
+		"tagNotSpecified":     conf.SeverityError,
+		"pullPolicyNotAlways": conf.SeverityError,
 	}
 
 	emptyCV := ContainerValidation{
@@ -437,7 +437,7 @@ func TestValidateImage(t *testing.T) {
 
 	var testCases = []struct {
 		name     string
-		image    conf.Images
+		image    map[string]conf.Severity
 		cv       ContainerValidation
 		expected []*ResultMessage
 	}{
@@ -507,7 +507,7 @@ func TestValidateImage(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.cv = resetCV(tt.cv)
-			err := applyContainerSchemaChecks(&conf.Configuration{Images: tt.image}, "", conf.Deployments, &tt.cv)
+			err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.image}, "", conf.Deployments, &tt.cv)
 			if err != nil {
 				panic(err)
 			}
@@ -519,12 +519,12 @@ func TestValidateImage(t *testing.T) {
 
 func TestValidateNetworking(t *testing.T) {
 	// Test setup.
-	emptyConf := conf.Networking{}
-	standardConf := conf.Networking{
-		HostPortSet: conf.SeverityWarning,
+	emptyConf := make(map[string]conf.Severity)
+	standardConf := map[string]conf.Severity{
+		"hostPortSet": conf.SeverityWarning,
 	}
-	strongConf := conf.Networking{
-		HostPortSet: conf.SeverityError,
+	strongConf := map[string]conf.Severity{
+		"hostPortSet": conf.SeverityError,
 	}
 
 	emptyCV := ContainerValidation{
@@ -553,7 +553,7 @@ func TestValidateNetworking(t *testing.T) {
 
 	var testCases = []struct {
 		name             string
-		networkConf      conf.Networking
+		networkConf      map[string]conf.Severity
 		cv               ContainerValidation
 		expectedMessages []*ResultMessage
 	}{
@@ -629,7 +629,7 @@ func TestValidateNetworking(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.cv = resetCV(tt.cv)
-			err := applyContainerSchemaChecks(&conf.Configuration{Networking: tt.networkConf}, "", conf.Deployments, &tt.cv)
+			err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.networkConf}, "", conf.Deployments, &tt.cv)
 			if err != nil {
 				panic(err)
 			}
@@ -644,22 +644,22 @@ func TestValidateSecurity(t *testing.T) {
 	falseVar := false
 
 	// Test setup.
-	emptyConf := conf.Security{}
-	standardConf := conf.Security{
-		RunAsRootAllowed:           conf.SeverityWarning,
-		RunAsPrivileged:            conf.SeverityError,
-		NotReadOnlyRootFileSystem:  conf.SeverityWarning,
-		PrivilegeEscalationAllowed: conf.SeverityError,
-		DangerousCapabilities:      conf.SeverityError,
-		InsecureCapabilities:       conf.SeverityWarning,
+	emptyConf := map[string]conf.Severity{}
+	standardConf := map[string]conf.Severity{
+		"runAsRootAllowed":           conf.SeverityWarning,
+		"runAsPrivileged":            conf.SeverityError,
+		"notReadOnlyRootFileSystem":  conf.SeverityWarning,
+		"privilegeEscalationAllowed": conf.SeverityError,
+		"dangerousCapabilities":      conf.SeverityError,
+		"insecureCapabilities":       conf.SeverityWarning,
 	}
-	strongConf := conf.Security{
-		RunAsRootAllowed:           conf.SeverityError,
-		RunAsPrivileged:            conf.SeverityError,
-		NotReadOnlyRootFileSystem:  conf.SeverityError,
-		PrivilegeEscalationAllowed: conf.SeverityError,
-		DangerousCapabilities:      conf.SeverityError,
-		InsecureCapabilities:       conf.SeverityError,
+	strongConf := map[string]conf.Severity{
+		"runAsRootAllowed":           conf.SeverityError,
+		"runAsPrivileged":            conf.SeverityError,
+		"notReadOnlyRootFileSystem":  conf.SeverityError,
+		"privilegeEscalationAllowed": conf.SeverityError,
+		"dangerousCapabilities":      conf.SeverityError,
+		"insecureCapabilities":       conf.SeverityError,
 	}
 
 	emptyCV := ContainerValidation{
@@ -780,7 +780,7 @@ func TestValidateSecurity(t *testing.T) {
 
 	var testCases = []struct {
 		name             string
-		securityConf     conf.Security
+		securityConf     map[string]conf.Severity
 		cv               ContainerValidation
 		expectedMessages []*ResultMessage
 	}{
@@ -1119,7 +1119,7 @@ func TestValidateSecurity(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.cv = resetCV(tt.cv)
-			err := applyContainerSchemaChecks(&conf.Configuration{Security: tt.securityConf}, "", conf.Deployments, &tt.cv)
+			err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.securityConf}, "", conf.Deployments, &tt.cv)
 			if err != nil {
 				panic(err)
 			}
@@ -1135,8 +1135,8 @@ func TestValidateRunAsRoot(t *testing.T) {
 	nonRootUser := int64(1000)
 	rootUser := int64(0)
 	config := conf.Configuration{
-		Security: conf.Security{
-			RunAsRootAllowed: conf.SeverityWarning,
+		Checks: map[string]conf.Severity{
+			"runAsRootAllowed": conf.SeverityWarning,
 		},
 	}
 	testCases := []struct {

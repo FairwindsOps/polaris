@@ -95,7 +95,6 @@ const (
 
 // SchemaCheck is a Polaris check that runs using JSON Schema
 type SchemaCheck struct {
-	Name           string                `yaml:"name"`
 	ID             string                `yaml:"id"`
 	Category       string                `yaml:"category"`
 	SuccessMessage string                `yaml:"successMessage"`

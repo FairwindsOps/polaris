@@ -29,9 +29,9 @@ import (
 
 func TestValidateController(t *testing.T) {
 	c := conf.Configuration{
-		Security: conf.Security{
-			HostIPCSet: conf.SeverityError,
-			HostPIDSet: conf.SeverityError,
+		Checks: map[string]conf.Severity{
+			"hostIPCSet": conf.SeverityError,
+			"hostPIDSet": conf.SeverityError,
 		},
 	}
 	deployment := controller.NewDeploymentController(test.MockDeploy())
@@ -64,9 +64,9 @@ func TestValidateController(t *testing.T) {
 
 func TestSkipHealthChecks(t *testing.T) {
 	c := conf.Configuration{
-		HealthChecks: conf.HealthChecks{
-			ReadinessProbeMissing: conf.SeverityError,
-			LivenessProbeMissing:  conf.SeverityWarning,
+		Checks: map[string]conf.Severity{
+			"readinessProbeMissing": conf.SeverityError,
+			"livenessProbeMissing":  conf.SeverityWarning,
 		},
 		ControllersToScan: []conf.SupportedController{
 			conf.Deployments,
@@ -139,9 +139,9 @@ func TestSkipHealthChecks(t *testing.T) {
 
 func TestControllerExemptions(t *testing.T) {
 	c := conf.Configuration{
-		HealthChecks: conf.HealthChecks{
-			ReadinessProbeMissing: conf.SeverityError,
-			LivenessProbeMissing:  conf.SeverityWarning,
+		Checks: map[string]conf.Severity{
+			"readinessProbeMissing": conf.SeverityError,
+			"livenessProbeMissing":  conf.SeverityWarning,
 		},
 		ControllersToScan: []conf.SupportedController{
 			conf.Deployments,

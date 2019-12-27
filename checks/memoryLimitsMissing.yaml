@@ -1,5 +1,3 @@
-name: MemoryLimitsMissing
-id: memoryLimitsMissing
 successMessage: Memory limits are set
 failureMessage: Memory limits should be set
 category: Resources

@@ -1,5 +1,3 @@
-name: DangerousCapabilities
-id: dangerousCapabilities
 successMessage: Container does not have any dangerous capabilities
 failureMessage: Container should not have dangerous capabilities
 category: Security

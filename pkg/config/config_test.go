@@ -29,18 +29,18 @@ import (
 var confInvalid = `test`
 
 var confValidYAML = `
-resources:
+checks:
   cpuRequestsMissing: warning
-controllers_to_scan:
+controllersToScan:
   - Deployments
 `
 
 var confValidJSON = `
 {
-  "resources": {
+  "checks": {
     "cpuRequestsMissing": "warning"
   },
-  "controllers_to_scan": ["Deployments"]
+  "controllersToScan": ["Deployments"]
 }
 `
 
@@ -96,7 +96,7 @@ func TestConfigNoServerError(t *testing.T) {
 }
 
 func testParsedConfig(t *testing.T, config *Configuration) {
-	assert.Equal(t, SeverityWarning, config.Resources.CPURequestsMissing)
-	assert.Equal(t, Severity(""), config.Resources.CPULimitsMissing)
+	assert.Equal(t, SeverityWarning, config.Checks["cpuRequestsMissing"])
+	assert.Equal(t, Severity(""), config.Checks["cpuLimitsMissing"])
 	assert.ElementsMatch(t, []SupportedController{Deployments}, config.ControllersToScan)
 }

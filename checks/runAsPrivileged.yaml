@@ -1,5 +1,3 @@
-name: RunAsPrivileged
-id: runAsPrivileged
 successMessage: Not running as privileged
 failureMessage: Should not be running as privileged
 category: Security

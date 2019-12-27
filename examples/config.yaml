@@ -1,18 +1,19 @@
-resources:
+checks:
+  # resources
   cpuRequestsMissing: warning
   cpuLimitsMissing: warning
   memoryRequestsMissing: warning
   memoryLimitsMissing: warning
-images:
+  # images
   tagNotSpecified: error
   pullPolicyNotAlways: ignore
-healthChecks:
+  # healthChecks
   readinessProbeMissing: warning
   livenessProbeMissing: warning
-networking:
+  # networking
   hostNetworkSet: warning
   hostPortSet: warning
-security:
+  # security
   hostIPCSet: error
   hostPIDSet: error
   notReadOnlyRootFileSystem: warning
@@ -21,7 +22,7 @@ security:
   runAsPrivileged: error
   dangerousCapabilities: error
   insecureCapabilities: warning
-controllers_to_scan:
+controllersToScan:
   - Deployments
   - StatefulSets
   - DaemonSets

@@ -1,5 +1,3 @@
-name: MemoryRequestsMissing
-id: memoryRequestsMissing
 successMessage: Memory requests are set
 failureMessage: Memory requests should be set
 category: Resources

@@ -1,5 +1,3 @@
-name: HostNetworkSet
-id: hostNetworkSet
 successMessage: Host network is not configured
 failureMessage: Host network should not be configured
 category: Networking

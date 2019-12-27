@@ -1,5 +1,3 @@
-name: InsecureCapabilities
-id: insecureCapabilities
 successMessage: Container does not have any insecure capabilities
 failureMessage: Container should not have insecure capabilities
 category: Security

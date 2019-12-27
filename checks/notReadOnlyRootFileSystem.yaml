@@ -1,5 +1,3 @@
-name: NotReadOnlyRootFileSystem
-id: notReadOnlyRootFileSystem
 successMessage: Filesystem is read only
 failureMessage: Filesystem should be read only
 category: Security

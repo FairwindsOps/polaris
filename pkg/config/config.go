@@ -29,13 +29,8 @@ import (
 // Configuration contains all of the config for the validation checks.
 type Configuration struct {
 	DisplayName        string                 `json:"displayName"`
-	Resources          Resources              `json:"resources"`
-	HealthChecks       HealthChecks           `json:"healthChecks"`
-	Images             Images                 `json:"images"`
-	Networking         Networking             `json:"networking"`
-	Security           Security               `json:"security"`
 	Checks             map[string]Severity    `json:"checks"`
-	ControllersToScan  []SupportedController  `json:"controllers_to_scan"`
+	ControllersToScan  []SupportedController  `json:"controllersToScan"`
 	CustomChecks       map[string]SchemaCheck `json:"customChecks"`
 	Exemptions         []Exemption            `json:"exemptions"`
 	DisallowExemptions bool                   `json:"disallowExemptions"`

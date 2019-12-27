@@ -1,13 +1,11 @@
-name: HostIPCSet
-id: hostIPCSet
-successMessage: Host IPC is not configured
-failureMessage: Host IPC should not be configured
+successMessage: Host PID is not configured
+failureMessage: Host PID should not be configured
 category: Security
 target: Pod
 schema:
   '$schema': http://json-schema.org/draft-07/schema
   type: object
   properties:
-    hostIPC:
+    hostPID:
       not:
         const: true
