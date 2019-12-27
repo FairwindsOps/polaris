@@ -23,21 +23,22 @@ import (
 	"strings"
 
 	packr "github.com/gobuffalo/packr/v2"
-	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
 // Configuration contains all of the config for the validation checks.
 type Configuration struct {
-	DisplayName        string                `json:"displayName"`
-	Resources          Resources             `json:"resources"`
-	HealthChecks       HealthChecks          `json:"healthChecks"`
-	Images             Images                `json:"images"`
-	Networking         Networking            `json:"networking"`
-	Security           Security              `json:"security"`
-	ControllersToScan  []SupportedController `json:"controllers_to_scan"`
-	Exemptions         []Exemption           `json:"exemptions"`
-	DisallowExemptions bool                  `json:"disallowExemptions"`
+	DisplayName        string                 `json:"displayName"`
+	Resources          Resources              `json:"resources"`
+	HealthChecks       HealthChecks           `json:"healthChecks"`
+	Images             Images                 `json:"images"`
+	Networking         Networking             `json:"networking"`
+	Security           Security               `json:"security"`
+	Checks             map[string]Severity    `json:"checks"`
+	ControllersToScan  []SupportedController  `json:"controllers_to_scan"`
+	CustomChecks       map[string]SchemaCheck `json:"customChecks"`
+	Exemptions         []Exemption            `json:"exemptions"`
+	DisallowExemptions bool                   `json:"disallowExemptions"`
 }
 
 // Exemption represents an exemption to normal rules
@@ -48,26 +49,10 @@ type Exemption struct {
 
 // Resources contains config for resource requests and limits.
 type Resources struct {
-	CPURequestsMissing    Severity       `json:"cpuRequestsMissing"`
-	CPURequestRanges      ResourceRanges `json:"cpuRequestRanges"`
-	CPULimitsMissing      Severity       `json:"cpuLimitsMissing"`
-	CPULimitRanges        ResourceRanges `json:"cpuLimitRanges"`
-	MemoryRequestsMissing Severity       `json:"memoryRequestsMissing"`
-	MemoryRequestRanges   ResourceRanges `json:"memoryRequestRanges"`
-	MemoryLimitsMissing   Severity       `json:"memoryLimitsMissing"`
-	MemoryLimitRanges     ResourceRanges `json:"memoryLimitRanges"`
-}
-
-// ResourceRanges contains config for requests or limits for a specific resource.
-type ResourceRanges struct {
-	Warning ResourceRange `json:"warning"`
-	Error   ResourceRange `json:"error"`
-}
-
-// ResourceRange can contain below and above conditions for validation.
-type ResourceRange struct {
-	Below *resource.Quantity `json:"below"`
-	Above *resource.Quantity `json:"above"`
+	CPURequestsMissing    Severity `json:"cpuRequestsMissing"`
+	CPULimitsMissing      Severity `json:"cpuLimitsMissing"`
+	MemoryRequestsMissing Severity `json:"memoryRequestsMissing"`
+	MemoryLimitsMissing   Severity `json:"memoryLimitsMissing"`
 }
 
 // HealthChecks contains config for readiness and liveness probes.
@@ -140,9 +125,14 @@ func Parse(rawBytes []byte) (Configuration, error) {
 	for {
 		if err := d.Decode(&conf); err != nil {
 			if err == io.EOF {
-				return conf, nil
+				break
 			}
 			return conf, fmt.Errorf("Decoding config failed: %v", err)
 		}
 	}
+	for key, check := range conf.CustomChecks {
+		check.ID = key
+		conf.CustomChecks[key] = check
+	}
+	return conf, nil
 }

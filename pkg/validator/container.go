@@ -15,12 +15,8 @@
 package validator
 
 import (
-	"fmt"
-
 	"github.com/fairwindsops/polaris/pkg/config"
-	"github.com/fairwindsops/polaris/pkg/validator/messages"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 // ContainerValidation tracks validation failures associated with a Container.
@@ -56,8 +52,6 @@ func ValidateContainer(container *corev1.Container, parentPodResult *PodResult, 
 		cv.parentPodSpec = parentPodResult.podSpec
 	}
 
-	cv.validateResources(conf, controllerName)
-
 	err := applyContainerSchemaChecks(conf, controllerName, controllerType, &cv)
 	// FIXME: don't panic
 	if err != nil {
@@ -71,83 +65,4 @@ func ValidateContainer(container *corev1.Container, parentPodResult *PodResult, 
 	}
 
 	return cRes
-}
-
-func (cv *ContainerValidation) validateResources(conf *config.Configuration, controllerName string) {
-	// Only validate resources for primary containers. Although it can
-	// be helpful to set these in certain cases, it usually isn't
-	if cv.IsInitContainer {
-		return
-	}
-
-	category := messages.CategoryResources
-	res := cv.Container.Resources
-
-	missingName := "CPURequestsMissing"
-	rangeName := "CPURequestRanges"
-	id := config.GetIDFromField(conf.Resources, missingName)
-	if conf.IsActionable(conf.Resources, missingName, controllerName) && res.Requests.Cpu().MilliValue() == 0 {
-		cv.addFailure(messages.CPURequestsFailure, conf.Resources.CPURequestsMissing, category, id)
-	} else if conf.IsActionable(conf.Resources, rangeName, controllerName) {
-		id := config.GetIDFromField(conf.Resources, rangeName)
-		cv.validateResourceRange(id, messages.CPURequestsLabel, &conf.Resources.CPURequestRanges, res.Requests.Cpu())
-	} else if conf.IsActionable(conf.Resources, missingName, controllerName) {
-		cv.addSuccess(fmt.Sprintf(messages.ResourcePresentSuccess, messages.CPURequestsLabel), category, id)
-	}
-
-	missingName = "CPULimitsMissing"
-	rangeName = "CPULimitRanges"
-	id = config.GetIDFromField(conf.Resources, missingName)
-	if conf.IsActionable(conf.Resources, missingName, controllerName) && res.Limits.Cpu().MilliValue() == 0 {
-		cv.addFailure(messages.CPULimitsFailure, conf.Resources.CPULimitsMissing, category, id)
-	} else if conf.IsActionable(conf.Resources, rangeName, controllerName) {
-		id := config.GetIDFromField(conf.Resources, rangeName)
-		cv.validateResourceRange(id, messages.CPULimitsLabel, &conf.Resources.CPULimitRanges, res.Requests.Cpu())
-	} else if conf.IsActionable(conf.Resources, missingName, controllerName) {
-		cv.addSuccess(fmt.Sprintf(messages.ResourcePresentSuccess, messages.CPULimitsLabel), category, id)
-	}
-
-	missingName = "MemoryRequestsMissing"
-	rangeName = "MemoryRequestRanges"
-	id = config.GetIDFromField(conf.Resources, missingName)
-	if conf.IsActionable(conf.Resources, missingName, controllerName) && res.Requests.Memory().MilliValue() == 0 {
-		cv.addFailure(messages.MemoryRequestsFailure, conf.Resources.MemoryRequestsMissing, category, id)
-	} else if conf.IsActionable(conf.Resources, rangeName, controllerName) {
-		id := config.GetIDFromField(conf.Resources, rangeName)
-		cv.validateResourceRange(id, messages.MemoryRequestsLabel, &conf.Resources.MemoryRequestRanges, res.Requests.Memory())
-	} else if conf.IsActionable(conf.Resources, missingName, controllerName) {
-		cv.addSuccess(fmt.Sprintf(messages.ResourcePresentSuccess, messages.MemoryRequestsLabel), category, id)
-	}
-
-	missingName = "MemoryLimitsMissing"
-	rangeName = "MemoryLimitRanges"
-	id = config.GetIDFromField(conf.Resources, missingName)
-	if conf.IsActionable(conf.Resources, missingName, controllerName) && res.Limits.Memory().MilliValue() == 0 {
-		cv.addFailure(messages.MemoryLimitsFailure, conf.Resources.MemoryLimitsMissing, category, id)
-	} else if conf.IsActionable(conf.Resources, rangeName, controllerName) {
-		id := config.GetIDFromField(conf.Resources, rangeName)
-		cv.validateResourceRange(id, messages.MemoryLimitsLabel, &conf.Resources.MemoryLimitRanges, res.Limits.Memory())
-	} else if conf.IsActionable(conf.Resources, missingName, controllerName) {
-		cv.addSuccess(fmt.Sprintf(messages.ResourcePresentSuccess, messages.MemoryLimitsLabel), category, id)
-	}
-}
-
-func (cv *ContainerValidation) validateResourceRange(id, resourceName string, rangeConf *config.ResourceRanges, res *resource.Quantity) {
-	warnAbove := rangeConf.Warning.Above
-	warnBelow := rangeConf.Warning.Below
-	errorAbove := rangeConf.Error.Above
-	errorBelow := rangeConf.Error.Below
-	category := messages.CategoryResources
-
-	if errorAbove != nil && errorAbove.MilliValue() < res.MilliValue() {
-		cv.addError(fmt.Sprintf(messages.ResourceAmountTooHighFailure, resourceName, errorAbove.String()), category, id)
-	} else if warnAbove != nil && warnAbove.MilliValue() < res.MilliValue() {
-		cv.addWarning(fmt.Sprintf(messages.ResourceAmountTooHighFailure, resourceName, warnAbove.String()), category, id)
-	} else if errorBelow != nil && errorBelow.MilliValue() > res.MilliValue() {
-		cv.addError(fmt.Sprintf(messages.ResourceAmountTooLowFailure, resourceName, errorBelow.String()), category, id)
-	} else if warnBelow != nil && warnBelow.MilliValue() > res.MilliValue() {
-		cv.addWarning(fmt.Sprintf(messages.ResourceAmountTooLowFailure, resourceName, warnBelow.String()), category, id)
-	} else if errorAbove != nil && warnAbove != nil && errorBelow != nil && warnBelow != nil {
-		cv.addSuccess(fmt.Sprintf(messages.ResourceAmountSuccess, resourceName), category, id)
-	}
 }

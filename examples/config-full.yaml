@@ -1,45 +1,11 @@
 resources:
   cpuRequestsMissing: warning
-  cpuRequestRanges:
-    warning:
-      below: 50m
-      above: 1000m
-    error:
-      below: 500m
-      above: 2000m
   cpuLimitsMissing: warning
-  cpuLimitRanges:
-    warning:
-      below: 50m
-      above: 1000m
-    error:
-      below: 500m
-      above: 2000m
   memoryRequestsMissing: warning
-  memoryRequestRanges:
-    warning:
-      below: 50M
-      above: 2G
-    error:
-      below: 100M
-      above: 4G
   memoryLimitsMissing: warning
-  memoryLimitRanges:
-    warning:
-      below: 50M
-      above: 2G
-    error:
-      below: 100M
-      above: 4G
 images:
   tagNotSpecified: error
   pullPolicyNotAlways: warning
-  whitelist:
-    error:
-      - gcr.io/*
-  blacklist:
-    warning:
-      - docker.io/*
 healthChecks:
   readinessProbeMissing: warning
   livenessProbeMissing: warning
@@ -53,16 +19,8 @@ security:
   runAsPrivileged: error
   notReadOnlyRootFileSystem: warning
   privilegeEscalationAllowed: error
-  capabilities:
-    error:
-      ifAnyAdded:
-        - SYS_ADMIN
-        - ALL
-      ifAnyNotDropped:
-        - ALL
-    warning:
-      ifAnyAddedBeyond:
-        - NONE
+  dangerousCapabilities: error
+  insecureCapabilities: warning
 controllers_to_scan:
   - Deployments
   - StatefulSets

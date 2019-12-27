@@ -24,39 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
-var resourceConf1 = `---
-resources:
-  cpuRequestRanges:
-    error:
-      below: 100m
-      above: 1
-    warning:
-      below: 200m
-      above: 800m
-  memoryRequestRanges:
-    error:
-      below: 100M
-      above: 3G
-    warning:
-      below: 200M
-      above: 2G
-  cpuLimitRanges:
-    error:
-      below: 100m
-      above: 2
-    warning:
-      below: 300m
-      above: 1800m
-  memoryLimitRanges:
-    error:
-      below: 200M
-      above: 6G
-    warning:
-      below: 300M
-      above: 4G
-`
-
-var resourceConf2 = `---
+var resourceConfMinimal = `---
 resources:
   cpuRequestsMissing: warning
   memoryRequestsMissing: warning
@@ -80,44 +48,66 @@ exemptions:
     - foo
 `
 
-var resourceConfRangeExemptions = `---
-resources:
-  cpuRequestRanges:
-    error:
-      below: 100m
-      above: 1
-    warning:
-      below: 200m
-      above: 800m
-  memoryRequestRanges:
-    error:
-      below: 100M
-      above: 3G
-    warning:
-      below: 200M
-      above: 2G
-  cpuLimitRanges:
-    error:
-      below: 100m
-      above: 2
-    warning:
-      below: 300m
-      above: 1800m
-  memoryLimitRanges:
-    error:
-      below: 200M
-      above: 6G
-    warning:
-      below: 300M
-      above: 4G
-exemptions:
-  - rules:
-    - cpuRequestRanges
-    - memoryRequestRanges
-    - cpuLimitRanges
-    - memoryLimitRanges
-    controllerNames:
-    - foo
+var resourceConfRanges = `
+checks:
+  memoryRequestsRange: error
+  memoryLimitsRange: warning
+customChecks:
+  memoryLimitsRange:
+    containers:
+      exclude:
+      - initContainer
+    successMessage: Memory limits are within the required range
+    failureMessage: Memory limits should be within the required range
+    category: Resources
+    target: Container
+    schema:
+      '$schema': http://json-schema.org/draft-07/schema
+      type: object
+      required:
+      - resources
+      properties:
+        resources:
+          type: object
+          required:
+          - limits
+          properties:
+            limits:
+              type: object
+              required:
+              - memory
+              properties:
+                memory:
+                  type: string
+                  resourceMinimum: 200M
+                  resourceMaximum: 6G
+  memoryRequestsRange:
+    successMessage: Memory requests are within the required range
+    failureMessage: Memory requests should be within the required range
+    category: Resources
+    target: Container
+    containers:
+      exclude:
+      - initContainer
+    schema:
+      '$schema': http://json-schema.org/draft-07/schema
+      type: object
+      required:
+      - resources
+      properties:
+        resources:
+          type: object
+          required:
+          - requests
+          properties:
+            requests:
+              required:
+              - memory
+              properties:
+                memory:
+                  type: string
+                  resourceMinimum: 200M
+                  resourceMaximum: 3G
 `
 
 func testValidateResources(t *testing.T, container *corev1.Container, resourceConf *string, controllerName string, expectedErrors []*ResultMessage, expectedWarnings []*ResultMessage, expectedSuccesses []*ResultMessage) {
@@ -129,7 +119,10 @@ func testValidateResources(t *testing.T, container *corev1.Container, resourceCo
 	parsedConf, err := conf.Parse([]byte(*resourceConf))
 	assert.NoError(t, err, "Expected no error when parsing config")
 
-	cv.validateResources(&parsedConf, controllerName)
+	err = applyContainerSchemaChecks(&parsedConf, controllerName, conf.Deployments, &cv)
+	if err != nil {
+		panic(err)
+	}
 
 	assert.Len(t, cv.Warnings, len(expectedWarnings))
 	assert.ElementsMatch(t, expectedWarnings, cv.Warnings)
@@ -151,7 +144,10 @@ func TestValidateResourcesEmptyConfig(t *testing.T) {
 		ResourceValidation: &ResourceValidation{},
 	}
 
-	cv.validateResources(&conf.Configuration{}, "")
+	err := applyContainerSchemaChecks(&conf.Configuration{}, "", conf.Deployments, &cv)
+	if err != nil {
+		panic(err)
+	}
 	assert.Len(t, cv.Errors, 0)
 }
 
@@ -192,7 +188,7 @@ func TestValidateResourcesEmptyContainer(t *testing.T) {
 
 	expectedSuccesses := []*ResultMessage{}
 
-	testValidateResources(t, &container, &resourceConf2, "foo", expectedErrors, expectedWarnings, expectedSuccesses)
+	testValidateResources(t, &container, &resourceConfMinimal, "foo", expectedErrors, expectedWarnings, expectedSuccesses)
 }
 
 func TestValidateResourcesPartiallyValid(t *testing.T) {
@@ -216,37 +212,25 @@ func TestValidateResourcesPartiallyValid(t *testing.T) {
 
 	expectedWarnings := []*ResultMessage{
 		{
-			ID:       "cpuRequestRanges",
+			ID:       "memoryLimitsRange",
 			Type:     "warning",
-			Message:  "CPU requests should be higher than 200m",
-			Category: "Resources",
-		},
-		{
-			ID:       "cpuLimitRanges",
-			Type:     "warning",
-			Message:  "CPU limits should be higher than 300m",
+			Message:  "Memory limits should be within the required range",
 			Category: "Resources",
 		},
 	}
 
 	expectedErrors := []*ResultMessage{
 		{
-			ID:       "memoryRequestRanges",
+			ID:       "memoryRequestsRange",
 			Type:     "error",
-			Message:  "Memory requests should be higher than 100M",
-			Category: "Resources",
-		},
-		{
-			ID:       "memoryLimitRanges",
-			Type:     "error",
-			Message:  "Memory limits should be higher than 200M",
+			Message:  "Memory requests should be within the required range",
 			Category: "Resources",
 		},
 	}
 
 	expectedSuccesses := []*ResultMessage{}
 
-	testValidateResources(t, &container, &resourceConf1, "foo", expectedErrors, expectedWarnings, expectedSuccesses)
+	testValidateResources(t, &container, &resourceConfRanges, "foo", expectedErrors, expectedWarnings, expectedSuccesses)
 }
 
 func TestValidateResourcesInit(t *testing.T) {
@@ -260,13 +244,20 @@ func TestValidateResourcesInit(t *testing.T) {
 		IsInitContainer:    true,
 	}
 
-	parsedConf, err := conf.Parse([]byte(resourceConf1))
+	parsedConf, err := conf.Parse([]byte(resourceConfRanges))
 	assert.NoError(t, err, "Expected no error when parsing config")
 
-	cvEmpty.validateResources(&parsedConf, "")
-	assert.Len(t, cvEmpty.Errors, 4)
+	err = applyContainerSchemaChecks(&parsedConf, "", conf.Deployments, &cvEmpty)
+	if err != nil {
+		panic(err)
+	}
+	assert.Len(t, cvEmpty.Errors, 1)
+	assert.Len(t, cvEmpty.Warnings, 1)
 
-	cvInit.validateResources(&parsedConf, "")
+	err = applyContainerSchemaChecks(&parsedConf, "", conf.Deployments, &cvInit)
+	if err != nil {
+		panic(err)
+	}
 	assert.Len(t, cvInit.Errors, 0)
 }
 
@@ -299,32 +290,20 @@ func TestValidateResourcesFullyValid(t *testing.T) {
 
 	expectedSuccesses := []*ResultMessage{
 		{
-			ID:       "cpuRequestRanges",
+			ID:       "memoryRequestsRange",
 			Type:     "success",
-			Message:  "CPU requests are within the expected range",
+			Message:  "Memory requests are within the required range",
 			Category: "Resources",
 		},
 		{
-			ID:       "memoryRequestRanges",
+			ID:       "memoryLimitsRange",
 			Type:     "success",
-			Message:  "Memory requests are within the expected range",
-			Category: "Resources",
-		},
-		{
-			ID:       "cpuLimitRanges",
-			Type:     "success",
-			Message:  "CPU limits are within the expected range",
-			Category: "Resources",
-		},
-		{
-			ID:       "memoryLimitRanges",
-			Type:     "success",
-			Message:  "Memory limits are within the expected range",
+			Message:  "Memory limits are within the required range",
 			Category: "Resources",
 		},
 	}
 
-	testValidateResources(t, &container, &resourceConf1, "foo", []*ResultMessage{}, []*ResultMessage{}, expectedSuccesses)
+	testValidateResources(t, &container, &resourceConfRanges, "foo", []*ResultMessage{}, []*ResultMessage{}, expectedSuccesses)
 
 	expectedSuccesses = []*ResultMessage{
 		{
@@ -353,7 +332,7 @@ func TestValidateResourcesFullyValid(t *testing.T) {
 		},
 	}
 
-	testValidateResources(t, &container, &resourceConf2, "foo", []*ResultMessage{}, []*ResultMessage{}, expectedSuccesses)
+	testValidateResources(t, &container, &resourceConfMinimal, "foo", []*ResultMessage{}, []*ResultMessage{}, expectedSuccesses)
 }
 
 func TestValidateHealthChecks(t *testing.T) {
@@ -1339,6 +1318,7 @@ func TestValidateResourcesExemption(t *testing.T) {
 	testValidateResources(t, &container, &disallowExemptionsConf, "foo", expectedErrors, expectedWarnings, expectedSuccesses)
 }
 
+/*
 func TestValidateResourceRangeExemption(t *testing.T) {
 	container := corev1.Container{
 		Name: "Empty",
@@ -1350,6 +1330,7 @@ func TestValidateResourceRangeExemption(t *testing.T) {
 
 	testValidateResources(t, &container, &resourceConfRangeExemptions, "foo", expectedErrors, expectedWarnings, expectedSuccesses)
 }
+*/
 
 func resetCV(cv ContainerValidation) ContainerValidation {
 	cv.Errors = []*ResultMessage{}

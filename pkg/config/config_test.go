@@ -24,111 +24,41 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"k8s.io/apimachinery/pkg/api/resource"
 )
 
-var resourceConfInvalid1 = `test`
+var confInvalid = `test`
 
-var resourceConfYAML1 = `---
+var confValidYAML = `
 resources:
-  cpuRequestRanges:
-    error:
-      below: 100m
-      above: 1
-    warning:
-      below: 200m
-      above: 800m
-  memoryRequestRanges:
-    error:
-      below: 100M
-      above: 3G
-    warning:
-      below: 200M
-      above: 2G
-  cpuLimitRanges:
-    error:
-      below: 100m
-      above: 2
-    warning:
-      below: 300m
-      above: 1800m
-  memoryLimitRanges:
-    error:
-      below: 200M
-      above: 6G
-    warning:
-      below: 300M
-      above: 4G
+  cpuRequestsMissing: warning
 controllers_to_scan:
   - Deployments
-  - StatefulSets
-  - Jobs
-  - CronJobs
-  - DaemonSets
-  - ReplicationControllers
 `
 
-var resourceConfJSON1 = `{
-	"resources": {
-		"cpuRequestRanges": {
-			"error": {
-				"below": "100m",
-				"above": 1
-			},
-			"warning": {
-				"below": "200m",
-				"above": "800m"
-			}
-		},
-		"memoryRequestRanges": {
-			"error": {
-				"below": "100M",
-				"above": "3G"
-			},
-			"warning": {
-				"below": "200M",
-				"above": "2G"
-			}
-		},
-		"cpuLimitRanges": {
-			"error": {
-				"below": "100m",
-				"above": 2
-			},
-			"warning": {
-				"below": "300m",
-				"above": "1800m"
-			}
-		},
-		"memoryLimitRanges": {
-			"error": {
-				"below": "200M",
-				"above": "6G"
-			},
-			"warning": {
-				"below": "300M",
-				"above": "4G"
-			}
-		}
-	},
-	"controllers_to_scan": ["Deployments", "StatefulSets", "Jobs", "CronJobs", "DaemonSets", "ReplicationControllers"]
-}`
+var confValidJSON = `
+{
+  "resources": {
+    "cpuRequestsMissing": "warning"
+  },
+  "controllers_to_scan": ["Deployments"]
+}
+`
 
 func TestParseError(t *testing.T) {
-	_, err := Parse([]byte(resourceConfInvalid1))
+	_, err := Parse([]byte(confInvalid))
 	expectedErr := "Decoding config failed: error unmarshaling JSON: while decoding JSON: json: cannot unmarshal string into Go value of type config.Configuration"
 	assert.EqualError(t, err, expectedErr)
 }
 
 func TestParseYaml(t *testing.T) {
-	parsedConf, err := Parse([]byte(resourceConfYAML1))
+	parsedConf, err := Parse([]byte(confValidYAML))
 	assert.NoError(t, err, "Expected no error when parsing YAML config")
 
 	testParsedConfig(t, &parsedConf)
 }
 
 func TestParseJson(t *testing.T) {
-	parsedConf, err := Parse([]byte(resourceConfJSON1))
+	parsedConf, err := Parse([]byte(confValidJSON))
 	assert.NoError(t, err, "Expected no error when parsing JSON config")
 
 	testParsedConfig(t, &parsedConf)
@@ -139,7 +69,7 @@ func TestConfigFromURL(t *testing.T) {
 	var parsedConf Configuration
 	srv := &http.Server{Addr: ":8081"}
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		io.WriteString(w, resourceConfYAML1)
+		io.WriteString(w, confValidYAML)
 	})
 
 	go func() {
@@ -166,30 +96,7 @@ func TestConfigNoServerError(t *testing.T) {
 }
 
 func testParsedConfig(t *testing.T, config *Configuration) {
-	cpuRequests := config.Resources.CPURequestRanges
-	assert.Equal(t, int64(100), cpuRequests.Error.Below.ScaledValue(resource.Milli))
-	assert.Equal(t, int64(1000), cpuRequests.Error.Above.ScaledValue(resource.Milli))
-	assert.Equal(t, int64(200), cpuRequests.Warning.Below.ScaledValue(resource.Milli))
-	assert.Equal(t, int64(800), cpuRequests.Warning.Above.ScaledValue(resource.Milli))
-
-	memRequests := config.Resources.MemoryRequestRanges
-	assert.Equal(t, int64(100), memRequests.Error.Below.ScaledValue(resource.Mega))
-	assert.Equal(t, int64(3000), memRequests.Error.Above.ScaledValue(resource.Mega))
-	assert.Equal(t, int64(200), memRequests.Warning.Below.ScaledValue(resource.Mega))
-	assert.Equal(t, int64(2000), memRequests.Warning.Above.ScaledValue(resource.Mega))
-
-	cpuLimits := config.Resources.CPULimitRanges
-	assert.Equal(t, int64(100), cpuLimits.Error.Below.ScaledValue(resource.Milli))
-	assert.Equal(t, int64(2000), cpuLimits.Error.Above.ScaledValue(resource.Milli))
-	assert.Equal(t, int64(300), cpuLimits.Warning.Below.ScaledValue(resource.Milli))
-	assert.Equal(t, int64(1800), cpuLimits.Warning.Above.ScaledValue(resource.Milli))
-
-	memLimits := config.Resources.MemoryLimitRanges
-	assert.Equal(t, int64(200), memLimits.Error.Below.ScaledValue(resource.Mega))
-	assert.Equal(t, int64(6000), memLimits.Error.Above.ScaledValue(resource.Mega))
-	assert.Equal(t, int64(300), memLimits.Warning.Below.ScaledValue(resource.Mega))
-	assert.Equal(t, int64(4000), memLimits.Warning.Above.ScaledValue(resource.Mega))
-
-	controllersToScan := config.ControllersToScan
-	assert.ElementsMatch(t, []SupportedController{Deployments, StatefulSets, Jobs, CronJobs, DaemonSets, ReplicationControllers}, controllersToScan)
+	assert.Equal(t, SeverityWarning, config.Resources.CPURequestsMissing)
+	assert.Equal(t, Severity(""), config.Resources.CPULimitsMissing)
+	assert.ElementsMatch(t, []SupportedController{Deployments}, config.ControllersToScan)
 }
