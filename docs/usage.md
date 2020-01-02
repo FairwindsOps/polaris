@@ -20,6 +20,34 @@ Polaris validation checks fall into several different categories:
 - [Resources](check-documentation/resources.md)
 - [Security](check-documentation/security.md)
 
+#### Custom Checks
+If you'd like to create your own checks, you can use [JSON Schema](https://json-schema.org/). For example,
+to disallow images from quay.io:
+
+```yaml
+checks:
+  imageRegistry: warning
+customChecks:
+  imageRegistry:
+    successMessage: Image comes from allowed registries
+    failureMessage: Image should not be from disallowed registry
+    category: Images
+    target: Container # target can be "Container" or "Pod"
+    schema:
+      '$schema': http://json-schema.org/draft-07/schema
+      type: object
+      properties:
+        image:
+          type: string
+          not:
+            pattern: ^quay.io
+```
+
+We also extend JSON Schema with `resourceMinimum` and `resourceMaximum` fields to help compare memory and CPU resource
+strings like `1000m` and `1G`. You can see an example in [the extended config](/examples/config-full.yaml)
+
+There are additional examples in the [checks folder](/checks).
+
 ### Exemptions
 Exemptions can be added two ways: by annotating a controller, or editing the Polaris config.
 
