@@ -154,7 +154,6 @@ metadata:
   namespace: polaris
   labels:
     app: polaris
-    foo: bar
     component: dashboard
 spec:
   replicas: 1
