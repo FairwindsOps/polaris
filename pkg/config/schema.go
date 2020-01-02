@@ -9,6 +9,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
+// TargetKind represents the part of the config to be validated
 type TargetKind string
 
 const (
@@ -29,7 +30,7 @@ type SchemaCheck struct {
 	Target         TargetKind            `yaml:"target"`
 	SchemaTarget   TargetKind            `yaml:"schemaTarget"`
 	Schema         jsonschema.RootSchema `yaml:"schema"`
-	JsonSchema     string                `yaml:"jsonSchema"`
+	JSONSchema     string                `yaml:"jsonSchema"`
 }
 
 type resourceMinimum string
@@ -114,8 +115,8 @@ func validateRange(path string, limit interface{}, data interface{}, isMinimum b
 // Initialize sets up the schema
 func (check *SchemaCheck) Initialize(id string) error {
 	check.ID = id
-	if check.JsonSchema != "" {
-		if err := json.Unmarshal([]byte(check.JsonSchema), &check.Schema); err != nil {
+	if check.JSONSchema != "" {
+		if err := json.Unmarshal([]byte(check.JSONSchema), &check.Schema); err != nil {
 			return err
 		}
 	}
