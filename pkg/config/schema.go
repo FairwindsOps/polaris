@@ -120,7 +120,6 @@ func (check *SchemaCheck) Initialize(id string) error {
 			return err
 		}
 	}
-	fmt.Println(check.Schema)
 	return nil
 }
 

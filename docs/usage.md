@@ -43,7 +43,18 @@ customChecks:
             pattern: ^quay.io
 ```
 
-We also extend JSON Schema with `resourceMinimum` and `resourceMaximum` fields to help compare memory and CPU resource
+Schemas can also be specified as JSON strings instead of YAML, for easier copy/pasting:
+```yaml
+customChecks:
+  foo:
+    jsonSchema: |
+      {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "type": "object"
+      }
+```
+
+We extend JSON Schema with `resourceMinimum` and `resourceMaximum` fields to help compare memory and CPU resource
 strings like `1000m` and `1G`. You can see an example in [the extended config](/examples/config-full.yaml)
 
 There are additional examples in the [checks folder](/checks).
