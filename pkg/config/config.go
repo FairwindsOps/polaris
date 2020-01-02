@@ -42,52 +42,6 @@ type Exemption struct {
 	ControllerNames []string `json:"controllerNames"`
 }
 
-// Resources contains config for resource requests and limits.
-type Resources struct {
-	CPURequestsMissing    Severity `json:"cpuRequestsMissing"`
-	CPULimitsMissing      Severity `json:"cpuLimitsMissing"`
-	MemoryRequestsMissing Severity `json:"memoryRequestsMissing"`
-	MemoryLimitsMissing   Severity `json:"memoryLimitsMissing"`
-}
-
-// HealthChecks contains config for readiness and liveness probes.
-type HealthChecks struct {
-	ReadinessProbeMissing Severity `json:"readinessProbeMissing"`
-	LivenessProbeMissing  Severity `json:"livenessProbeMissing"`
-}
-
-// Images contains the config for images.
-type Images struct {
-	TagNotSpecified     Severity          `json:"tagNotSpecified"`
-	PullPolicyNotAlways Severity          `json:"pullPolicyNotAlways"`
-	Whitelist           ErrorWarningLists `json:"whitelist"`
-	Blacklist           ErrorWarningLists `json:"blacklist"`
-}
-
-// ErrorWarningLists provides lists of patterns to match or avoid in image tags.
-type ErrorWarningLists struct {
-	Error   []string `json:"error"`
-	Warning []string `json:"warning"`
-}
-
-// Networking contains the config for networking validations.
-type Networking struct {
-	HostNetworkSet Severity `json:"hostNetworkSet"`
-	HostPortSet    Severity `json:"hostPortSet"`
-}
-
-// Security contains the config for security validations.
-type Security struct {
-	HostIPCSet                 Severity `json:"hostIPCSet"`
-	HostPIDSet                 Severity `json:"hostPIDSet"`
-	RunAsRootAllowed           Severity `json:"runAsRootAllowed"`
-	RunAsPrivileged            Severity `json:"runAsPrivileged"`
-	NotReadOnlyRootFileSystem  Severity `json:"notReadOnlyRootFileSystem"`
-	PrivilegeEscalationAllowed Severity `json:"privilegeEscalationAllowed"`
-	DangerousCapabilities      Severity `json:"dangerousCapabilities"`
-	InsecureCapabilities       Severity `json:"insecureCapabilities"`
-}
-
 // ParseFile parses config from a file.
 func ParseFile(path string) (Configuration, error) {
 	var rawBytes []byte
