@@ -80,7 +80,10 @@ func Parse(rawBytes []byte) (Configuration, error) {
 		}
 	}
 	for key, check := range conf.CustomChecks {
-		check.ID = key
+		err := check.Initialize(key)
+		if err != nil {
+			return conf, err
+		}
 		conf.CustomChecks[key] = check
 	}
 	return conf, nil
