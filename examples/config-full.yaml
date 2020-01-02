@@ -1,27 +1,78 @@
-resources:
+checks:
+  # resources
   cpuRequestsMissing: warning
   cpuLimitsMissing: warning
   memoryRequestsMissing: warning
   memoryLimitsMissing: warning
-images:
+  # images
   tagNotSpecified: error
-  pullPolicyNotAlways: warning
-healthChecks:
+  pullPolicyNotAlways: ignore
+  # healthChecks
   readinessProbeMissing: warning
   livenessProbeMissing: warning
-networking:
-  hostNetworkSet: error
-  hostPortSet: error
-security:
+  # networking
+  hostNetworkSet: warning
+  hostPortSet: warning
+  # security
   hostIPCSet: error
   hostPIDSet: error
-  runAsRootAllowed: warning
-  runAsPrivileged: error
   notReadOnlyRootFileSystem: warning
   privilegeEscalationAllowed: error
+  runAsRootAllowed: warning
+  runAsPrivileged: error
   dangerousCapabilities: error
   insecureCapabilities: warning
-controllers_to_scan:
+
+customChecks:
+  resourceLimits:
+    containers:
+      exclude:
+      - initContainer
+    successMessage: Resource limits are within the required range
+    failureMessage: Resource limits should be within the required range
+    category: Resources
+    target: Container
+    schema:
+      '$schema': http://json-schema.org/draft-07/schema
+      type: object
+      required:
+      - resources
+      properties:
+        resources:
+          type: object
+          required:
+          - limits
+          properties:
+            limits:
+              type: object
+              required:
+              - memory
+              - cpu
+              properties:
+                memory:
+                  type: string
+                  resourceMinimum: 100M
+                  resourceMaximum: 6G
+                cpu:
+                  type: string
+                  resourceMinimum: 100m
+                  resourceMaximum: "2"
+  imageRegistry:
+    successMessage: Image comes from allowed registries
+    failureMessage: Image should not be from disallowed registry
+    category: Images
+    target: Container
+    schema:
+      '$schema': http://json-schema.org/draft-07/schema
+      type: object
+      properties:
+        image:
+          type: string
+          allOf:
+            not:
+              pattern: ^quay.io
+
+controllersToScan:
   - Deployments
   - StatefulSets
   - DaemonSets
