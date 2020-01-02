@@ -31,11 +31,12 @@ func ValidateController(conf conf.Configuration, controller controller.Interface
 	controllerType := controller.GetType()
 	pod := controller.GetPodSpec()
 	podResult := ValidatePod(conf, pod, controller.GetName(), controllerType)
-	return ControllerResult{
+	result := ControllerResult{
 		Type:      controllerType.String(),
 		Name:      controller.GetName(),
 		PodResult: podResult,
 	}
+	return result
 }
 
 // ValidateControllers validates that each deployment conforms to the Polaris config,

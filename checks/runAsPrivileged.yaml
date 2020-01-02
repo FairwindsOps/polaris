@@ -1,0 +1,15 @@
+name: RunAsPrivileged
+id: runAsPrivileged
+successMessage: Not running as privileged
+failureMessage: Should not be running as privileged
+category: Security
+target: Container
+schema:
+  '$schema': http://json-schema.org/draft-07/schema
+  type: object
+  properties:
+    securityContext:
+      properties:
+        privileged:
+          not:
+            const: true

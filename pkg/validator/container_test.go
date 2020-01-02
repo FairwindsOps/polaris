@@ -409,17 +409,21 @@ func TestValidateHealthChecks(t *testing.T) {
 		{name: "probes configured, but not required", probes: p2, cv: goodCV, errors: &f1},
 	}
 
-	for _, tt := range testCases {
+	for idx, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.cv.validateHealthChecks(&conf.Configuration{HealthChecks: tt.probes}, "")
+			err := applyContainerSchemaChecks(&conf.Configuration{HealthChecks: tt.probes}, "", conf.Deployments, &tt.cv)
+			if err != nil {
+				panic(err)
+			}
+			message := fmt.Sprintf("test case %d", idx)
 
 			if tt.warnings != nil {
-				assert.Len(t, tt.cv.Warnings, len(*tt.warnings))
-				assert.ElementsMatch(t, tt.cv.Warnings, *tt.warnings)
+				assert.Len(t, tt.cv.Warnings, len(*tt.warnings), message)
+				assert.ElementsMatch(t, tt.cv.Warnings, *tt.warnings, message)
 			}
 
-			assert.Len(t, tt.cv.Errors, len(*tt.errors))
-			assert.ElementsMatch(t, tt.cv.Errors, *tt.errors)
+			assert.Len(t, tt.cv.Errors, len(*tt.errors), message)
+			assert.ElementsMatch(t, tt.cv.Errors, *tt.errors, message)
 		})
 	}
 }
@@ -524,7 +528,10 @@ func TestValidateImage(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.cv = resetCV(tt.cv)
-			tt.cv.validateImage(&conf.Configuration{Images: tt.image}, "")
+			err := applyContainerSchemaChecks(&conf.Configuration{Images: tt.image}, "", conf.Deployments, &tt.cv)
+			if err != nil {
+				panic(err)
+			}
 			assert.Len(t, tt.cv.Errors, len(tt.expected))
 			assert.ElementsMatch(t, tt.cv.Errors, tt.expected)
 		})
@@ -643,7 +650,10 @@ func TestValidateNetworking(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.cv = resetCV(tt.cv)
-			tt.cv.validateNetworking(&conf.Configuration{Networking: tt.networkConf}, "")
+			err := applyContainerSchemaChecks(&conf.Configuration{Networking: tt.networkConf}, "", conf.Deployments, &tt.cv)
+			if err != nil {
+				panic(err)
+			}
 			assert.Len(t, tt.cv.messages(), len(tt.expectedMessages))
 			assert.ElementsMatch(t, tt.cv.messages(), tt.expectedMessages)
 		})
@@ -1133,6 +1143,10 @@ func TestValidateSecurity(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.cv = resetCV(tt.cv)
+			err := applyContainerSchemaChecks(&conf.Configuration{Security: tt.securityConf}, "", conf.Deployments, &tt.cv)
+			if err != nil {
+				panic(err)
+			}
 			tt.cv.validateSecurity(&conf.Configuration{Security: tt.securityConf}, "")
 			assert.Len(t, tt.cv.messages(), len(tt.expectedMessages))
 			assert.ElementsMatch(t, tt.cv.messages(), tt.expectedMessages)
@@ -1151,10 +1165,12 @@ func TestValidateRunAsRoot(t *testing.T) {
 		},
 	}
 	testCases := []struct {
+		name    string
 		cv      ContainerValidation
 		message ResultMessage
 	}{
 		{
+			name: "pod=false,container=nil",
 			cv: ContainerValidation{
 				ResourceValidation: &ResourceValidation{},
 				Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
@@ -1174,6 +1190,7 @@ func TestValidateRunAsRoot(t *testing.T) {
 			},
 		},
 		{
+			name: "pod=false,container=true",
 			cv: ContainerValidation{
 				ResourceValidation: &ResourceValidation{},
 				Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
@@ -1193,6 +1210,7 @@ func TestValidateRunAsRoot(t *testing.T) {
 			},
 		},
 		{
+			name: "pod=nil,container=runAsUser",
 			cv: ContainerValidation{
 				ResourceValidation: &ResourceValidation{},
 				Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
@@ -1207,6 +1225,7 @@ func TestValidateRunAsRoot(t *testing.T) {
 			},
 		},
 		{
+			name: "pod=runAsUser,container=nil",
 			cv: ContainerValidation{
 				ResourceValidation: &ResourceValidation{},
 				Container:          &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{}},
@@ -1224,6 +1243,7 @@ func TestValidateRunAsRoot(t *testing.T) {
 			},
 		},
 		{
+			name: "pod=runAsUser,container=runAsUser0",
 			cv: ContainerValidation{
 				ResourceValidation: &ResourceValidation{},
 				Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
@@ -1243,6 +1263,7 @@ func TestValidateRunAsRoot(t *testing.T) {
 			},
 		},
 		{
+			name: "pod=false,container=runAsUser",
 			cv: ContainerValidation{
 				ResourceValidation: &ResourceValidation{},
 				Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
@@ -1263,9 +1284,16 @@ func TestValidateRunAsRoot(t *testing.T) {
 		},
 	}
 	for idx, tt := range testCases {
-		tt.cv.validateSecurity(&config, "")
-		assert.Len(t, tt.cv.messages(), 1)
-		assert.Equal(t, &tt.message, tt.cv.messages()[0], fmt.Sprintf("Test case %d failed", idx))
+		t.Run(tt.name, func(t *testing.T) {
+			err := applyContainerSchemaChecks(&config, "", conf.Deployments, &tt.cv)
+			if err != nil {
+				panic(err)
+			}
+			assert.Len(t, tt.cv.messages(), 1)
+			if len(tt.cv.messages()) > 0 {
+				assert.Equal(t, &tt.message, tt.cv.messages()[0], fmt.Sprintf("Test case %d failed", idx))
+			}
+		})
 	}
 }
 

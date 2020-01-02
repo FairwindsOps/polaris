@@ -1,0 +1,18 @@
+name: TagNotSpecified
+id: tagNotSpecified
+successMessage: Image tag is specified
+failureMessage: Image tag should be specified
+category: Images
+target: Container
+schema:
+  '$schema': http://json-schema.org/draft-07/schema
+  required:
+  - image
+  allOf:
+  - properties:
+      image:
+        pattern: ^.+:.+$
+  - properties:
+      image:
+        not:
+          pattern: ^.+:latest$

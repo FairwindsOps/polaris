@@ -1,0 +1,18 @@
+name: NotReadOnlyRootFileSystem
+id: notReadOnlyRootFileSystem
+successMessage: Filesystem is read only
+failureMessage: Filesystem should be read only
+category: Security
+target: Container
+schema:
+  '$schema': http://json-schema.org/draft-07/schema
+  type: object
+  required:
+  - securityContext
+  properties:
+    securityContext:
+      required:
+      - readOnlyRootFilesystem
+      properties:
+        readOnlyRootFilesystem:
+          const: true

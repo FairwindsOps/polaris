@@ -16,7 +16,6 @@ package validator
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/validator/messages"
@@ -58,11 +57,13 @@ func ValidateContainer(container *corev1.Container, parentPodResult *PodResult, 
 	}
 
 	cv.validateResources(conf, controllerName)
-	if !isInit && controllerType != config.Jobs && controllerType != config.CronJobs {
-		cv.validateHealthChecks(conf, controllerName)
+
+	err := applyContainerSchemaChecks(conf, controllerName, controllerType, &cv)
+	// FIXME: don't panic
+	if err != nil {
+		panic(err)
 	}
-	cv.validateImage(conf, controllerName)
-	cv.validateNetworking(conf, controllerName)
+
 	cv.validateSecurity(conf, controllerName)
 
 	cRes := ContainerResult{
@@ -153,80 +154,7 @@ func (cv *ContainerValidation) validateResourceRange(id, resourceName string, ra
 	}
 }
 
-func (cv *ContainerValidation) validateHealthChecks(conf *config.Configuration, controllerName string) {
-	category := messages.CategoryHealthChecks
-
-	name := "ReadinessProbeMissing"
-	// Don't validate readiness probes on init containers
-	if !cv.IsInitContainer && conf.IsActionable(conf.HealthChecks, name, controllerName) {
-		id := config.GetIDFromField(conf.HealthChecks, name)
-		if cv.Container.ReadinessProbe == nil {
-			cv.addFailure(messages.ReadinessProbeFailure, conf.HealthChecks.ReadinessProbeMissing, category, id)
-		} else {
-			cv.addSuccess(messages.ReadinessProbeSuccess, category, id)
-		}
-	}
-
-	name = "LivenessProbeMissing"
-	if conf.IsActionable(conf.HealthChecks, name, controllerName) {
-		id := config.GetIDFromField(conf.HealthChecks, "LivenessProbeMissing")
-		if cv.Container.LivenessProbe == nil {
-			cv.addFailure(messages.LivenessProbeFailure, conf.HealthChecks.LivenessProbeMissing, category, id)
-		} else {
-			cv.addSuccess(messages.LivenessProbeSuccess, category, id)
-		}
-	}
-}
-
-func (cv *ContainerValidation) validateImage(conf *config.Configuration, controllerName string) {
-	category := messages.CategoryImages
-
-	name := "PullPolicyNotAlways"
-	if conf.IsActionable(conf.Images, name, controllerName) {
-		id := config.GetIDFromField(conf.Images, name)
-		if cv.Container.ImagePullPolicy != corev1.PullAlways {
-			cv.addFailure(messages.ImagePullPolicyFailure, conf.Images.PullPolicyNotAlways, category, id)
-		} else {
-			cv.addSuccess(messages.ImagePullPolicySuccess, category, id)
-		}
-	}
-
-	name = "TagNotSpecified"
-	if conf.IsActionable(conf.Images, name, controllerName) {
-		id := config.GetIDFromField(conf.Images, name)
-		img := strings.Split(cv.Container.Image, ":")
-		if len(img) == 1 || img[1] == "latest" {
-			cv.addFailure(messages.ImageTagFailure, conf.Images.TagNotSpecified, category, id)
-		} else {
-			cv.addSuccess(messages.ImageTagSuccess, category, id)
-		}
-	}
-}
-
-func (cv *ContainerValidation) validateNetworking(conf *config.Configuration, controllerName string) {
-	category := messages.CategoryNetworking
-
-	name := "HostPortSet"
-	if conf.IsActionable(conf.Networking, name, controllerName) {
-		hostPortSet := false
-		for _, port := range cv.Container.Ports {
-			if port.HostPort != 0 {
-				hostPortSet = true
-				break
-			}
-		}
-
-		id := config.GetIDFromField(conf.Networking, name)
-		if hostPortSet {
-			cv.addFailure(messages.HostPortFailure, conf.Networking.HostPortSet, category, id)
-		} else {
-			cv.addSuccess(messages.HostPortSuccess, category, id)
-		}
-	}
-}
-
 func (cv *ContainerValidation) validateSecurity(conf *config.Configuration, controllerName string) {
-	category := messages.CategorySecurity
 	securityContext := cv.Container.SecurityContext
 	podSecurityContext := cv.parentPodSpec.SecurityContext
 
@@ -240,55 +168,7 @@ func (cv *ContainerValidation) validateSecurity(conf *config.Configuration, cont
 		podSecurityContext = &corev1.PodSecurityContext{}
 	}
 
-	name := "RunAsRootAllowed"
-	if conf.IsActionable(conf.Security, name, controllerName) {
-		id := config.GetIDFromField(conf.Security, name)
-		runAsRootSuccess := false
-		if getBoolValue(securityContext.RunAsNonRoot) || (securityContext.RunAsUser != nil && *securityContext.RunAsUser > 0) {
-			// Check if the container is explicitly set to True (pass)
-			runAsRootSuccess = true
-		} else if securityContext.RunAsNonRoot == nil && securityContext.RunAsUser == nil {
-			// Or if the container values are unset, check the pod values
-			runAsRootSuccess = getBoolValue(podSecurityContext.RunAsNonRoot) || (podSecurityContext.RunAsUser != nil && *podSecurityContext.RunAsUser > 0)
-		}
-		if runAsRootSuccess {
-			cv.addSuccess(messages.RunAsRootSuccess, category, id)
-		} else {
-			cv.addFailure(messages.RunAsRootFailure, conf.Security.RunAsRootAllowed, category, id)
-		}
-	}
-
-	name = "RunAsPrivileged"
-	if conf.IsActionable(conf.Security, name, controllerName) {
-		id := config.GetIDFromField(conf.Security, name)
-		if getBoolValue(securityContext.Privileged) {
-			cv.addFailure(messages.RunAsPrivilegedFailure, conf.Security.RunAsPrivileged, category, id)
-		} else {
-			cv.addSuccess(messages.RunAsPrivilegedSuccess, category, id)
-		}
-	}
-
-	name = "NotReadOnlyRootFileSystem"
-	if conf.IsActionable(conf.Security, name, controllerName) {
-		id := config.GetIDFromField(conf.Security, name)
-		if getBoolValue(securityContext.ReadOnlyRootFilesystem) {
-			cv.addSuccess(messages.ReadOnlyFilesystemSuccess, category, id)
-		} else {
-			cv.addFailure(messages.ReadOnlyFilesystemFailure, conf.Security.NotReadOnlyRootFileSystem, category, id)
-		}
-	}
-
-	name = "PrivilegeEscalationAllowed"
-	if conf.IsActionable(conf.Security, name, controllerName) {
-		id := config.GetIDFromField(conf.Security, name)
-		if getBoolValue(securityContext.AllowPrivilegeEscalation) {
-			cv.addFailure(messages.PrivilegeEscalationFailure, conf.Security.PrivilegeEscalationAllowed, category, id)
-		} else {
-			cv.addSuccess(messages.PrivilegeEscalationSuccess, category, id)
-		}
-	}
-
-	name = "Capabilities"
+	name := "Capabilities"
 	if conf.IsActionable(conf.Security, name, controllerName) {
 		cv.validateCapabilities(&conf.Security.Capabilities.Warning, &conf.Security.Capabilities.Error)
 	}
@@ -416,13 +296,4 @@ func capContains(list []corev1.Capability, val corev1.Capability) bool {
 	}
 
 	return false
-}
-
-// getBoolValue returns false if nil or returns the value of the bool pointer
-func getBoolValue(val *bool) bool {
-	if val == nil {
-		return false
-	}
-
-	return *val
 }
