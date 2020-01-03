@@ -29,8 +29,8 @@ func (r ReplicationControllerController) GetAnnotations() map[string]string {
 	return r.K8SResource.ObjectMeta.Annotations
 }
 
-// GetType returns the supportedcontroller enum type
-func (r ReplicationControllerController) GetType() config.SupportedController {
+// GetKind returns the supportedcontroller enum type
+func (r ReplicationControllerController) GetKind() config.SupportedController {
 	return config.ReplicationControllers
 }
 

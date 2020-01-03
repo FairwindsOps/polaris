@@ -27,12 +27,13 @@ const exemptionAnnotationKey = "polaris.fairwinds.com/exempt"
 
 // ValidateController validates a single controller, returns a ControllerResult.
 func ValidateController(conf *conf.Configuration, controller controller.Interface) ControllerResult {
-	controllerType := controller.GetType()
+	controllerKind := controller.GetKind()
 	pod := controller.GetPodSpec()
-	podResult := ValidatePod(conf, pod, controller.GetName(), controllerType)
+	podResult := ValidatePod(conf, pod, controller.GetName(), controllerKind)
 	result := ControllerResult{
-		Type:      controllerType.String(),
+		Kind:      controllerKind.String(),
 		Name:      controller.GetName(),
+		Messages:  ResultSet{},
 		PodResult: podResult,
 	}
 	return result
@@ -43,7 +44,7 @@ func ValidateController(conf *conf.Configuration, controller controller.Interfac
 func ValidateControllers(config *conf.Configuration, kubeResources *kube.ResourceProvider) []ControllerResult {
 	var controllersToAudit []controller.Interface
 	for _, supportedControllers := range config.ControllersToScan {
-		loadedControllers, _ := controllers.LoadControllersByType(supportedControllers, kubeResources)
+		loadedControllers, _ := controllers.LoadControllersByKind(supportedControllers, kubeResources)
 		controllersToAudit = append(controllersToAudit, loadedControllers...)
 	}
 

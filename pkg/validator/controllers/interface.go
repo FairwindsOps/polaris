@@ -14,7 +14,7 @@ type Interface interface {
 	GetNamespace() string
 	GetPodTemplate() *kubeAPICoreV1.PodTemplateSpec
 	GetPodSpec() *kubeAPICoreV1.PodSpec
-	GetType() config.SupportedController
+	GetKind() config.SupportedController
 	GetAnnotations() map[string]string
 }
 
@@ -34,10 +34,10 @@ func (g GenericController) GetNamespace() string {
 	return g.Namespace
 }
 
-// LoadControllersByType loads a list of controllers from the kubeResources by detecting their type
-func LoadControllersByType(controllerType config.SupportedController, kubeResources *kube.ResourceProvider) ([]Interface, error) {
+// LoadControllersByKind loads a list of controllers from the kubeResources by detecting their type
+func LoadControllersByKind(controllerKind config.SupportedController, kubeResources *kube.ResourceProvider) ([]Interface, error) {
 	interfaces := []Interface{}
-	switch controllerType {
+	switch controllerKind {
 	case config.Deployments:
 		for _, deploy := range kubeResources.Deployments {
 			interfaces = append(interfaces, NewDeploymentController(deploy))
@@ -66,5 +66,5 @@ func LoadControllersByType(controllerType config.SupportedController, kubeResour
 	if len(interfaces) > 0 {
 		return interfaces, nil
 	}
-	return nil, fmt.Errorf("Controller type (%s) does not have a generator", controllerType)
+	return nil, fmt.Errorf("Controller type (%s) does not have a generator", controllerKind)
 }

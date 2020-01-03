@@ -19,8 +19,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-func ValidateContainer(conf *config.Configuration, basePod *corev1.PodSpec, container *corev1.Container, controllerName string, controllerType config.SupportedController, isInit bool) ContainerResult {
-	results, err := applyContainerSchemaChecks(conf, basePod, container, controllerName, controllerType, isInit)
+func ValidateContainer(conf *config.Configuration, basePod *corev1.PodSpec, container *corev1.Container, controllerName string, controllerKind config.SupportedController, isInit bool) ContainerResult {
+	results, err := applyContainerSchemaChecks(conf, basePod, container, controllerName, controllerKind, isInit)
 	// FIXME: don't panic
 	if err != nil {
 		panic(err)
@@ -34,10 +34,10 @@ func ValidateContainer(conf *config.Configuration, basePod *corev1.PodSpec, cont
 	return cRes
 }
 
-func ValidateContainers(conf *config.Configuration, basePod *corev1.PodSpec, containers []corev1.Container, controllerName string, controllerType config.SupportedController, isInit bool) []ContainerResult {
+func ValidateContainers(conf *config.Configuration, basePod *corev1.PodSpec, containers []corev1.Container, controllerName string, controllerKind config.SupportedController, isInit bool) []ContainerResult {
 	results := []ContainerResult{}
 	for _, container := range containers {
-		cRes := ValidateContainer(conf, basePod, &container, controllerName, controllerType, isInit)
+		cRes := ValidateContainer(conf, basePod, &container, controllerName, controllerKind, isInit)
 		results = append(results, cRes)
 	}
 	return results

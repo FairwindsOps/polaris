@@ -27,8 +27,8 @@ func (d DeploymentController) GetAnnotations() map[string]string {
 	return d.K8SResource.ObjectMeta.Annotations
 }
 
-// GetType returns the supportedcontroller enum type
-func (d DeploymentController) GetType() config.SupportedController {
+// GetKind returns the supportedcontroller enum type
+func (d DeploymentController) GetKind() config.SupportedController {
 	return config.Deployments
 }
 

@@ -33,11 +33,11 @@ const (
 // ControllerStrings are strongly ordered to match the SupportedController enum
 var ControllerStrings = []string{
 	"Unsupported",
-	"Deployments",
-	"StatefulSets",
-	"DaemonSets",
-	"Jobs",
-	"CronJobs",
+	"Deployment",
+	"StatefulSet",
+	"DaemonSet",
+	"Job",
+	"CronJob",
 	"ReplicationController",
 }
 

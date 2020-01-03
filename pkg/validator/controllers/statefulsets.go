@@ -27,8 +27,8 @@ func (s StatefulSetController) GetAnnotations() map[string]string {
 	return s.K8SResource.ObjectMeta.Annotations
 }
 
-// GetType returns the supportedcontroller enum type
-func (s StatefulSetController) GetType() config.SupportedController {
+// GetKind returns the supportedcontroller enum type
+func (s StatefulSetController) GetKind() config.SupportedController {
 	return config.StatefulSets
 }
 

@@ -27,8 +27,8 @@ func (j JobController) GetAnnotations() map[string]string {
 	return j.K8SResource.ObjectMeta.Annotations
 }
 
-// GetType returns the supportedcontroller enum type
-func (j JobController) GetType() config.SupportedController {
+// GetKind returns the supportedcontroller enum type
+func (j JobController) GetKind() config.SupportedController {
 	return config.Jobs
 }
 

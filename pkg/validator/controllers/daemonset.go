@@ -27,8 +27,8 @@ func (d DaemonSetController) GetAnnotations() map[string]string {
 	return d.K8SResource.ObjectMeta.Annotations
 }
 
-// GetType returns the supportedcontroller enum type
-func (d DaemonSetController) GetType() config.SupportedController {
+// GetKind returns the supportedcontroller enum type
+func (d DaemonSetController) GetKind() config.SupportedController {
 	return config.DaemonSets
 }
 

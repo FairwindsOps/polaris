@@ -72,7 +72,7 @@ func parseCheck(rawBytes []byte) (config.SchemaCheck, error) {
 	}
 }
 
-func resolveCheck(conf *config.Configuration, checkID string, controllerName string, controllerType config.SupportedController, target config.TargetKind, isInitContainer bool) (*config.SchemaCheck, error) {
+func resolveCheck(conf *config.Configuration, checkID string, controllerName string, controllerKind config.SupportedController, target config.TargetKind, isInitContainer bool) (*config.SchemaCheck, error) {
 	check, ok := conf.CustomChecks[checkID]
 	if !ok {
 		check, ok = builtInChecks[checkID]
@@ -83,7 +83,7 @@ func resolveCheck(conf *config.Configuration, checkID string, controllerName str
 	if !conf.IsActionable(check.ID, controllerName) {
 		return nil, nil
 	}
-	if !check.IsActionable(target, controllerType, isInitContainer) {
+	if !check.IsActionable(target, controllerKind, isInitContainer) {
 		return nil, nil
 	}
 	return &check, nil
@@ -104,11 +104,11 @@ func makeResult(conf *config.Configuration, check *config.SchemaCheck, passes bo
 	return result
 }
 
-func applyPodSchemaChecks(conf *config.Configuration, pod *corev1.PodSpec, controllerName string, controllerType config.SupportedController) (ResultSet, error) {
+func applyPodSchemaChecks(conf *config.Configuration, pod *corev1.PodSpec, controllerName string, controllerKind config.SupportedController) (ResultSet, error) {
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
 	for _, checkID := range checkIDs {
-		check, err := resolveCheck(conf, checkID, controllerName, controllerType, config.TargetPod, false)
+		check, err := resolveCheck(conf, checkID, controllerName, controllerKind, config.TargetPod, false)
 		if err != nil {
 			return nil, err
 		}
@@ -126,11 +126,11 @@ func applyPodSchemaChecks(conf *config.Configuration, pod *corev1.PodSpec, contr
 	return results, nil
 }
 
-func applyContainerSchemaChecks(conf *config.Configuration, basePod *corev1.PodSpec, container *corev1.Container, controllerName string, controllerType config.SupportedController, isInit bool) (ResultSet, error) {
+func applyContainerSchemaChecks(conf *config.Configuration, basePod *corev1.PodSpec, container *corev1.Container, controllerName string, controllerKind config.SupportedController, isInit bool) (ResultSet, error) {
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
 	for _, checkID := range checkIDs {
-		check, err := resolveCheck(conf, checkID, controllerName, controllerType, config.TargetContainer, isInit)
+		check, err := resolveCheck(conf, checkID, controllerName, controllerKind, config.TargetContainer, isInit)
 		if err != nil {
 			return nil, err
 		} else if check == nil {

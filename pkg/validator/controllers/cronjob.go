@@ -22,8 +22,8 @@ func (c CronJobController) GetPodSpec() *kubeAPICoreV1.PodSpec {
 	return &c.K8SResource.Spec.JobTemplate.Spec.Template.Spec
 }
 
-// GetType returns the supportedcontroller enum type
-func (c CronJobController) GetType() config.SupportedController {
+// GetKind returns the supportedcontroller enum type
+func (c CronJobController) GetKind() config.SupportedController {
 	return config.CronJobs
 }
 
