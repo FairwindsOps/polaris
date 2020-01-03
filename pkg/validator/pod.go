@@ -15,12 +15,17 @@
 package validator
 
 import (
-	"github.com/fairwindsops/polaris/pkg/config"
 	corev1 "k8s.io/api/core/v1"
+
+	"github.com/fairwindsops/polaris/pkg/config"
+	"github.com/fairwindsops/polaris/pkg/validator/controllers"
 )
 
 // ValidatePod validates that each pod conforms to the Polaris config, returns a ResourceResult.
-func ValidatePod(conf *config.Configuration, pod *corev1.PodSpec, controllerName string, controllerKind config.SupportedController) PodResult {
+func ValidatePod(conf *config.Configuration, controller controllers.Interface) PodResult {
+	pod := controller.GetPodSpec()
+	controllerName := controller.GetName()
+	controllerKind := controller.GetKind()
 	podResults, err := applyPodSchemaChecks(conf, pod, controllerName, controllerKind)
 	// FIXME: don't panic
 	if err != nil {

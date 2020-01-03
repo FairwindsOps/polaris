@@ -27,11 +27,9 @@ const exemptionAnnotationKey = "polaris.fairwinds.com/exempt"
 
 // ValidateController validates a single controller, returns a ControllerResult.
 func ValidateController(conf *conf.Configuration, controller controller.Interface) ControllerResult {
-	controllerKind := controller.GetKind()
-	pod := controller.GetPodSpec()
-	podResult := ValidatePod(conf, pod, controller.GetName(), controllerKind)
+	podResult := ValidatePod(conf, controller)
 	result := ControllerResult{
-		Kind:      controllerKind.String(),
+		Kind:      controller.GetKind().String(),
 		Name:      controller.GetName(),
 		Namespace: controller.GetObjectMeta().Namespace,
 		Results:   ResultSet{},

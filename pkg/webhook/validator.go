@@ -23,6 +23,7 @@ import (
 	"github.com/fairwindsops/polaris/pkg/config"
 	validator "github.com/fairwindsops/polaris/pkg/validator"
 	"github.com/fairwindsops/polaris/pkg/validator/controllers"
+
 	"github.com/sirupsen/logrus"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -93,8 +94,9 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 
 	if req.AdmissionRequest.Kind.Kind == "Pod" {
 		pod := corev1.Pod{}
-		err = v.decoder.Decode(req, &pod)
-		podResult = validator.ValidatePod(&v.Config, &pod.Spec, "", config.Unsupported)
+		err = v.decoder.Decode(req, &pod) // err is handled below
+		nakedPod := controllers.NewNakedPodController(pod)
+		podResult = validator.ValidatePod(&v.Config, nakedPod)
 	} else {
 		var controller controllers.Interface
 		if yes := v.Config.CheckIfKindIsConfiguredForValidation(req.AdmissionRequest.Kind.Kind); !yes {
