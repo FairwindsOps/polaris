@@ -27,13 +27,26 @@ func (cs *CountSummary) AddSummary(other CountSummary) {
 	cs.Errors += other.Errors
 }
 
+// AddResult adds a single result to the summary
+func (cs *CountSummary) AddResult(result ResultMessage) {
+	if result.Success == false {
+		if result.Severity == config.SeverityWarning {
+			cs.Warnings++
+		} else {
+			cs.Errors++
+		}
+	} else {
+		cs.Successes++
+	}
+}
+
 // AddSummary adds two CountSummaryByCategories together
 func (csc CountSummaryByCategory) AddSummary(other CountSummaryByCategory) {
 	categories := []string{}
-	for cat, _ := range csc {
+	for cat := range csc {
 		categories = append(categories, cat)
 	}
-	for cat, _ := range other {
+	for cat := range other {
 		categories = append(categories, cat)
 	}
 	for _, cat := range categories {
@@ -47,15 +60,7 @@ func (csc CountSummaryByCategory) AddSummary(other CountSummaryByCategory) {
 func (rs ResultSet) GetSummary() CountSummary {
 	cs := CountSummary{}
 	for _, result := range rs {
-		if result.Success == false {
-			if result.Severity == config.SeverityWarning {
-				cs.Warnings += 1
-			} else {
-				cs.Errors += 1
-			}
-		} else {
-			cs.Successes += 1
-		}
+		cs.AddResult(result)
 	}
 	return cs
 }
@@ -68,15 +73,7 @@ func (rs ResultSet) GetSummaryByCategory() CountSummaryByCategory {
 		if !ok {
 			cs = CountSummary{}
 		}
-		if result.Success == false {
-			if result.Severity == config.SeverityWarning {
-				cs.Warnings += 1
-			} else {
-				cs.Errors += 1
-			}
-		} else {
-			cs.Successes += 1
-		}
+		cs.AddResult(result)
 		summaries[result.Category] = cs
 	}
 	return summaries
