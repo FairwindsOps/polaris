@@ -42,8 +42,8 @@ func TestValidateController(t *testing.T) {
 	}
 
 	expectedMessages := ResultSet{
-		"hostIPCSet": {ID: "hostIPCSet", Message: "Host IPC is not configured", Type: "success", Severity: "error", Category: "Security"},
-		"hostPIDSet": {ID: "hostPIDSet", Message: "Host PID is not configured", Type: "success", Severity: "error", Category: "Security"},
+		"hostIPCSet": {ID: "hostIPCSet", Message: "Host IPC is not configured", Success: true, Severity: "error", Category: "Security"},
+		"hostPIDSet": {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "error", Category: "Security"},
 	}
 
 	actualResult := ValidateController(&c, deployment)
@@ -78,8 +78,8 @@ func TestSkipHealthChecks(t *testing.T) {
 		Errors:    uint(1),
 	}
 	expectedMessages := ResultSet{
-		"readinessProbeMissing": {ID: "readinessProbeMissing", Message: "Readiness probe should be configured", Type: "failure", Severity: "error", Category: "Health Checks"},
-		"livenessProbeMissing":  {ID: "livenessProbeMissing", Message: "Liveness probe should be configured", Type: "failure", Severity: "warning", Category: "Health Checks"},
+		"readinessProbeMissing": {ID: "readinessProbeMissing", Message: "Readiness probe should be configured", Success: false, Severity: "error", Category: "Health Checks"},
+		"livenessProbeMissing":  {ID: "livenessProbeMissing", Message: "Liveness probe should be configured", Success: false, Severity: "warning", Category: "Health Checks"},
 	}
 	actualResult := ValidateController(&c, deployment)
 	assert.Equal(t, "Deployments", actualResult.Type)

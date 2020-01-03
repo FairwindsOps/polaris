@@ -113,7 +113,7 @@ func TestValidateResourcesPartiallyValid(t *testing.T) {
 	expectedWarnings := []ResultMessage{
 		{
 			ID:       "memoryLimitsRange",
-			Type:     "failure",
+			Success:  false,
 			Severity: "warning",
 			Message:  "Memory limits should be within the required range",
 			Category: "Resources",
@@ -123,7 +123,7 @@ func TestValidateResourcesPartiallyValid(t *testing.T) {
 	expectedErrors := []ResultMessage{
 		{
 			ID:       "memoryRequestsRange",
-			Type:     "failure",
+			Success:  false,
 			Severity: "error",
 			Message:  "Memory requests should be within the required range",
 			Category: "Resources",
@@ -186,14 +186,14 @@ func TestValidateResourcesFullyValid(t *testing.T) {
 	expectedSuccesses := []ResultMessage{
 		{
 			ID:       "memoryRequestsRange",
-			Type:     "success",
+			Success:  true,
 			Severity: "error",
 			Message:  "Memory requests are within the required range",
 			Category: "Resources",
 		},
 		{
 			ID:       "memoryLimitsRange",
-			Type:     "success",
+			Success:  true,
 			Severity: "warning",
 			Message:  "Memory limits are within the required range",
 			Category: "Resources",
@@ -205,28 +205,28 @@ func TestValidateResourcesFullyValid(t *testing.T) {
 	expectedSuccesses = []ResultMessage{
 		{
 			ID:       "cpuRequestsMissing",
-			Type:     "success",
+			Success:  true,
 			Severity: "warning",
 			Message:  "CPU requests are set",
 			Category: "Resources",
 		},
 		{
 			ID:       "memoryRequestsMissing",
-			Type:     "success",
+			Success:  true,
 			Severity: "warning",
 			Message:  "Memory requests are set",
 			Category: "Resources",
 		},
 		{
 			ID:       "cpuLimitsMissing",
-			Type:     "success",
+			Success:  true,
 			Severity: "error",
 			Message:  "CPU limits are set",
 			Category: "Resources",
 		},
 		{
 			ID:       "memoryLimitsMissing",
-			Type:     "success",
+			Success:  true,
 			Severity: "error",
 			Message:  "Memory limits are set",
 			Category: "Resources",
@@ -250,7 +250,7 @@ func TestValidateCustomCheckExemptions(t *testing.T) {
 	expectedErrors = []ResultMessage{
 		{
 			ID:       "foo",
-			Type:     "failure",
+			Success:  false,
 			Severity: "error",
 			Message:  "fail!",
 			Category: "Security",

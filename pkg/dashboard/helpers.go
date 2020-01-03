@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/validator"
 )
 
@@ -91,12 +92,11 @@ func getWeatherText(counts validator.CountSummary) string {
 }
 
 func getIcon(rm validator.ResultMessage) string {
-	switch rm.Type {
-	case "success":
+	if rm.Success {
 		return "fas fa-check"
-	case "warning":
+	} else if rm.Severity == config.SeverityWarning {
 		return "fas fa-exclamation"
-	default:
+	} else {
 		return "fas fa-times"
 	}
 }

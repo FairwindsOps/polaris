@@ -43,9 +43,9 @@ func TestValidatePod(t *testing.T) {
 	}
 
 	expectedMessages := ResultSet{
-		"hostIPCSet":     {ID: "hostIPCSet", Message: "Host IPC is not configured", Type: "success", Severity: "error", Category: "Security"},
-		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Type: "success", Severity: "warning", Category: "Networking"},
-		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Type: "success", Severity: "error", Category: "Security"},
+		"hostIPCSet":     {ID: "hostIPCSet", Message: "Host IPC is not configured", Success: true, Severity: "error", Category: "Security"},
+		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Success: true, Severity: "warning", Category: "Networking"},
+		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "error", Category: "Security"},
 	}
 
 	actualPodResult := ValidatePod(&c, &pod.Spec, "", conf.Deployments)
@@ -76,9 +76,9 @@ func TestInvalidIPCPod(t *testing.T) {
 		Errors:    uint(1),
 	}
 	expectedMessages := ResultSet{
-		"hostIPCSet":     {ID: "hostIPCSet", Message: "Host IPC should not be configured", Type: "failure", Severity: "error", Category: "Security"},
-		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Type: "success", Severity: "warning", Category: "Networking"},
-		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Type: "success", Severity: "error", Category: "Security"},
+		"hostIPCSet":     {ID: "hostIPCSet", Message: "Host IPC should not be configured", Success: false, Severity: "error", Category: "Security"},
+		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Success: true, Severity: "warning", Category: "Networking"},
+		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "error", Category: "Security"},
 	}
 
 	actualPodResult := ValidatePod(&c, &pod.Spec, "", conf.Deployments)
@@ -110,9 +110,9 @@ func TestInvalidNeworkPod(t *testing.T) {
 	}
 
 	expectedMessages := ResultSet{
-		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network should not be configured", Type: "failure", Severity: "warning", Category: "Networking"},
-		"hostIPCSet":     {ID: "hostIPCSet", Message: "Host IPC is not configured", Type: "success", Severity: "error", Category: "Security"},
-		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Type: "success", Severity: "error", Category: "Security"},
+		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network should not be configured", Success: false, Severity: "warning", Category: "Networking"},
+		"hostIPCSet":     {ID: "hostIPCSet", Message: "Host IPC is not configured", Success: true, Severity: "error", Category: "Security"},
+		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "error", Category: "Security"},
 	}
 
 	actualPodResult := ValidatePod(&c, &pod.Spec, "", conf.Deployments)
@@ -144,9 +144,9 @@ func TestInvalidPIDPod(t *testing.T) {
 	}
 
 	expectedMessages := ResultSet{
-		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID should not be configured", Type: "failure", Severity: "error", Category: "Security"},
-		"hostIPCSet":     {ID: "hostIPCSet", Message: "Host IPC is not configured", Type: "success", Severity: "error", Category: "Security"},
-		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Type: "success", Severity: "warning", Category: "Networking"},
+		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID should not be configured", Success: false, Severity: "error", Category: "Security"},
+		"hostIPCSet":     {ID: "hostIPCSet", Message: "Host IPC is not configured", Success: true, Severity: "error", Category: "Security"},
+		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Success: true, Severity: "warning", Category: "Networking"},
 	}
 
 	actualPodResult := ValidatePod(&c, &pod.Spec, "", conf.Deployments)
@@ -183,8 +183,8 @@ func TestExemption(t *testing.T) {
 		Errors:    uint(0),
 	}
 	expectedMessages := ResultSet{
-		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Type: "success", Severity: "warning", Category: "Networking"},
-		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Type: "success", Severity: "error", Category: "Security"},
+		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Success: true, Severity: "warning", Category: "Networking"},
+		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "error", Category: "Security"},
 	}
 
 	actualPodResult := ValidatePod(&c, &pod.Spec, "foo", conf.Deployments)

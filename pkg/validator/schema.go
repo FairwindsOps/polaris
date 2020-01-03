@@ -94,13 +94,12 @@ func makeResult(conf *config.Configuration, check *config.SchemaCheck, passes bo
 		ID:       check.ID,
 		Severity: conf.Checks[check.ID],
 		Category: check.Category,
+		Success:  passes,
 	}
 	if passes {
 		result.Message = check.SuccessMessage
-		result.Type = MessageTypeSuccess
 	} else {
 		result.Message = check.FailureMessage
-		result.Type = MessageTypeFailure
 	}
 	return result
 }

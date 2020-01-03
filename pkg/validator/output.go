@@ -48,22 +48,11 @@ type ClusterInfo struct {
 	ReplicationControllers int
 }
 
-// MessageType represents the type of Message
-type MessageType string
-
-const (
-	// MessageTypeSuccess indicates a validation success
-	MessageTypeSuccess MessageType = "success"
-
-	// MessageTypeWarning indicates a validation failure
-	MessageTypeFailure MessageType = "failure"
-)
-
 // ResultMessage is the result of a given check
 type ResultMessage struct {
 	ID       string
 	Message  string
-	Type     MessageType
+	Success  bool
 	Severity config.Severity
 	Category string
 }
@@ -117,7 +106,7 @@ type CategorySummary map[string]*CountSummary
 func (rs ResultSet) GetSummary() CountSummary {
 	cs := CountSummary{}
 	for _, result := range rs {
-		if result.Type == MessageTypeFailure {
+		if result.Success == false {
 			if result.Severity == config.SeverityWarning {
 				cs.Warnings += 1
 			} else {
@@ -155,7 +144,7 @@ func (a AuditData) GetSummary() CountSummary {
 func (rs ResultSet) GetSuccesses() []ResultMessage {
 	successes := []ResultMessage{}
 	for _, msg := range rs {
-		if msg.Type == MessageTypeSuccess {
+		if msg.Success {
 			successes = append(successes, msg)
 		}
 	}
@@ -165,7 +154,7 @@ func (rs ResultSet) GetSuccesses() []ResultMessage {
 func (rs ResultSet) GetWarnings() []ResultMessage {
 	warnings := []ResultMessage{}
 	for _, msg := range rs {
-		if msg.Type == MessageTypeFailure && msg.Severity == config.SeverityWarning {
+		if msg.Success == false && msg.Severity == config.SeverityWarning {
 			warnings = append(warnings, msg)
 		}
 	}
@@ -175,7 +164,7 @@ func (rs ResultSet) GetWarnings() []ResultMessage {
 func (rs ResultSet) GetErrors() []ResultMessage {
 	errors := []ResultMessage{}
 	for _, msg := range rs {
-		if msg.Type == MessageTypeFailure && msg.Severity == config.SeverityError {
+		if msg.Success == false && msg.Severity == config.SeverityError {
 			errors = append(errors, msg)
 		}
 	}

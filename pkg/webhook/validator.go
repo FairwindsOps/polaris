@@ -162,14 +162,14 @@ func getFailureReason(podResult validator.PodResult) string {
 	reason := "\nPolaris prevented this deployment due to configuration problems:\n"
 
 	for _, message := range podResult.Messages {
-		if message.Type == validator.MessageTypeFailure && message.Severity == config.SeverityError {
+		if !message.Success && message.Severity == config.SeverityError {
 			reason += fmt.Sprintf("- Pod: %s\n", message.Message)
 		}
 	}
 
 	for _, containerResult := range podResult.ContainerResults {
 		for _, message := range containerResult.Messages {
-			if message.Type == validator.MessageTypeFailure && message.Severity == config.SeverityError {
+			if !message.Success && message.Severity == config.SeverityError {
 				reason += fmt.Sprintf("- Container %s: %s\n", containerResult.Name, message.Message)
 			}
 		}
