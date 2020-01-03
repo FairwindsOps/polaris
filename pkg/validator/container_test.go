@@ -159,10 +159,8 @@ func TestValidateHealthChecks(t *testing.T) {
 		ReadinessProbe: &probe,
 	}
 
-	l := ResultMessage{ID: "livenessProbeMissing", Success: false,
-		Severity: "warning", Message: "Liveness probe should be configured", Category: "Health Checks"}
-	r := ResultMessage{ID: "readinessProbeMissing", Success: false,
-		Severity: "error", Message: "Readiness probe should be configured", Category: "Health Checks"}
+	l := ResultMessage{ID: "livenessProbeMissing", Success: false, Severity: "warning", Message: "Liveness probe should be configured", Category: "Health Checks"}
+	r := ResultMessage{ID: "readinessProbeMissing", Success: false, Severity: "error", Message: "Readiness probe should be configured", Category: "Health Checks"}
 	f1 := []ResultMessage{}
 	f2 := []ResultMessage{r}
 	w1 := []ResultMessage{l}
