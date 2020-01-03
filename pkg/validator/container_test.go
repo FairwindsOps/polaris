@@ -47,45 +47,36 @@ exemptions:
     - foo
 `
 
-func testValidate(t *testing.T, container *corev1.Container, resourceConf *string, controllerName string, expectedErrors []*ResultMessage, expectedWarnings []*ResultMessage, expectedSuccesses []*ResultMessage) {
-	cv := ContainerValidation{
-		Container:          container,
-		ResourceValidation: &ResourceValidation{},
-	}
-
+func testValidate(t *testing.T, container *corev1.Container, resourceConf *string, controllerName string, expectedErrors []ResultMessage, expectedWarnings []ResultMessage, expectedSuccesses []ResultMessage) {
 	parsedConf, err := conf.Parse([]byte(*resourceConf))
 	assert.NoError(t, err, "Expected no error when parsing config")
 
-	err = applyContainerSchemaChecks(&parsedConf, controllerName, conf.Deployments, &cv)
+	results, err := applyContainerSchemaChecks(&parsedConf, &corev1.PodSpec{}, container, controllerName, conf.Deployments, false)
 	if err != nil {
 		panic(err)
 	}
+	summary := results.GetSummary()
 
-	assert.Len(t, cv.Warnings, len(expectedWarnings))
-	assert.ElementsMatch(t, expectedWarnings, cv.Warnings)
+	assert.Equal(t, uint(len(expectedWarnings)), summary.Warnings)
+	assert.ElementsMatch(t, expectedWarnings, results.GetWarnings())
 
-	assert.Len(t, cv.Errors, len(expectedErrors))
-	assert.ElementsMatch(t, expectedErrors, cv.Errors)
+	assert.Equal(t, uint(len(expectedErrors)), summary.Errors)
+	assert.ElementsMatch(t, expectedErrors, results.GetErrors())
 
-	assert.Len(t, cv.Successes, len(expectedSuccesses))
-	assert.ElementsMatch(t, expectedSuccesses, cv.Successes)
+	assert.Equal(t, uint(len(expectedSuccesses)), summary.Successes)
+	assert.ElementsMatch(t, expectedSuccesses, results.GetSuccesses())
 }
 
 func TestValidateResourcesEmptyConfig(t *testing.T) {
-	container := corev1.Container{
+	container := &corev1.Container{
 		Name: "Empty",
 	}
 
-	cv := ContainerValidation{
-		Container:          &container,
-		ResourceValidation: &ResourceValidation{},
-	}
-
-	err := applyContainerSchemaChecks(&conf.Configuration{}, "", conf.Deployments, &cv)
+	results, err := applyContainerSchemaChecks(&conf.Configuration{}, &corev1.PodSpec{}, container, "", conf.Deployments, false)
 	if err != nil {
 		panic(err)
 	}
-	assert.Len(t, cv.Errors, 0)
+	assert.Equal(t, uint(0), results.GetSummary().Errors)
 }
 
 func TestValidateResourcesEmptyContainer(t *testing.T) {
@@ -93,37 +84,41 @@ func TestValidateResourcesEmptyContainer(t *testing.T) {
 		Name: "Empty",
 	}
 
-	expectedWarnings := []*ResultMessage{
+	expectedWarnings := []ResultMessage{
 		{
 			ID:       "cpuRequestsMissing",
-			Type:     "warning",
+			Type:     "failure",
+			Severity: "warning",
 			Message:  "CPU requests should be set",
 			Category: "Resources",
 		},
 		{
 			ID:       "memoryRequestsMissing",
-			Type:     "warning",
+			Type:     "failure",
+			Severity: "warning",
 			Message:  "Memory requests should be set",
 			Category: "Resources",
 		},
 	}
 
-	expectedErrors := []*ResultMessage{
+	expectedErrors := []ResultMessage{
 		{
 			ID:       "cpuLimitsMissing",
-			Type:     "error",
+			Type:     "failure",
+			Severity: "error",
 			Message:  "CPU limits should be set",
 			Category: "Resources",
 		},
 		{
 			ID:       "memoryLimitsMissing",
-			Type:     "error",
+			Type:     "failure",
+			Severity: "error",
 			Message:  "Memory limits should be set",
 			Category: "Resources",
 		},
 	}
 
-	expectedSuccesses := []*ResultMessage{}
+	expectedSuccesses := []ResultMessage{}
 
 	testValidate(t, &container, &resourceConfMinimal, "foo", expectedErrors, expectedWarnings, expectedSuccesses)
 }
@@ -142,60 +137,56 @@ func TestValidateHealthChecks(t *testing.T) {
 	}
 
 	probe := corev1.Probe{}
-	emptyCV := ContainerValidation{
-		Container:          &corev1.Container{Name: ""},
-		ResourceValidation: &ResourceValidation{},
-	}
-	emptyCVInit := ContainerValidation{
-		Container:          &corev1.Container{Name: ""},
-		ResourceValidation: &ResourceValidation{},
-		IsInitContainer:    true,
-	}
-	goodCV := ContainerValidation{
-		Container: &corev1.Container{
-			Name:           "",
-			LivenessProbe:  &probe,
-			ReadinessProbe: &probe,
-		},
-		ResourceValidation: &ResourceValidation{},
+	emptyContainer := &corev1.Container{Name: ""}
+	goodContainer := &corev1.Container{
+		Name:           "",
+		LivenessProbe:  &probe,
+		ReadinessProbe: &probe,
 	}
 
-	l := &ResultMessage{ID: "livenessProbeMissing", Type: "warning", Message: "Liveness probe should be configured", Category: "Health Checks"}
-	r := &ResultMessage{ID: "readinessProbeMissing", Type: "error", Message: "Readiness probe should be configured", Category: "Health Checks"}
-	f1 := []*ResultMessage{}
-	f2 := []*ResultMessage{r}
-	w1 := []*ResultMessage{l}
+	l := ResultMessage{ID: "livenessProbeMissing", Type: "failure",
+		Severity: "warning", Message: "Liveness probe should be configured", Category: "Health Checks"}
+	r := ResultMessage{ID: "readinessProbeMissing", Type: "failure",
+		Severity: "error", Message: "Readiness probe should be configured", Category: "Health Checks"}
+	f1 := []ResultMessage{}
+	f2 := []ResultMessage{r}
+	w1 := []ResultMessage{l}
 
 	var testCases = []struct {
-		name     string
-		probes   map[string]conf.Severity
-		cv       ContainerValidation
-		errors   *[]*ResultMessage
-		warnings *[]*ResultMessage
+		name      string
+		probes    map[string]conf.Severity
+		container *corev1.Container
+		isInit    bool
+		errors    *[]ResultMessage
+		warnings  *[]ResultMessage
 	}{
-		{name: "probes not configured", probes: p1, cv: emptyCV, errors: &f1},
-		{name: "probes not required", probes: p2, cv: emptyCV, errors: &f1},
-		{name: "probes required & configured", probes: p3, cv: goodCV, errors: &f1},
-		{name: "probes required, not configured, but init", probes: p3, cv: emptyCVInit, errors: &f1},
-		{name: "probes required & not configured", probes: p3, cv: emptyCV, errors: &f2, warnings: &w1},
-		{name: "probes configured, but not required", probes: p2, cv: goodCV, errors: &f1},
+		{name: "probes not configured", probes: p1, container: emptyContainer, errors: &f1},
+		{name: "probes not required", probes: p2, container: emptyContainer, errors: &f1},
+		{name: "probes required & configured", probes: p3, container: goodContainer, errors: &f1},
+		{name: "probes required, not configured, but init", probes: p3, container: emptyContainer, isInit: true, errors: &f1},
+		{name: "probes required & not configured", probes: p3, container: emptyContainer, errors: &f2, warnings: &w1},
+		{name: "probes configured, but not required", probes: p2, container: goodContainer, errors: &f1},
 	}
 
 	for idx, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.probes}, "", conf.Deployments, &tt.cv)
+			results, err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.probes}, &corev1.PodSpec{}, tt.container, "", conf.Deployments, tt.isInit)
 			if err != nil {
 				panic(err)
 			}
 			message := fmt.Sprintf("test case %d", idx)
 
 			if tt.warnings != nil {
-				assert.Len(t, tt.cv.Warnings, len(*tt.warnings), message)
-				assert.ElementsMatch(t, tt.cv.Warnings, *tt.warnings, message)
+				warnings := results.GetWarnings()
+				assert.Len(t, warnings, len(*tt.warnings), message)
+				assert.ElementsMatch(t, warnings, *tt.warnings, message)
 			}
 
-			assert.Len(t, tt.cv.Errors, len(*tt.errors), message)
-			assert.ElementsMatch(t, tt.cv.Errors, *tt.errors, message)
+			if tt.errors != nil {
+				errors := results.GetErrors()
+				assert.Len(t, errors, len(*tt.errors), message)
+				assert.ElementsMatch(t, errors, *tt.errors, message)
+			}
 		})
 	}
 }
@@ -211,101 +202,94 @@ func TestValidateImage(t *testing.T) {
 		"pullPolicyNotAlways": conf.SeverityError,
 	}
 
-	emptyCV := ContainerValidation{
-		Container:          &corev1.Container{},
-		ResourceValidation: &ResourceValidation{},
-	}
-	badCV := ContainerValidation{
-		Container:          &corev1.Container{Image: "test"},
-		ResourceValidation: &ResourceValidation{},
-	}
-	lessBadCV := ContainerValidation{
-		Container:          &corev1.Container{Image: "test:latest", ImagePullPolicy: ""},
-		ResourceValidation: &ResourceValidation{},
-	}
-	goodCV := ContainerValidation{
-		Container:          &corev1.Container{Image: "test:0.1.0", ImagePullPolicy: "Always"},
-		ResourceValidation: &ResourceValidation{},
-	}
+	emptyContainer := &corev1.Container{}
+	badContainer := &corev1.Container{Image: "test"}
+	lessBadContainer := &corev1.Container{Image: "test:latest", ImagePullPolicy: ""}
+	goodContainer := &corev1.Container{Image: "test:0.1.0", ImagePullPolicy: "Always"}
 
 	var testCases = []struct {
-		name     string
-		image    map[string]conf.Severity
-		cv       ContainerValidation
-		expected []*ResultMessage
+		name      string
+		image     map[string]conf.Severity
+		container *corev1.Container
+		expected  []ResultMessage
 	}{
 		{
-			name:     "emptyConf + emptyCV",
-			image:    emptyConf,
-			cv:       emptyCV,
-			expected: []*ResultMessage{},
+			name:      "emptyConf + emptyCV",
+			image:     emptyConf,
+			container: emptyContainer,
+			expected:  []ResultMessage{},
 		},
 		{
-			name:  "standardConf + emptyCV",
-			image: standardConf,
-			cv:    emptyCV,
-			expected: []*ResultMessage{{
+			name:      "standardConf + emptyCV",
+			image:     standardConf,
+			container: emptyContainer,
+			expected: []ResultMessage{{
 				ID:       "tagNotSpecified",
 				Message:  "Image tag should be specified",
-				Type:     "error",
+				Type:     "failure",
+				Severity: "error",
 				Category: "Images",
 			}},
 		},
 		{
-			name:  "standardConf + badCV",
-			image: standardConf,
-			cv:    badCV,
-			expected: []*ResultMessage{{
+			name:      "standardConf + badCV",
+			image:     standardConf,
+			container: badContainer,
+			expected: []ResultMessage{{
 				ID:       "tagNotSpecified",
 				Message:  "Image tag should be specified",
-				Type:     "error",
+				Type:     "failure",
+				Severity: "error",
 				Category: "Images",
 			}},
 		},
 		{
-			name:  "standardConf + lessBadCV",
-			image: standardConf,
-			cv:    lessBadCV,
-			expected: []*ResultMessage{{
+			name:      "standardConf + lessBadCV",
+			image:     standardConf,
+			container: lessBadContainer,
+			expected: []ResultMessage{{
 				ID:       "tagNotSpecified",
 				Message:  "Image tag should be specified",
-				Type:     "error",
+				Type:     "failure",
+				Severity: "error",
 				Category: "Images",
 			}},
 		},
 		{
-			name:  "strongConf + badCV",
-			image: strongConf,
-			cv:    badCV,
-			expected: []*ResultMessage{{
+			name:      "strongConf + badCV",
+			image:     strongConf,
+			container: badContainer,
+			expected: []ResultMessage{{
 				ID:       "pullPolicyNotAlways",
 				Message:  "Image pull policy should be \"Always\"",
-				Type:     "error",
+				Type:     "failure",
+				Severity: "error",
 				Category: "Images",
 			}, {
 				ID:       "tagNotSpecified",
 				Message:  "Image tag should be specified",
-				Type:     "error",
+				Type:     "failure",
+				Severity: "error",
 				Category: "Images",
 			}},
 		},
 		{
-			name:     "strongConf + goodCV",
-			image:    strongConf,
-			cv:       goodCV,
-			expected: []*ResultMessage{},
+			name:      "strongConf + goodCV",
+			image:     strongConf,
+			container: goodContainer,
+			expected:  []ResultMessage{},
 		},
 	}
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.cv = resetCV(tt.cv)
-			err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.image}, "", conf.Deployments, &tt.cv)
+			results, err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.image}, &corev1.PodSpec{}, tt.container, "", conf.Deployments, false)
 			if err != nil {
 				panic(err)
 			}
-			assert.Len(t, tt.cv.Errors, len(tt.expected))
-			assert.ElementsMatch(t, tt.cv.Errors, tt.expected)
+			errors := results.GetErrors()
+			assert.Len(t, errors, len(tt.expected))
+			assert.ElementsMatch(t, errors, tt.expected)
 		})
 	}
 }
@@ -320,100 +304,94 @@ func TestValidateNetworking(t *testing.T) {
 		"hostPortSet": conf.SeverityError,
 	}
 
-	emptyCV := ContainerValidation{
-		Container:          &corev1.Container{Name: ""},
-		ResourceValidation: &ResourceValidation{},
+	emptyContainer := &corev1.Container{Name: ""}
+	badContainer := &corev1.Container{
+		Ports: []corev1.ContainerPort{{
+			ContainerPort: 3000,
+			HostPort:      443,
+		}},
 	}
-
-	badCV := ContainerValidation{
-		Container: &corev1.Container{
-			Ports: []corev1.ContainerPort{{
-				ContainerPort: 3000,
-				HostPort:      443,
-			}},
-		},
-		ResourceValidation: &ResourceValidation{},
-	}
-
-	goodCV := ContainerValidation{
-		Container: &corev1.Container{
-			Ports: []corev1.ContainerPort{{
-				ContainerPort: 3000,
-			}},
-		},
-		ResourceValidation: &ResourceValidation{},
+	goodContainer := &corev1.Container{
+		Ports: []corev1.ContainerPort{{
+			ContainerPort: 3000,
+		}},
 	}
 
 	var testCases = []struct {
 		name             string
 		networkConf      map[string]conf.Severity
-		cv               ContainerValidation
-		expectedMessages []*ResultMessage
+		container        *corev1.Container
+		expectedMessages []ResultMessage
 	}{
 		{
 			name:             "empty ports + empty validation config",
 			networkConf:      emptyConf,
-			cv:               emptyCV,
-			expectedMessages: []*ResultMessage{},
+			container:        emptyContainer,
+			expectedMessages: []ResultMessage{},
 		},
 		{
 			name:        "empty ports + standard validation config",
 			networkConf: standardConf,
-			cv:          emptyCV,
-			expectedMessages: []*ResultMessage{{
+			container:   emptyContainer,
+			expectedMessages: []ResultMessage{{
 				ID:       "hostPortSet",
 				Message:  "Host port is not configured",
 				Type:     "success",
+				Severity: "warning",
 				Category: "Networking",
 			}},
 		},
 		{
 			name:        "empty ports + strong validation config",
 			networkConf: standardConf,
-			cv:          emptyCV,
-			expectedMessages: []*ResultMessage{{
+			container:   emptyContainer,
+			expectedMessages: []ResultMessage{{
 				ID:       "hostPortSet",
 				Message:  "Host port is not configured",
 				Type:     "success",
+				Severity: "warning",
 				Category: "Networking",
 			}},
 		},
 		{
 			name:             "host ports + empty validation config",
 			networkConf:      emptyConf,
-			cv:               badCV,
-			expectedMessages: []*ResultMessage{},
+			container:        badContainer,
+			expectedMessages: []ResultMessage{},
 		},
 		{
 			name:        "host ports + standard validation config",
 			networkConf: standardConf,
-			cv:          badCV,
-			expectedMessages: []*ResultMessage{{
+			container:   badContainer,
+			expectedMessages: []ResultMessage{{
 				ID:       "hostPortSet",
 				Message:  "Host port should not be configured",
-				Type:     "warning",
+				Type:     "failure",
+				Severity: "warning",
 				Category: "Networking",
 			}},
 		},
 		{
 			name:        "no host ports + standard validation config",
 			networkConf: standardConf,
-			cv:          goodCV,
-			expectedMessages: []*ResultMessage{{
+			container:   goodContainer,
+			expectedMessages: []ResultMessage{{
 				ID:       "hostPortSet",
 				Message:  "Host port is not configured",
 				Type:     "success",
+				Severity: "warning",
 				Category: "Networking",
 			}},
 		},
 		{
 			name:        "host ports + strong validation config",
 			networkConf: strongConf,
-			cv:          badCV,
-			expectedMessages: []*ResultMessage{{
+			container:   badContainer,
+			expectedMessages: []ResultMessage{{
 				ID:       "hostPortSet",
 				Message:  "Host port should not be configured",
-				Type:     "error",
+				Type:     "failure",
+				Severity: "error",
 				Category: "Networking",
 			}},
 		},
@@ -421,13 +399,16 @@ func TestValidateNetworking(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.cv = resetCV(tt.cv)
-			err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.networkConf}, "", conf.Deployments, &tt.cv)
+			results, err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.networkConf}, &corev1.PodSpec{}, tt.container, "", conf.Deployments, false)
 			if err != nil {
 				panic(err)
 			}
-			assert.Len(t, tt.cv.messages(), len(tt.expectedMessages))
-			assert.ElementsMatch(t, tt.cv.messages(), tt.expectedMessages)
+			messages := []ResultMessage{}
+			for _, msg := range results {
+				messages = append(messages, msg)
+			}
+			assert.Len(t, messages, len(tt.expectedMessages))
+			assert.ElementsMatch(t, messages, tt.expectedMessages)
 		})
 	}
 }
@@ -455,62 +436,45 @@ func TestValidateSecurity(t *testing.T) {
 		"insecureCapabilities":       conf.SeverityError,
 	}
 
-	emptyCV := ContainerValidation{
-		Container:          &corev1.Container{Name: ""},
-		ResourceValidation: &ResourceValidation{},
-	}
-
-	badCV := ContainerValidation{
-		Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
+	emptyContainer := &corev1.Container{Name: ""}
+	badContainer := &corev1.Container{
+		Name: "",
+		SecurityContext: &corev1.SecurityContext{
 			RunAsNonRoot:             &falseVar,
 			ReadOnlyRootFilesystem:   &falseVar,
 			Privileged:               &trueVar,
 			AllowPrivilegeEscalation: &trueVar,
 			Capabilities: &corev1.Capabilities{
 				Add: []corev1.Capability{"AUDIT_WRITE", "SYS_ADMIN", "NET_ADMIN"},
-			},
-		}},
-		ResourceValidation: &ResourceValidation{},
-	}
-
-	badCVWithGoodPodSpec := ContainerValidation{
-		Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
-			RunAsNonRoot:             &falseVar,
-			ReadOnlyRootFilesystem:   &falseVar,
-			Privileged:               &trueVar,
-			AllowPrivilegeEscalation: &trueVar,
-			Capabilities: &corev1.Capabilities{
-				Add: []corev1.Capability{"AUDIT_WRITE", "SYS_ADMIN", "NET_ADMIN"},
-			},
-		}},
-		ResourceValidation: &ResourceValidation{},
-		parentPodSpec: corev1.PodSpec{
-			SecurityContext: &corev1.PodSecurityContext{
-				RunAsNonRoot: &trueVar,
 			},
 		},
 	}
-
-	badCVWithBadPodSpec := ContainerValidation{
-		Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
+	emptyPodSpec := &corev1.PodSpec{}
+	goodPodSpec := &corev1.PodSpec{
+		SecurityContext: &corev1.PodSecurityContext{
+			RunAsNonRoot: &trueVar,
+		},
+	}
+	badPodSpec := &corev1.PodSpec{
+		SecurityContext: &corev1.PodSecurityContext{
+			RunAsNonRoot: &falseVar,
+		},
+	}
+	inheritContainer := &corev1.Container{
+		Name: "",
+		SecurityContext: &corev1.SecurityContext{
 			RunAsNonRoot:             nil, // this will use the default from the podspec
-			ReadOnlyRootFilesystem:   &falseVar,
-			Privileged:               &trueVar,
-			AllowPrivilegeEscalation: &trueVar,
+			ReadOnlyRootFilesystem:   &trueVar,
+			Privileged:               &falseVar,
+			AllowPrivilegeEscalation: &falseVar,
 			Capabilities: &corev1.Capabilities{
-				Add: []corev1.Capability{"AUDIT_WRITE", "SYS_ADMIN", "NET_ADMIN"},
-			},
-		}},
-		ResourceValidation: &ResourceValidation{},
-		parentPodSpec: corev1.PodSpec{
-			SecurityContext: &corev1.PodSecurityContext{
-				RunAsNonRoot: &falseVar,
+				Drop: []corev1.Capability{"ALL"},
 			},
 		},
 	}
-
-	goodCV := ContainerValidation{
-		Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
+	goodContainer := &corev1.Container{
+		Name: "",
+		SecurityContext: &corev1.SecurityContext{
 			RunAsNonRoot:             &trueVar,
 			ReadOnlyRootFilesystem:   &trueVar,
 			Privileged:               &falseVar,
@@ -518,12 +482,11 @@ func TestValidateSecurity(t *testing.T) {
 			Capabilities: &corev1.Capabilities{
 				Drop: []corev1.Capability{"NET_BIND_SERVICE", "FOWNER"},
 			},
-		}},
-		ResourceValidation: &ResourceValidation{},
+		},
 	}
-
-	strongCV := ContainerValidation{
-		Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
+	strongContainer := &corev1.Container{
+		Name: "",
+		SecurityContext: &corev1.SecurityContext{
 			RunAsNonRoot:             &trueVar,
 			ReadOnlyRootFilesystem:   &trueVar,
 			Privileged:               &falseVar,
@@ -531,379 +494,407 @@ func TestValidateSecurity(t *testing.T) {
 			Capabilities: &corev1.Capabilities{
 				Drop: []corev1.Capability{"ALL"},
 			},
-		}},
-		ResourceValidation: &ResourceValidation{},
-	}
-
-	strongCVWithPodSpecSecurityContext := ContainerValidation{
-		Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
-			RunAsNonRoot:             nil, // not set but overridden via podSpec
-			ReadOnlyRootFilesystem:   &trueVar,
-			Privileged:               &falseVar,
-			AllowPrivilegeEscalation: &falseVar,
-			Capabilities: &corev1.Capabilities{
-				Drop: []corev1.Capability{"ALL"},
-			},
-		}},
-		ResourceValidation: &ResourceValidation{},
-		parentPodSpec: corev1.PodSpec{
-			SecurityContext: &corev1.PodSecurityContext{
-				RunAsNonRoot: &trueVar,
-			},
-		},
-	}
-
-	strongCVWithBadPodSpecSecurityContext := ContainerValidation{
-		Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
-			RunAsNonRoot:             &trueVar, // will override the bad setting in PodSpec
-			ReadOnlyRootFilesystem:   &trueVar,
-			Privileged:               &falseVar,
-			AllowPrivilegeEscalation: &falseVar,
-			Capabilities: &corev1.Capabilities{
-				Drop: []corev1.Capability{"ALL"},
-			},
-		}},
-		ResourceValidation: &ResourceValidation{},
-		parentPodSpec: corev1.PodSpec{
-			SecurityContext: &corev1.PodSecurityContext{
-				RunAsNonRoot: &falseVar, // is overridden at container level with RunAsNonRoot:true
-			},
 		},
 	}
 
 	var testCases = []struct {
 		name             string
 		securityConf     map[string]conf.Severity
-		cv               ContainerValidation
-		expectedMessages []*ResultMessage
+		container        *corev1.Container
+		pod              *corev1.PodSpec
+		expectedMessages []ResultMessage
 	}{
 		{
 			name:             "empty security context + empty validation config",
 			securityConf:     emptyConf,
-			cv:               emptyCV,
-			expectedMessages: []*ResultMessage{},
+			container:        emptyContainer,
+			pod:              emptyPodSpec,
+			expectedMessages: []ResultMessage{},
 		},
 		{
 			name:         "empty security context + standard validation config",
 			securityConf: standardConf,
-			cv:           emptyCV,
-			expectedMessages: []*ResultMessage{{
+			container:    emptyContainer,
+			pod:          emptyPodSpec,
+			expectedMessages: []ResultMessage{{
 				ID:       "runAsRootAllowed",
 				Message:  "Should not be allowed to run as root",
-				Type:     "warning",
+				Type:     "failure",
+				Severity: "warning",
 				Category: "Security",
 			}, {
 				ID:       "notReadOnlyRootFileSystem",
 				Message:  "Filesystem should be read only",
-				Type:     "warning",
+				Type:     "failure",
+				Severity: "warning",
 				Category: "Security",
 			}, {
 				ID:       "runAsPrivileged",
 				Message:  "Not running as privileged",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation not allowed",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "insecureCapabilities",
 				Message:  "Container does not have any insecure capabilities",
 				Type:     "success",
+				Severity: "warning",
 				Category: "Security",
 			}, {
 				ID:       "dangerousCapabilities",
 				Message:  "Container does not have any dangerous capabilities",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}},
 		},
 		{
 			name:         "bad security context + standard validation config",
 			securityConf: standardConf,
-			cv:           badCV,
-			expectedMessages: []*ResultMessage{{
+			container:    badContainer,
+			pod:          emptyPodSpec,
+			expectedMessages: []ResultMessage{{
 				ID:       "dangerousCapabilities",
 				Message:  "Container should not have dangerous capabilities",
-				Type:     "error",
+				Type:     "failure",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation should not be allowed",
-				Type:     "error",
+				Type:     "failure",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "runAsPrivileged",
 				Message:  "Should not be running as privileged",
-				Type:     "error",
+				Type:     "failure",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "insecureCapabilities",
 				Message:  "Container should not have insecure capabilities",
-				Type:     "warning",
+				Type:     "failure",
+				Severity: "warning",
 				Category: "Security",
 			}, {
 				ID:       "runAsRootAllowed",
 				Message:  "Should not be allowed to run as root",
-				Type:     "warning",
+				Type:     "failure",
+				Severity: "warning",
 				Category: "Security",
 			}, {
 				ID:       "notReadOnlyRootFileSystem",
 				Message:  "Filesystem should be read only",
-				Type:     "warning",
+				Type:     "failure",
+				Severity: "warning",
 				Category: "Security",
 			}},
 		},
 		{
 			name:         "bad security context + standard validation config with good settings in podspec",
 			securityConf: standardConf,
-			cv:           badCVWithGoodPodSpec,
-			expectedMessages: []*ResultMessage{{
+			container:    badContainer,
+			pod:          goodPodSpec,
+			expectedMessages: []ResultMessage{{
 				ID:       "dangerousCapabilities",
 				Message:  "Container should not have dangerous capabilities",
-				Type:     "error",
+				Type:     "failure",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation should not be allowed",
-				Type:     "error",
+				Type:     "failure",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "runAsPrivileged",
 				Message:  "Should not be running as privileged",
-				Type:     "error",
+				Type:     "failure",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "insecureCapabilities",
 				Message:  "Container should not have insecure capabilities",
-				Type:     "warning",
+				Type:     "failure",
+				Severity: "warning",
 				Category: "Security",
 			}, {
 				ID:       "runAsRootAllowed",
 				Message:  "Should not be allowed to run as root",
-				Type:     "warning",
+				Type:     "failure",
+				Severity: "warning",
 				Category: "Security",
 			}, {
 				ID:       "notReadOnlyRootFileSystem",
 				Message:  "Filesystem should be read only",
-				Type:     "warning",
+				Type:     "failure",
+				Severity: "warning",
 				Category: "Security",
 			}},
 		},
 		{
 			name:         "bad security context + standard validation config from default set in podspec",
 			securityConf: standardConf,
-			cv:           badCVWithBadPodSpec,
-			expectedMessages: []*ResultMessage{{
+			container:    badContainer,
+			pod:          badPodSpec,
+			expectedMessages: []ResultMessage{{
 				ID:       "dangerousCapabilities",
 				Message:  "Container should not have dangerous capabilities",
-				Type:     "error",
+				Type:     "failure",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "insecureCapabilities",
 				Message:  "Container should not have insecure capabilities",
-				Type:     "warning",
+				Type:     "failure",
+				Severity: "warning",
 				Category: "Security",
 			}, {
 				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation should not be allowed",
-				Type:     "error",
+				Type:     "failure",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "runAsPrivileged",
 				Message:  "Should not be running as privileged",
-				Type:     "error",
+				Type:     "failure",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "runAsRootAllowed",
 				Message:  "Should not be allowed to run as root",
-				Type:     "warning",
+				Type:     "failure",
+				Severity: "warning",
 				Category: "Security",
 			}, {
 				ID:       "notReadOnlyRootFileSystem",
 				Message:  "Filesystem should be read only",
-				Type:     "warning",
+				Type:     "failure",
+				Severity: "warning",
 				Category: "Security",
 			}},
 		},
 		{
 			name:         "good security context + standard validation config",
 			securityConf: standardConf,
-			cv:           goodCV,
-			expectedMessages: []*ResultMessage{{
+			container:    goodContainer,
+			pod:          emptyPodSpec,
+			expectedMessages: []ResultMessage{{
 				ID:       "runAsRootAllowed",
 				Message:  "Is not allowed to run as root",
 				Type:     "success",
+				Severity: "warning",
 				Category: "Security",
 			}, {
 				ID:       "notReadOnlyRootFileSystem",
 				Message:  "Filesystem is read only",
 				Type:     "success",
+				Severity: "warning",
 				Category: "Security",
 			}, {
 				ID:       "runAsPrivileged",
 				Message:  "Not running as privileged",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation not allowed",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "dangerousCapabilities",
 				Message:  "Container does not have any dangerous capabilities",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "insecureCapabilities",
 				Message:  "Container does not have any insecure capabilities",
 				Type:     "success",
+				Severity: "warning",
 				Category: "Security",
 			}},
 		},
 		{
 			name:         "good security context + strong validation config",
 			securityConf: strongConf,
-			cv:           goodCV,
-			expectedMessages: []*ResultMessage{{
+			container:    goodContainer,
+			pod:          emptyPodSpec,
+			expectedMessages: []ResultMessage{{
 				ID:       "dangerousCapabilities",
 				Message:  "Container does not have any dangerous capabilities",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "insecureCapabilities",
 				Message:  "Container does not have any insecure capabilities",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "runAsRootAllowed",
 				Message:  "Is not allowed to run as root",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "notReadOnlyRootFileSystem",
 				Message:  "Filesystem is read only",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "runAsPrivileged",
 				Message:  "Not running as privileged",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation not allowed",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}},
 		},
 		{
 			name:         "strong security context + strong validation config",
 			securityConf: strongConf,
-			cv:           strongCV,
-			expectedMessages: []*ResultMessage{{
+			container:    strongContainer,
+			pod:          emptyPodSpec,
+			expectedMessages: []ResultMessage{{
 				ID:       "runAsRootAllowed",
 				Message:  "Is not allowed to run as root",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "notReadOnlyRootFileSystem",
 				Message:  "Filesystem is read only",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "runAsPrivileged",
 				Message:  "Not running as privileged",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation not allowed",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "dangerousCapabilities",
 				Message:  "Container does not have any dangerous capabilities",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "insecureCapabilities",
 				Message:  "Container does not have any insecure capabilities",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}},
 		},
 		{
 			name:         "strong security context + strong validation config via podspec default",
 			securityConf: strongConf,
-			cv:           strongCVWithPodSpecSecurityContext,
-			expectedMessages: []*ResultMessage{{
+			container:    inheritContainer,
+			pod:          goodPodSpec,
+			expectedMessages: []ResultMessage{{
 				ID:       "runAsRootAllowed",
 				Message:  "Is not allowed to run as root",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "notReadOnlyRootFileSystem",
 				Message:  "Filesystem is read only",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "runAsPrivileged",
 				Message:  "Not running as privileged",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation not allowed",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "dangerousCapabilities",
 				Message:  "Container does not have any dangerous capabilities",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "insecureCapabilities",
 				Message:  "Container does not have any insecure capabilities",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}},
 		},
 		{
 			name:         "strong security context + strong validation config with bad setting in podspec default",
 			securityConf: strongConf,
-			cv:           strongCVWithBadPodSpecSecurityContext,
-			expectedMessages: []*ResultMessage{{
+			container:    strongContainer,
+			pod:          badPodSpec,
+			expectedMessages: []ResultMessage{{
 				ID:       "runAsRootAllowed",
 				Message:  "Is not allowed to run as root",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "notReadOnlyRootFileSystem",
 				Message:  "Filesystem is read only",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "runAsPrivileged",
 				Message:  "Not running as privileged",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation not allowed",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "dangerousCapabilities",
 				Message:  "Container does not have any dangerous capabilities",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}, {
 				ID:       "insecureCapabilities",
 				Message:  "Container does not have any insecure capabilities",
 				Type:     "success",
+				Severity: "error",
 				Category: "Security",
 			}},
 		},
@@ -911,13 +902,16 @@ func TestValidateSecurity(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.cv = resetCV(tt.cv)
-			err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.securityConf}, "", conf.Deployments, &tt.cv)
+			results, err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.securityConf}, tt.pod, tt.container, "", conf.Deployments, false)
 			if err != nil {
 				panic(err)
 			}
-			assert.Len(t, tt.cv.messages(), len(tt.expectedMessages))
-			assert.ElementsMatch(t, tt.expectedMessages, tt.cv.messages())
+			messages := []ResultMessage{}
+			for _, msg := range results {
+				messages = append(messages, msg)
+			}
+			assert.Len(t, messages, len(tt.expectedMessages))
+			assert.ElementsMatch(t, tt.expectedMessages, messages)
 		})
 	}
 }
@@ -932,134 +926,136 @@ func TestValidateRunAsRoot(t *testing.T) {
 			"runAsRootAllowed": conf.SeverityWarning,
 		},
 	}
+
+	goodContainer := &corev1.Container{
+		SecurityContext: &corev1.SecurityContext{
+			RunAsNonRoot: &trueVar,
+		},
+	}
+	badContainer := &corev1.Container{
+		SecurityContext: &corev1.SecurityContext{
+			RunAsNonRoot: &falseVar,
+		},
+	}
+	inheritContainer := &corev1.Container{
+		SecurityContext: &corev1.SecurityContext{
+			RunAsNonRoot: nil,
+		},
+	}
+	runAsUserContainer := &corev1.Container{
+		SecurityContext: &corev1.SecurityContext{
+			RunAsUser: &nonRootUser,
+		},
+	}
+	runAsUser0Container := &corev1.Container{
+		SecurityContext: &corev1.SecurityContext{
+			RunAsUser: &rootUser,
+		},
+	}
+	badPod := &corev1.PodSpec{
+		SecurityContext: &corev1.PodSecurityContext{
+			RunAsNonRoot: &falseVar,
+		},
+	}
+	runAsUserPod := &corev1.PodSpec{
+		SecurityContext: &corev1.PodSecurityContext{
+			RunAsUser: &nonRootUser,
+		},
+	}
+	emptyPod := &corev1.PodSpec{}
+
 	testCases := []struct {
-		name    string
-		cv      ContainerValidation
-		message ResultMessage
+		name      string
+		container *corev1.Container
+		pod       *corev1.PodSpec
+		message   ResultMessage
 	}{
 		{
-			name: "pod=false,container=nil",
-			cv: ContainerValidation{
-				ResourceValidation: &ResourceValidation{},
-				Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
-					RunAsNonRoot: nil,
-				}},
-				parentPodSpec: corev1.PodSpec{
-					SecurityContext: &corev1.PodSecurityContext{
-						RunAsNonRoot: &falseVar,
-					},
-				},
-			},
+			name:      "pod=false,container=nil",
+			container: inheritContainer,
+			pod:       badPod,
 			message: ResultMessage{
 				ID:       "runAsRootAllowed",
 				Message:  "Should not be allowed to run as root",
-				Type:     "warning",
+				Type:     "failure",
+				Severity: "warning",
 				Category: "Security",
 			},
 		},
 		{
-			name: "pod=false,container=true",
-			cv: ContainerValidation{
-				ResourceValidation: &ResourceValidation{},
-				Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
-					RunAsNonRoot: &trueVar,
-				}},
-				parentPodSpec: corev1.PodSpec{
-					SecurityContext: &corev1.PodSecurityContext{
-						RunAsNonRoot: &falseVar,
-					},
-				},
-			},
+			name:      "pod=false,container=true",
+			container: goodContainer,
+			pod:       badPod,
 			message: ResultMessage{
 				ID:       "runAsRootAllowed",
 				Message:  "Is not allowed to run as root",
 				Type:     "success",
+				Severity: "warning",
 				Category: "Security",
 			},
 		},
 		{
-			name: "pod=nil,container=runAsUser",
-			cv: ContainerValidation{
-				ResourceValidation: &ResourceValidation{},
-				Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
-					RunAsUser: &nonRootUser,
-				}},
-			},
+			name:      "pod=nil,container=runAsUser",
+			container: runAsUserContainer,
+			pod:       emptyPod,
 			message: ResultMessage{
 				ID:       "runAsRootAllowed",
 				Message:  "Is not allowed to run as root",
 				Type:     "success",
+				Severity: "warning",
 				Category: "Security",
 			},
 		},
 		{
-			name: "pod=runAsUser,container=nil",
-			cv: ContainerValidation{
-				ResourceValidation: &ResourceValidation{},
-				Container:          &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{}},
-				parentPodSpec: corev1.PodSpec{
-					SecurityContext: &corev1.PodSecurityContext{
-						RunAsUser: &nonRootUser,
-					},
-				},
-			},
+			name:      "pod=runAsUser,container=nil",
+			container: inheritContainer,
+			pod:       runAsUserPod,
 			message: ResultMessage{
 				ID:       "runAsRootAllowed",
 				Message:  "Is not allowed to run as root",
 				Type:     "success",
+				Severity: "warning",
 				Category: "Security",
 			},
 		},
 		{
-			name: "pod=runAsUser,container=runAsUser0",
-			cv: ContainerValidation{
-				ResourceValidation: &ResourceValidation{},
-				Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
-					RunAsUser: &rootUser,
-				}},
-				parentPodSpec: corev1.PodSpec{
-					SecurityContext: &corev1.PodSecurityContext{
-						RunAsUser: &nonRootUser,
-					},
-				},
-			},
+			name:      "pod=runAsUser,container=runAsUser0",
+			container: runAsUser0Container,
+			pod:       runAsUserPod,
 			message: ResultMessage{
 				ID:       "runAsRootAllowed",
 				Message:  "Should not be allowed to run as root",
-				Type:     "warning",
+				Type:     "failure",
+				Severity: "warning",
 				Category: "Security",
 			},
 		},
 		{
-			name: "pod=false,container=runAsUser",
-			cv: ContainerValidation{
-				ResourceValidation: &ResourceValidation{},
-				Container: &corev1.Container{Name: "", SecurityContext: &corev1.SecurityContext{
-					RunAsNonRoot: &falseVar,
-				}},
-				parentPodSpec: corev1.PodSpec{
-					SecurityContext: &corev1.PodSecurityContext{
-						RunAsUser: &nonRootUser,
-					},
-				},
-			},
+			name:      "pod=runAsUser,container=false",
+			pod:       runAsUserPod,
+			container: badContainer,
 			message: ResultMessage{
 				ID:       "runAsRootAllowed",
 				Message:  "Should not be allowed to run as root",
-				Type:     "warning",
+				Type:     "failure",
+				Severity: "warning",
 				Category: "Security",
 			},
 		},
 	}
 	for idx, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			err := applyContainerSchemaChecks(&config, "", conf.Deployments, &tt.cv)
+			results, err := applyContainerSchemaChecks(&config, tt.pod, tt.container, "", conf.Deployments, false)
 			if err != nil {
 				panic(err)
 			}
-			assert.Len(t, tt.cv.messages(), 1)
-			if len(tt.cv.messages()) > 0 {
-				assert.Equal(t, &tt.message, tt.cv.messages()[0], fmt.Sprintf("Test case %d failed", idx))
+			messages := []ResultMessage{}
+			for _, msg := range results {
+				messages = append(messages, msg)
+			}
+			assert.Len(t, messages, 1)
+			if len(messages) > 0 {
+				assert.Equal(t, tt.message, messages[0], fmt.Sprintf("Test case %d failed", idx))
 			}
 		})
 	}
@@ -1070,37 +1066,41 @@ func TestValidateResourcesExemption(t *testing.T) {
 		Name: "Empty",
 	}
 
-	expectedWarnings := []*ResultMessage{}
-	expectedErrors := []*ResultMessage{}
-	expectedSuccesses := []*ResultMessage{}
+	expectedWarnings := []ResultMessage{}
+	expectedErrors := []ResultMessage{}
+	expectedSuccesses := []ResultMessage{}
 
 	testValidate(t, &container, &resourceConfExemptions, "foo", expectedErrors, expectedWarnings, expectedSuccesses)
 
-	expectedWarnings = []*ResultMessage{
+	expectedWarnings = []ResultMessage{
 		{
 			ID:       "cpuRequestsMissing",
-			Type:     "warning",
+			Type:     "failure",
+			Severity: "warning",
 			Message:  "CPU requests should be set",
 			Category: "Resources",
 		},
 		{
 			ID:       "memoryRequestsMissing",
-			Type:     "warning",
+			Type:     "failure",
+			Severity: "warning",
 			Message:  "Memory requests should be set",
 			Category: "Resources",
 		},
 	}
 
-	expectedErrors = []*ResultMessage{
+	expectedErrors = []ResultMessage{
 		{
 			ID:       "cpuLimitsMissing",
-			Type:     "error",
+			Type:     "failure",
+			Severity: "error",
 			Message:  "CPU limits should be set",
 			Category: "Resources",
 		},
 		{
 			ID:       "memoryLimitsMissing",
-			Type:     "error",
+			Type:     "failure",
+			Severity: "error",
 			Message:  "Memory limits should be set",
 			Category: "Resources",
 		},
@@ -1109,11 +1109,4 @@ func TestValidateResourcesExemption(t *testing.T) {
 	disallowExemptionsConf := resourceConfExemptions + "\ndisallowExemptions: true"
 
 	testValidate(t, &container, &disallowExemptionsConf, "foo", expectedErrors, expectedWarnings, expectedSuccesses)
-}
-
-func resetCV(cv ContainerValidation) ContainerValidation {
-	cv.Errors = []*ResultMessage{}
-	cv.Successes = []*ResultMessage{}
-	cv.Warnings = []*ResultMessage{}
-	return cv
 }

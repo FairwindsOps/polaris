@@ -21,13 +21,12 @@ import (
 	"github.com/fairwindsops/polaris/pkg/kube"
 	"github.com/fairwindsops/polaris/pkg/validator/controllers"
 	controller "github.com/fairwindsops/polaris/pkg/validator/controllers"
-	"github.com/sirupsen/logrus"
 )
 
 const exemptionAnnotationKey = "polaris.fairwinds.com/exempt"
 
 // ValidateController validates a single controller, returns a ControllerResult.
-func ValidateController(conf conf.Configuration, controller controller.Interface) ControllerResult {
+func ValidateController(conf *conf.Configuration, controller controller.Interface) ControllerResult {
 	controllerType := controller.GetType()
 	pod := controller.GetPodSpec()
 	podResult := ValidatePod(conf, pod, controller.GetName(), controllerType)
@@ -41,24 +40,21 @@ func ValidateController(conf conf.Configuration, controller controller.Interface
 
 // ValidateControllers validates that each deployment conforms to the Polaris config,
 // builds a list of ResourceResults organized by namespace.
-func ValidateControllers(config conf.Configuration, kubeResources *kube.ResourceProvider, nsResults *NamespacedResults) {
+func ValidateControllers(config *conf.Configuration, kubeResources *kube.ResourceProvider) []ControllerResult {
 	var controllersToAudit []controller.Interface
 	for _, supportedControllers := range config.ControllersToScan {
 		loadedControllers, _ := controllers.LoadControllersByType(supportedControllers, kubeResources)
 		controllersToAudit = append(controllersToAudit, loadedControllers...)
 	}
 
+	results := []ControllerResult{}
 	for _, controller := range controllersToAudit {
 		if !config.DisallowExemptions && hasExemptionAnnotation(controller) {
 			continue
 		}
-		controllerResult := ValidateController(config, controller)
-		nsResult := nsResults.getNamespaceResult(controller.GetNamespace())
-		nsResult.Summary.appendResults(*controllerResult.PodResult.Summary)
-		if err := nsResult.AddResult(controller.GetType(), controllerResult); err != nil {
-			logrus.Errorf("Internal Error: Failed to add a grouped result: %s", err)
-		}
+		results = append(results, ValidateController(config, controller))
 	}
+	return results
 }
 
 func hasExemptionAnnotation(ctrl controller.Interface) bool {

@@ -94,7 +94,7 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 	if req.AdmissionRequest.Kind.Kind == "Pod" {
 		pod := corev1.Pod{}
 		err = v.decoder.Decode(req, &pod)
-		podResult = validator.ValidatePod(v.Config, &pod.Spec, "", config.Unsupported)
+		podResult = validator.ValidatePod(&v.Config, &pod.Spec, "", config.Unsupported)
 	} else {
 		var controller controllers.Interface
 		if yes := v.Config.CheckIfKindIsConfiguredForValidation(req.AdmissionRequest.Kind.Kind); !yes {
@@ -138,7 +138,7 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 			err = v.decoder.Decode(req, &replicationController)
 			controller = controllers.NewReplicationControllerController(replicationController)
 		}
-		controllerResult := validator.ValidateController(v.Config, controller)
+		controllerResult := validator.ValidateController(&v.Config, controller)
 		podResult = controllerResult.PodResult
 	}
 
@@ -149,11 +149,12 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 
 	allowed := true
 	reason := ""
-	if podResult.Summary.Totals.Errors > 0 {
+	numErrors := podResult.GetSummary().Errors
+	if numErrors > 0 {
 		allowed = false
 		reason = getFailureReason(podResult)
 	}
-	logrus.Infof("%d validation errors found when validating %s", podResult.Summary.Totals.Errors, podResult.Name)
+	logrus.Infof("%d validation errors found when validating %s", numErrors, podResult.Name)
 	return admission.ValidationResponse(allowed, reason)
 }
 
@@ -161,14 +162,14 @@ func getFailureReason(podResult validator.PodResult) string {
 	reason := "\nPolaris prevented this deployment due to configuration problems:\n"
 
 	for _, message := range podResult.Messages {
-		if message.Type == validator.MessageTypeError {
+		if message.Type == validator.MessageTypeFailure && message.Severity == config.SeverityError {
 			reason += fmt.Sprintf("- Pod: %s\n", message.Message)
 		}
 	}
 
 	for _, containerResult := range podResult.ContainerResults {
 		for _, message := range containerResult.Messages {
-			if message.Type == validator.MessageTypeError {
+			if message.Type == validator.MessageTypeFailure && message.Severity == config.SeverityError {
 				reason += fmt.Sprintf("- Container %s: %s\n", containerResult.Name, message.Message)
 			}
 		}

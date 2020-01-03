@@ -19,45 +19,27 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// PodValidation tracks validation failures associated with a Pod.
-type PodValidation struct {
-	*ResourceValidation
-	Pod *corev1.PodSpec
-}
-
 // ValidatePod validates that each pod conforms to the Polaris config, returns a ResourceResult.
-func ValidatePod(conf config.Configuration, pod *corev1.PodSpec, controllerName string, controllerType config.SupportedController) PodResult {
-	pv := PodValidation{
-		Pod:                pod,
-		ResourceValidation: &ResourceValidation{},
-	}
-
-	err := applyPodSchemaChecks(&conf, pod, controllerName, controllerType, &pv)
+func ValidatePod(conf *config.Configuration, pod *corev1.PodSpec, controllerName string, controllerType config.SupportedController) PodResult {
+	podResults, err := applyPodSchemaChecks(conf, pod, controllerName, controllerType)
 	// FIXME: don't panic
 	if err != nil {
 		panic(err)
 	}
 
 	pRes := PodResult{
-		Messages:         pv.messages(),
+		Messages:         podResults,
 		ContainerResults: []ContainerResult{},
-		Summary:          pv.summary(),
-		podSpec:          *pod,
 	}
 
-	pv.validateContainers(pod.InitContainers, &pRes, &conf, controllerName, controllerType, true)
-	pv.validateContainers(pod.Containers, &pRes, &conf, controllerName, controllerType, false)
+	podCopy := *pod
+	podCopy.InitContainers = []corev1.Container{}
+	podCopy.Containers = []corev1.Container{}
 
-	for _, cRes := range pRes.ContainerResults {
-		pRes.Summary.appendResults(*cRes.Summary)
-	}
+	containerResults := ValidateContainers(conf, &podCopy, pod.InitContainers, controllerName, controllerType, true)
+	pRes.ContainerResults = append(pRes.ContainerResults, containerResults...)
+	containerResults = ValidateContainers(conf, &podCopy, pod.Containers, controllerName, controllerType, false)
+	pRes.ContainerResults = append(pRes.ContainerResults, containerResults...)
 
 	return pRes
-}
-
-func (pv *PodValidation) validateContainers(containers []corev1.Container, pRes *PodResult, conf *config.Configuration, controllerName string, controllerType config.SupportedController, isInit bool) {
-	for _, container := range containers {
-		cRes := ValidateContainer(&container, pRes, conf, controllerName, controllerType, isInit)
-		pRes.ContainerResults = append(pRes.ContainerResults, cRes)
-	}
 }

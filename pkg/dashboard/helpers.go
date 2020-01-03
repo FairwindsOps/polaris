@@ -21,10 +21,6 @@ import (
 	"github.com/fairwindsops/polaris/pkg/validator"
 )
 
-func getAllControllerResults(nr validator.NamespaceResult) []validator.ControllerResult {
-	return nr.GetAllControllerResults()
-}
-
 func getWarningWidth(counts validator.CountSummary, fullWidth int) uint {
 	return uint(float64(counts.Successes+counts.Warnings) / float64(counts.Successes+counts.Warnings+counts.Errors) * float64(fullWidth))
 }

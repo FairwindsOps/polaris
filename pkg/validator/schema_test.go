@@ -110,55 +110,50 @@ func TestValidateResourcesPartiallyValid(t *testing.T) {
 		},
 	}
 
-	expectedWarnings := []*ResultMessage{
+	expectedWarnings := []ResultMessage{
 		{
 			ID:       "memoryLimitsRange",
-			Type:     "warning",
+			Type:     "failure",
+			Severity: "warning",
 			Message:  "Memory limits should be within the required range",
 			Category: "Resources",
 		},
 	}
 
-	expectedErrors := []*ResultMessage{
+	expectedErrors := []ResultMessage{
 		{
 			ID:       "memoryRequestsRange",
-			Type:     "error",
+			Type:     "failure",
+			Severity: "error",
 			Message:  "Memory requests should be within the required range",
 			Category: "Resources",
 		},
 	}
 
-	expectedSuccesses := []*ResultMessage{}
+	expectedSuccesses := []ResultMessage{}
 
 	testValidate(t, &container, &resourceConfRanges, "foo", expectedErrors, expectedWarnings, expectedSuccesses)
 }
 
 func TestValidateResourcesInit(t *testing.T) {
-	cvEmpty := ContainerValidation{
-		Container:          &corev1.Container{},
-		ResourceValidation: &ResourceValidation{},
-	}
-	cvInit := ContainerValidation{
-		Container:          &corev1.Container{},
-		ResourceValidation: &ResourceValidation{},
-		IsInitContainer:    true,
-	}
+	emptyContainer := &corev1.Container{}
 
 	parsedConf, err := conf.Parse([]byte(resourceConfRanges))
 	assert.NoError(t, err, "Expected no error when parsing config")
 
-	err = applyContainerSchemaChecks(&parsedConf, "", conf.Deployments, &cvEmpty)
+	results, err := applyContainerSchemaChecks(&parsedConf, &corev1.PodSpec{}, emptyContainer, "", conf.Deployments, false)
 	if err != nil {
 		panic(err)
 	}
-	assert.Len(t, cvEmpty.Errors, 1)
-	assert.Len(t, cvEmpty.Warnings, 1)
+	assert.Equal(t, uint(1), results.GetSummary().Errors)
+	assert.Equal(t, uint(1), results.GetSummary().Warnings)
 
-	err = applyContainerSchemaChecks(&parsedConf, "", conf.Deployments, &cvInit)
+	results, err = applyContainerSchemaChecks(&parsedConf, &corev1.PodSpec{}, emptyContainer, "", conf.Deployments, true)
 	if err != nil {
 		panic(err)
 	}
-	assert.Len(t, cvInit.Errors, 0)
+	assert.Equal(t, uint(0), results.GetSummary().Errors)
+	assert.Equal(t, uint(0), results.GetSummary().Warnings)
 }
 
 func TestValidateResourcesFullyValid(t *testing.T) {
@@ -188,51 +183,57 @@ func TestValidateResourcesFullyValid(t *testing.T) {
 		},
 	}
 
-	expectedSuccesses := []*ResultMessage{
+	expectedSuccesses := []ResultMessage{
 		{
 			ID:       "memoryRequestsRange",
 			Type:     "success",
+			Severity: "error",
 			Message:  "Memory requests are within the required range",
 			Category: "Resources",
 		},
 		{
 			ID:       "memoryLimitsRange",
 			Type:     "success",
+			Severity: "warning",
 			Message:  "Memory limits are within the required range",
 			Category: "Resources",
 		},
 	}
 
-	testValidate(t, &container, &resourceConfRanges, "foo", []*ResultMessage{}, []*ResultMessage{}, expectedSuccesses)
+	testValidate(t, &container, &resourceConfRanges, "foo", []ResultMessage{}, []ResultMessage{}, expectedSuccesses)
 
-	expectedSuccesses = []*ResultMessage{
+	expectedSuccesses = []ResultMessage{
 		{
 			ID:       "cpuRequestsMissing",
 			Type:     "success",
+			Severity: "warning",
 			Message:  "CPU requests are set",
 			Category: "Resources",
 		},
 		{
 			ID:       "memoryRequestsMissing",
 			Type:     "success",
+			Severity: "warning",
 			Message:  "Memory requests are set",
 			Category: "Resources",
 		},
 		{
 			ID:       "cpuLimitsMissing",
 			Type:     "success",
+			Severity: "error",
 			Message:  "CPU limits are set",
 			Category: "Resources",
 		},
 		{
 			ID:       "memoryLimitsMissing",
 			Type:     "success",
+			Severity: "error",
 			Message:  "Memory limits are set",
 			Category: "Resources",
 		},
 	}
 
-	testValidate(t, &container, &resourceConfMinimal, "foo", []*ResultMessage{}, []*ResultMessage{}, expectedSuccesses)
+	testValidate(t, &container, &resourceConfMinimal, "foo", []ResultMessage{}, []ResultMessage{}, expectedSuccesses)
 }
 
 func TestValidateCustomCheckExemptions(t *testing.T) {
@@ -241,15 +242,16 @@ func TestValidateCustomCheckExemptions(t *testing.T) {
 		Image: "hub.docker.com/foo",
 	}
 
-	expectedWarnings := []*ResultMessage{}
-	expectedErrors := []*ResultMessage{}
-	expectedSuccesses := []*ResultMessage{}
+	expectedWarnings := []ResultMessage{}
+	expectedErrors := []ResultMessage{}
+	expectedSuccesses := []ResultMessage{}
 	testValidate(t, &container, &customCheckExemptions, "exempt", expectedErrors, expectedWarnings, expectedSuccesses)
 
-	expectedErrors = []*ResultMessage{
+	expectedErrors = []ResultMessage{
 		{
 			ID:       "foo",
-			Type:     "error",
+			Type:     "failure",
+			Severity: "error",
 			Message:  "fail!",
 			Category: "Security",
 		},
