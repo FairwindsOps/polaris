@@ -161,14 +161,14 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 func getFailureReason(podResult validator.PodResult) string {
 	reason := "\nPolaris prevented this deployment due to configuration problems:\n"
 
-	for _, message := range podResult.Messages {
+	for _, message := range podResult.Results {
 		if !message.Success && message.Severity == config.SeverityError {
 			reason += fmt.Sprintf("- Pod: %s\n", message.Message)
 		}
 	}
 
 	for _, containerResult := range podResult.ContainerResults {
-		for _, message := range containerResult.Messages {
+		for _, message := range containerResult.Results {
 			if !message.Success && message.Severity == config.SeverityError {
 				reason += fmt.Sprintf("- Container %s: %s\n", containerResult.Name, message.Message)
 			}

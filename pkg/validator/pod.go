@@ -28,7 +28,7 @@ func ValidatePod(conf *config.Configuration, pod *corev1.PodSpec, controllerName
 	}
 
 	pRes := PodResult{
-		Messages:         podResults,
+		Results:          podResults,
 		ContainerResults: []ContainerResult{},
 	}
 

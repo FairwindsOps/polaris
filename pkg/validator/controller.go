@@ -34,7 +34,7 @@ func ValidateController(conf *conf.Configuration, controller controller.Interfac
 		Kind:      controllerKind.String(),
 		Name:      controller.GetName(),
 		Namespace: controller.GetObjectMeta().Namespace,
-		Messages:  ResultSet{},
+		Results:   ResultSet{},
 		PodResult: podResult,
 	}
 	return result

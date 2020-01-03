@@ -42,7 +42,7 @@ func TestValidatePod(t *testing.T) {
 		Errors:    uint(0),
 	}
 
-	expectedMessages := ResultSet{
+	expectedResults := ResultSet{
 		"hostIPCSet":     {ID: "hostIPCSet", Message: "Host IPC is not configured", Success: true, Severity: "error", Category: "Security"},
 		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Success: true, Severity: "warning", Category: "Networking"},
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "error", Category: "Security"},
@@ -52,7 +52,7 @@ func TestValidatePod(t *testing.T) {
 
 	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualPodResult.GetSummary())
-	assert.EqualValues(t, expectedMessages, actualPodResult.Messages)
+	assert.EqualValues(t, expectedResults, actualPodResult.Results)
 }
 
 func TestInvalidIPCPod(t *testing.T) {
@@ -75,7 +75,7 @@ func TestInvalidIPCPod(t *testing.T) {
 		Warnings:  uint(0),
 		Errors:    uint(1),
 	}
-	expectedMessages := ResultSet{
+	expectedResults := ResultSet{
 		"hostIPCSet":     {ID: "hostIPCSet", Message: "Host IPC should not be configured", Success: false, Severity: "error", Category: "Security"},
 		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Success: true, Severity: "warning", Category: "Networking"},
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "error", Category: "Security"},
@@ -85,7 +85,7 @@ func TestInvalidIPCPod(t *testing.T) {
 
 	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualPodResult.GetSummary())
-	assert.EqualValues(t, expectedMessages, actualPodResult.Messages)
+	assert.EqualValues(t, expectedResults, actualPodResult.Results)
 }
 
 func TestInvalidNeworkPod(t *testing.T) {
@@ -109,7 +109,7 @@ func TestInvalidNeworkPod(t *testing.T) {
 		Errors:    uint(0),
 	}
 
-	expectedMessages := ResultSet{
+	expectedResults := ResultSet{
 		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network should not be configured", Success: false, Severity: "warning", Category: "Networking"},
 		"hostIPCSet":     {ID: "hostIPCSet", Message: "Host IPC is not configured", Success: true, Severity: "error", Category: "Security"},
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "error", Category: "Security"},
@@ -119,7 +119,7 @@ func TestInvalidNeworkPod(t *testing.T) {
 
 	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualPodResult.GetSummary())
-	assert.EqualValues(t, expectedMessages, actualPodResult.Messages)
+	assert.EqualValues(t, expectedResults, actualPodResult.Results)
 }
 
 func TestInvalidPIDPod(t *testing.T) {
@@ -143,7 +143,7 @@ func TestInvalidPIDPod(t *testing.T) {
 		Errors:    uint(1),
 	}
 
-	expectedMessages := ResultSet{
+	expectedResults := ResultSet{
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID should not be configured", Success: false, Severity: "error", Category: "Security"},
 		"hostIPCSet":     {ID: "hostIPCSet", Message: "Host IPC is not configured", Success: true, Severity: "error", Category: "Security"},
 		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Success: true, Severity: "warning", Category: "Networking"},
@@ -153,7 +153,7 @@ func TestInvalidPIDPod(t *testing.T) {
 
 	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualPodResult.GetSummary())
-	assert.EqualValues(t, expectedMessages, actualPodResult.Messages)
+	assert.EqualValues(t, expectedResults, actualPodResult.Results)
 }
 
 func TestExemption(t *testing.T) {
@@ -182,7 +182,7 @@ func TestExemption(t *testing.T) {
 		Warnings:  uint(0),
 		Errors:    uint(0),
 	}
-	expectedMessages := ResultSet{
+	expectedResults := ResultSet{
 		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Success: true, Severity: "warning", Category: "Networking"},
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "error", Category: "Security"},
 	}
@@ -191,5 +191,5 @@ func TestExemption(t *testing.T) {
 
 	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualPodResult.GetSummary())
-	assert.EqualValues(t, expectedMessages, actualPodResult.Messages)
+	assert.EqualValues(t, expectedResults, actualPodResult.Results)
 }

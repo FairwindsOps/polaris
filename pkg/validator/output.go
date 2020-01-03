@@ -65,21 +65,21 @@ type ControllerResult struct {
 	Name      string
 	Namespace string
 	Kind      string
-	Messages  ResultSet
+	Results   ResultSet
 	PodResult PodResult
 }
 
 // PodResult provides a list of validation messages for each pod.
 type PodResult struct {
 	Name             string
-	Messages         ResultSet
+	Results          ResultSet
 	ContainerResults []ContainerResult
 }
 
 // ContainerResult provides a list of validation messages for each container.
 type ContainerResult struct {
-	Name     string
-	Messages ResultSet
+	Name    string
+	Results ResultSet
 }
 
 // CountSummary provides a high level overview of success, warnings, and errors.
@@ -121,15 +121,15 @@ func (rs ResultSet) GetSummary() CountSummary {
 }
 
 func (p PodResult) GetSummary() CountSummary {
-	summary := p.Messages.GetSummary()
+	summary := p.Results.GetSummary()
 	for _, containerResult := range p.ContainerResults {
-		summary.AddSummary(containerResult.Messages.GetSummary())
+		summary.AddSummary(containerResult.Results.GetSummary())
 	}
 	return summary
 }
 
 func (c ControllerResult) GetSummary() CountSummary {
-	summary := c.Messages.GetSummary()
+	summary := c.Results.GetSummary()
 	summary.AddSummary(c.PodResult.GetSummary())
 	return summary
 }

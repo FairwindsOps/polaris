@@ -318,22 +318,22 @@ func TestValidateNetworking(t *testing.T) {
 	}
 
 	var testCases = []struct {
-		name             string
-		networkConf      map[string]conf.Severity
-		container        *corev1.Container
-		expectedMessages []ResultMessage
+		name            string
+		networkConf     map[string]conf.Severity
+		container       *corev1.Container
+		expectedResults []ResultMessage
 	}{
 		{
-			name:             "empty ports + empty validation config",
-			networkConf:      emptyConf,
-			container:        emptyContainer,
-			expectedMessages: []ResultMessage{},
+			name:            "empty ports + empty validation config",
+			networkConf:     emptyConf,
+			container:       emptyContainer,
+			expectedResults: []ResultMessage{},
 		},
 		{
 			name:        "empty ports + standard validation config",
 			networkConf: standardConf,
 			container:   emptyContainer,
-			expectedMessages: []ResultMessage{{
+			expectedResults: []ResultMessage{{
 				ID:       "hostPortSet",
 				Message:  "Host port is not configured",
 				Success:  true,
@@ -345,7 +345,7 @@ func TestValidateNetworking(t *testing.T) {
 			name:        "empty ports + strong validation config",
 			networkConf: standardConf,
 			container:   emptyContainer,
-			expectedMessages: []ResultMessage{{
+			expectedResults: []ResultMessage{{
 				ID:       "hostPortSet",
 				Message:  "Host port is not configured",
 				Success:  true,
@@ -354,16 +354,16 @@ func TestValidateNetworking(t *testing.T) {
 			}},
 		},
 		{
-			name:             "host ports + empty validation config",
-			networkConf:      emptyConf,
-			container:        badContainer,
-			expectedMessages: []ResultMessage{},
+			name:            "host ports + empty validation config",
+			networkConf:     emptyConf,
+			container:       badContainer,
+			expectedResults: []ResultMessage{},
 		},
 		{
 			name:        "host ports + standard validation config",
 			networkConf: standardConf,
 			container:   badContainer,
-			expectedMessages: []ResultMessage{{
+			expectedResults: []ResultMessage{{
 				ID:       "hostPortSet",
 				Message:  "Host port should not be configured",
 				Success:  false,
@@ -375,7 +375,7 @@ func TestValidateNetworking(t *testing.T) {
 			name:        "no host ports + standard validation config",
 			networkConf: standardConf,
 			container:   goodContainer,
-			expectedMessages: []ResultMessage{{
+			expectedResults: []ResultMessage{{
 				ID:       "hostPortSet",
 				Message:  "Host port is not configured",
 				Success:  true,
@@ -387,7 +387,7 @@ func TestValidateNetworking(t *testing.T) {
 			name:        "host ports + strong validation config",
 			networkConf: strongConf,
 			container:   badContainer,
-			expectedMessages: []ResultMessage{{
+			expectedResults: []ResultMessage{{
 				ID:       "hostPortSet",
 				Message:  "Host port should not be configured",
 				Success:  false,
@@ -407,8 +407,8 @@ func TestValidateNetworking(t *testing.T) {
 			for _, msg := range results {
 				messages = append(messages, msg)
 			}
-			assert.Len(t, messages, len(tt.expectedMessages))
-			assert.ElementsMatch(t, messages, tt.expectedMessages)
+			assert.Len(t, messages, len(tt.expectedResults))
+			assert.ElementsMatch(t, messages, tt.expectedResults)
 		})
 	}
 }
@@ -498,25 +498,25 @@ func TestValidateSecurity(t *testing.T) {
 	}
 
 	var testCases = []struct {
-		name             string
-		securityConf     map[string]conf.Severity
-		container        *corev1.Container
-		pod              *corev1.PodSpec
-		expectedMessages []ResultMessage
+		name            string
+		securityConf    map[string]conf.Severity
+		container       *corev1.Container
+		pod             *corev1.PodSpec
+		expectedResults []ResultMessage
 	}{
 		{
-			name:             "empty security context + empty validation config",
-			securityConf:     emptyConf,
-			container:        emptyContainer,
-			pod:              emptyPodSpec,
-			expectedMessages: []ResultMessage{},
+			name:            "empty security context + empty validation config",
+			securityConf:    emptyConf,
+			container:       emptyContainer,
+			pod:             emptyPodSpec,
+			expectedResults: []ResultMessage{},
 		},
 		{
 			name:         "empty security context + standard validation config",
 			securityConf: standardConf,
 			container:    emptyContainer,
 			pod:          emptyPodSpec,
-			expectedMessages: []ResultMessage{{
+			expectedResults: []ResultMessage{{
 				ID:       "runAsRootAllowed",
 				Message:  "Should not be allowed to run as root",
 				Success:  false,
@@ -559,7 +559,7 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: standardConf,
 			container:    badContainer,
 			pod:          emptyPodSpec,
-			expectedMessages: []ResultMessage{{
+			expectedResults: []ResultMessage{{
 				ID:       "dangerousCapabilities",
 				Message:  "Container should not have dangerous capabilities",
 				Success:  false,
@@ -602,7 +602,7 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: standardConf,
 			container:    badContainer,
 			pod:          goodPodSpec,
-			expectedMessages: []ResultMessage{{
+			expectedResults: []ResultMessage{{
 				ID:       "dangerousCapabilities",
 				Message:  "Container should not have dangerous capabilities",
 				Success:  false,
@@ -645,7 +645,7 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: standardConf,
 			container:    badContainer,
 			pod:          badPodSpec,
-			expectedMessages: []ResultMessage{{
+			expectedResults: []ResultMessage{{
 				ID:       "dangerousCapabilities",
 				Message:  "Container should not have dangerous capabilities",
 				Success:  false,
@@ -688,7 +688,7 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: standardConf,
 			container:    goodContainer,
 			pod:          emptyPodSpec,
-			expectedMessages: []ResultMessage{{
+			expectedResults: []ResultMessage{{
 				ID:       "runAsRootAllowed",
 				Message:  "Is not allowed to run as root",
 				Success:  true,
@@ -731,7 +731,7 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: strongConf,
 			container:    goodContainer,
 			pod:          emptyPodSpec,
-			expectedMessages: []ResultMessage{{
+			expectedResults: []ResultMessage{{
 				ID:       "dangerousCapabilities",
 				Message:  "Container does not have any dangerous capabilities",
 				Success:  true,
@@ -774,7 +774,7 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: strongConf,
 			container:    strongContainer,
 			pod:          emptyPodSpec,
-			expectedMessages: []ResultMessage{{
+			expectedResults: []ResultMessage{{
 				ID:       "runAsRootAllowed",
 				Message:  "Is not allowed to run as root",
 				Success:  true,
@@ -817,7 +817,7 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: strongConf,
 			container:    inheritContainer,
 			pod:          goodPodSpec,
-			expectedMessages: []ResultMessage{{
+			expectedResults: []ResultMessage{{
 				ID:       "runAsRootAllowed",
 				Message:  "Is not allowed to run as root",
 				Success:  true,
@@ -860,7 +860,7 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: strongConf,
 			container:    strongContainer,
 			pod:          badPodSpec,
-			expectedMessages: []ResultMessage{{
+			expectedResults: []ResultMessage{{
 				ID:       "runAsRootAllowed",
 				Message:  "Is not allowed to run as root",
 				Success:  true,
@@ -910,8 +910,8 @@ func TestValidateSecurity(t *testing.T) {
 			for _, msg := range results {
 				messages = append(messages, msg)
 			}
-			assert.Len(t, messages, len(tt.expectedMessages))
-			assert.ElementsMatch(t, tt.expectedMessages, messages)
+			assert.Len(t, messages, len(tt.expectedResults))
+			assert.ElementsMatch(t, tt.expectedResults, messages)
 		})
 	}
 }

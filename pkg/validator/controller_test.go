@@ -41,7 +41,7 @@ func TestValidateController(t *testing.T) {
 		Errors:    uint(0),
 	}
 
-	expectedMessages := ResultSet{
+	expectedResults := ResultSet{
 		"hostIPCSet": {ID: "hostIPCSet", Message: "Host IPC is not configured", Success: true, Severity: "error", Category: "Security"},
 		"hostPIDSet": {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "error", Category: "Security"},
 	}
@@ -51,7 +51,7 @@ func TestValidateController(t *testing.T) {
 	assert.Equal(t, "Deployment", actualResult.Kind)
 	assert.Equal(t, 1, len(actualResult.PodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualResult.GetSummary())
-	assert.EqualValues(t, expectedMessages, actualResult.PodResult.Messages)
+	assert.EqualValues(t, expectedResults, actualResult.PodResult.Results)
 }
 
 func TestSkipHealthChecks(t *testing.T) {
@@ -77,7 +77,7 @@ func TestSkipHealthChecks(t *testing.T) {
 		Warnings:  uint(1),
 		Errors:    uint(1),
 	}
-	expectedMessages := ResultSet{
+	expectedResults := ResultSet{
 		"readinessProbeMissing": {ID: "readinessProbeMissing", Message: "Readiness probe should be configured", Success: false, Severity: "error", Category: "Health Checks"},
 		"livenessProbeMissing":  {ID: "livenessProbeMissing", Message: "Liveness probe should be configured", Success: false, Severity: "warning", Category: "Health Checks"},
 	}
@@ -85,8 +85,8 @@ func TestSkipHealthChecks(t *testing.T) {
 	assert.Equal(t, "Deployment", actualResult.Kind)
 	assert.Equal(t, 2, len(actualResult.PodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualResult.GetSummary())
-	assert.EqualValues(t, ResultSet{}, actualResult.PodResult.ContainerResults[0].Messages)
-	assert.EqualValues(t, expectedMessages, actualResult.PodResult.ContainerResults[1].Messages)
+	assert.EqualValues(t, ResultSet{}, actualResult.PodResult.ContainerResults[0].Results)
+	assert.EqualValues(t, expectedResults, actualResult.PodResult.ContainerResults[1].Results)
 
 	job := controller.NewJobController(test.MockJob())
 	expectedSum = CountSummary{
@@ -94,12 +94,12 @@ func TestSkipHealthChecks(t *testing.T) {
 		Warnings:  uint(0),
 		Errors:    uint(0),
 	}
-	expectedMessages = ResultSet{}
+	expectedResults = ResultSet{}
 	actualResult = ValidateController(&c, job)
 	assert.Equal(t, "Job", actualResult.Kind)
 	assert.Equal(t, 1, len(actualResult.PodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualResult.GetSummary())
-	assert.EqualValues(t, expectedMessages, actualResult.PodResult.ContainerResults[0].Messages)
+	assert.EqualValues(t, expectedResults, actualResult.PodResult.ContainerResults[0].Results)
 
 	cronjob := controller.NewCronJobController(test.MockCronJob())
 	expectedSum = CountSummary{
@@ -107,12 +107,12 @@ func TestSkipHealthChecks(t *testing.T) {
 		Warnings:  uint(0),
 		Errors:    uint(0),
 	}
-	expectedMessages = ResultSet{}
+	expectedResults = ResultSet{}
 	actualResult = ValidateController(&c, cronjob)
 	assert.Equal(t, "CronJob", actualResult.Kind)
 	assert.Equal(t, 1, len(actualResult.PodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualResult.GetSummary())
-	assert.EqualValues(t, expectedMessages, actualResult.PodResult.ContainerResults[0].Messages)
+	assert.EqualValues(t, expectedResults, actualResult.PodResult.ContainerResults[0].Results)
 }
 
 func TestControllerExemptions(t *testing.T) {

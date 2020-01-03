@@ -27,8 +27,8 @@ func ValidateContainer(conf *config.Configuration, basePod *corev1.PodSpec, cont
 	}
 
 	cRes := ContainerResult{
-		Name:     container.Name,
-		Messages: results,
+		Name:    container.Name,
+		Results: results,
 	}
 
 	return cRes
