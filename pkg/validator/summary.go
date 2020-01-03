@@ -179,8 +179,8 @@ func (rs ResultSet) GetErrors() []ResultMessage {
 	return errors
 }
 
-// GetSortedMessages returns messages sorted as errors, then warnings, then successes
-func (rs ResultSet) GetSortedMessages() []ResultMessage {
+// GetSortedResults returns messages sorted as errors, then warnings, then successes
+func (rs ResultSet) GetSortedResults() []ResultMessage {
 	messages := []ResultMessage{}
 	messages = append(messages, rs.GetErrors()...)
 	messages = append(messages, rs.GetWarnings()...)

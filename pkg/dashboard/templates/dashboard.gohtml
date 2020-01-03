@@ -96,7 +96,7 @@
               <div class="result-messages expandable-content">
                 <h4>Pod Spec:</h4>
                 <ul class="message-list">
-                  {{ range $message := .PodResult.Results.GetSortedMessages }}
+                  {{ range $message := .PodResult.Results.GetSortedResults }}
                     <li class="{{ getResultClass . }}">
                       <i class="message-icon {{ getIcon $message }}"></i>
                       <span class="message">{{ .Message }}</span>
@@ -111,7 +111,7 @@
                 <div class="result-messages expandable-content">
                   <h4>Container: {{ .Name }}</h4>
                   <ul class="message-list">
-                    {{ range $message := .Results.GetSortedMessages }}
+                    {{ range $message := .Results.GetSortedResults }}
                       <li class="{{ getResultClass . }}">
                         <i class="message-icon {{ getIcon $message }}"></i>
                         <span class="message">{{ .Message }}</span>
@@ -124,7 +124,7 @@
                 </div>
               {{ end }} {{/* end range .PodResult.ContainerResults */}}
             </div>
-        {{ end }} {{/* end range .Results.GetSortedMessages */}}
+        {{ end }} {{/* end range .Results.GetSortedResults */}}
       </div>
     </div>
   {{ end }} {{/* end range .AuditData.GetResultsByNamespace */}}

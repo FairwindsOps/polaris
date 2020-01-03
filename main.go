@@ -107,12 +107,13 @@ func main() {
 	} else if *audit {
 		auditData := runAndReportAudit(c, *auditPath, *auditOutputFile, *auditOutputURL, *auditOutputFormat)
 
-		numErrors := auditData.GetSummary().Errors
-		if *setExitCode && numErrors > 0 {
-			logrus.Infof("%d errors found in audit", numErrors)
+		summary := auditData.GetSummary()
+		score := summary.GetScore()
+		if *setExitCode && summary.Errors > 0 {
+			logrus.Infof("%d errors found in audit", summary.Errors)
 			os.Exit(3)
-		} else if *minScore != 0 && auditData.GetSummary().GetScore() < uint(*minScore) {
-			logrus.Infof("Audit score of %d is less than the provided minimum of %d", auditData.GetSummary().GetScore(), *minScore)
+		} else if *minScore != 0 && score < uint(*minScore) {
+			logrus.Infof("Audit score of %d is less than the provided minimum of %d", score, *minScore)
 			os.Exit(4)
 		}
 	}
