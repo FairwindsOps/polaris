@@ -46,7 +46,10 @@ func TestValidateController(t *testing.T) {
 		"hostPIDSet": {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "error", Category: "Security"},
 	}
 
-	actualResult := ValidateController(&c, deployment)
+	actualResult, err := ValidateController(&c, deployment)
+	if err != nil {
+		panic(err)
+	}
 
 	assert.Equal(t, "Deployment", actualResult.Kind)
 	assert.Equal(t, 1, len(actualResult.PodResult.ContainerResults), "should be equal")
@@ -81,7 +84,10 @@ func TestSkipHealthChecks(t *testing.T) {
 		"readinessProbeMissing": {ID: "readinessProbeMissing", Message: "Readiness probe should be configured", Success: false, Severity: "error", Category: "Health Checks"},
 		"livenessProbeMissing":  {ID: "livenessProbeMissing", Message: "Liveness probe should be configured", Success: false, Severity: "warning", Category: "Health Checks"},
 	}
-	actualResult := ValidateController(&c, deployment)
+	actualResult, err := ValidateController(&c, deployment)
+	if err != nil {
+		panic(err)
+	}
 	assert.Equal(t, "Deployment", actualResult.Kind)
 	assert.Equal(t, 2, len(actualResult.PodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualResult.GetSummary())
@@ -95,7 +101,10 @@ func TestSkipHealthChecks(t *testing.T) {
 		Errors:    uint(0),
 	}
 	expectedResults = ResultSet{}
-	actualResult = ValidateController(&c, job)
+	actualResult, err = ValidateController(&c, job)
+	if err != nil {
+		panic(err)
+	}
 	assert.Equal(t, "Job", actualResult.Kind)
 	assert.Equal(t, 1, len(actualResult.PodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualResult.GetSummary())
@@ -108,7 +117,10 @@ func TestSkipHealthChecks(t *testing.T) {
 		Errors:    uint(0),
 	}
 	expectedResults = ResultSet{}
-	actualResult = ValidateController(&c, cronjob)
+	actualResult, err = ValidateController(&c, cronjob)
+	if err != nil {
+		panic(err)
+	}
 	assert.Equal(t, "CronJob", actualResult.Kind)
 	assert.Equal(t, 1, len(actualResult.PodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualResult.GetSummary())
@@ -134,7 +146,10 @@ func TestControllerExemptions(t *testing.T) {
 		Warnings:  uint(1),
 		Errors:    uint(1),
 	}
-	actualResults := ValidateControllers(&c, resources)
+	actualResults, err := ValidateControllers(&c, resources)
+	if err != nil {
+		panic(err)
+	}
 	assert.Equal(t, 1, len(actualResults))
 	assert.Equal(t, "Deployment", actualResults[0].Kind)
 	assert.EqualValues(t, expectedSum, actualResults[0].GetSummary())
@@ -142,6 +157,9 @@ func TestControllerExemptions(t *testing.T) {
 	resources.Deployments[0].ObjectMeta.Annotations = map[string]string{
 		exemptionAnnotationKey: "true",
 	}
-	actualResults = ValidateControllers(&c, resources)
+	actualResults, err = ValidateControllers(&c, resources)
+	if err != nil {
+		panic(err)
+	}
 	assert.Equal(t, 0, len(actualResults))
 }

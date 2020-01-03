@@ -22,7 +22,10 @@ func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider) (
 		displayName = kubeResources.SourceName
 	}
 
-	results := ValidateControllers(&config, kubeResources)
+	results, err := ValidateControllers(&config, kubeResources)
+	if err != nil {
+		return AuditData{}, err
+	}
 
 	auditData := AuditData{
 		PolarisOutputVersion: PolarisOutputVersion,

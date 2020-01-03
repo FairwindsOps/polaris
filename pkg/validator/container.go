@@ -22,11 +22,10 @@ import (
 )
 
 // ValidateContainer validates a single container from a given controller
-func ValidateContainer(conf *config.Configuration, controller controllers.Interface, container *corev1.Container, isInit bool) ContainerResult {
+func ValidateContainer(conf *config.Configuration, controller controllers.Interface, container *corev1.Container, isInit bool) (ContainerResult, error) {
 	results, err := applyContainerSchemaChecks(conf, controller, container, isInit)
-	// FIXME: don't panic
 	if err != nil {
-		panic(err)
+		return ContainerResult{}, err
 	}
 
 	cRes := ContainerResult{
@@ -34,20 +33,26 @@ func ValidateContainer(conf *config.Configuration, controller controllers.Interf
 		Results: results,
 	}
 
-	return cRes
+	return cRes, nil
 }
 
 // ValidateAllContainers validates both init and regular containers
-func ValidateAllContainers(conf *config.Configuration, controller controllers.Interface) []ContainerResult {
+func ValidateAllContainers(conf *config.Configuration, controller controllers.Interface) ([]ContainerResult, error) {
 	results := []ContainerResult{}
 	pod := controller.GetPodSpec()
 	for _, container := range pod.InitContainers {
-		result := ValidateContainer(conf, controller, &container, true)
+		result, err := ValidateContainer(conf, controller, &container, true)
+		if err != nil {
+			return nil, err
+		}
 		results = append(results, result)
 	}
 	for _, container := range pod.Containers {
-		result := ValidateContainer(conf, controller, &container, false)
+		result, err := ValidateContainer(conf, controller, &container, false)
+		if err != nil {
+			return nil, err
+		}
 		results = append(results, result)
 	}
-	return results
+	return results, nil
 }

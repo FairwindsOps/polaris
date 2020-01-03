@@ -96,7 +96,9 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 		pod := corev1.Pod{}
 		err = v.decoder.Decode(req, &pod) // err is handled below
 		nakedPod := controllers.NewNakedPodController(pod)
-		podResult = validator.ValidatePod(&v.Config, nakedPod)
+		if err == nil {
+			podResult, err = validator.ValidatePod(&v.Config, nakedPod)
+		}
 	} else {
 		var controller controllers.Interface
 		if yes := v.Config.CheckIfKindIsConfiguredForValidation(req.AdmissionRequest.Kind.Kind); !yes {
@@ -140,8 +142,11 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 			err = v.decoder.Decode(req, &replicationController)
 			controller = controllers.NewReplicationControllerController(replicationController)
 		}
-		controllerResult := validator.ValidateController(&v.Config, controller)
-		podResult = controllerResult.PodResult
+		if err == nil {
+			var controllerResult validator.ControllerResult
+			controllerResult, err = validator.ValidateController(&v.Config, controller)
+			podResult = controllerResult.PodResult
+		}
 	}
 
 	if err != nil {

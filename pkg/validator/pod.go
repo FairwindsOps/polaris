@@ -20,11 +20,10 @@ import (
 )
 
 // ValidatePod validates that each pod conforms to the Polaris config, returns a ResourceResult.
-func ValidatePod(conf *config.Configuration, controller controllers.Interface) PodResult {
+func ValidatePod(conf *config.Configuration, controller controllers.Interface) (PodResult, error) {
 	podResults, err := applyPodSchemaChecks(conf, controller)
-	// FIXME: don't panic
 	if err != nil {
-		panic(err)
+		return PodResult{}, err
 	}
 
 	pRes := PodResult{
@@ -32,7 +31,10 @@ func ValidatePod(conf *config.Configuration, controller controllers.Interface) P
 		ContainerResults: []ContainerResult{},
 	}
 
-	pRes.ContainerResults = ValidateAllContainers(conf, controller)
+	pRes.ContainerResults, err = ValidateAllContainers(conf, controller)
+	if err != nil {
+		return pRes, err
+	}
 
-	return pRes
+	return pRes, nil
 }

@@ -53,7 +53,10 @@ func TestValidatePod(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "error", Category: "Security"},
 	}
 
-	actualPodResult := ValidatePod(&c, deployment)
+	actualPodResult, err := ValidatePod(&c, deployment)
+	if err != nil {
+		panic(err)
+	}
 
 	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualPodResult.GetSummary())
@@ -87,7 +90,10 @@ func TestInvalidIPCPod(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "error", Category: "Security"},
 	}
 
-	actualPodResult := ValidatePod(&c, deployment)
+	actualPodResult, err := ValidatePod(&c, deployment)
+	if err != nil {
+		panic(err)
+	}
 
 	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualPodResult.GetSummary())
@@ -122,7 +128,10 @@ func TestInvalidNeworkPod(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "error", Category: "Security"},
 	}
 
-	actualPodResult := ValidatePod(&c, deployment)
+	actualPodResult, err := ValidatePod(&c, deployment)
+	if err != nil {
+		panic(err)
+	}
 
 	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualPodResult.GetSummary())
@@ -157,7 +166,10 @@ func TestInvalidPIDPod(t *testing.T) {
 		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Success: true, Severity: "warning", Category: "Networking"},
 	}
 
-	actualPodResult := ValidatePod(&c, deployment)
+	actualPodResult, err := ValidatePod(&c, deployment)
+	if err != nil {
+		panic(err)
+	}
 
 	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualPodResult.GetSummary())
@@ -202,7 +214,10 @@ func TestExemption(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "error", Category: "Security"},
 	}
 
-	actualPodResult := ValidatePod(&c, deployment)
+	actualPodResult, err := ValidatePod(&c, deployment)
+	if err != nil {
+		panic(err)
+	}
 
 	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualPodResult.GetSummary())

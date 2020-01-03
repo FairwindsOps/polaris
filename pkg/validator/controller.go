@@ -26,8 +26,11 @@ import (
 const exemptionAnnotationKey = "polaris.fairwinds.com/exempt"
 
 // ValidateController validates a single controller, returns a ControllerResult.
-func ValidateController(conf *conf.Configuration, controller controller.Interface) ControllerResult {
-	podResult := ValidatePod(conf, controller)
+func ValidateController(conf *conf.Configuration, controller controller.Interface) (ControllerResult, error) {
+	podResult, err := ValidatePod(conf, controller)
+	if err != nil {
+		return ControllerResult{}, err
+	}
 	result := ControllerResult{
 		Kind:      controller.GetKind().String(),
 		Name:      controller.GetName(),
@@ -35,12 +38,12 @@ func ValidateController(conf *conf.Configuration, controller controller.Interfac
 		Results:   ResultSet{},
 		PodResult: podResult,
 	}
-	return result
+	return result, nil
 }
 
 // ValidateControllers validates that each deployment conforms to the Polaris config,
 // builds a list of ResourceResults organized by namespace.
-func ValidateControllers(config *conf.Configuration, kubeResources *kube.ResourceProvider) []ControllerResult {
+func ValidateControllers(config *conf.Configuration, kubeResources *kube.ResourceProvider) ([]ControllerResult, error) {
 	var controllersToAudit []controller.Interface
 	for _, supportedControllers := range config.ControllersToScan {
 		loadedControllers, _ := controllers.LoadControllersByKind(supportedControllers, kubeResources)
@@ -52,9 +55,13 @@ func ValidateControllers(config *conf.Configuration, kubeResources *kube.Resourc
 		if !config.DisallowExemptions && hasExemptionAnnotation(controller) {
 			continue
 		}
-		results = append(results, ValidateController(config, controller))
+		result, err := ValidateController(config, controller)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, result)
 	}
-	return results
+	return results, nil
 }
 
 func hasExemptionAnnotation(ctrl controller.Interface) bool {
