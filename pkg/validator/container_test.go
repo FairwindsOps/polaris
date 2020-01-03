@@ -19,8 +19,12 @@ import (
 	"testing"
 
 	conf "github.com/fairwindsops/polaris/pkg/config"
+	"github.com/fairwindsops/polaris/pkg/validator/controllers"
+
 	"github.com/stretchr/testify/assert"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var resourceConfMinimal = `---
@@ -47,11 +51,22 @@ exemptions:
     - foo
 `
 
+func getEmptyController(name string) controllers.Interface {
+	return controllers.NewDeploymentController(appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: appsv1.DeploymentSpec{
+			Template: corev1.PodTemplateSpec{},
+		},
+	})
+}
+
 func testValidate(t *testing.T, container *corev1.Container, resourceConf *string, controllerName string, expectedErrors []ResultMessage, expectedWarnings []ResultMessage, expectedSuccesses []ResultMessage) {
 	parsedConf, err := conf.Parse([]byte(*resourceConf))
 	assert.NoError(t, err, "Expected no error when parsing config")
 
-	results, err := applyContainerSchemaChecks(&parsedConf, &corev1.PodSpec{}, container, controllerName, conf.Deployments, false)
+	results, err := applyContainerSchemaChecks(&parsedConf, getEmptyController(controllerName), container, false)
 	if err != nil {
 		panic(err)
 	}
@@ -72,7 +87,7 @@ func TestValidateResourcesEmptyConfig(t *testing.T) {
 		Name: "Empty",
 	}
 
-	results, err := applyContainerSchemaChecks(&conf.Configuration{}, &corev1.PodSpec{}, container, "", conf.Deployments, false)
+	results, err := applyContainerSchemaChecks(&conf.Configuration{}, getEmptyController(""), container, false)
 	if err != nil {
 		panic(err)
 	}
@@ -170,7 +185,8 @@ func TestValidateHealthChecks(t *testing.T) {
 
 	for idx, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			results, err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.probes}, &corev1.PodSpec{}, tt.container, "", conf.Deployments, tt.isInit)
+			controller := getEmptyController("")
+			results, err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.probes}, controller, tt.container, tt.isInit)
 			if err != nil {
 				panic(err)
 			}
@@ -283,7 +299,8 @@ func TestValidateImage(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			results, err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.image}, &corev1.PodSpec{}, tt.container, "", conf.Deployments, false)
+			controller := getEmptyController("")
+			results, err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.image}, controller, tt.container, false)
 			if err != nil {
 				panic(err)
 			}
@@ -399,7 +416,8 @@ func TestValidateNetworking(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			results, err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.networkConf}, &corev1.PodSpec{}, tt.container, "", conf.Deployments, false)
+			controller := getEmptyController("")
+			results, err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.networkConf}, controller, tt.container, false)
 			if err != nil {
 				panic(err)
 			}
@@ -902,7 +920,17 @@ func TestValidateSecurity(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			results, err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.securityConf}, tt.pod, tt.container, "", conf.Deployments, false)
+			controller := controllers.NewDeploymentController(appsv1.Deployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "",
+				},
+				Spec: appsv1.DeploymentSpec{
+					Template: corev1.PodTemplateSpec{
+						Spec: *tt.pod,
+					},
+				},
+			})
+			results, err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.securityConf}, controller, tt.container, false)
 			if err != nil {
 				panic(err)
 			}
@@ -1045,7 +1073,17 @@ func TestValidateRunAsRoot(t *testing.T) {
 	}
 	for idx, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			results, err := applyContainerSchemaChecks(&config, tt.pod, tt.container, "", conf.Deployments, false)
+			controller := controllers.NewDeploymentController(appsv1.Deployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "",
+				},
+				Spec: appsv1.DeploymentSpec{
+					Template: corev1.PodTemplateSpec{
+						Spec: *tt.pod,
+					},
+				},
+			})
+			results, err := applyContainerSchemaChecks(&config, controller, tt.container, false)
 			if err != nil {
 				panic(err)
 			}

@@ -15,18 +15,13 @@
 package validator
 
 import (
-	corev1 "k8s.io/api/core/v1"
-
 	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/validator/controllers"
 )
 
 // ValidatePod validates that each pod conforms to the Polaris config, returns a ResourceResult.
 func ValidatePod(conf *config.Configuration, controller controllers.Interface) PodResult {
-	pod := controller.GetPodSpec()
-	controllerName := controller.GetName()
-	controllerKind := controller.GetKind()
-	podResults, err := applyPodSchemaChecks(conf, pod, controllerName, controllerKind)
+	podResults, err := applyPodSchemaChecks(conf, controller)
 	// FIXME: don't panic
 	if err != nil {
 		panic(err)
@@ -37,14 +32,7 @@ func ValidatePod(conf *config.Configuration, controller controllers.Interface) P
 		ContainerResults: []ContainerResult{},
 	}
 
-	podCopy := *pod
-	podCopy.InitContainers = []corev1.Container{}
-	podCopy.Containers = []corev1.Container{}
-
-	containerResults := ValidateContainers(conf, &podCopy, pod.InitContainers, controllerName, controllerKind, true)
-	pRes.ContainerResults = append(pRes.ContainerResults, containerResults...)
-	containerResults = ValidateContainers(conf, &podCopy, pod.Containers, controllerName, controllerKind, false)
-	pRes.ContainerResults = append(pRes.ContainerResults, containerResults...)
+	pRes.ContainerResults = ValidateAllContainers(conf, controller)
 
 	return pRes
 }

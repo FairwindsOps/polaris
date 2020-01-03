@@ -16,11 +16,14 @@ package validator
 
 import (
 	"github.com/fairwindsops/polaris/pkg/config"
+	"github.com/fairwindsops/polaris/pkg/validator/controllers"
+
 	corev1 "k8s.io/api/core/v1"
 )
 
-func ValidateContainer(conf *config.Configuration, basePod *corev1.PodSpec, container *corev1.Container, controllerName string, controllerKind config.SupportedController, isInit bool) ContainerResult {
-	results, err := applyContainerSchemaChecks(conf, basePod, container, controllerName, controllerKind, isInit)
+// ValidateContainer validates a single container from a given controller
+func ValidateContainer(conf *config.Configuration, controller controllers.Interface, container *corev1.Container, isInit bool) ContainerResult {
+	results, err := applyContainerSchemaChecks(conf, controller, container, isInit)
 	// FIXME: don't panic
 	if err != nil {
 		panic(err)
@@ -34,11 +37,17 @@ func ValidateContainer(conf *config.Configuration, basePod *corev1.PodSpec, cont
 	return cRes
 }
 
-func ValidateContainers(conf *config.Configuration, basePod *corev1.PodSpec, containers []corev1.Container, controllerName string, controllerKind config.SupportedController, isInit bool) []ContainerResult {
+// ValidateAllContainers validates both init and regular containers
+func ValidateAllContainers(conf *config.Configuration, controller controllers.Interface) []ContainerResult {
 	results := []ContainerResult{}
-	for _, container := range containers {
-		cRes := ValidateContainer(conf, basePod, &container, controllerName, controllerKind, isInit)
-		results = append(results, cRes)
+	pod := controller.GetPodSpec()
+	for _, container := range pod.InitContainers {
+		result := ValidateContainer(conf, controller, &container, true)
+		results = append(results, result)
+	}
+	for _, container := range pod.Containers {
+		result := ValidateContainer(conf, controller, &container, false)
+		results = append(results, result)
 	}
 	return results
 }

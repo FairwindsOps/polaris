@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	conf "github.com/fairwindsops/polaris/pkg/config"
+
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -137,18 +138,19 @@ func TestValidateResourcesPartiallyValid(t *testing.T) {
 
 func TestValidateResourcesInit(t *testing.T) {
 	emptyContainer := &corev1.Container{}
+	controller := getEmptyController("")
 
 	parsedConf, err := conf.Parse([]byte(resourceConfRanges))
 	assert.NoError(t, err, "Expected no error when parsing config")
 
-	results, err := applyContainerSchemaChecks(&parsedConf, &corev1.PodSpec{}, emptyContainer, "", conf.Deployments, false)
+	results, err := applyContainerSchemaChecks(&parsedConf, controller, emptyContainer, false)
 	if err != nil {
 		panic(err)
 	}
 	assert.Equal(t, uint(1), results.GetSummary().Errors)
 	assert.Equal(t, uint(1), results.GetSummary().Warnings)
 
-	results, err = applyContainerSchemaChecks(&parsedConf, &corev1.PodSpec{}, emptyContainer, "", conf.Deployments, true)
+	results, err = applyContainerSchemaChecks(&parsedConf, controller, emptyContainer, true)
 	if err != nil {
 		panic(err)
 	}

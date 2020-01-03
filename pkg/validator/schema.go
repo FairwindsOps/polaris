@@ -11,6 +11,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/fairwindsops/polaris/pkg/config"
+	"github.com/fairwindsops/polaris/pkg/validator/controllers"
 )
 
 var (
@@ -104,11 +105,11 @@ func makeResult(conf *config.Configuration, check *config.SchemaCheck, passes bo
 	return result
 }
 
-func applyPodSchemaChecks(conf *config.Configuration, pod *corev1.PodSpec, controllerName string, controllerKind config.SupportedController) (ResultSet, error) {
+func applyPodSchemaChecks(conf *config.Configuration, controller controllers.Interface) (ResultSet, error) {
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
 	for _, checkID := range checkIDs {
-		check, err := resolveCheck(conf, checkID, controllerName, controllerKind, config.TargetPod, false)
+		check, err := resolveCheck(conf, checkID, controller.GetName(), controller.GetKind(), config.TargetPod, false)
 		if err != nil {
 			return nil, err
 		}
@@ -117,7 +118,7 @@ func applyPodSchemaChecks(conf *config.Configuration, pod *corev1.PodSpec, contr
 		} else if check == nil {
 			continue
 		}
-		passes, err := check.CheckPod(pod)
+		passes, err := check.CheckPod(controller.GetPodSpec())
 		if err != nil {
 			return nil, err
 		}
@@ -126,11 +127,11 @@ func applyPodSchemaChecks(conf *config.Configuration, pod *corev1.PodSpec, contr
 	return results, nil
 }
 
-func applyContainerSchemaChecks(conf *config.Configuration, basePod *corev1.PodSpec, container *corev1.Container, controllerName string, controllerKind config.SupportedController, isInit bool) (ResultSet, error) {
+func applyContainerSchemaChecks(conf *config.Configuration, controller controllers.Interface, container *corev1.Container, isInit bool) (ResultSet, error) {
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
 	for _, checkID := range checkIDs {
-		check, err := resolveCheck(conf, checkID, controllerName, controllerKind, config.TargetContainer, isInit)
+		check, err := resolveCheck(conf, checkID, controller.GetName(), controller.GetKind(), config.TargetContainer, isInit)
 		if err != nil {
 			return nil, err
 		} else if check == nil {
@@ -138,9 +139,10 @@ func applyContainerSchemaChecks(conf *config.Configuration, basePod *corev1.PodS
 		}
 		var passes bool
 		if check.SchemaTarget == config.TargetPod {
-			basePod.Containers = []corev1.Container{*container}
-			passes, err = check.CheckPod(basePod)
-			basePod.Containers = []corev1.Container{}
+			podCopy := *controller.GetPodSpec()
+			podCopy.InitContainers = []corev1.Container{}
+			podCopy.Containers = []corev1.Container{*container}
+			passes, err = check.CheckPod(&podCopy)
 		} else {
 			passes, err = check.CheckContainer(container)
 		}
