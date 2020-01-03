@@ -73,7 +73,7 @@ func parseCheck(rawBytes []byte) (config.SchemaCheck, error) {
 	}
 }
 
-func resolveCheck(conf *config.Configuration, checkID string, controllerName string, controllerKind config.SupportedController, target config.TargetKind, isInitContainer bool) (*config.SchemaCheck, error) {
+func resolveCheck(conf *config.Configuration, checkID string, controller controllers.Interface, target config.TargetKind, isInitContainer bool) (*config.SchemaCheck, error) {
 	check, ok := conf.CustomChecks[checkID]
 	if !ok {
 		check, ok = builtInChecks[checkID]
@@ -81,10 +81,10 @@ func resolveCheck(conf *config.Configuration, checkID string, controllerName str
 	if !ok {
 		return nil, fmt.Errorf("Check %s not found", checkID)
 	}
-	if !conf.IsActionable(check.ID, controllerName) {
+	if !conf.IsActionable(check.ID, controller.GetName()) {
 		return nil, nil
 	}
-	if !check.IsActionable(target, controllerKind, isInitContainer) {
+	if !check.IsActionable(target, controller.GetKind(), isInitContainer) {
 		return nil, nil
 	}
 	return &check, nil
@@ -109,7 +109,7 @@ func applyPodSchemaChecks(conf *config.Configuration, controller controllers.Int
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
 	for _, checkID := range checkIDs {
-		check, err := resolveCheck(conf, checkID, controller.GetName(), controller.GetKind(), config.TargetPod, false)
+		check, err := resolveCheck(conf, checkID, controller, config.TargetPod, false)
 		if err != nil {
 			return nil, err
 		}
@@ -131,7 +131,7 @@ func applyContainerSchemaChecks(conf *config.Configuration, controller controlle
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
 	for _, checkID := range checkIDs {
-		check, err := resolveCheck(conf, checkID, controller.GetName(), controller.GetKind(), config.TargetContainer, isInit)
+		check, err := resolveCheck(conf, checkID, controller, config.TargetContainer, isInit)
 		if err != nil {
 			return nil, err
 		} else if check == nil {
