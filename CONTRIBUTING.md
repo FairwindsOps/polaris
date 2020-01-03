@@ -94,9 +94,8 @@ The steps are:
     2. Bump the version number in:
         1. main.go
         2. README.md
-    3. Regenerate the deployment files. Assuming you've cloned the charts repo to `./charts`:
-        1. `helm template ./charts/stable/polaris/ --name polaris --namespace polaris --set templateOnly=true > deploy/dashboard.yaml`
-        2. `helm template ./charts/stable/polaris/ --name polaris --namespace polaris --set templateOnly=true --set webhook.enable=true --set dashboard.enable=false > deploy/webhook.yaml`
+    3. Regenerate the deployment files. Assuming you've cloned the charts repo to `~/git/charts`:
+        1. `CHARTS_DIR=~/git/charts ./scripts/generate-deployment-files.sh`
     4. Update CHANGELOG.md
     5. Merge your PR
 3. Tag the latest branch for this repo
