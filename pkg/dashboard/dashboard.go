@@ -96,6 +96,7 @@ func GetBaseTemplate(name string) (*template.Template, error) {
 		"getWeatherText":  getWeatherText,
 		"getGrade":        getGrade,
 		"getIcon":         getIcon,
+		"getResultClass":  getResultClass,
 		"getCategoryLink": getCategoryLink,
 		"getCategoryInfo": getCategoryInfo,
 	})
@@ -229,7 +230,7 @@ func GetRouter(c config.Configuration, auditPath string, port int, basePath stri
 
 // MainHandler gets template data and renders the dashboard with it.
 func MainHandler(w http.ResponseWriter, r *http.Request, c config.Configuration, auditData validator.AuditData, basePath string) {
-	jsonData, err := json.Marshal(auditData)
+	jsonData, err := json.Marshal(auditData.GetSummary())
 
 	if err != nil {
 		http.Error(w, "Error serializing audit data", 500)

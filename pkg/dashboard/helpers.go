@@ -76,6 +76,16 @@ func getWeatherIcon(counts validator.CountSummary) string {
 	}
 }
 
+func getResultClass(result validator.ResultMessage) string {
+	cls := string(result.Severity)
+	if result.Success {
+		cls += " success"
+	} else {
+		cls += " failure"
+	}
+	return cls
+}
+
 func getWeatherText(counts validator.CountSummary) string {
 	score := counts.GetScore()
 	if score >= 90 {
