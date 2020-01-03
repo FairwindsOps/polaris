@@ -59,7 +59,7 @@ func ValidateControllers(config *conf.Configuration, kubeResources *kube.Resourc
 }
 
 func hasExemptionAnnotation(ctrl controller.Interface) bool {
-	annot := ctrl.GetAnnotations()
+	annot := ctrl.GetObjectMeta().Annotations
 	val := annot[exemptionAnnotationKey]
 	return strings.ToLower(val) == "true"
 }

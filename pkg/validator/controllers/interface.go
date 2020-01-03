@@ -6,6 +6,7 @@ import (
 	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
 	kubeAPICoreV1 "k8s.io/api/core/v1"
+	kubeAPIMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Interface is an interface for k8s controllers (e.g. Deployments and StatefulSets)
@@ -15,7 +16,7 @@ type Interface interface {
 	GetPodTemplate() *kubeAPICoreV1.PodTemplateSpec
 	GetPodSpec() *kubeAPICoreV1.PodSpec
 	GetKind() config.SupportedController
-	GetAnnotations() map[string]string
+	GetObjectMeta() kubeAPIMetaV1.ObjectMeta
 }
 
 // GenericController is a base implementation with some free methods for inherited structs

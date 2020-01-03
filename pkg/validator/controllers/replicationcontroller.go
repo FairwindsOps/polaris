@@ -3,6 +3,7 @@ package controllers
 import (
 	"github.com/fairwindsops/polaris/pkg/config"
 	kubeAPICoreV1 "k8s.io/api/core/v1"
+	kubeAPIMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // NOTE: Maybe this name of ReplicationController is duplicative but it's more explicit since
@@ -24,9 +25,9 @@ func (r ReplicationControllerController) GetPodSpec() *kubeAPICoreV1.PodSpec {
 	return &r.K8SResource.Spec.Template.Spec
 }
 
-// GetAnnotations returns the controller's annotations
-func (r ReplicationControllerController) GetAnnotations() map[string]string {
-	return r.K8SResource.ObjectMeta.Annotations
+// GetObjectMeta returns the metadata
+func (r ReplicationControllerController) GetObjectMeta() kubeAPIMetaV1.ObjectMeta {
+	return r.K8SResource.ObjectMeta
 }
 
 // GetKind returns the supportedcontroller enum type

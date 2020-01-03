@@ -4,6 +4,7 @@ import (
 	"github.com/fairwindsops/polaris/pkg/config"
 	kubeAPIBatchV1beta1 "k8s.io/api/batch/v1beta1"
 	kubeAPICoreV1 "k8s.io/api/core/v1"
+	kubeAPIMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // CronJobController is an implementation of controller for deployments
@@ -27,9 +28,9 @@ func (c CronJobController) GetKind() config.SupportedController {
 	return config.CronJobs
 }
 
-// GetAnnotations returns the controller's annotations
-func (c CronJobController) GetAnnotations() map[string]string {
-	return c.K8SResource.ObjectMeta.Annotations
+// GetObjectMeta returns the metadata
+func (c CronJobController) GetObjectMeta() kubeAPIMetaV1.ObjectMeta {
+	return c.K8SResource.ObjectMeta
 }
 
 // NewCronJobController builds a new controller interface for Deployments

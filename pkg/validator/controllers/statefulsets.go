@@ -4,6 +4,7 @@ import (
 	"github.com/fairwindsops/polaris/pkg/config"
 	kubeAPIAppsV1 "k8s.io/api/apps/v1"
 	kubeAPICoreV1 "k8s.io/api/core/v1"
+	kubeAPIMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // StatefulSetController is an implementation of controller for deployments
@@ -22,9 +23,9 @@ func (s StatefulSetController) GetPodSpec() *kubeAPICoreV1.PodSpec {
 	return &s.K8SResource.Spec.Template.Spec
 }
 
-// GetAnnotations returns the controller's annotations
-func (s StatefulSetController) GetAnnotations() map[string]string {
-	return s.K8SResource.ObjectMeta.Annotations
+// GetObjectMeta returns the metadata
+func (s StatefulSetController) GetObjectMeta() kubeAPIMetaV1.ObjectMeta {
+	return s.K8SResource.ObjectMeta
 }
 
 // GetKind returns the supportedcontroller enum type
