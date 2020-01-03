@@ -33,6 +33,7 @@ func ValidateController(conf *conf.Configuration, controller controller.Interfac
 	result := ControllerResult{
 		Kind:      controllerKind.String(),
 		Name:      controller.GetName(),
+		Namespace: controller.GetObjectMeta().Namespace,
 		Messages:  ResultSet{},
 		PodResult: podResult,
 	}

@@ -63,6 +63,7 @@ type ResultSet map[string]ResultMessage
 // ControllerResult provides results for a controller
 type ControllerResult struct {
 	Name      string
+	Namespace string
 	Kind      string
 	Messages  ResultSet
 	PodResult PodResult
