@@ -1,5 +1,3 @@
-name: PrivilegeEscalationAllowed
-id: privilegeEscalationAllowed
 successMessage: Privilege escalation not allowed
 failureMessage: Privilege escalation should not be allowed
 category: Security

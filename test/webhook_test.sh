@@ -70,6 +70,7 @@ for filename in test/webhook_cases/passing_test.*.yaml; do
     if ! kubectl apply -f $filename &> /dev/null; then
         ALL_TESTS_PASSED=0
         echo "Test Failed: Polaris prevented a deployment with no configuration issues." 
+        kubectl logs -n polaris $(kubectl get po -oname -n polaris | grep webhook)
     fi
 done
 
@@ -79,6 +80,7 @@ for filename in test/webhook_cases/failing_test.*.yaml; do
     if kubectl apply -f $filename &> /dev/null; then
         ALL_TESTS_PASSED=0
         echo "Test Failed: Polaris should have prevented this deployment due to configuration issues."
+        kubectl logs -n polaris $(kubectl get po -oname -n polaris | grep webhook)
     fi
 done
 

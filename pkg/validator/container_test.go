@@ -21,43 +21,10 @@ import (
 	conf "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 )
 
-var resourceConf1 = `---
-resources:
-  cpuRequestRanges:
-    error:
-      below: 100m
-      above: 1
-    warning:
-      below: 200m
-      above: 800m
-  memoryRequestRanges:
-    error:
-      below: 100M
-      above: 3G
-    warning:
-      below: 200M
-      above: 2G
-  cpuLimitRanges:
-    error:
-      below: 100m
-      above: 2
-    warning:
-      below: 300m
-      above: 1800m
-  memoryLimitRanges:
-    error:
-      below: 200M
-      above: 6G
-    warning:
-      below: 300M
-      above: 4G
-`
-
-var resourceConf2 = `---
-resources:
+var resourceConfMinimal = `---
+checks:
   cpuRequestsMissing: warning
   memoryRequestsMissing: warning
   cpuLimitsMissing: error
@@ -65,7 +32,7 @@ resources:
 `
 
 var resourceConfExemptions = `---
-resources:
+checks:
   cpuRequestsMissing: warning
   memoryRequestsMissing: warning
   cpuLimitsMissing: error
@@ -80,47 +47,7 @@ exemptions:
     - foo
 `
 
-var resourceConfRangeExemptions = `---
-resources:
-  cpuRequestRanges:
-    error:
-      below: 100m
-      above: 1
-    warning:
-      below: 200m
-      above: 800m
-  memoryRequestRanges:
-    error:
-      below: 100M
-      above: 3G
-    warning:
-      below: 200M
-      above: 2G
-  cpuLimitRanges:
-    error:
-      below: 100m
-      above: 2
-    warning:
-      below: 300m
-      above: 1800m
-  memoryLimitRanges:
-    error:
-      below: 200M
-      above: 6G
-    warning:
-      below: 300M
-      above: 4G
-exemptions:
-  - rules:
-    - cpuRequestRanges
-    - memoryRequestRanges
-    - cpuLimitRanges
-    - memoryLimitRanges
-    controllerNames:
-    - foo
-`
-
-func testValidateResources(t *testing.T, container *corev1.Container, resourceConf *string, controllerName string, expectedErrors []*ResultMessage, expectedWarnings []*ResultMessage, expectedSuccesses []*ResultMessage) {
+func testValidate(t *testing.T, container *corev1.Container, resourceConf *string, controllerName string, expectedErrors []*ResultMessage, expectedWarnings []*ResultMessage, expectedSuccesses []*ResultMessage) {
 	cv := ContainerValidation{
 		Container:          container,
 		ResourceValidation: &ResourceValidation{},
@@ -129,7 +56,10 @@ func testValidateResources(t *testing.T, container *corev1.Container, resourceCo
 	parsedConf, err := conf.Parse([]byte(*resourceConf))
 	assert.NoError(t, err, "Expected no error when parsing config")
 
-	cv.validateResources(&parsedConf, controllerName)
+	err = applyContainerSchemaChecks(&parsedConf, controllerName, conf.Deployments, &cv)
+	if err != nil {
+		panic(err)
+	}
 
 	assert.Len(t, cv.Warnings, len(expectedWarnings))
 	assert.ElementsMatch(t, expectedWarnings, cv.Warnings)
@@ -151,7 +81,10 @@ func TestValidateResourcesEmptyConfig(t *testing.T) {
 		ResourceValidation: &ResourceValidation{},
 	}
 
-	cv.validateResources(&conf.Configuration{}, "")
+	err := applyContainerSchemaChecks(&conf.Configuration{}, "", conf.Deployments, &cv)
+	if err != nil {
+		panic(err)
+	}
 	assert.Len(t, cv.Errors, 0)
 }
 
@@ -192,181 +125,20 @@ func TestValidateResourcesEmptyContainer(t *testing.T) {
 
 	expectedSuccesses := []*ResultMessage{}
 
-	testValidateResources(t, &container, &resourceConf2, "foo", expectedErrors, expectedWarnings, expectedSuccesses)
-}
-
-func TestValidateResourcesPartiallyValid(t *testing.T) {
-	cpuRequest, err := resource.ParseQuantity("100m")
-	assert.NoError(t, err, "Error parsing quantity")
-
-	cpuLimit, err := resource.ParseQuantity("200m")
-	assert.NoError(t, err, "Error parsing quantity")
-
-	container := corev1.Container{
-		Name: "Empty",
-		Resources: corev1.ResourceRequirements{
-			Requests: corev1.ResourceList{
-				"cpu": cpuRequest,
-			},
-			Limits: corev1.ResourceList{
-				"cpu": cpuLimit,
-			},
-		},
-	}
-
-	expectedWarnings := []*ResultMessage{
-		{
-			ID:       "cpuRequestRanges",
-			Type:     "warning",
-			Message:  "CPU requests should be higher than 200m",
-			Category: "Resources",
-		},
-		{
-			ID:       "cpuLimitRanges",
-			Type:     "warning",
-			Message:  "CPU limits should be higher than 300m",
-			Category: "Resources",
-		},
-	}
-
-	expectedErrors := []*ResultMessage{
-		{
-			ID:       "memoryRequestRanges",
-			Type:     "error",
-			Message:  "Memory requests should be higher than 100M",
-			Category: "Resources",
-		},
-		{
-			ID:       "memoryLimitRanges",
-			Type:     "error",
-			Message:  "Memory limits should be higher than 200M",
-			Category: "Resources",
-		},
-	}
-
-	expectedSuccesses := []*ResultMessage{}
-
-	testValidateResources(t, &container, &resourceConf1, "foo", expectedErrors, expectedWarnings, expectedSuccesses)
-}
-
-func TestValidateResourcesInit(t *testing.T) {
-	cvEmpty := ContainerValidation{
-		Container:          &corev1.Container{},
-		ResourceValidation: &ResourceValidation{},
-	}
-	cvInit := ContainerValidation{
-		Container:          &corev1.Container{},
-		ResourceValidation: &ResourceValidation{},
-		IsInitContainer:    true,
-	}
-
-	parsedConf, err := conf.Parse([]byte(resourceConf1))
-	assert.NoError(t, err, "Expected no error when parsing config")
-
-	cvEmpty.validateResources(&parsedConf, "")
-	assert.Len(t, cvEmpty.Errors, 4)
-
-	cvInit.validateResources(&parsedConf, "")
-	assert.Len(t, cvInit.Errors, 0)
-}
-
-func TestValidateResourcesFullyValid(t *testing.T) {
-	cpuRequest, err := resource.ParseQuantity("300m")
-	assert.NoError(t, err, "Error parsing quantity")
-
-	cpuLimit, err := resource.ParseQuantity("400m")
-	assert.NoError(t, err, "Error parsing quantity")
-
-	memoryRequest, err := resource.ParseQuantity("400Mi")
-	assert.NoError(t, err, "Error parsing quantity")
-
-	memoryLimit, err := resource.ParseQuantity("500Mi")
-	assert.NoError(t, err, "Error parsing quantity")
-
-	container := corev1.Container{
-		Name: "Empty",
-		Resources: corev1.ResourceRequirements{
-			Requests: corev1.ResourceList{
-				"cpu":    cpuRequest,
-				"memory": memoryRequest,
-			},
-			Limits: corev1.ResourceList{
-				"cpu":    cpuLimit,
-				"memory": memoryLimit,
-			},
-		},
-	}
-
-	expectedSuccesses := []*ResultMessage{
-		{
-			ID:       "cpuRequestRanges",
-			Type:     "success",
-			Message:  "CPU requests are within the expected range",
-			Category: "Resources",
-		},
-		{
-			ID:       "memoryRequestRanges",
-			Type:     "success",
-			Message:  "Memory requests are within the expected range",
-			Category: "Resources",
-		},
-		{
-			ID:       "cpuLimitRanges",
-			Type:     "success",
-			Message:  "CPU limits are within the expected range",
-			Category: "Resources",
-		},
-		{
-			ID:       "memoryLimitRanges",
-			Type:     "success",
-			Message:  "Memory limits are within the expected range",
-			Category: "Resources",
-		},
-	}
-
-	testValidateResources(t, &container, &resourceConf1, "foo", []*ResultMessage{}, []*ResultMessage{}, expectedSuccesses)
-
-	expectedSuccesses = []*ResultMessage{
-		{
-			ID:       "cpuRequestsMissing",
-			Type:     "success",
-			Message:  "CPU requests are set",
-			Category: "Resources",
-		},
-		{
-			ID:       "memoryRequestsMissing",
-			Type:     "success",
-			Message:  "Memory requests are set",
-			Category: "Resources",
-		},
-		{
-			ID:       "cpuLimitsMissing",
-			Type:     "success",
-			Message:  "CPU limits are set",
-			Category: "Resources",
-		},
-		{
-			ID:       "memoryLimitsMissing",
-			Type:     "success",
-			Message:  "Memory limits are set",
-			Category: "Resources",
-		},
-	}
-
-	testValidateResources(t, &container, &resourceConf2, "foo", []*ResultMessage{}, []*ResultMessage{}, expectedSuccesses)
+	testValidate(t, &container, &resourceConfMinimal, "foo", expectedErrors, expectedWarnings, expectedSuccesses)
 }
 
 func TestValidateHealthChecks(t *testing.T) {
 
 	// Test setup.
-	p1 := conf.HealthChecks{}
-	p2 := conf.HealthChecks{
-		ReadinessProbeMissing: conf.SeverityIgnore,
-		LivenessProbeMissing:  conf.SeverityIgnore,
+	p1 := make(map[string]conf.Severity)
+	p2 := map[string]conf.Severity{
+		"readinessProbeMissing": conf.SeverityIgnore,
+		"livenessProbeMissing":  conf.SeverityIgnore,
 	}
-	p3 := conf.HealthChecks{
-		ReadinessProbeMissing: conf.SeverityError,
-		LivenessProbeMissing:  conf.SeverityWarning,
+	p3 := map[string]conf.Severity{
+		"readinessProbeMissing": conf.SeverityError,
+		"livenessProbeMissing":  conf.SeverityWarning,
 	}
 
 	probe := corev1.Probe{}
@@ -396,7 +168,7 @@ func TestValidateHealthChecks(t *testing.T) {
 
 	var testCases = []struct {
 		name     string
-		probes   conf.HealthChecks
+		probes   map[string]conf.Severity
 		cv       ContainerValidation
 		errors   *[]*ResultMessage
 		warnings *[]*ResultMessage
@@ -411,7 +183,7 @@ func TestValidateHealthChecks(t *testing.T) {
 
 	for idx, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			err := applyContainerSchemaChecks(&conf.Configuration{HealthChecks: tt.probes}, "", conf.Deployments, &tt.cv)
+			err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.probes}, "", conf.Deployments, &tt.cv)
 			if err != nil {
 				panic(err)
 			}
@@ -429,14 +201,14 @@ func TestValidateHealthChecks(t *testing.T) {
 }
 
 func TestValidateImage(t *testing.T) {
-	emptyConf := conf.Images{}
-	standardConf := conf.Images{
-		TagNotSpecified:     conf.SeverityError,
-		PullPolicyNotAlways: conf.SeverityIgnore,
+	emptyConf := make(map[string]conf.Severity)
+	standardConf := map[string]conf.Severity{
+		"tagNotSpecified":     conf.SeverityError,
+		"pullPolicyNotAlways": conf.SeverityIgnore,
 	}
-	strongConf := conf.Images{
-		TagNotSpecified:     conf.SeverityError,
-		PullPolicyNotAlways: conf.SeverityError,
+	strongConf := map[string]conf.Severity{
+		"tagNotSpecified":     conf.SeverityError,
+		"pullPolicyNotAlways": conf.SeverityError,
 	}
 
 	emptyCV := ContainerValidation{
@@ -458,7 +230,7 @@ func TestValidateImage(t *testing.T) {
 
 	var testCases = []struct {
 		name     string
-		image    conf.Images
+		image    map[string]conf.Severity
 		cv       ContainerValidation
 		expected []*ResultMessage
 	}{
@@ -528,7 +300,7 @@ func TestValidateImage(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.cv = resetCV(tt.cv)
-			err := applyContainerSchemaChecks(&conf.Configuration{Images: tt.image}, "", conf.Deployments, &tt.cv)
+			err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.image}, "", conf.Deployments, &tt.cv)
 			if err != nil {
 				panic(err)
 			}
@@ -540,12 +312,12 @@ func TestValidateImage(t *testing.T) {
 
 func TestValidateNetworking(t *testing.T) {
 	// Test setup.
-	emptyConf := conf.Networking{}
-	standardConf := conf.Networking{
-		HostPortSet: conf.SeverityWarning,
+	emptyConf := make(map[string]conf.Severity)
+	standardConf := map[string]conf.Severity{
+		"hostPortSet": conf.SeverityWarning,
 	}
-	strongConf := conf.Networking{
-		HostPortSet: conf.SeverityError,
+	strongConf := map[string]conf.Severity{
+		"hostPortSet": conf.SeverityError,
 	}
 
 	emptyCV := ContainerValidation{
@@ -574,7 +346,7 @@ func TestValidateNetworking(t *testing.T) {
 
 	var testCases = []struct {
 		name             string
-		networkConf      conf.Networking
+		networkConf      map[string]conf.Severity
 		cv               ContainerValidation
 		expectedMessages []*ResultMessage
 	}{
@@ -650,7 +422,7 @@ func TestValidateNetworking(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.cv = resetCV(tt.cv)
-			err := applyContainerSchemaChecks(&conf.Configuration{Networking: tt.networkConf}, "", conf.Deployments, &tt.cv)
+			err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.networkConf}, "", conf.Deployments, &tt.cv)
 			if err != nil {
 				panic(err)
 			}
@@ -665,35 +437,22 @@ func TestValidateSecurity(t *testing.T) {
 	falseVar := false
 
 	// Test setup.
-	emptyConf := conf.Security{}
-	standardConf := conf.Security{
-		RunAsRootAllowed:           conf.SeverityWarning,
-		RunAsPrivileged:            conf.SeverityError,
-		NotReadOnlyRootFileSystem:  conf.SeverityWarning,
-		PrivilegeEscalationAllowed: conf.SeverityError,
-		Capabilities: conf.SecurityCapabilities{
-			Error: conf.SecurityCapabilityLists{
-				IfAnyAdded: []corev1.Capability{"ALL", "SYS_ADMIN", "NET_ADMIN"},
-			},
-			Warning: conf.SecurityCapabilityLists{
-				IfAnyAddedBeyond: []corev1.Capability{"NONE"},
-			},
-		},
+	emptyConf := map[string]conf.Severity{}
+	standardConf := map[string]conf.Severity{
+		"runAsRootAllowed":           conf.SeverityWarning,
+		"runAsPrivileged":            conf.SeverityError,
+		"notReadOnlyRootFileSystem":  conf.SeverityWarning,
+		"privilegeEscalationAllowed": conf.SeverityError,
+		"dangerousCapabilities":      conf.SeverityError,
+		"insecureCapabilities":       conf.SeverityWarning,
 	}
-	strongConf := conf.Security{
-		RunAsRootAllowed:           conf.SeverityError,
-		RunAsPrivileged:            conf.SeverityError,
-		NotReadOnlyRootFileSystem:  conf.SeverityError,
-		PrivilegeEscalationAllowed: conf.SeverityError,
-		Capabilities: conf.SecurityCapabilities{
-			Error: conf.SecurityCapabilityLists{
-				IfAnyAdded:      []corev1.Capability{"ALL", "SYS_ADMIN", "NET_ADMIN"},
-				IfAnyNotDropped: []corev1.Capability{"NET_BIND_SERVICE", "DAC_OVERRIDE", "SYS_CHROOT"},
-			},
-			Warning: conf.SecurityCapabilityLists{
-				IfAnyAddedBeyond: []corev1.Capability{"NONE"},
-			},
-		},
+	strongConf := map[string]conf.Severity{
+		"runAsRootAllowed":           conf.SeverityError,
+		"runAsPrivileged":            conf.SeverityError,
+		"notReadOnlyRootFileSystem":  conf.SeverityError,
+		"privilegeEscalationAllowed": conf.SeverityError,
+		"dangerousCapabilities":      conf.SeverityError,
+		"insecureCapabilities":       conf.SeverityError,
 	}
 
 	emptyCV := ContainerValidation{
@@ -708,7 +467,7 @@ func TestValidateSecurity(t *testing.T) {
 			Privileged:               &trueVar,
 			AllowPrivilegeEscalation: &trueVar,
 			Capabilities: &corev1.Capabilities{
-				Add: []corev1.Capability{"AUDIT_CONTROL", "SYS_ADMIN", "NET_ADMIN"},
+				Add: []corev1.Capability{"AUDIT_WRITE", "SYS_ADMIN", "NET_ADMIN"},
 			},
 		}},
 		ResourceValidation: &ResourceValidation{},
@@ -721,7 +480,7 @@ func TestValidateSecurity(t *testing.T) {
 			Privileged:               &trueVar,
 			AllowPrivilegeEscalation: &trueVar,
 			Capabilities: &corev1.Capabilities{
-				Add: []corev1.Capability{"AUDIT_CONTROL", "SYS_ADMIN", "NET_ADMIN"},
+				Add: []corev1.Capability{"AUDIT_WRITE", "SYS_ADMIN", "NET_ADMIN"},
 			},
 		}},
 		ResourceValidation: &ResourceValidation{},
@@ -739,7 +498,7 @@ func TestValidateSecurity(t *testing.T) {
 			Privileged:               &trueVar,
 			AllowPrivilegeEscalation: &trueVar,
 			Capabilities: &corev1.Capabilities{
-				Add: []corev1.Capability{"AUDIT_CONTROL", "SYS_ADMIN", "NET_ADMIN"},
+				Add: []corev1.Capability{"AUDIT_WRITE", "SYS_ADMIN", "NET_ADMIN"},
 			},
 		}},
 		ResourceValidation: &ResourceValidation{},
@@ -814,7 +573,7 @@ func TestValidateSecurity(t *testing.T) {
 
 	var testCases = []struct {
 		name             string
-		securityConf     conf.Security
+		securityConf     map[string]conf.Severity
 		cv               ContainerValidation
 		expectedMessages []*ResultMessage
 	}{
@@ -849,8 +608,13 @@ func TestValidateSecurity(t *testing.T) {
 				Type:     "success",
 				Category: "Security",
 			}, {
-				ID:       "capabilitiesAdded",
-				Message:  "Disallowed security capabilities have not been added",
+				ID:       "insecureCapabilities",
+				Message:  "Container does not have any insecure capabilities",
+				Type:     "success",
+				Category: "Security",
+			}, {
+				ID:       "dangerousCapabilities",
+				Message:  "Container does not have any dangerous capabilities",
 				Type:     "success",
 				Category: "Security",
 			}},
@@ -860,8 +624,8 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: standardConf,
 			cv:           badCV,
 			expectedMessages: []*ResultMessage{{
-				ID:       "capabilitiesAdded",
-				Message:  "The following security capabilities should not be added: SYS_ADMIN, NET_ADMIN",
+				ID:       "dangerousCapabilities",
+				Message:  "Container should not have dangerous capabilities",
 				Type:     "error",
 				Category: "Security",
 			}, {
@@ -875,8 +639,8 @@ func TestValidateSecurity(t *testing.T) {
 				Type:     "error",
 				Category: "Security",
 			}, {
-				ID:       "capabilitiesAdded",
-				Message:  "The following security capabilities should not be added: AUDIT_CONTROL, SYS_ADMIN, NET_ADMIN",
+				ID:       "insecureCapabilities",
+				Message:  "Container should not have insecure capabilities",
 				Type:     "warning",
 				Category: "Security",
 			}, {
@@ -896,8 +660,8 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: standardConf,
 			cv:           badCVWithGoodPodSpec,
 			expectedMessages: []*ResultMessage{{
-				ID:       "capabilitiesAdded",
-				Message:  "The following security capabilities should not be added: SYS_ADMIN, NET_ADMIN",
+				ID:       "dangerousCapabilities",
+				Message:  "Container should not have dangerous capabilities",
 				Type:     "error",
 				Category: "Security",
 			}, {
@@ -911,8 +675,8 @@ func TestValidateSecurity(t *testing.T) {
 				Type:     "error",
 				Category: "Security",
 			}, {
-				ID:       "capabilitiesAdded",
-				Message:  "The following security capabilities should not be added: AUDIT_CONTROL, SYS_ADMIN, NET_ADMIN",
+				ID:       "insecureCapabilities",
+				Message:  "Container should not have insecure capabilities",
 				Type:     "warning",
 				Category: "Security",
 			}, {
@@ -932,9 +696,14 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: standardConf,
 			cv:           badCVWithBadPodSpec,
 			expectedMessages: []*ResultMessage{{
-				ID:       "capabilitiesAdded",
-				Message:  "The following security capabilities should not be added: SYS_ADMIN, NET_ADMIN",
+				ID:       "dangerousCapabilities",
+				Message:  "Container should not have dangerous capabilities",
 				Type:     "error",
+				Category: "Security",
+			}, {
+				ID:       "insecureCapabilities",
+				Message:  "Container should not have insecure capabilities",
+				Type:     "warning",
 				Category: "Security",
 			}, {
 				ID:       "privilegeEscalationAllowed",
@@ -945,11 +714,6 @@ func TestValidateSecurity(t *testing.T) {
 				ID:       "runAsPrivileged",
 				Message:  "Should not be running as privileged",
 				Type:     "error",
-				Category: "Security",
-			}, {
-				ID:       "capabilitiesAdded",
-				Message:  "The following security capabilities should not be added: AUDIT_CONTROL, SYS_ADMIN, NET_ADMIN",
-				Type:     "warning",
 				Category: "Security",
 			}, {
 				ID:       "runAsRootAllowed",
@@ -988,8 +752,13 @@ func TestValidateSecurity(t *testing.T) {
 				Type:     "success",
 				Category: "Security",
 			}, {
-				ID:       "capabilitiesAdded",
-				Message:  "Disallowed security capabilities have not been added",
+				ID:       "dangerousCapabilities",
+				Message:  "Container does not have any dangerous capabilities",
+				Type:     "success",
+				Category: "Security",
+			}, {
+				ID:       "insecureCapabilities",
+				Message:  "Container does not have any insecure capabilities",
 				Type:     "success",
 				Category: "Security",
 			}},
@@ -999,13 +768,13 @@ func TestValidateSecurity(t *testing.T) {
 			securityConf: strongConf,
 			cv:           goodCV,
 			expectedMessages: []*ResultMessage{{
-				ID:       "capabilitiesNotDropped",
-				Message:  "The following security capabilities should be dropped: DAC_OVERRIDE, SYS_CHROOT",
-				Type:     "error",
+				ID:       "dangerousCapabilities",
+				Message:  "Container does not have any dangerous capabilities",
+				Type:     "success",
 				Category: "Security",
 			}, {
-				ID:       "capabilitiesAdded",
-				Message:  "Disallowed security capabilities have not been added",
+				ID:       "insecureCapabilities",
+				Message:  "Container does not have any insecure capabilities",
 				Type:     "success",
 				Category: "Security",
 			}, {
@@ -1055,13 +824,13 @@ func TestValidateSecurity(t *testing.T) {
 				Type:     "success",
 				Category: "Security",
 			}, {
-				ID:       "capabilitiesAdded",
-				Message:  "Disallowed security capabilities have not been added",
+				ID:       "dangerousCapabilities",
+				Message:  "Container does not have any dangerous capabilities",
 				Type:     "success",
 				Category: "Security",
 			}, {
-				ID:       "capabilitiesDropped",
-				Message:  "All disallowed security capabilities have been dropped",
+				ID:       "insecureCapabilities",
+				Message:  "Container does not have any insecure capabilities",
 				Type:     "success",
 				Category: "Security",
 			}},
@@ -1091,13 +860,13 @@ func TestValidateSecurity(t *testing.T) {
 				Type:     "success",
 				Category: "Security",
 			}, {
-				ID:       "capabilitiesAdded",
-				Message:  "Disallowed security capabilities have not been added",
+				ID:       "dangerousCapabilities",
+				Message:  "Container does not have any dangerous capabilities",
 				Type:     "success",
 				Category: "Security",
 			}, {
-				ID:       "capabilitiesDropped",
-				Message:  "All disallowed security capabilities have been dropped",
+				ID:       "insecureCapabilities",
+				Message:  "Container does not have any insecure capabilities",
 				Type:     "success",
 				Category: "Security",
 			}},
@@ -1127,13 +896,13 @@ func TestValidateSecurity(t *testing.T) {
 				Type:     "success",
 				Category: "Security",
 			}, {
-				ID:       "capabilitiesAdded",
-				Message:  "Disallowed security capabilities have not been added",
+				ID:       "dangerousCapabilities",
+				Message:  "Container does not have any dangerous capabilities",
 				Type:     "success",
 				Category: "Security",
 			}, {
-				ID:       "capabilitiesDropped",
-				Message:  "All disallowed security capabilities have been dropped",
+				ID:       "insecureCapabilities",
+				Message:  "Container does not have any insecure capabilities",
 				Type:     "success",
 				Category: "Security",
 			}},
@@ -1143,13 +912,12 @@ func TestValidateSecurity(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.cv = resetCV(tt.cv)
-			err := applyContainerSchemaChecks(&conf.Configuration{Security: tt.securityConf}, "", conf.Deployments, &tt.cv)
+			err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.securityConf}, "", conf.Deployments, &tt.cv)
 			if err != nil {
 				panic(err)
 			}
-			tt.cv.validateSecurity(&conf.Configuration{Security: tt.securityConf}, "")
 			assert.Len(t, tt.cv.messages(), len(tt.expectedMessages))
-			assert.ElementsMatch(t, tt.cv.messages(), tt.expectedMessages)
+			assert.ElementsMatch(t, tt.expectedMessages, tt.cv.messages())
 		})
 	}
 }
@@ -1160,8 +928,8 @@ func TestValidateRunAsRoot(t *testing.T) {
 	nonRootUser := int64(1000)
 	rootUser := int64(0)
 	config := conf.Configuration{
-		Security: conf.Security{
-			RunAsRootAllowed: conf.SeverityWarning,
+		Checks: map[string]conf.Severity{
+			"runAsRootAllowed": conf.SeverityWarning,
 		},
 	}
 	testCases := []struct {
@@ -1306,7 +1074,7 @@ func TestValidateResourcesExemption(t *testing.T) {
 	expectedErrors := []*ResultMessage{}
 	expectedSuccesses := []*ResultMessage{}
 
-	testValidateResources(t, &container, &resourceConfExemptions, "foo", expectedErrors, expectedWarnings, expectedSuccesses)
+	testValidate(t, &container, &resourceConfExemptions, "foo", expectedErrors, expectedWarnings, expectedSuccesses)
 
 	expectedWarnings = []*ResultMessage{
 		{
@@ -1340,19 +1108,7 @@ func TestValidateResourcesExemption(t *testing.T) {
 
 	disallowExemptionsConf := resourceConfExemptions + "\ndisallowExemptions: true"
 
-	testValidateResources(t, &container, &disallowExemptionsConf, "foo", expectedErrors, expectedWarnings, expectedSuccesses)
-}
-
-func TestValidateResourceRangeExemption(t *testing.T) {
-	container := corev1.Container{
-		Name: "Empty",
-	}
-
-	expectedWarnings := []*ResultMessage{}
-	expectedErrors := []*ResultMessage{}
-	expectedSuccesses := []*ResultMessage{}
-
-	testValidateResources(t, &container, &resourceConfRangeExemptions, "foo", expectedErrors, expectedWarnings, expectedSuccesses)
+	testValidate(t, &container, &disallowExemptionsConf, "foo", expectedErrors, expectedWarnings, expectedSuccesses)
 }
 
 func resetCV(cv ContainerValidation) ContainerValidation {

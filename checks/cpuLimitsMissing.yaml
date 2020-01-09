@@ -1,0 +1,27 @@
+successMessage: CPU limits are set
+failureMessage: CPU limits should be set
+category: Resources
+target: Container
+containers:
+  exclude:
+  - initContainer
+schema:
+  '$schema': http://json-schema.org/draft-07/schema
+  type: object
+  required:
+  - resources
+  properties:
+    resources:
+      type: object
+      required:
+      - limits
+      properties:
+        limits:
+          type: object
+          required:
+          - cpu
+          properties:
+            cpu:
+              type: string
+              not:
+                const: ''

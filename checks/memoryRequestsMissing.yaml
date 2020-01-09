@@ -1,0 +1,27 @@
+successMessage: Memory requests are set
+failureMessage: Memory requests should be set
+category: Resources
+target: Container
+containers:
+  exclude:
+  - initContainer
+schema:
+  '$schema': http://json-schema.org/draft-07/schema
+  type: object
+  required:
+  - resources
+  properties:
+    resources:
+      type: object
+      required:
+      - requests
+      properties:
+        requests:
+          type: object
+          required:
+          - memory
+          properties:
+            memory:
+              type: string
+              not:
+                const: ''

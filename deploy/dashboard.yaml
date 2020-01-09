@@ -14,56 +14,131 @@ metadata:
   labels:
     app: polaris
 data:
-  config.yaml:  |
-    resources:
+  config.yaml:  |-
+    checks:
+      # resources
       cpuRequestsMissing: warning
       cpuLimitsMissing: warning
       memoryRequestsMissing: warning
       memoryLimitsMissing: warning
-    images:
+      # images
       tagNotSpecified: error
-    healthChecks:
+      pullPolicyNotAlways: ignore
+      # healthChecks
       readinessProbeMissing: warning
       livenessProbeMissing: warning
-    networking:
+      # networking
       hostNetworkSet: warning
       hostPortSet: warning
-    security:
+      # security
       hostIPCSet: error
       hostPIDSet: error
       notReadOnlyRootFileSystem: warning
       privilegeEscalationAllowed: error
       runAsRootAllowed: warning
       runAsPrivileged: error
-      capabilities:
-        error:
-          ifAnyAdded:
-            - SYS_ADMIN
-            - NET_ADMIN
-            - ALL
-        warning:
-          ifAnyAddedBeyond:
-            - CHOWN
-            - DAC_OVERRIDE
-            - FSETID
-            - FOWNER
-            - MKNOD
-            - NET_RAW
-            - SETGID
-            - SETUID
-            - SETFCAP
-            - SETPCAP
-            - NET_BIND_SERVICE
-            - SYS_CHROOT
-            - KILL
-            - AUDIT_WRITE
-    controllers_to_scan:
+      dangerousCapabilities: error
+      insecureCapabilities: warning
+    controllersToScan:
       - Deployments
       - StatefulSets
       - DaemonSets
-      - Jobs
       - CronJobs
+      - Jobs
       - ReplicationControllers
+    exemptions:
+      - controllerNames:
+          - dns-controller
+          - datadog-datadog
+          - kube-flannel-ds
+          - kube2iam
+          - aws-iam-authenticator
+          - datadog
+          - kube2iam
+        rules:
+          - hostNetworkSet
+      - controllerNames:
+          - aws-iam-authenticator
+          - aws-cluster-autoscaler
+          - kube-state-metrics
+          - dns-controller
+          - external-dns
+          - dnsmasq
+          - autoscaler
+          - kubernetes-dashboard
+          - install-cni
+          - kube2iam
+        rules:
+          - readinessProbeMissing
+          - livenessProbeMissing
+      - controllerNames:
+          - aws-iam-authenticator
+          - nginx-ingress-controller
+          - nginx-ingress-default-backend
+          - aws-cluster-autoscaler
+          - kube-state-metrics
+          - dns-controller
+          - external-dns
+          - kubedns
+          - dnsmasq
+          - autoscaler
+          - tiller
+          - kube2iam
+        rules:
+          - runAsRootAllowed
+      - controllerNames:
+          - aws-iam-authenticator
+          - nginx-ingress-controller
+          - nginx-ingress-default-backend
+          - aws-cluster-autoscaler
+          - kube-state-metrics
+          - dns-controller
+          - external-dns
+          - kubedns
+          - dnsmasq
+          - autoscaler
+          - tiller
+          - kube2iam
+        rules:
+          - notReadOnlyRootFileSystem
+      - controllerNames:
+          - cert-manager
+          - dns-controller
+          - kubedns
+          - dnsmasq
+          - autoscaler
+          - insights-agent-goldilocks-vpa-install
+        rules:
+          - cpuRequestsMissing
+          - cpuLimitsMissing
+          - memoryRequestsMissing
+          - memoryLimitsMissing
+      - controllerNames:
+          - kube2iam
+          - kube-flannel-ds
+        rules:
+          - runAsPrivileged
+      - controllerNames:
+          - kube-hunter
+        rules:
+          - hostPIDSet
+      - controllerNames:
+          - polaris
+          - kube-hunter
+          - goldilocks
+          - insights-agent-goldilocks-vpa-install
+        rules:
+          - notReadOnlyRootFileSystem
+      - controllerNames:
+          - insights-agent-goldilocks-controller
+        rules:
+          - livenessProbeMissing
+          - readinessProbeMissing
+      - controllerNames:
+          - insights-agent-goldilocks-vpa-install
+          - kube-hunter
+        rules:
+          - runAsRootAllowed
   
 ---
 # Source: polaris/templates/dashboard.rbac.yaml
@@ -164,7 +239,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: '8aa5a565fba7a2db98d46752087de8c1dcc83b70cd762c5829d5ba01270d54a2'
+        checksum/config: 'eb6d6b194c6786d62400fc0578dd5ea5158212b5b29d93d3cde3fa14da8ac501'
       labels:
         app: polaris
         component: dashboard

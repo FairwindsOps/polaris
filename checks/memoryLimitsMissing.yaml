@@ -1,0 +1,27 @@
+successMessage: Memory limits are set
+failureMessage: Memory limits should be set
+category: Resources
+target: Container
+containers:
+  exclude:
+  - initContainer
+schema:
+  '$schema': http://json-schema.org/draft-07/schema
+  type: object
+  required:
+  - resources
+  properties:
+    resources:
+      type: object
+      required:
+      - limits
+      properties:
+        limits:
+          type: object
+          required:
+          - memory
+          properties:
+            memory:
+              type: string
+              not:
+                const: ''

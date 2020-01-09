@@ -1,0 +1,31 @@
+successMessage: Container does not have any insecure capabilities
+failureMessage: Container should not have insecure capabilities
+category: Security
+target: Container
+schema:
+  '$schema': http://json-schema.org/draft-07/schema
+  type: object
+  properties:
+    securityContext:
+      type: object
+      properties:
+        capabilities:
+          type: object
+          properties:
+            add:
+              enum:
+              - CHOWN
+              - DAC_OVERRIDE
+              - FSETID
+              - FOWNER
+              - MKNOD
+              - NET_RAW
+              - SETGID
+              - SETUID
+              - SETFCAP
+              - SETPCAP
+              - NET_BIND_SERVICE
+              - SYS_CHROOT
+              - KILL
+              - AUDIT_WRITE
+

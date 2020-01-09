@@ -16,9 +16,9 @@ func TestGetTemplateData(t *testing.T) {
 	assert.Equal(t, err, nil, "error should be nil")
 
 	c := conf.Configuration{
-		HealthChecks: conf.HealthChecks{
-			ReadinessProbeMissing: conf.SeverityError,
-			LivenessProbeMissing:  conf.SeverityWarning,
+		Checks: map[string]conf.Severity{
+			"readinessProbeMissing": conf.SeverityError,
+			"livenessProbeMissing":  conf.SeverityWarning,
 		},
 		ControllersToScan: []conf.SupportedController{
 			conf.Deployments,
