@@ -7,6 +7,7 @@ checks:
   # images
   tagNotSpecified: error
   pullPolicyNotAlways: ignore
+  imageRegistry: warning
   # healthChecks
   readinessProbeMissing: warning
   livenessProbeMissing: warning
@@ -68,9 +69,8 @@ customChecks:
       properties:
         image:
           type: string
-          allOf:
-            not:
-              pattern: ^quay.io
+          not:
+            pattern: ^quay.io
 
 controllersToScan:
   - Deployments
