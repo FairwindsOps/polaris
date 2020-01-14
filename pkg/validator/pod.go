@@ -16,48 +16,25 @@ package validator
 
 import (
 	"github.com/fairwindsops/polaris/pkg/config"
-	corev1 "k8s.io/api/core/v1"
+	"github.com/fairwindsops/polaris/pkg/validator/controllers"
 )
 
-// PodValidation tracks validation failures associated with a Pod.
-type PodValidation struct {
-	*ResourceValidation
-	Pod *corev1.PodSpec
-}
-
 // ValidatePod validates that each pod conforms to the Polaris config, returns a ResourceResult.
-func ValidatePod(conf config.Configuration, pod *corev1.PodSpec, controllerName string, controllerType config.SupportedController) PodResult {
-	pv := PodValidation{
-		Pod:                pod,
-		ResourceValidation: &ResourceValidation{},
-	}
-
-	err := applyPodSchemaChecks(&conf, pod, controllerName, controllerType, &pv)
-	// FIXME: don't panic
+func ValidatePod(conf *config.Configuration, controller controllers.Interface) (PodResult, error) {
+	podResults, err := applyPodSchemaChecks(conf, controller)
 	if err != nil {
-		panic(err)
+		return PodResult{}, err
 	}
 
 	pRes := PodResult{
-		Messages:         pv.messages(),
+		Results:          podResults,
 		ContainerResults: []ContainerResult{},
-		Summary:          pv.summary(),
-		podSpec:          *pod,
 	}
 
-	pv.validateContainers(pod.InitContainers, &pRes, &conf, controllerName, controllerType, true)
-	pv.validateContainers(pod.Containers, &pRes, &conf, controllerName, controllerType, false)
-
-	for _, cRes := range pRes.ContainerResults {
-		pRes.Summary.appendResults(*cRes.Summary)
+	pRes.ContainerResults, err = ValidateAllContainers(conf, controller)
+	if err != nil {
+		return pRes, err
 	}
 
-	return pRes
-}
-
-func (pv *PodValidation) validateContainers(containers []corev1.Container, pRes *PodResult, conf *config.Configuration, controllerName string, controllerType config.SupportedController, isInit bool) {
-	for _, container := range containers {
-		cRes := ValidateContainer(&container, pRes, conf, controllerName, controllerType, isInit)
-		pRes.ContainerResults = append(pRes.ContainerResults, cRes)
-	}
+	return pRes, nil
 }

@@ -28,17 +28,20 @@ const (
 	CronJobs
 	// ReplicationControllers are supported controllers for scanning pod specs
 	ReplicationControllers
+	// NakedPods are a pseudo-controller for scanning pod specs
+	NakedPods
 )
 
 // ControllerStrings are strongly ordered to match the SupportedController enum
 var ControllerStrings = []string{
 	"Unsupported",
-	"Deployments",
-	"StatefulSets",
-	"DaemonSets",
-	"Jobs",
-	"CronJobs",
+	"Deployment",
+	"StatefulSet",
+	"DaemonSet",
+	"Job",
+	"CronJob",
 	"ReplicationController",
+	"NakedPod",
 }
 
 // stringLookupForSupportedControllers is the list of lowercase singular and plural strings for string to enum lookup
@@ -55,6 +58,8 @@ var stringLookupForSupportedControllers = map[string]SupportedController{
 	"cronjobs":               CronJobs,
 	"replicationcontroller":  ReplicationControllers,
 	"replicationcontrollers": ReplicationControllers,
+	"nakedpod":               NakedPods,
+	"nakedpods":              NakedPods,
 }
 
 // SupportedController is a constant item of a controller that is supported for scanning pod specs
@@ -118,6 +123,10 @@ func (s SupportedController) ListSupportedAPIVersions() []runtime.Object {
 	case ReplicationControllers:
 		supportedVersions = []runtime.Object{
 			&corev1.ReplicationController{},
+		}
+	case NakedPods:
+		supportedVersions = []runtime.Object{
+			&corev1.Pod{},
 		}
 	}
 	return supportedVersions

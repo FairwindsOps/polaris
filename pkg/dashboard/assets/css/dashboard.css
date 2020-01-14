@@ -257,11 +257,11 @@ ul.message-list li i.message-icon {
   color: #8BD2DC;
 }
 
-.result-messages .warning i.message-icon {
+.result-messages .failure.warning i.message-icon {
   color: #f26c21;
 }
 
-.result-messages .error i.message-icon {
+.result-messages .failure.error i.message-icon {
   color: #a11f4c;
 }
 

@@ -23,6 +23,7 @@ import (
 	"github.com/fairwindsops/polaris/pkg/config"
 	validator "github.com/fairwindsops/polaris/pkg/validator"
 	"github.com/fairwindsops/polaris/pkg/validator/controllers"
+
 	"github.com/sirupsen/logrus"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -93,8 +94,11 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 
 	if req.AdmissionRequest.Kind.Kind == "Pod" {
 		pod := corev1.Pod{}
-		err = v.decoder.Decode(req, &pod)
-		podResult = validator.ValidatePod(v.Config, &pod.Spec, "", config.Unsupported)
+		err = v.decoder.Decode(req, &pod) // err is handled below
+		nakedPod := controllers.NewNakedPodController(pod)
+		if err == nil {
+			podResult, err = validator.ValidatePod(&v.Config, nakedPod)
+		}
 	} else {
 		var controller controllers.Interface
 		if yes := v.Config.CheckIfKindIsConfiguredForValidation(req.AdmissionRequest.Kind.Kind); !yes {
@@ -138,8 +142,11 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 			err = v.decoder.Decode(req, &replicationController)
 			controller = controllers.NewReplicationControllerController(replicationController)
 		}
-		controllerResult := validator.ValidateController(v.Config, controller)
-		podResult = controllerResult.PodResult
+		if err == nil {
+			var controllerResult validator.ControllerResult
+			controllerResult, err = validator.ValidateController(&v.Config, controller)
+			podResult = controllerResult.PodResult
+		}
 	}
 
 	if err != nil {
@@ -149,26 +156,27 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 
 	allowed := true
 	reason := ""
-	if podResult.Summary.Totals.Errors > 0 {
+	numErrors := podResult.GetSummary().Errors
+	if numErrors > 0 {
 		allowed = false
 		reason = getFailureReason(podResult)
 	}
-	logrus.Infof("%d validation errors found when validating %s", podResult.Summary.Totals.Errors, podResult.Name)
+	logrus.Infof("%d validation errors found when validating %s", numErrors, podResult.Name)
 	return admission.ValidationResponse(allowed, reason)
 }
 
 func getFailureReason(podResult validator.PodResult) string {
 	reason := "\nPolaris prevented this deployment due to configuration problems:\n"
 
-	for _, message := range podResult.Messages {
-		if message.Type == validator.MessageTypeError {
+	for _, message := range podResult.Results {
+		if !message.Success && message.Severity == config.SeverityError {
 			reason += fmt.Sprintf("- Pod: %s\n", message.Message)
 		}
 	}
 
 	for _, containerResult := range podResult.ContainerResults {
-		for _, message := range containerResult.Messages {
-			if message.Type == validator.MessageTypeError {
+		for _, message := range containerResult.Results {
+			if !message.Success && message.Severity == config.SeverityError {
 				reason += fmt.Sprintf("- Container %s: %s\n", containerResult.Name, message.Message)
 			}
 		}

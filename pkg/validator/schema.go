@@ -11,6 +11,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/fairwindsops/polaris/pkg/config"
+	"github.com/fairwindsops/polaris/pkg/validator/controllers"
 )
 
 var (
@@ -72,72 +73,85 @@ func parseCheck(rawBytes []byte) (config.SchemaCheck, error) {
 	}
 }
 
-func applyPodSchemaChecks(conf *config.Configuration, pod *corev1.PodSpec, controllerName string, controllerType config.SupportedController, pv *PodValidation) error {
-	checkIDs := getSortedKeys(conf.Checks)
-	for _, checkID := range checkIDs {
-		check, ok := conf.CustomChecks[checkID]
-		if !ok {
-			check, ok = builtInChecks[checkID]
-		}
-		if !ok {
-			return fmt.Errorf("Check %s not found", checkID)
-		}
-		if !conf.IsActionable(check.ID, controllerName) {
-			continue
-		}
-		if !check.IsActionable(config.TargetPod, controllerType, false) {
-			continue
-		}
-		passes, err := check.CheckPod(pod)
-		if err != nil {
-			return err
-		}
-		if passes {
-			pv.addSuccess(check.SuccessMessage, check.Category, check.ID)
-		} else {
-			severity := conf.Checks[checkID]
-			pv.addFailure(check.FailureMessage, severity, check.Category, check.ID)
-		}
+func resolveCheck(conf *config.Configuration, checkID string, controller controllers.Interface, target config.TargetKind, isInitContainer bool) (*config.SchemaCheck, error) {
+	check, ok := conf.CustomChecks[checkID]
+	if !ok {
+		check, ok = builtInChecks[checkID]
 	}
-	return nil
+	if !ok {
+		return nil, fmt.Errorf("Check %s not found", checkID)
+	}
+	if !conf.IsActionable(check.ID, controller.GetName()) {
+		return nil, nil
+	}
+	if !check.IsActionable(target, controller.GetKind(), isInitContainer) {
+		return nil, nil
+	}
+	return &check, nil
 }
 
-func applyContainerSchemaChecks(conf *config.Configuration, controllerName string, controllerType config.SupportedController, cv *ContainerValidation) error {
+func makeResult(conf *config.Configuration, check *config.SchemaCheck, passes bool) ResultMessage {
+	result := ResultMessage{
+		ID:       check.ID,
+		Severity: conf.Checks[check.ID],
+		Category: check.Category,
+		Success:  passes,
+	}
+	if passes {
+		result.Message = check.SuccessMessage
+	} else {
+		result.Message = check.FailureMessage
+	}
+	return result
+}
+
+func applyPodSchemaChecks(conf *config.Configuration, controller controllers.Interface) (ResultSet, error) {
+	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
 	for _, checkID := range checkIDs {
-		check, ok := conf.CustomChecks[checkID]
-		if !ok {
-			check, ok = builtInChecks[checkID]
+		check, err := resolveCheck(conf, checkID, controller, config.TargetPod, false)
+		if err != nil {
+			return nil, err
 		}
-		if !ok {
-			return fmt.Errorf("Check %s not found", checkID)
-		}
-		if !conf.IsActionable(check.ID, controllerName) {
+		if err != nil {
+			return nil, err
+		} else if check == nil {
 			continue
 		}
-		if !check.IsActionable(config.TargetContainer, controllerType, cv.IsInitContainer) {
+		passes, err := check.CheckPod(controller.GetPodSpec())
+		if err != nil {
+			return nil, err
+		}
+		results[check.ID] = makeResult(conf, check, passes)
+	}
+	return results, nil
+}
+
+func applyContainerSchemaChecks(conf *config.Configuration, controller controllers.Interface, container *corev1.Container, isInit bool) (ResultSet, error) {
+	results := ResultSet{}
+	checkIDs := getSortedKeys(conf.Checks)
+	for _, checkID := range checkIDs {
+		check, err := resolveCheck(conf, checkID, controller, config.TargetContainer, isInit)
+		if err != nil {
+			return nil, err
+		} else if check == nil {
 			continue
 		}
 		var passes bool
-		var err error
 		if check.SchemaTarget == config.TargetPod {
-			cv.parentPodSpec.Containers = []corev1.Container{*cv.Container}
-			passes, err = check.CheckPod(&cv.parentPodSpec)
-			cv.parentPodSpec.Containers = []corev1.Container{}
+			podCopy := *controller.GetPodSpec()
+			podCopy.InitContainers = []corev1.Container{}
+			podCopy.Containers = []corev1.Container{*container}
+			passes, err = check.CheckPod(&podCopy)
 		} else {
-			passes, err = check.CheckContainer(cv.Container)
+			passes, err = check.CheckContainer(container)
 		}
 		if err != nil {
-			return err
+			return nil, err
 		}
-		if passes {
-			cv.addSuccess(check.SuccessMessage, check.Category, check.ID)
-		} else {
-			severity := conf.Checks[checkID]
-			cv.addFailure(check.FailureMessage, severity, check.Category, check.ID)
-		}
+		results[check.ID] = makeResult(conf, check, passes)
 	}
-	return nil
+	return results, nil
 }
 
 func getSortedKeys(m map[string]config.Severity) []string {

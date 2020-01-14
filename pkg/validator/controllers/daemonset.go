@@ -4,6 +4,7 @@ import (
 	"github.com/fairwindsops/polaris/pkg/config"
 	kubeAPIAppsV1 "k8s.io/api/apps/v1"
 	kubeAPICoreV1 "k8s.io/api/core/v1"
+	kubeAPIMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // DaemonSetController is an implementation of controller for deployments
@@ -22,13 +23,13 @@ func (d DaemonSetController) GetPodSpec() *kubeAPICoreV1.PodSpec {
 	return &d.K8SResource.Spec.Template.Spec
 }
 
-// GetAnnotations returns the controller's annotations
-func (d DaemonSetController) GetAnnotations() map[string]string {
-	return d.K8SResource.ObjectMeta.Annotations
+// GetObjectMeta returns the metadata
+func (d DaemonSetController) GetObjectMeta() kubeAPIMetaV1.ObjectMeta {
+	return d.K8SResource.ObjectMeta
 }
 
-// GetType returns the supportedcontroller enum type
-func (d DaemonSetController) GetType() config.SupportedController {
+// GetKind returns the supportedcontroller enum type
+func (d DaemonSetController) GetKind() config.SupportedController {
 	return config.DaemonSets
 }
 

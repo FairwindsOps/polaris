@@ -21,48 +21,51 @@ import (
 	"github.com/fairwindsops/polaris/pkg/kube"
 	"github.com/fairwindsops/polaris/pkg/validator/controllers"
 	controller "github.com/fairwindsops/polaris/pkg/validator/controllers"
-	"github.com/sirupsen/logrus"
 )
 
 const exemptionAnnotationKey = "polaris.fairwinds.com/exempt"
 
 // ValidateController validates a single controller, returns a ControllerResult.
-func ValidateController(conf conf.Configuration, controller controller.Interface) ControllerResult {
-	controllerType := controller.GetType()
-	pod := controller.GetPodSpec()
-	podResult := ValidatePod(conf, pod, controller.GetName(), controllerType)
+func ValidateController(conf *conf.Configuration, controller controller.Interface) (ControllerResult, error) {
+	podResult, err := ValidatePod(conf, controller)
+	if err != nil {
+		return ControllerResult{}, err
+	}
 	result := ControllerResult{
-		Type:      controllerType.String(),
+		Kind:      controller.GetKind().String(),
 		Name:      controller.GetName(),
+		Namespace: controller.GetObjectMeta().Namespace,
+		Results:   ResultSet{},
 		PodResult: podResult,
 	}
-	return result
+	return result, nil
 }
 
 // ValidateControllers validates that each deployment conforms to the Polaris config,
 // builds a list of ResourceResults organized by namespace.
-func ValidateControllers(config conf.Configuration, kubeResources *kube.ResourceProvider, nsResults *NamespacedResults) {
+func ValidateControllers(config *conf.Configuration, kubeResources *kube.ResourceProvider) ([]ControllerResult, error) {
 	var controllersToAudit []controller.Interface
 	for _, supportedControllers := range config.ControllersToScan {
-		loadedControllers, _ := controllers.LoadControllersByType(supportedControllers, kubeResources)
+		loadedControllers, _ := controllers.LoadControllersByKind(supportedControllers, kubeResources)
 		controllersToAudit = append(controllersToAudit, loadedControllers...)
 	}
 
+	results := []ControllerResult{}
 	for _, controller := range controllersToAudit {
 		if !config.DisallowExemptions && hasExemptionAnnotation(controller) {
 			continue
 		}
-		controllerResult := ValidateController(config, controller)
-		nsResult := nsResults.getNamespaceResult(controller.GetNamespace())
-		nsResult.Summary.appendResults(*controllerResult.PodResult.Summary)
-		if err := nsResult.AddResult(controller.GetType(), controllerResult); err != nil {
-			logrus.Errorf("Internal Error: Failed to add a grouped result: %s", err)
+		result, err := ValidateController(config, controller)
+		if err != nil {
+			return nil, err
 		}
+		results = append(results, result)
 	}
+	return results, nil
 }
 
 func hasExemptionAnnotation(ctrl controller.Interface) bool {
-	annot := ctrl.GetAnnotations()
+	annot := ctrl.GetObjectMeta().Annotations
 	val := annot[exemptionAnnotationKey]
 	return strings.ToLower(val) == "true"
 }

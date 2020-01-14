@@ -18,12 +18,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/validator"
 )
-
-func getAllControllerResults(nr validator.NamespaceResult) []validator.ControllerResult {
-	return nr.GetAllControllerResults()
-}
 
 func getWarningWidth(counts validator.CountSummary, fullWidth int) uint {
 	return uint(float64(counts.Successes+counts.Warnings) / float64(counts.Successes+counts.Warnings+counts.Errors) * float64(fullWidth))
@@ -79,6 +76,16 @@ func getWeatherIcon(counts validator.CountSummary) string {
 	}
 }
 
+func getResultClass(result validator.ResultMessage) string {
+	cls := string(result.Severity)
+	if result.Success {
+		cls += " success"
+	} else {
+		cls += " failure"
+	}
+	return cls
+}
+
 func getWeatherText(counts validator.CountSummary) string {
 	score := counts.GetScore()
 	if score >= 90 {
@@ -95,12 +102,11 @@ func getWeatherText(counts validator.CountSummary) string {
 }
 
 func getIcon(rm validator.ResultMessage) string {
-	switch rm.Type {
-	case "success":
+	if rm.Success {
 		return "fas fa-check"
-	case "warning":
+	} else if rm.Severity == config.SeverityWarning {
 		return "fas fa-exclamation"
-	default:
+	} else {
 		return "fas fa-times"
 	}
 }

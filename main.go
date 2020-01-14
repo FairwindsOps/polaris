@@ -107,11 +107,13 @@ func main() {
 	} else if *audit {
 		auditData := runAndReportAudit(c, *auditPath, *auditOutputFile, *auditOutputURL, *auditOutputFormat)
 
-		if *setExitCode && auditData.ClusterSummary.Results.Totals.Errors > 0 {
-			logrus.Infof("%d errors found in audit", auditData.ClusterSummary.Results.Totals.Errors)
+		summary := auditData.GetSummary()
+		score := summary.GetScore()
+		if *setExitCode && summary.Errors > 0 {
+			logrus.Infof("%d errors found in audit", summary.Errors)
 			os.Exit(3)
-		} else if *minScore != 0 && auditData.ClusterSummary.Score < uint(*minScore) {
-			logrus.Infof("Audit score of %d is less than the provided minimum of %d", auditData.ClusterSummary.Score, *minScore)
+		} else if *minScore != 0 && score < uint(*minScore) {
+			logrus.Infof("Audit score of %d is less than the provided minimum of %d", score, *minScore)
 			os.Exit(4)
 		}
 	}
@@ -228,7 +230,7 @@ func runAndReportAudit(c conf.Configuration, auditPath string, outputFile string
 
 	var outputBytes []byte
 	if outputFormat == "score" {
-		outputBytes = []byte(fmt.Sprintf("%d\n", auditData.ClusterSummary.Score))
+		outputBytes = []byte(fmt.Sprintf("%d\n", auditData.GetSummary().GetScore()))
 	} else if outputFormat == "yaml" {
 		jsonBytes, err := json.Marshal(auditData)
 		if err == nil {

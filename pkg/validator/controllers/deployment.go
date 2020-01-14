@@ -4,6 +4,7 @@ import (
 	"github.com/fairwindsops/polaris/pkg/config"
 	kubeAPIAppsV1 "k8s.io/api/apps/v1"
 	kubeAPICoreV1 "k8s.io/api/core/v1"
+	kubeAPIMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // DeploymentController is an implementation of controller for deployments
@@ -22,13 +23,13 @@ func (d DeploymentController) GetPodSpec() *kubeAPICoreV1.PodSpec {
 	return &d.K8SResource.Spec.Template.Spec
 }
 
-// GetAnnotations returns the controller's annotations
-func (d DeploymentController) GetAnnotations() map[string]string {
-	return d.K8SResource.ObjectMeta.Annotations
+// GetObjectMeta returns the metadata
+func (d DeploymentController) GetObjectMeta() kubeAPIMetaV1.ObjectMeta {
+	return d.K8SResource.ObjectMeta
 }
 
-// GetType returns the supportedcontroller enum type
-func (d DeploymentController) GetType() config.SupportedController {
+// GetKind returns the supportedcontroller enum type
+func (d DeploymentController) GetKind() config.SupportedController {
 	return config.Deployments
 }
 

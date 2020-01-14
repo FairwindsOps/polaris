@@ -35,31 +35,26 @@ func TestValidateController(t *testing.T) {
 		},
 	}
 	deployment := controller.NewDeploymentController(test.MockDeploy())
-	expectedSum := ResultSummary{
-		Totals: CountSummary{
-			Successes: uint(2),
-			Warnings:  uint(0),
-			Errors:    uint(0),
-		},
-		ByCategory: make(map[string]*CountSummary),
-	}
-	expectedSum.ByCategory["Security"] = &CountSummary{
+	expectedSum := CountSummary{
 		Successes: uint(2),
 		Warnings:  uint(0),
 		Errors:    uint(0),
 	}
 
-	expectedMessages := []*ResultMessage{
-		{ID: "hostIPCSet", Message: "Host IPC is not configured", Type: "success", Category: "Security"},
-		{ID: "hostPIDSet", Message: "Host PID is not configured", Type: "success", Category: "Security"},
+	expectedResults := ResultSet{
+		"hostIPCSet": {ID: "hostIPCSet", Message: "Host IPC is not configured", Success: true, Severity: "error", Category: "Security"},
+		"hostPIDSet": {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "error", Category: "Security"},
 	}
 
-	actualResult := ValidateController(c, deployment)
+	actualResult, err := ValidateController(&c, deployment)
+	if err != nil {
+		panic(err)
+	}
 
-	assert.Equal(t, "Deployments", actualResult.Type)
+	assert.Equal(t, "Deployment", actualResult.Kind)
 	assert.Equal(t, 1, len(actualResult.PodResult.ContainerResults), "should be equal")
-	assert.EqualValues(t, &expectedSum, actualResult.PodResult.Summary)
-	assert.EqualValues(t, expectedMessages, actualResult.PodResult.Messages)
+	assert.EqualValues(t, expectedSum, actualResult.GetSummary())
+	assert.EqualValues(t, expectedResults, actualResult.PodResult.Results)
 }
 
 func TestSkipHealthChecks(t *testing.T) {
@@ -80,61 +75,56 @@ func TestSkipHealthChecks(t *testing.T) {
 	deploymentBase := test.MockDeploy()
 	deploymentBase.Spec.Template.Spec.InitContainers = []corev1.Container{test.MockContainer("test")}
 	deployment := controller.NewDeploymentController(deploymentBase)
-	expectedSum := ResultSummary{
-		Totals: CountSummary{
-			Successes: uint(0),
-			Warnings:  uint(1),
-			Errors:    uint(1),
-		},
-		ByCategory: make(map[string]*CountSummary),
-	}
-	expectedSum.ByCategory["Health Checks"] = &CountSummary{
+	expectedSum := CountSummary{
 		Successes: uint(0),
 		Warnings:  uint(1),
 		Errors:    uint(1),
 	}
-	expectedMessages := []*ResultMessage{
-		{ID: "readinessProbeMissing", Message: "Readiness probe should be configured", Type: "error", Category: "Health Checks"},
-		{ID: "livenessProbeMissing", Message: "Liveness probe should be configured", Type: "warning", Category: "Health Checks"},
+	expectedResults := ResultSet{
+		"readinessProbeMissing": {ID: "readinessProbeMissing", Message: "Readiness probe should be configured", Success: false, Severity: "error", Category: "Health Checks"},
+		"livenessProbeMissing":  {ID: "livenessProbeMissing", Message: "Liveness probe should be configured", Success: false, Severity: "warning", Category: "Health Checks"},
 	}
-	actualResult := ValidateController(c, deployment)
-	assert.Equal(t, "Deployments", actualResult.Type)
+	actualResult, err := ValidateController(&c, deployment)
+	if err != nil {
+		panic(err)
+	}
+	assert.Equal(t, "Deployment", actualResult.Kind)
 	assert.Equal(t, 2, len(actualResult.PodResult.ContainerResults), "should be equal")
-	assert.EqualValues(t, &expectedSum, actualResult.PodResult.Summary)
-	assert.EqualValues(t, []*ResultMessage{}, actualResult.PodResult.ContainerResults[0].Messages)
-	assert.EqualValues(t, expectedMessages, actualResult.PodResult.ContainerResults[1].Messages)
+	assert.EqualValues(t, expectedSum, actualResult.GetSummary())
+	assert.EqualValues(t, ResultSet{}, actualResult.PodResult.ContainerResults[0].Results)
+	assert.EqualValues(t, expectedResults, actualResult.PodResult.ContainerResults[1].Results)
 
 	job := controller.NewJobController(test.MockJob())
-	expectedSum = ResultSummary{
-		Totals: CountSummary{
-			Successes: uint(0),
-			Warnings:  uint(0),
-			Errors:    uint(0),
-		},
-		ByCategory: make(map[string]*CountSummary),
+	expectedSum = CountSummary{
+		Successes: uint(0),
+		Warnings:  uint(0),
+		Errors:    uint(0),
 	}
-	expectedMessages = []*ResultMessage{}
-	actualResult = ValidateController(c, job)
-	assert.Equal(t, "Jobs", actualResult.Type)
+	expectedResults = ResultSet{}
+	actualResult, err = ValidateController(&c, job)
+	if err != nil {
+		panic(err)
+	}
+	assert.Equal(t, "Job", actualResult.Kind)
 	assert.Equal(t, 1, len(actualResult.PodResult.ContainerResults), "should be equal")
-	assert.EqualValues(t, &expectedSum, actualResult.PodResult.Summary)
-	assert.EqualValues(t, expectedMessages, actualResult.PodResult.ContainerResults[0].Messages)
+	assert.EqualValues(t, expectedSum, actualResult.GetSummary())
+	assert.EqualValues(t, expectedResults, actualResult.PodResult.ContainerResults[0].Results)
 
 	cronjob := controller.NewCronJobController(test.MockCronJob())
-	expectedSum = ResultSummary{
-		Totals: CountSummary{
-			Successes: uint(0),
-			Warnings:  uint(0),
-			Errors:    uint(0),
-		},
-		ByCategory: make(map[string]*CountSummary),
+	expectedSum = CountSummary{
+		Successes: uint(0),
+		Warnings:  uint(0),
+		Errors:    uint(0),
 	}
-	expectedMessages = []*ResultMessage{}
-	actualResult = ValidateController(c, cronjob)
-	assert.Equal(t, "CronJobs", actualResult.Type)
+	expectedResults = ResultSet{}
+	actualResult, err = ValidateController(&c, cronjob)
+	if err != nil {
+		panic(err)
+	}
+	assert.Equal(t, "CronJob", actualResult.Kind)
 	assert.Equal(t, 1, len(actualResult.PodResult.ContainerResults), "should be equal")
-	assert.EqualValues(t, &expectedSum, actualResult.PodResult.Summary)
-	assert.EqualValues(t, expectedMessages, actualResult.PodResult.ContainerResults[0].Messages)
+	assert.EqualValues(t, expectedSum, actualResult.GetSummary())
+	assert.EqualValues(t, expectedResults, actualResult.PodResult.ContainerResults[0].Results)
 }
 
 func TestControllerExemptions(t *testing.T) {
@@ -151,29 +141,25 @@ func TestControllerExemptions(t *testing.T) {
 		Deployments: []appsv1.Deployment{test.MockDeploy()},
 	}
 
-	expectedSum := ResultSummary{
-		Totals: CountSummary{
-			Successes: uint(0),
-			Warnings:  uint(1),
-			Errors:    uint(1),
-		},
-		ByCategory: make(map[string]*CountSummary),
-	}
-	expectedSum.ByCategory["Health Checks"] = &CountSummary{
+	expectedSum := CountSummary{
 		Successes: uint(0),
 		Warnings:  uint(1),
 		Errors:    uint(1),
 	}
-	nsResults := NamespacedResults{}
-	ValidateControllers(c, resources, &nsResults)
-	actualResult := nsResults[""].DeploymentResults[0]
-	assert.Equal(t, "Deployments", actualResult.Type)
-	assert.EqualValues(t, &expectedSum, actualResult.PodResult.Summary)
+	actualResults, err := ValidateControllers(&c, resources)
+	if err != nil {
+		panic(err)
+	}
+	assert.Equal(t, 1, len(actualResults))
+	assert.Equal(t, "Deployment", actualResults[0].Kind)
+	assert.EqualValues(t, expectedSum, actualResults[0].GetSummary())
 
 	resources.Deployments[0].ObjectMeta.Annotations = map[string]string{
 		exemptionAnnotationKey: "true",
 	}
-	nsResults = NamespacedResults{}
-	ValidateControllers(c, resources, &nsResults)
-	assert.Equal(t, (*NamespaceResult)(nil), nsResults[""])
+	actualResults, err = ValidateControllers(&c, resources)
+	if err != nil {
+		panic(err)
+	}
+	assert.Equal(t, 0, len(actualResults))
 }

@@ -90,15 +90,15 @@ type templateData struct {
 // GetBaseTemplate puts together the dashboard template. Individual pieces can be overridden before rendering.
 func GetBaseTemplate(name string) (*template.Template, error) {
 	tmpl := template.New(name).Funcs(template.FuncMap{
-		"getWarningWidth":         getWarningWidth,
-		"getSuccessWidth":         getSuccessWidth,
-		"getWeatherIcon":          getWeatherIcon,
-		"getWeatherText":          getWeatherText,
-		"getGrade":                getGrade,
-		"getIcon":                 getIcon,
-		"getCategoryLink":         getCategoryLink,
-		"getCategoryInfo":         getCategoryInfo,
-		"getAllControllerResults": getAllControllerResults,
+		"getWarningWidth": getWarningWidth,
+		"getSuccessWidth": getSuccessWidth,
+		"getWeatherIcon":  getWeatherIcon,
+		"getWeatherText":  getWeatherText,
+		"getGrade":        getGrade,
+		"getIcon":         getIcon,
+		"getResultClass":  getResultClass,
+		"getCategoryLink": getCategoryLink,
+		"getCategoryInfo": getCategoryInfo,
 	})
 
 	templateFileNames := []string{
@@ -230,7 +230,7 @@ func GetRouter(c config.Configuration, auditPath string, port int, basePath stri
 
 // MainHandler gets template data and renders the dashboard with it.
 func MainHandler(w http.ResponseWriter, r *http.Request, c config.Configuration, auditData validator.AuditData, basePath string) {
-	jsonData, err := json.Marshal(auditData)
+	jsonData, err := json.Marshal(auditData.GetSummary())
 
 	if err != nil {
 		http.Error(w, "Error serializing audit data", 500)
