@@ -63,10 +63,14 @@ func getEmptyController(name string) controllers.Interface {
 }
 
 func testValidate(t *testing.T, container *corev1.Container, resourceConf *string, controllerName string, expectedErrors []ResultMessage, expectedWarnings []ResultMessage, expectedSuccesses []ResultMessage) {
+	testValidateWithController(t, container, resourceConf, getEmptyController(controllerName), expectedErrors, expectedWarnings, expectedSuccesses)
+}
+
+func testValidateWithController(t *testing.T, container *corev1.Container, resourceConf *string, controller controllers.Interface, expectedErrors []ResultMessage, expectedWarnings []ResultMessage, expectedSuccesses []ResultMessage) {
 	parsedConf, err := conf.Parse([]byte(*resourceConf))
 	assert.NoError(t, err, "Expected no error when parsing config")
 
-	results, err := applyContainerSchemaChecks(&parsedConf, getEmptyController(controllerName), container, false)
+	results, err := applyContainerSchemaChecks(&parsedConf, controller, container, false)
 	if err != nil {
 		panic(err)
 	}
@@ -1145,4 +1149,53 @@ func TestValidateResourcesExemption(t *testing.T) {
 	disallowExemptionsConf := resourceConfExemptions + "\ndisallowExemptions: true"
 
 	testValidate(t, &container, &disallowExemptionsConf, "foo", expectedErrors, expectedWarnings, expectedSuccesses)
+}
+
+func TestValidateResourcesEmptyContainerCPURequestsExempt(t *testing.T) {
+	container := corev1.Container{
+		Name: "Empty",
+	}
+
+	expectedWarnings := []ResultMessage{
+		{
+			ID:       "memoryRequestsMissing",
+			Success:  false,
+			Severity: "warning",
+			Message:  "Memory requests should be set",
+			Category: "Resources",
+		},
+	}
+
+	expectedErrors := []ResultMessage{
+		{
+			ID:       "cpuLimitsMissing",
+			Success:  false,
+			Severity: "error",
+			Message:  "CPU limits should be set",
+			Category: "Resources",
+		},
+		{
+			ID:       "memoryLimitsMissing",
+			Success:  false,
+			Severity: "error",
+			Message:  "Memory limits should be set",
+			Category: "Resources",
+		},
+	}
+
+	expectedSuccesses := []ResultMessage{}
+	
+	controller := controllers.NewDeploymentController(appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "foo",
+			Annotations: map[string]string {
+				"polaris.fairwinds.com/cpu-requests-missing-exempt": "true", // Exempt this controller from cpuRequestsMissing
+				"polaris.fairwinds.com/memory-requests-missing-exempt": "truthy", // Don't actually exempt this controller from memoryRequestsMissing
+			} ,
+		},
+		Spec: appsv1.DeploymentSpec{
+			Template: corev1.PodTemplateSpec{},
+		},
+	})
+	testValidateWithController(t, &container, &resourceConfMinimal, controller, expectedErrors, expectedWarnings, expectedSuccesses)
 }
