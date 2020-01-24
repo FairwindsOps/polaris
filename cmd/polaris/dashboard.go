@@ -27,7 +27,7 @@ import (
 var serverPort int
 var basePath string
 var loadAuditFile string
-var auditPath string
+
 
 func init() {
 	rootCmd.AddCommand(dashboardCmd)
