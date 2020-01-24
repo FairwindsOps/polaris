@@ -25,8 +25,8 @@ We label issues with the ["good first issue" tag](https://github.com/FairwindsOp
 ### Installation
 * Install the project with `go get github.com/fairwindsops/polaris`
 * Change into the polaris directory which is installed at `$GOPATH/src/github.com/fairwindsops/polaris`
-* See the dashboard with `go run main.go --dashboard`, then open http://localhost:8080/
-* See the audit data  `go run main.go --audit`. This command shows the audit information on the command line. 
+* See the dashboard with `go run main.go dashboard`, then open http://localhost:8080/
+* See the audit data  `go run main.go audit`. This command shows the audit information on the command line. 
 
 ## Running Tests
 
