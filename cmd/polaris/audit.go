@@ -35,7 +35,6 @@ var minScore int
 var auditOutputURL string
 var auditOutputFile string
 var auditOutputFormat string
-var displayName string
 
 
 func init() {
@@ -45,7 +44,7 @@ func init() {
 	auditCmd.PersistentFlags().IntVar(&minScore, "set-exit-code-below-score", 0, "Set an exit code of 4 when the score is below this threshold (1-100).")
 	auditCmd.PersistentFlags().StringVar(&auditOutputURL, "output-url", "", "Destination URL to send audit results.")
 	auditCmd.PersistentFlags().StringVar(&auditOutputFile, "output-file", "", "Destination file for audit results.")
-	auditCmd.PersistentFlags().StringVar(&auditOutputFormat, "output-format", "json", "Output format for results - json, yaml, or score.")
+	auditCmd.PersistentFlags().StringVarP(&auditOutputFormat, "format", "f", "json", "Output format for results - json, yaml, or score.")
 	auditCmd.PersistentFlags().StringVar(&displayName, "display-name", "", "An optional identifier for the audit.")
 }
 

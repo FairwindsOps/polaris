@@ -35,6 +35,7 @@ func init() {
 	dashboardCmd.PersistentFlags().StringVar(&basePath, "base-path", "/", "Path on which the dashboard is served.")
 	dashboardCmd.PersistentFlags().StringVar(&loadAuditFile, "load-audit-file", "", "Runs the dashboard with data saved from a past audit.")
 	dashboardCmd.PersistentFlags().StringVar(&auditPath, "audit-path", "", "If specified, audits one or more YAML files instead of a cluster.")
+	dashboardCmd.PersistentFlags().StringVar(&displayName, "display-name", "", "An optional identifier for the audit.")
 
 }
 
@@ -43,6 +44,10 @@ var dashboardCmd = &cobra.Command{
 	Short: "Runs the webserver for Polaris dashboard.",
 	Long:  `Runs the webserver for Polaris dashboard.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if displayName != "" {
+			c.DisplayName = displayName
+		}
+	
 		var auditDataPtr *validator.AuditData
 		if loadAuditFile != "" {
 			auditData := validator.ReadAuditFromFile(loadAuditFile)
