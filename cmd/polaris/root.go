@@ -29,6 +29,7 @@ var configPath string
 var disallowExemptions bool
 var logLevel string
 var auditPath string
+var displayName string
 
 var (
 	version string

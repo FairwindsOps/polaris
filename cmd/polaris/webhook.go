@@ -35,7 +35,7 @@ var disableWebhookConfigInstaller bool
 
 func init() {
 	rootCmd.AddCommand(webhookCmd)
-	webhookCmd.PersistentFlags().IntVarP(&webhookPort, "port", "p", 8080, "Port for the dashboard webserver.")
+	webhookCmd.PersistentFlags().IntVarP(&webhookPort, "port", "p", 9876, "Port for the dashboard webserver.")
 	webhookCmd.PersistentFlags().BoolVar(&disableWebhookConfigInstaller, "disable-webhook-config-installer", false, "disable the installer in the webhook server, so it won't install webhook configuration resources during bootstrapping.")
 }
 

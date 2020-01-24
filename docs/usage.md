@@ -95,8 +95,8 @@ kubectl port-forward --namespace polaris svc/polaris-dashboard 8080:80
 ```
 ### Helm
 ```bash
-helm repo add reactiveops-stable https://charts.reactiveops.com/stable
-helm upgrade --install polaris reactiveops-stable/polaris --namespace polaris
+helm repo add fairwinds-stable https://charts.fairwinds.com/stable
+helm upgrade --install polaris fairwinds-stable/polaris --namespace polaris
 kubectl port-forward --namespace polaris svc/polaris-dashboard 8080:80
 ```
 
@@ -108,7 +108,7 @@ or can be installed with [Homebrew](https://brew.sh/):
 ```bash
 brew tap reactiveops/tap
 brew install reactiveops/tap/polaris
-polaris --dashboard --dashboard-port 8080
+polaris dashboard --port 8080
 ```
 
 ## Webhook
@@ -119,8 +119,8 @@ kubectl apply -f https://github.com/fairwindsops/polaris/releases/latest/downloa
 
 ### Helm
 ```bash
-helm repo add reactiveops-stable https://charts.reactiveops.com/stable
-helm upgrade --install polaris reactiveops-stable/polaris --namespace polaris \
+helm repo add fairwindsops-stable https://charts.fairwinds.com/stable
+helm upgrade --install polaris fairwindsops-stable/polaris --namespace polaris \
   --set webhook.enable=true --set dashboard.enable=false
 ```
 
@@ -129,29 +129,29 @@ helm upgrade --install polaris reactiveops-stable/polaris --namespace polaris \
 Binary releases can be downloaded from the [releases page](https://github.com/fairwindsops/polaris/releases)
 or can be installed with [Homebrew](https://brew.sh/):
 ```bash
-brew tap reactiveops/tap
-brew install reactiveops/tap/polaris
-polaris --version
+brew tap FairwindsOps/homebrew-tap
+brew install FairwindsOps/homebrew-tap/polaris
+polaris version
 ```
 
 You can run audits on the command line and see the output as JSON, YAML, or a raw score:
 ```bash
-polaris --audit --output-format yaml > report.yaml
-polaris --audit --output-format score
+polaris audit --format yaml > report.yaml
+polaris audit --format score
 # 92
 ```
 
 Both the dashboard and audits can run against a local directory or YAML file
 rather than a cluster:
 ```bash
-polaris --audit --audit-path ./deploy/
+polaris audit --audit-path ./deploy/
 ```
 
 #### Running with CI/CD
 You can integrate Polaris into CI/CD for repositories containing infrastructure-as-code.
 For example, to fail if polaris detects *any* error-level issues, or if the score drops below 90%:
 ```bash
-polaris --audit --audit-path ./deploy/ \
+polaris audit --audit-path ./deploy/ \
   --set-exit-code-on-error \
   --set-exit-code-below-score 90
 ```
@@ -161,50 +161,63 @@ For more on exit code meanings, see [exit-code docs](exit-codes.md).
 #### CLI Options
 
 ```
-# high-level flags
--version
+# top-level commands
+audit
+      Runs a one-time audit.
+dashboard
+      Runs the webserver for Polaris dashboard.
+help
+      Prints help, if you give it a command then it will print help for that command. Same as -h
+version
       Prints the version of Polaris
--config string
+webhook
+      Runs the webhook webserver
+
+# high-level flags
+-c, --config string
       Location of Polaris configuration file
--kubeconfig string
+--disallow-exemptions
+      Disallow any exemptions from configuration file.
+-h, --help
+      Help for Polaris (same as help command)
+--kubeconfig string
       Path to a kubeconfig. Only required if out-of-cluster.
--log-level string
+--log-level string
       Logrus log level (default "info")
--master string
+--master string
       The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.
 
 # dashboard flags
--dashboard
-      Runs the webserver for Polaris dashboard.
--dashboard-base-path string
+--audit-path string
+      If specified, audits one or more YAML files instead of a cluster
+--base-path string
       Path on which the dashboard is served (default "/")
--dashboard-port int
-      Port for the dashboard webserver (default 8080)
--display-name string
+--display-name string
       An optional identifier for the audit
+--load-audit-file string
+      Runs the dashboard with data saved from a past audit.
+-p, --port int
+      Port for the dashboard webserver (default 8080)
 
 # audit flags
--audit
-      Runs a one-time audit.
--audit-path string
+--audit-path string
       If specified, audits one or more YAML files instead of a cluster
--output-file string
+--display-name string
+      An optional identifier for the audit
+--output-file string
       Destination file for audit results
--output-format string
+--output-format string
       Output format for results - json, yaml, or score (default "json")
--output-url string
+--output-url string
       Destination URL to send audit results
--set-exit-code-below-score int
-      When running with --audit, set an exit code of 4 when the score is below this threshold (1-100)
--set-exit-code-on-error
-      When running with --audit, set an exit code of 3 when the audit contains error-level issues.
+--set-exit-code-below-score int
+      Set an exit code of 4 when the score is below this threshold (1-100)
+--set-exit-code-on-error
+      Set an exit code of 3 when the audit contains error-level issues.
 
 # webhook flags
--webhook
-      Runs the webhook webserver.
--webhook-port int
-      Port for the webhook webserver (default 9876)
--disable-webhook-config-installer
+--disable-webhook-config-installer
       disable the installer in the webhook server, so it won't install webhook configuration resources during bootstrapping
+-p, --port int
+      Port for the webhook webserver (default 9876)
 ```
-
