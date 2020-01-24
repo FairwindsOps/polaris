@@ -22,11 +22,13 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
 )
 
 var configPath string
 var disallowExemptions bool
 var logLevel string
+var auditPath string
 
 var (
 	version string
