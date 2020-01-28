@@ -62,7 +62,7 @@ There are additional examples in the [checks folder](/checks).
 ### Exemptions
 Exemptions can be added two ways: by annotating a controller, or editing the Polaris config.
 
-To exempt a controller via annotations, use the annotation `polaris.fairwinds.com/exempt=true`, e.g.
+To exempt a controller from all checks via annotations, use the annotation `polaris.fairwinds.com/exempt=true`, e.g.
 ```
 kubectl annotate deployment my-deployment polaris.fairwinds.com/exempt=true
 ```
@@ -74,6 +74,11 @@ exemptions:
       - dns-controller
     rules:
       - hostNetworkSet
+```
+
+To exempt a controller from a particular check via annotations, use an annotation in the form of `polaris.fairwinds.com/<check>-exempt=true`, e.g.
+```
+kubectl annotate deployment my-deployment polaris.fairwinds.com/cpu-requests-missing-exempt=true
 ```
 
 # Installing
