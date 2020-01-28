@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"sort"
-	"regexp"
 	"strings"
 
 	packr "github.com/gobuffalo/packr/v2"
@@ -108,11 +107,7 @@ func makeResult(conf *config.Configuration, check *config.SchemaCheck, passes bo
 }
 
 func getExemptKey(checkID string) string {
-	matchWordBoundary := regexp.MustCompile("([a-z])([A-Z])")
-	matchAcronymWordBoundary := regexp.MustCompile("([A-Z])([A-Z][a-z])")
-	wordSplitString := matchWordBoundary.ReplaceAllString(checkID, "${1}-${2}")
-	kebabCase := strings.ToLower(matchAcronymWordBoundary.ReplaceAllString(wordSplitString, "${1}-${2}"))
-	return fmt.Sprintf("polaris.fairwinds.com/%s-exempt", kebabCase)
+	return fmt.Sprintf("polaris.fairwinds.com/%s-exempt", checkID)
 }
 
 func applyPodSchemaChecks(conf *config.Configuration, controller controllers.Interface) (ResultSet, error) {

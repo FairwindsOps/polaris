@@ -260,32 +260,3 @@ func TestValidateCustomCheckExemptions(t *testing.T) {
 	}
 	testValidate(t, &container, &customCheckExemptions, "notexempt", expectedErrors, expectedWarnings, expectedSuccesses)
 }
-
-func TestGetExemptKey(t *testing.T) {
-	keyMap := map[string]string {
-		"hostIPCSet": "polaris.fairwinds.com/host-ipc-set-exempt",
-		"hostPIDSet": "polaris.fairwinds.com/host-pid-set-exempt",
-		"hostNetworkSet": "polaris.fairwinds.com/host-network-set-exempt",
-		"memoryLimitsMissing": "polaris.fairwinds.com/memory-limits-missing-exempt",
-		"memoryRequestsMissing": "polaris.fairwinds.com/memory-requests-missing-exempt",
-		"cpuLimitsMissing": "polaris.fairwinds.com/cpu-limits-missing-exempt",
-		"cpuRequestsMissing": "polaris.fairwinds.com/cpu-requests-missing-exempt",
-		"readinessProbeMissing": "polaris.fairwinds.com/readiness-probe-missing-exempt",
-		"livenessProbeMissing": "polaris.fairwinds.com/liveness-probe-missing-exempt",
-		"pullPolicyNotAlways": "polaris.fairwinds.com/pull-policy-not-always-exempt",
-		"tagNotSpecified": "polaris.fairwinds.com/tag-not-specified-exempt",
-		"hostPortSet": "polaris.fairwinds.com/host-port-set-exempt",
-		"runAsRootAllowed": "polaris.fairwinds.com/run-as-root-allowed-exempt",
-		"runAsPrivileged": "polaris.fairwinds.com/run-as-privileged-exempt",
-		"notReadOnlyRootFileSystem": "polaris.fairwinds.com/not-read-only-root-file-system-exempt",
-		"privilegeEscalationAllowed": "polaris.fairwinds.com/privilege-escalation-allowed-exempt",
-		"dangerousCapabilities": "polaris.fairwinds.com/dangerous-capabilities-exempt",
-		"insecureCapabilities": "polaris.fairwinds.com/insecure-capabilities-exempt",
-	}
-	for id, key := range keyMap {
-		exemptKey := getExemptKey(id)
-		assert.Equal(t, key, exemptKey)
-	}
-	
-
-}

@@ -1189,8 +1189,8 @@ func TestValidateResourcesEmptyContainerCPURequestsExempt(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "foo",
 			Annotations: map[string]string {
-				"polaris.fairwinds.com/cpu-requests-missing-exempt": "true", // Exempt this controller from cpuRequestsMissing
-				"polaris.fairwinds.com/memory-requests-missing-exempt": "truthy", // Don't actually exempt this controller from memoryRequestsMissing
+				"polaris.fairwinds.com/cpuRequestsMissing-exempt": "true", // Exempt this controller from cpuRequestsMissing
+				"polaris.fairwinds.com/memoryRequestsMissing-exempt": "truthy", // Don't actually exempt this controller from memoryRequestsMissing
 			} ,
 		},
 		Spec: appsv1.DeploymentSpec{
