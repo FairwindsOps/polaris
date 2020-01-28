@@ -78,7 +78,7 @@ exemptions:
 
 To exempt a controller from a particular check via annotations, use an annotation in the form of `polaris.fairwinds.com/<check>-exempt=true`, e.g.
 ```
-kubectl annotate deployment my-deployment polaris.fairwinds.com/cpu-requests-missing-exempt=true
+kubectl annotate deployment my-deployment polaris.fairwinds.com/cpuRequestsMissing-exempt=true
 ```
 
 # Installing
