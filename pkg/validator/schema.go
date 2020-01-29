@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"sort"
+	"strings"
 
 	packr "github.com/gobuffalo/packr/v2"
 	corev1 "k8s.io/api/core/v1"
@@ -105,10 +106,19 @@ func makeResult(conf *config.Configuration, check *config.SchemaCheck, passes bo
 	return result
 }
 
+func getExemptKey(checkID string) string {
+	return fmt.Sprintf("polaris.fairwinds.com/%s-exempt", checkID)
+}
+
 func applyPodSchemaChecks(conf *config.Configuration, controller controllers.Interface) (ResultSet, error) {
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
+	objectAnnotations := controller.GetObjectMeta().Annotations
 	for _, checkID := range checkIDs {
+		exemptValue := objectAnnotations[getExemptKey(checkID)]
+		if strings.ToLower(exemptValue) == "true" {
+			continue
+		}
 		check, err := resolveCheck(conf, checkID, controller, config.TargetPod, false)
 		if err != nil {
 			return nil, err
@@ -130,7 +140,12 @@ func applyPodSchemaChecks(conf *config.Configuration, controller controllers.Int
 func applyContainerSchemaChecks(conf *config.Configuration, controller controllers.Interface, container *corev1.Container, isInit bool) (ResultSet, error) {
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
+	objectAnnotations := controller.GetObjectMeta().Annotations
 	for _, checkID := range checkIDs {
+		exemptValue := objectAnnotations[getExemptKey(checkID)]
+		if strings.ToLower(exemptValue) == "true" {
+			continue
+		}
 		check, err := resolveCheck(conf, checkID, controller, config.TargetContainer, isInit)
 		if err != nil {
 			return nil, err

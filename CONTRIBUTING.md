@@ -7,7 +7,7 @@ Issues, whether bugs, tasks, or feature requests are essential for keeping Polar
 This project adheres to a [code of conduct](CODE_OF_CONDUCT.md). Please review this document before contributing to this project.
 
 ## Sign the CLA
-Before you can contribute, you will need to sign the [Contributor License Agreement](https://cla-assistant.io/fairwinds/polaris).
+Before you can contribute, you will need to sign the [Contributor License Agreement](https://cla-assistant.io/fairwindsops/polaris).
 
 ## Project Structure
 

@@ -1,4 +1,5 @@
 # x.x.x (next release)
+* Added the ability to exempt a particular controller from a particular check.
 
 # 0.6.0
 * Fixed webhook support in Kubernetes 1.16
