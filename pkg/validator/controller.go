@@ -21,6 +21,7 @@ import (
 	"github.com/fairwindsops/polaris/pkg/kube"
 	"github.com/fairwindsops/polaris/pkg/validator/controllers"
 	controller "github.com/fairwindsops/polaris/pkg/validator/controllers"
+	"github.com/sirupsen/logrus"
 )
 
 const exemptionAnnotationKey = "polaris.fairwinds.com/exempt"
@@ -32,13 +33,47 @@ func ValidateController(conf *conf.Configuration, controller controller.Interfac
 		return ControllerResult{}, err
 	}
 	result := ControllerResult{
-		Kind:      controller.GetKind().String(),
-		Name:      controller.GetName(),
-		Namespace: controller.GetObjectMeta().Namespace,
-		Results:   ResultSet{},
-		PodResult: podResult,
+		Kind:        controller.GetKind().String(),
+		Name:        controller.GetName(),
+		Namespace:   controller.GetObjectMeta().Namespace,
+		Results:     ResultSet{},
+		PodResult:   podResult,
+		CreatedTime: controller.GetObjectMeta().CreationTimestamp.Time,
+	}
+	owners := controller.GetObjectMeta().OwnerReferences
+	// If an owner exists then set the name to the controller.
+	// This allows us to handle CRDs creating Controllers or DeploymentConfigs in OpenShift.
+	if len(owners) > 0 {
+		firstOwner := owners[0]
+		result.Kind = firstOwner.Kind
+		result.Name = firstOwner.Name
 	}
 	return result, nil
+}
+
+// Because the controllers with an Owner take on the name of the Owner, this eliminates any duplicates.
+// In cases like CronJobs older children can hang around, so this takes the most recent.
+func deduplicateControllers(controllerResults []ControllerResult) []ControllerResult {
+	controllerMap := make(map[string][]ControllerResult)
+	for _, controller := range controllerResults {
+		key := controller.Namespace + "/" + controller.Kind + "/" + controller.Name
+		controllerMap[key] = append(controllerMap[key], controller)
+	}
+	results := make([]ControllerResult, 0)
+	for _, controllers := range controllerMap {
+		if len(controllers) == 1 {
+			results = append(results, controllers[0])
+		} else {
+			latestController := controllers[0]
+			for _, controller := range controllers[1:] {
+				if controller.CreatedTime.After(latestController.CreatedTime) {
+					latestController = controller
+				}
+			}
+			results = append(results, latestController)
+		}
+	}
+	return results
 }
 
 // ValidateControllers validates that each deployment conforms to the Polaris config,
@@ -46,10 +81,12 @@ func ValidateController(conf *conf.Configuration, controller controller.Interfac
 func ValidateControllers(config *conf.Configuration, kubeResources *kube.ResourceProvider) ([]ControllerResult, error) {
 	var controllersToAudit []controller.Interface
 	for _, supportedControllers := range config.ControllersToScan {
-		loadedControllers, _ := controllers.LoadControllersByKind(supportedControllers, kubeResources)
+		loadedControllers, err := controllers.LoadControllersByKind(supportedControllers, kubeResources)
+		if err != nil {
+			logrus.Warn(err)
+		}
 		controllersToAudit = append(controllersToAudit, loadedControllers...)
 	}
-
 	results := []ControllerResult{}
 	for _, controller := range controllersToAudit {
 		if !config.DisallowExemptions && hasExemptionAnnotation(controller) {
@@ -61,7 +98,7 @@ func ValidateControllers(config *conf.Configuration, kubeResources *kube.Resourc
 		}
 		results = append(results, result)
 	}
-	return results, nil
+	return deduplicateControllers(results), nil
 }
 
 func hasExemptionAnnotation(ctrl controller.Interface) bool {

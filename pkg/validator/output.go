@@ -16,6 +16,7 @@ package validator
 
 import (
 	"github.com/fairwindsops/polaris/pkg/config"
+	"time"
 )
 
 const (
@@ -62,11 +63,12 @@ type ResultSet map[string]ResultMessage
 
 // ControllerResult provides results for a controller
 type ControllerResult struct {
-	Name      string
-	Namespace string
-	Kind      string
-	Results   ResultSet
-	PodResult PodResult
+	Name        string
+	Namespace   string
+	Kind        string
+	Results     ResultSet
+	PodResult   PodResult
+	CreatedTime time.Time
 }
 
 // PodResult provides a list of validation messages for each pod.
