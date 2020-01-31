@@ -1,5 +1,6 @@
 # x.x.x (next release)
 * Added the ability to exempt a particular controller from a particular check.
+* Changed configuration of controllers-to-scan to controllersToScan
 
 # 0.6.0
 * Fixed webhook support in Kubernetes 1.16
