@@ -18,7 +18,7 @@ type CountSummaryByCategory map[string]CountSummary
 func (cs CountSummary) GetScore() uint {
 	total := (cs.Successes * 2) + cs.Warnings + (cs.Errors * 2)
 	if total == 0 {
-		total = 1 // Prevent divide by 0.
+		return 0 // Prevent divide by 0.
 	}
 	return uint((float64(cs.Successes*2) / float64(total)) * 100)
 }
