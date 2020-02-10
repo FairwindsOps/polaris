@@ -26,8 +26,8 @@ func init() {
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Prints the current version of the tool.",
-	Long:  `Prints the current version.`,
+	Short: "Prints the current version.",
+	Long:  `Prints the current version of the tool.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Polaris version:" + version + " Commit:" + commit)
 	},

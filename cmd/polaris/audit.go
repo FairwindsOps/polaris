@@ -22,11 +22,11 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/spf13/cobra"
-	"github.com/sirupsen/logrus"
-	"github.com/fairwindsops/polaris/pkg/validator"
 	conf "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
+	"github.com/fairwindsops/polaris/pkg/validator"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
 )
 
@@ -35,7 +35,6 @@ var minScore int
 var auditOutputURL string
 var auditOutputFile string
 var auditOutputFormat string
-
 
 func init() {
 	rootCmd.AddCommand(auditCmd)
@@ -54,9 +53,9 @@ var auditCmd = &cobra.Command{
 	Long:  `Runs a one-time audit.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if displayName != "" {
-			c.DisplayName = displayName
+			config.DisplayName = displayName
 		}
-	
+
 		auditData := runAndReportAudit(c, auditPath, auditOutputFile, auditOutputURL, auditOutputFormat)
 
 		summary := auditData.GetSummary()
@@ -70,7 +69,6 @@ var auditCmd = &cobra.Command{
 		}
 	},
 }
-
 
 func runAndReportAudit(c conf.Configuration, auditPath string, outputFile string, outputURL string, outputFormat string) validator.AuditData {
 	// Create a kubernetes client resource provider

@@ -102,7 +102,7 @@ var webhookCmd = &cobra.Command{
 		// Should only register controllers that are configured to be scanned
 		logrus.Debug("Registering webhooks to the webhook server")
 		var webhooks []webhook.Webhook
-		for index, controllerToScan := range c.ControllersToScan {
+		for index, controllerToScan := range config.ControllersToScan {
 			for innerIndex, supportedAPIType := range controllerToScan.ListSupportedAPIVersions() {
 				webhookName := strings.ToLower(fmt.Sprintf("%s-%d-%d", controllerToScan, index, innerIndex))
 				hook := fwebhook.NewWebhook(webhookName, mgr, fwebhook.Validator{Config: c}, supportedAPIType)

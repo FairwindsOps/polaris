@@ -44,7 +44,7 @@ func init() {
 	flag.Parse()
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 }
-var c conf.Configuration
+var config conf.Configuration
 
 var rootCmd = &cobra.Command{
 	Use:   "polaris",
@@ -58,14 +58,14 @@ var rootCmd = &cobra.Command{
 			logrus.SetLevel(parsedLevel)
 		}
 
-		c, err = conf.ParseFile(configPath)
+		config, err = conf.ParseFile(configPath)
 		if err != nil {
 			logrus.Errorf("Error parsing config at %s: %v", configPath, err)
 			os.Exit(1)
 		}
 
 		if disallowExemptions {
-			c.DisallowExemptions = true
+			config.DisallowExemptions = true
 		}
 	
 	},

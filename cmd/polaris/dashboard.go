@@ -45,7 +45,7 @@ var dashboardCmd = &cobra.Command{
 	Long:  `Runs the webserver for Polaris dashboard.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if displayName != "" {
-			c.DisplayName = displayName
+			config.DisplayName = displayName
 		}
 	
 		var auditDataPtr *validator.AuditData
