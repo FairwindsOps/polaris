@@ -18,16 +18,15 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/spf13/cobra"
-	"github.com/sirupsen/logrus"
 	"github.com/fairwindsops/polaris/pkg/dashboard"
 	"github.com/fairwindsops/polaris/pkg/validator"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 )
 
 var serverPort int
 var basePath string
 var loadAuditFile string
-
 
 func init() {
 	rootCmd.AddCommand(dashboardCmd)
@@ -47,18 +46,18 @@ var dashboardCmd = &cobra.Command{
 		if displayName != "" {
 			config.DisplayName = displayName
 		}
-	
+
 		var auditDataPtr *validator.AuditData
 		if loadAuditFile != "" {
 			auditData := validator.ReadAuditFromFile(loadAuditFile)
 			auditDataPtr = &auditData
 		}
-		router := dashboard.GetRouter(c, auditPath, serverPort, basePath, auditDataPtr)
+		router := dashboard.GetRouter(config, auditPath, serverPort, basePath, auditDataPtr)
 		router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("OK"))
 		})
 		http.Handle("/", router)
-	
+
 		logrus.Infof("Starting Polaris dashboard server on port %d", serverPort)
 		logrus.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", serverPort), nil))
 	},

@@ -56,7 +56,7 @@ var auditCmd = &cobra.Command{
 			config.DisplayName = displayName
 		}
 
-		auditData := runAndReportAudit(c, auditPath, auditOutputFile, auditOutputURL, auditOutputFormat)
+		auditData := runAndReportAudit(config, auditPath, auditOutputFile, auditOutputURL, auditOutputFormat)
 
 		summary := auditData.GetSummary()
 		score := summary.GetScore()

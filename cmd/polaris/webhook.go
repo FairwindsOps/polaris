@@ -16,18 +16,18 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"io/ioutil"
+	"os"
 	"strings"
 
-	"github.com/spf13/cobra"
-	"github.com/sirupsen/logrus"
-	"sigs.k8s.io/controller-runtime/pkg/client/config"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 	fwebhook "github.com/fairwindsops/polaris/pkg/webhook"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
-	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 	apitypes "k8s.io/apimachinery/pkg/types"
+	k8sConfig "sigs.k8s.io/controller-runtime/pkg/client/config"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
 var webhookPort int
@@ -45,7 +45,7 @@ var webhookCmd = &cobra.Command{
 	Long:  `Runs the webhook webserver.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		logrus.Debug("Setting up controller manager")
-		mgr, err := manager.New(config.GetConfigOrDie(), manager.Options{})
+		mgr, err := manager.New(k8sConfig.GetConfigOrDie(), manager.Options{})
 		if err != nil {
 			logrus.Errorf("Unable to set up overall controller manager: %v", err)
 			os.Exit(1)
@@ -105,7 +105,7 @@ var webhookCmd = &cobra.Command{
 		for index, controllerToScan := range config.ControllersToScan {
 			for innerIndex, supportedAPIType := range controllerToScan.ListSupportedAPIVersions() {
 				webhookName := strings.ToLower(fmt.Sprintf("%s-%d-%d", controllerToScan, index, innerIndex))
-				hook := fwebhook.NewWebhook(webhookName, mgr, fwebhook.Validator{Config: c}, supportedAPIType)
+				hook := fwebhook.NewWebhook(webhookName, mgr, fwebhook.Validator{Config: config}, supportedAPIType)
 				webhooks = append(webhooks, hook)
 			}
 		}
