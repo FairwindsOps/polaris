@@ -22,7 +22,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-
 )
 
 var configPath string
@@ -33,7 +32,6 @@ var displayName string
 
 var (
 	version string
-	commit  string
 )
 
 func init() {
@@ -44,6 +42,7 @@ func init() {
 	flag.Parse()
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 }
+
 var config conf.Configuration
 
 var rootCmd = &cobra.Command{
@@ -67,7 +66,7 @@ var rootCmd = &cobra.Command{
 		if disallowExemptions {
 			config.DisallowExemptions = true
 		}
-	
+
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		logrus.Error("You must specify a sub-command.")
@@ -80,9 +79,8 @@ var rootCmd = &cobra.Command{
 }
 
 // Execute the stuff
-func Execute(VERSION string, COMMIT string) {
+func Execute(VERSION string) {
 	version = VERSION
-	commit = COMMIT
 	if err := rootCmd.Execute(); err != nil {
 		logrus.Error(err)
 		os.Exit(1)

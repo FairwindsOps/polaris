@@ -21,11 +21,10 @@ import (
 const (
 	// Version represents the current release version of Polaris
 	Version = "0.6.0"
-	// TODO make sure this gets set.
-	commit = "n/a"
+
 )
 
 func main() {
-	cmd.Execute(Version, commit)
+	cmd.Execute(Version)
 }
 
