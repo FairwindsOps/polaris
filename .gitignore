@@ -6,6 +6,7 @@
 *.dylib
 polaris
 
+!cmd/polaris
 !deploy/helm/polaris
 
 # Test binary, build with `go test -c`
