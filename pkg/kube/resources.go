@@ -133,6 +133,10 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 	if err != nil {
 		return nil, err
 	}
+	cronJobs, err := getCronJobs(kube)
+	if err != nil {
+		return nil, err
+	}
 	daemonSets, err := kube.AppsV1().DaemonSets("").List(listOpts)
 	if err != nil {
 		logrus.Errorf("Error fetching DaemonSets: %v", err)
@@ -141,11 +145,6 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 	jobs, err := kube.BatchV1().Jobs("").List(listOpts)
 	if err != nil {
 		logrus.Errorf("Error fetching Jobs: %v", err)
-		return nil, err
-	}
-	cronJobs, err := kube.BatchV1beta1().CronJobs("").List(listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching CronJobs: %v", err)
 		return nil, err
 	}
 	replicationControllers, err := kube.CoreV1().ReplicationControllers("").List(listOpts)
@@ -178,7 +177,7 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 		StatefulSets:           statefulSets,
 		DaemonSets:             daemonSets.Items,
 		Jobs:                   jobs.Items,
-		CronJobs:               cronJobs.Items,
+		CronJobs:               cronJobs,
 		ReplicationControllers: replicationControllers.Items,
 		Nodes:                  nodes.Items,
 		Namespaces:             namespaces.Items,
@@ -350,6 +349,38 @@ func getDaemonSets(kube kubernetes.Interface) ([]appsv1.DaemonSet, error) {
 		err = json.Unmarshal(str, &controller)
 		if err != nil {
 			logrus.Errorf("Error unmarshaling old DaemonSet version: %v", err)
+			return nil, err
+		}
+		controllers = append(controllers, controller)
+	}
+	return controllers, nil
+}
+
+func getCronJobs(kube kubernetes.Interface) ([]batchv1beta1.CronJob, error) {
+	listOpts := metav1.ListOptions{}
+	controllerList, err := kube.BatchV1beta1().CronJobs("").List(listOpts)
+	if err != nil {
+		logrus.Errorf("Error fetching CronJobs: %v", err)
+		return nil, err
+	}
+	controllers := controllerList.Items
+
+	controllersV2A1, err := kube.BatchV2alpha1().CronJobs("").List(listOpts)
+	if err != nil {
+		logrus.Errorf("Error fetching CronJobs v2alpha1: %v", err)
+		return nil, err
+	}
+
+	for _, oldController := range controllersV2A1.Items {
+		str, err := json.Marshal(oldController)
+		if err != nil {
+			logrus.Errorf("Error marshaling old CronJob version: %v", err)
+			return nil, err
+		}
+		controller := batchv1beta1.CronJob{}
+		err = json.Unmarshal(str, &controller)
+		if err != nil {
+			logrus.Errorf("Error unmarshaling old CronJob version: %v", err)
 			return nil, err
 		}
 		controllers = append(controllers, controller)
