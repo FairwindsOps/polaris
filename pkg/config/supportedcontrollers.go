@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
+	appsv1beta1 "k8s.io/api/apps/v1beta1"
+	appsv1beta2 "k8s.io/api/apps/v1beta2"
 	batchv1 "k8s.io/api/batch/v1"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
@@ -103,14 +105,19 @@ func (s SupportedController) ListSupportedAPIVersions() []runtime.Object {
 	case Deployments:
 		supportedVersions = []runtime.Object{
 			&appsv1.Deployment{},
+			&appsv1beta1.Deployment{},
+			&appsv1beta2.Deployment{},
 		}
 	case StatefulSets:
 		supportedVersions = []runtime.Object{
 			&appsv1.StatefulSet{},
+			&appsv1beta1.StatefulSet{},
+			&appsv1beta2.StatefulSet{},
 		}
 	case DaemonSets:
 		supportedVersions = []runtime.Object{
 			&appsv1.DaemonSet{},
+			&appsv1beta2.DaemonSet{},
 		}
 	case Jobs:
 		supportedVersions = []runtime.Object{
