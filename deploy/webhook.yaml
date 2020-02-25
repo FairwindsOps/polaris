@@ -314,8 +314,6 @@ spec:
             - webhook
             - --config
             - /opt/app/config.yaml
-            - --log-level
-            - debug
           image: 'quay.io/fairwinds/polaris:0.6'
           imagePullPolicy: 'Always'
           ports:
