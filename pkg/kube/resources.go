@@ -2,6 +2,7 @@ package kube
 
 import (
 	"bytes"
+	"encoding/json"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -77,7 +78,7 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 		}
 		contents, err := ioutil.ReadFile(path)
 		if err != nil {
-			logrus.Errorf("Error reading file %v", path)
+			logrus.Errorf("Error reading file: %v", path)
 			return err
 		}
 		specs := regexp.MustCompile("\n-+\n").Split(string(contents), -1)
@@ -105,12 +106,12 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 func CreateResourceProviderFromCluster() (*ResourceProvider, error) {
 	kubeConf, configError := config.GetConfig()
 	if configError != nil {
-		logrus.Errorf("Error fetching KubeConfig %v", configError)
+		logrus.Errorf("Error fetching KubeConfig: %v", configError)
 		return nil, configError
 	}
 	api, err := kubernetes.NewForConfig(kubeConf)
 	if err != nil {
-		logrus.Errorf("Error creating Kubernetes client %v", err)
+		logrus.Errorf("Error creating Kubernetes client: %v", err)
 		return nil, err
 	}
 	return CreateResourceProviderFromAPI(api, kubeConf.Host)
@@ -121,52 +122,49 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 	listOpts := metav1.ListOptions{}
 	serverVersion, err := kube.Discovery().ServerVersion()
 	if err != nil {
-		logrus.Errorf("Error fetching Cluster API version %v", err)
+		logrus.Errorf("Error fetching Cluster API version: %v", err)
 		return nil, err
 	}
-	deploys, err := kube.AppsV1().Deployments("").List(listOpts)
+	deploys, err := getDeployments(kube)
 	if err != nil {
-		logrus.Errorf("Error fetching Deployments %v", err)
 		return nil, err
 	}
-	statefulSets, err := kube.AppsV1().StatefulSets("").List(listOpts)
+	statefulSets, err := getStatefulSets(kube)
 	if err != nil {
-		logrus.Errorf("Error fetching StatefulSets%v", err)
 		return nil, err
 	}
-	daemonSets, err := kube.AppsV1().DaemonSets("").List(listOpts)
+	cronJobs, err := getCronJobs(kube)
 	if err != nil {
-		logrus.Errorf("Error fetching DaemonSets %v", err)
 		return nil, err
 	}
+	daemonSets, err := getDaemonSets(kube)
+	if err != nil {
+		return nil, err
+	}
+
 	jobs, err := kube.BatchV1().Jobs("").List(listOpts)
 	if err != nil {
-		logrus.Errorf("Error fetching Jobs %v", err)
-		return nil, err
-	}
-	cronJobs, err := kube.BatchV1beta1().CronJobs("").List(listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching CronJobs %v", err)
+		logrus.Errorf("Error fetching Jobs: %v", err)
 		return nil, err
 	}
 	replicationControllers, err := kube.CoreV1().ReplicationControllers("").List(listOpts)
 	if err != nil {
-		logrus.Errorf("Error fetching ReplicationControllers %v", err)
+		logrus.Errorf("Error fetching ReplicationControllers: %v", err)
 		return nil, err
 	}
 	nodes, err := kube.CoreV1().Nodes().List(listOpts)
 	if err != nil {
-		logrus.Errorf("Error fetching Nodes %v", err)
+		logrus.Errorf("Error fetching Nodes: %v", err)
 		return nil, err
 	}
 	namespaces, err := kube.CoreV1().Namespaces().List(listOpts)
 	if err != nil {
-		logrus.Errorf("Error fetching Namespaces %v", err)
+		logrus.Errorf("Error fetching Namespaces: %v", err)
 		return nil, err
 	}
 	pods, err := kube.CoreV1().Pods("").List(listOpts)
 	if err != nil {
-		logrus.Errorf("Error fetching Pods %v", err)
+		logrus.Errorf("Error fetching Pods: %v", err)
 		return nil, err
 	}
 
@@ -175,11 +173,11 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 		SourceType:             "Cluster",
 		SourceName:             clusterName,
 		CreationTime:           time.Now(),
-		Deployments:            deploys.Items,
-		StatefulSets:           statefulSets.Items,
-		DaemonSets:             daemonSets.Items,
+		Deployments:            deploys,
+		StatefulSets:           statefulSets,
+		DaemonSets:             daemonSets,
+		CronJobs:               cronJobs,
 		Jobs:                   jobs.Items,
-		CronJobs:               cronJobs.Items,
 		ReplicationControllers: replicationControllers.Items,
 		Nodes:                  nodes.Items,
 		Namespaces:             namespaces.Items,
@@ -236,4 +234,156 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 		return err
 	}
 	return nil
+}
+
+func getDeployments(kube kubernetes.Interface) ([]appsv1.Deployment, error) {
+	listOpts := metav1.ListOptions{}
+	deployList, err := kube.AppsV1().Deployments("").List(listOpts)
+	if err != nil {
+		logrus.Errorf("Error fetching Deployments: %v", err)
+		return nil, err
+	}
+	deploys := deployList.Items
+
+	oldDeploys := make([]interface{}, 0)
+	deploysV1B1, err := kube.AppsV1beta1().Deployments("").List(listOpts)
+	if err != nil {
+		logrus.Errorf("Error fetching Deployments v1beta1: %v", err)
+		return nil, err
+	}
+	for _, oldDeploy := range deploysV1B1.Items {
+		oldDeploys = append(oldDeploys, oldDeploy)
+	}
+	deploysV1B2, err := kube.AppsV1beta2().Deployments("").List(listOpts)
+	if err != nil {
+		logrus.Errorf("Error fetching Deployments v1beta2: %v", err)
+		return nil, err
+	}
+	for _, oldDeploy := range deploysV1B2.Items {
+		oldDeploys = append(oldDeploys, oldDeploy)
+	}
+
+	for _, oldDeploy := range oldDeploys {
+		str, err := json.Marshal(oldDeploy)
+		if err != nil {
+			logrus.Errorf("Error marshaling old deployment version: %v", err)
+			return nil, err
+		}
+		deploy := appsv1.Deployment{}
+		err = json.Unmarshal(str, &deploy)
+		if err != nil {
+			logrus.Errorf("Error unmarshaling old deployment version: %v", err)
+			return nil, err
+		}
+		deploys = append(deploys, deploy)
+	}
+	return deploys, nil
+}
+
+func getStatefulSets(kube kubernetes.Interface) ([]appsv1.StatefulSet, error) {
+	listOpts := metav1.ListOptions{}
+	controllerList, err := kube.AppsV1().StatefulSets("").List(listOpts)
+	if err != nil {
+		logrus.Errorf("Error fetching StatefulSets: %v", err)
+		return nil, err
+	}
+	controllers := controllerList.Items
+
+	oldControllers := make([]interface{}, 0)
+	controllersV1B1, err := kube.AppsV1beta1().StatefulSets("").List(listOpts)
+	if err != nil {
+		logrus.Errorf("Error fetching StatefulSets v1beta1: %v", err)
+		return nil, err
+	}
+	for _, oldController := range controllersV1B1.Items {
+		oldControllers = append(oldControllers, oldController)
+	}
+	controllersV1B2, err := kube.AppsV1beta2().StatefulSets("").List(listOpts)
+	if err != nil {
+		logrus.Errorf("Error fetching StatefulSets v1beta2: %v", err)
+		return nil, err
+	}
+	for _, oldController := range controllersV1B2.Items {
+		oldControllers = append(oldControllers, oldController)
+	}
+
+	for _, oldController := range oldControllers {
+		str, err := json.Marshal(oldController)
+		if err != nil {
+			logrus.Errorf("Error marshaling old StatefulSet version: %v", err)
+			return nil, err
+		}
+		controller := appsv1.StatefulSet{}
+		err = json.Unmarshal(str, &controller)
+		if err != nil {
+			logrus.Errorf("Error unmarshaling old StatefulSet version: %v", err)
+			return nil, err
+		}
+		controllers = append(controllers, controller)
+	}
+	return controllers, nil
+}
+
+func getDaemonSets(kube kubernetes.Interface) ([]appsv1.DaemonSet, error) {
+	listOpts := metav1.ListOptions{}
+	controllerList, err := kube.AppsV1().DaemonSets("").List(listOpts)
+	if err != nil {
+		logrus.Errorf("Error fetching DaemonSets: %v", err)
+		return nil, err
+	}
+	controllers := controllerList.Items
+
+	controllersV1B2, err := kube.AppsV1beta2().DaemonSets("").List(listOpts)
+	if err != nil {
+		logrus.Errorf("Error fetching DaemonSets v1beta2: %v", err)
+		return nil, err
+	}
+
+	for _, oldController := range controllersV1B2.Items {
+		str, err := json.Marshal(oldController)
+		if err != nil {
+			logrus.Errorf("Error marshaling old DaemonSet version: %v", err)
+			return nil, err
+		}
+		controller := appsv1.DaemonSet{}
+		err = json.Unmarshal(str, &controller)
+		if err != nil {
+			logrus.Errorf("Error unmarshaling old DaemonSet version: %v", err)
+			return nil, err
+		}
+		controllers = append(controllers, controller)
+	}
+	return controllers, nil
+}
+
+func getCronJobs(kube kubernetes.Interface) ([]batchv1beta1.CronJob, error) {
+	listOpts := metav1.ListOptions{}
+	controllerList, err := kube.BatchV1beta1().CronJobs("").List(listOpts)
+	if err != nil {
+		logrus.Errorf("Error fetching CronJobs: %v", err)
+		return nil, err
+	}
+	controllers := controllerList.Items
+
+	controllersV2A1, err := kube.BatchV2alpha1().CronJobs("").List(listOpts)
+	if err != nil {
+		logrus.Errorf("Error fetching CronJobs v2alpha1: %v", err)
+		return nil, err
+	}
+
+	for _, oldController := range controllersV2A1.Items {
+		str, err := json.Marshal(oldController)
+		if err != nil {
+			logrus.Errorf("Error marshaling old CronJob version: %v", err)
+			return nil, err
+		}
+		controller := batchv1beta1.CronJob{}
+		err = json.Unmarshal(str, &controller)
+		if err != nil {
+			logrus.Errorf("Error unmarshaling old CronJob version: %v", err)
+			return nil, err
+		}
+		controllers = append(controllers, controller)
+	}
+	return controllers, nil
 }

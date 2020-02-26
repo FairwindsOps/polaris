@@ -12,6 +12,7 @@ import (
 func TestGetTemplateData(t *testing.T) {
 	k8s := test.SetupTestAPI()
 	k8s = test.SetupAddControllers(k8s, "test")
+	k8s = test.SetupAddExtraControllerVersions(k8s, "test-extra")
 	resources, err := kube.CreateResourceProviderFromAPI(k8s, "test")
 	assert.Equal(t, err, nil, "error should be nil")
 
@@ -32,8 +33,8 @@ func TestGetTemplateData(t *testing.T) {
 
 	sum := CountSummary{
 		Successes: uint(0),
-		Warnings:  uint(4),
-		Errors:    uint(4),
+		Warnings:  uint(9),
+		Errors:    uint(9),
 	}
 
 	actualAudit, err := RunAudit(c, resources)
@@ -43,29 +44,27 @@ func TestGetTemplateData(t *testing.T) {
 	assert.Equal(t, actualAudit.SourceType, "Cluster", "should be from a cluster")
 	assert.Equal(t, actualAudit.SourceName, "test", "should be from a cluster")
 
-	assert.Equal(t, 6, len(actualAudit.Results))
+	expected := []struct {
+		kind    string
+		results int
+	}{
+		{kind: "Deployment", results: 2},
+		{kind: "Deployment", results: 2},
+		{kind: "Deployment", results: 2},
+		{kind: "StatefulSet", results: 2},
+		{kind: "StatefulSet", results: 2},
+		{kind: "StatefulSet", results: 2},
+		{kind: "DaemonSet", results: 2},
+		{kind: "DaemonSet", results: 2},
+		{kind: "Job", results: 0},
+		{kind: "CronJob", results: 0},
+		{kind: "ReplicationController", results: 2},
+	}
 
-	assert.Equal(t, "Deployment", actualAudit.Results[0].Kind)
-	assert.Equal(t, 1, len(actualAudit.Results[0].PodResult.ContainerResults))
-	assert.Equal(t, 2, len(actualAudit.Results[0].PodResult.ContainerResults[0].Results))
-
-	assert.Equal(t, "StatefulSet", actualAudit.Results[1].Kind)
-	assert.Equal(t, 1, len(actualAudit.Results[1].PodResult.ContainerResults))
-	assert.Equal(t, 2, len(actualAudit.Results[1].PodResult.ContainerResults[0].Results))
-
-	assert.Equal(t, "DaemonSet", actualAudit.Results[2].Kind)
-	assert.Equal(t, 1, len(actualAudit.Results[2].PodResult.ContainerResults))
-	assert.Equal(t, 2, len(actualAudit.Results[2].PodResult.ContainerResults[0].Results))
-
-	assert.Equal(t, "Job", actualAudit.Results[3].Kind)
-	assert.Equal(t, 1, len(actualAudit.Results[3].PodResult.ContainerResults))
-	assert.Equal(t, 0, len(actualAudit.Results[3].PodResult.ContainerResults[0].Results))
-
-	assert.Equal(t, "CronJob", actualAudit.Results[4].Kind)
-	assert.Equal(t, 1, len(actualAudit.Results[4].PodResult.ContainerResults))
-	assert.Equal(t, 0, len(actualAudit.Results[4].PodResult.ContainerResults[0].Results))
-
-	assert.Equal(t, "ReplicationController", actualAudit.Results[5].Kind)
-	assert.Equal(t, 1, len(actualAudit.Results[5].PodResult.ContainerResults))
-	assert.Equal(t, 2, len(actualAudit.Results[5].PodResult.ContainerResults[0].Results))
+	assert.Equal(t, len(expected), len(actualAudit.Results))
+	for idx, result := range actualAudit.Results {
+		assert.Equal(t, expected[idx].kind, result.Kind)
+		assert.Equal(t, 1, len(result.PodResult.ContainerResults))
+		assert.Equal(t, expected[idx].results, len(result.PodResult.ContainerResults[0].Results))
+	}
 }

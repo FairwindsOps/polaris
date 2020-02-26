@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/fairwindsops/polaris/pkg/config"
 	validator "github.com/fairwindsops/polaris/pkg/validator"
@@ -80,10 +79,9 @@ func NewWebhook(name string, mgr manager.Manager, validator Validator, apiType r
 		Build()
 	if err != nil {
 		logrus.Errorf("Error building webhook: %v", err)
-		os.Exit(1)
-	} else {
-		logrus.Info(name + " webhook started")
+		return nil
 	}
+	logrus.Info(name + " webhook started")
 	return webhook
 }
 
