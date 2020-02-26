@@ -137,11 +137,11 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 	if err != nil {
 		return nil, err
 	}
-	daemonSets, err := kube.AppsV1().DaemonSets("").List(listOpts)
+	daemonSets, err := getDaemonSets(kube)
 	if err != nil {
-		logrus.Errorf("Error fetching DaemonSets: %v", err)
 		return nil, err
 	}
+
 	jobs, err := kube.BatchV1().Jobs("").List(listOpts)
 	if err != nil {
 		logrus.Errorf("Error fetching Jobs: %v", err)
@@ -175,9 +175,9 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 		CreationTime:           time.Now(),
 		Deployments:            deploys,
 		StatefulSets:           statefulSets,
-		DaemonSets:             daemonSets.Items,
-		Jobs:                   jobs.Items,
+		DaemonSets:             daemonSets,
 		CronJobs:               cronJobs,
+		Jobs:                   jobs.Items,
 		ReplicationControllers: replicationControllers.Items,
 		Nodes:                  nodes.Items,
 		Namespaces:             namespaces.Items,
