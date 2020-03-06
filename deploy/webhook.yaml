@@ -311,7 +311,7 @@ spec:
         - name: webhook
           command:
             - polaris
-            - webhook
+            - --webhook
             - --config
             - /opt/app/config.yaml
           image: 'quay.io/fairwinds/polaris:0.6'
