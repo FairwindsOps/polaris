@@ -1,4 +1,6 @@
 sed -ri "s|'(quay.io/fairwinds/polaris:).+'|'\1${CIRCLE_SHA1}'|" ./deploy/dashboard.yaml
+# TODO: remove this after 1.0 is released
+sed -i "s/--dashboard/dashboard/" ./deploy/dashboard.yaml
 
 
 function check_dashboard_is_ready() {
