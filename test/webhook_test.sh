@@ -3,6 +3,8 @@ set -e
 
 #sed is replacing the polaris version with this commit sha so we are testing exactly this verison.
 sed -ri "s|'(quay.io/fairwinds/polaris:).+'|'\1${CIRCLE_SHA1}'|" ./deploy/webhook.yaml
+# TODO: remove this after 1.0 is released
+sed -i "s/--webhook/webhook/" ./deploy/webhook.yaml
 
 # Testing to ensure that the webhook starts up, allows a correct deployment to pass,
 # and prevents a incorrectly formatted deployment. 
