@@ -106,7 +106,9 @@ var webhookCmd = &cobra.Command{
 			for innerIndex, supportedAPIType := range controllerToScan.ListSupportedAPIVersions() {
 				webhookName := strings.ToLower(fmt.Sprintf("%s-%d-%d", controllerToScan, index, innerIndex))
 				hook := fwebhook.NewWebhook(webhookName, mgr, fwebhook.Validator{Config: config}, supportedAPIType)
-				webhooks = append(webhooks, hook)
+				if hook != nil {
+					webhooks = append(webhooks, hook)
+				}
 			}
 		}
 

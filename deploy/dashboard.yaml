@@ -251,7 +251,7 @@ spec:
       containers:
       - command:
         - polaris
-        - dashboard
+        - --dashboard
         - --config
         - /opt/app/config.yaml
         image: 'quay.io/fairwinds/polaris:0.6'
