@@ -131,27 +131,9 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 		logrus.Errorf("Error fetching Cluster API version: %v", err)
 		return nil, err
 	}
-	deploys, err := getDeployments(kube)
-	if err != nil {
-		return nil, err
-	}
-	statefulSets, err := getStatefulSets(kube)
-	if err != nil {
-		return nil, err
-	}
-	daemonSets, err := getDaemonSets(kube)
-	if err != nil {
-		return nil, err
-	}
-
 	jobs, err := kube.BatchV1().Jobs("").List(listOpts)
 	if err != nil {
 		logrus.Errorf("Error fetching Jobs: %v", err)
-		return nil, err
-	}
-	replicationControllers, err := kube.CoreV1().ReplicationControllers("").List(listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching ReplicationControllers: %v", err)
 		return nil, err
 	}
 	nodes, err := kube.CoreV1().Nodes().List(listOpts)
@@ -182,20 +164,16 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 	restMapper := restmapper.NewDiscoveryRESTMapper(resources)
 
 	api := ResourceProvider{
-		ServerVersion:          serverVersion.Major + "." + serverVersion.Minor,
-		SourceType:             "Cluster",
-		SourceName:             clusterName,
-		CreationTime:           time.Now(),
-		Deployments:            deploys,
-		StatefulSets:           statefulSets,
-		DaemonSets:             daemonSets,
-		Jobs:                   jobs.Items,
-		ReplicationControllers: replicationControllers.Items,
-		Nodes:                  nodes.Items,
-		Namespaces:             namespaces.Items,
-		Pods:                   pods.Items,
-		DynamicClient:          &dynamicInterface,
-		RestMapper:             &restMapper,
+		ServerVersion: serverVersion.Major + "." + serverVersion.Minor,
+		SourceType:    "Cluster",
+		SourceName:    clusterName,
+		CreationTime:  time.Now(),
+		Jobs:          jobs.Items,
+		Nodes:         nodes.Items,
+		Namespaces:    namespaces.Items,
+		Pods:          pods.Items,
+		DynamicClient: &dynamicInterface,
+		RestMapper:    &restMapper,
 	}
 	return &api, nil
 }
