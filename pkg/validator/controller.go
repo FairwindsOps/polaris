@@ -17,17 +17,20 @@ package validator
 import (
 	"strings"
 
+	"github.com/sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+
 	conf "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
 	"github.com/fairwindsops/polaris/pkg/validator/controllers"
 	controller "github.com/fairwindsops/polaris/pkg/validator/controllers"
-	"github.com/sirupsen/logrus"
 )
 
 const exemptionAnnotationKey = "polaris.fairwinds.com/exempt"
 
 // ValidateController validates a single controller, returns a ControllerResult.
-func ValidateController(conf *conf.Configuration, controller controller.Interface) (ControllerResult, error) {
+func ValidateController(conf *conf.Configuration, controller controller.Interface, kubeResources *kube.ResourceProvider) (ControllerResult, error) {
 	podResult, err := ValidatePod(conf, controller)
 	if err != nil {
 		return ControllerResult{}, err
@@ -43,11 +46,31 @@ func ValidateController(conf *conf.Configuration, controller controller.Interfac
 	owners := controller.GetObjectMeta().OwnerReferences
 	// If an owner exists then set the name to the controller.
 	// This allows us to handle CRDs creating Controllers or DeploymentConfigs in OpenShift.
-	if len(owners) > 0 {
+	for len(owners) > 0 {
 		firstOwner := owners[0]
 		result.Kind = firstOwner.Kind
 		result.Name = firstOwner.Name
+		if kubeResources.DynamicClient != nil {
+
+			dynamicClient := *kubeResources.DynamicClient
+			restMapper := *kubeResources.RestMapper
+			fqKind := schema.FromAPIVersionAndKind(firstOwner.APIVersion, firstOwner.Kind)
+			mapping, err := restMapper.RESTMapping(fqKind.GroupKind(), fqKind.Version)
+			if err != nil {
+				logrus.Warnf("Error retrieving mapping %s of API %s and Kind %s because of error: %v ", firstOwner.Name, firstOwner.APIVersion, firstOwner.Kind, err)
+				return result, nil
+			}
+			getParents, err := dynamicClient.Resource(mapping.Resource).Namespace(controller.GetObjectMeta().Namespace).Get(firstOwner.Name, metav1.GetOptions{})
+			if err != nil {
+				logrus.Warnf("Error retrieving parent object %s of API %s and Kind %s because of error: %v ", firstOwner.Name, firstOwner.APIVersion, firstOwner.Kind, err)
+				return result, nil
+			}
+			owners = getParents.GetOwnerReferences()
+		} else {
+			break
+		}
 	}
+
 	return result, nil
 }
 
@@ -80,19 +103,17 @@ func deduplicateControllers(controllerResults []ControllerResult) []ControllerRe
 // builds a list of ResourceResults organized by namespace.
 func ValidateControllers(config *conf.Configuration, kubeResources *kube.ResourceProvider) ([]ControllerResult, error) {
 	var controllersToAudit []controller.Interface
-	for _, supportedControllers := range config.ControllersToScan {
-		loadedControllers, err := controllers.LoadControllersByKind(supportedControllers, kubeResources)
-		if err != nil {
-			logrus.Warn(err)
-		}
-		controllersToAudit = append(controllersToAudit, loadedControllers...)
+	loadedControllers, err := controllers.LoadControllersByKind(conf.NakedPods, kubeResources)
+	if err != nil {
+		logrus.Warn(err)
 	}
+	controllersToAudit = append(controllersToAudit, loadedControllers...)
 	results := []ControllerResult{}
 	for _, controller := range controllersToAudit {
 		if !config.DisallowExemptions && hasExemptionAnnotation(controller) {
 			continue
 		}
-		result, err := ValidateController(config, controller)
+		result, err := ValidateController(config, controller, kubeResources)
 		if err != nil {
 			return nil, err
 		}

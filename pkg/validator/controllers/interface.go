@@ -39,6 +39,10 @@ func (g GenericController) GetNamespace() string {
 func LoadControllersByKind(controllerKind config.SupportedController, kubeResources *kube.ResourceProvider) ([]Interface, error) {
 	interfaces := []Interface{}
 	switch controllerKind {
+	case config.NakedPods:
+		for _, pod := range kubeResources.Pods {
+			interfaces = append(interfaces, NewNakedPodController(pod))
+		}
 	case config.Deployments:
 		for _, deploy := range kubeResources.Deployments {
 			interfaces = append(interfaces, NewDeploymentController(deploy))

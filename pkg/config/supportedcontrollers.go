@@ -10,8 +10,6 @@ import (
 	appsv1beta1 "k8s.io/api/apps/v1beta1"
 	appsv1beta2 "k8s.io/api/apps/v1beta2"
 	batchv1 "k8s.io/api/batch/v1"
-	batchv1beta1 "k8s.io/api/batch/v1beta1"
-	batchv2alpha1 "k8s.io/api/batch/v2alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -123,11 +121,6 @@ func (s SupportedController) ListSupportedAPIVersions() []runtime.Object {
 	case Jobs:
 		supportedVersions = []runtime.Object{
 			&batchv1.Job{},
-		}
-	case CronJobs:
-		supportedVersions = []runtime.Object{
-			&batchv1beta1.CronJob{},
-			&batchv2alpha1.CronJob{},
 		}
 	case ReplicationControllers:
 		supportedVersions = []runtime.Object{

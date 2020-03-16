@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	"github.com/fairwindsops/polaris/pkg/config"
+	"github.com/fairwindsops/polaris/pkg/kube"
 	validator "github.com/fairwindsops/polaris/pkg/validator"
 	"github.com/fairwindsops/polaris/pkg/validator/controllers"
 
@@ -142,7 +143,7 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 		}
 		if err == nil {
 			var controllerResult validator.ControllerResult
-			controllerResult, err = validator.ValidateController(&v.Config, controller)
+			controllerResult, err = validator.ValidateController(&v.Config, controller, &kube.ResourceProvider{})
 			podResult = controllerResult.PodResult
 		}
 	}

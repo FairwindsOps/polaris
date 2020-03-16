@@ -15,10 +15,14 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sYaml "k8s.io/apimachinery/pkg/util/yaml"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth" // Required for other auth providers like GKE.
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/restmapper"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 )
 
@@ -37,6 +41,8 @@ type ResourceProvider struct {
 	ReplicationControllers []corev1.ReplicationController
 	Namespaces             []corev1.Namespace
 	Pods                   []corev1.Pod
+	DynamicClient          *dynamic.Interface
+	RestMapper             *meta.RESTMapper
 }
 
 type k8sResource struct {
@@ -114,11 +120,11 @@ func CreateResourceProviderFromCluster() (*ResourceProvider, error) {
 		logrus.Errorf("Error creating Kubernetes client: %v", err)
 		return nil, err
 	}
-	return CreateResourceProviderFromAPI(api, kubeConf.Host)
+	return CreateResourceProviderFromAPI(api, kubeConf.Host, kubeConf)
 }
 
 // CreateResourceProviderFromAPI creates a new ResourceProvider from an existing k8s interface
-func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string) (*ResourceProvider, error) {
+func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string, kubeConf *rest.Config) (*ResourceProvider, error) {
 	listOpts := metav1.ListOptions{}
 	serverVersion, err := kube.Discovery().ServerVersion()
 	if err != nil {
@@ -130,10 +136,6 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 		return nil, err
 	}
 	statefulSets, err := getStatefulSets(kube)
-	if err != nil {
-		return nil, err
-	}
-	cronJobs, err := getCronJobs(kube)
 	if err != nil {
 		return nil, err
 	}
@@ -167,6 +169,17 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 		logrus.Errorf("Error fetching Pods: %v", err)
 		return nil, err
 	}
+	dynamicInterface, err := dynamic.NewForConfig(kubeConf)
+	if err != nil {
+		logrus.Errorf("Error connecting to dynamic interface: %v", err)
+		return nil, err
+	}
+	resources, err := restmapper.GetAPIGroupResources(kube.Discovery())
+	if err != nil {
+		logrus.Errorf("Error getting API Group resources: %v", err)
+		return nil, err
+	}
+	restMapper := restmapper.NewDiscoveryRESTMapper(resources)
 
 	api := ResourceProvider{
 		ServerVersion:          serverVersion.Major + "." + serverVersion.Minor,
@@ -176,12 +189,13 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 		Deployments:            deploys,
 		StatefulSets:           statefulSets,
 		DaemonSets:             daemonSets,
-		CronJobs:               cronJobs,
 		Jobs:                   jobs.Items,
 		ReplicationControllers: replicationControllers.Items,
 		Nodes:                  nodes.Items,
 		Namespaces:             namespaces.Items,
 		Pods:                   pods.Items,
+		DynamicClient:          &dynamicInterface,
+		RestMapper:             &restMapper,
 	}
 	return &api, nil
 }
@@ -349,38 +363,6 @@ func getDaemonSets(kube kubernetes.Interface) ([]appsv1.DaemonSet, error) {
 		err = json.Unmarshal(str, &controller)
 		if err != nil {
 			logrus.Errorf("Error unmarshaling old DaemonSet version: %v", err)
-			return nil, err
-		}
-		controllers = append(controllers, controller)
-	}
-	return controllers, nil
-}
-
-func getCronJobs(kube kubernetes.Interface) ([]batchv1beta1.CronJob, error) {
-	listOpts := metav1.ListOptions{}
-	controllerList, err := kube.BatchV1beta1().CronJobs("").List(listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching CronJobs: %v", err)
-		return nil, err
-	}
-	controllers := controllerList.Items
-
-	controllersV2A1, err := kube.BatchV2alpha1().CronJobs("").List(listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching CronJobs v2alpha1: %v", err)
-		return nil, err
-	}
-
-	for _, oldController := range controllersV2A1.Items {
-		str, err := json.Marshal(oldController)
-		if err != nil {
-			logrus.Errorf("Error marshaling old CronJob version: %v", err)
-			return nil, err
-		}
-		controller := batchv1beta1.CronJob{}
-		err = json.Unmarshal(str, &controller)
-		if err != nil {
-			logrus.Errorf("Error unmarshaling old CronJob version: %v", err)
 			return nil, err
 		}
 		controllers = append(controllers, controller)
