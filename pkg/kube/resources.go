@@ -21,7 +21,6 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth" // Required for other auth providers like GKE.
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 )
@@ -120,11 +119,16 @@ func CreateResourceProviderFromCluster() (*ResourceProvider, error) {
 		logrus.Errorf("Error creating Kubernetes client: %v", err)
 		return nil, err
 	}
-	return CreateResourceProviderFromAPI(api, kubeConf.Host, kubeConf)
+	dynamicInterface, err := dynamic.NewForConfig(kubeConf)
+	if err != nil {
+		logrus.Errorf("Error connecting to dynamic interface: %v", err)
+		return nil, err
+	}
+	return CreateResourceProviderFromAPI(api, kubeConf.Host, &dynamicInterface)
 }
 
 // CreateResourceProviderFromAPI creates a new ResourceProvider from an existing k8s interface
-func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string, kubeConf *rest.Config) (*ResourceProvider, error) {
+func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string, dynamic *dynamic.Interface) (*ResourceProvider, error) {
 	listOpts := metav1.ListOptions{}
 	serverVersion, err := kube.Discovery().ServerVersion()
 	if err != nil {
@@ -151,11 +155,7 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 		logrus.Errorf("Error fetching Pods: %v", err)
 		return nil, err
 	}
-	dynamicInterface, err := dynamic.NewForConfig(kubeConf)
-	if err != nil {
-		logrus.Errorf("Error connecting to dynamic interface: %v", err)
-		return nil, err
-	}
+
 	resources, err := restmapper.GetAPIGroupResources(kube.Discovery())
 	if err != nil {
 		logrus.Errorf("Error getting API Group resources: %v", err)
@@ -172,7 +172,7 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 		Nodes:         nodes.Items,
 		Namespaces:    namespaces.Items,
 		Pods:          pods.Items,
-		DynamicClient: &dynamicInterface,
+		DynamicClient: dynamic,
 		RestMapper:    &restMapper,
 	}
 	return &api, nil

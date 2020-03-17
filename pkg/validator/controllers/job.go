@@ -13,11 +13,6 @@ type JobController struct {
 	K8SResource kubeAPIBatchV1.Job
 }
 
-// GetPodTemplate returns the original template spec
-func (j JobController) GetPodTemplate() *kubeAPICoreV1.PodTemplateSpec {
-	return &j.K8SResource.Spec.Template
-}
-
 // GetPodSpec returns the original kubernetes template pod spec
 func (j JobController) GetPodSpec() *kubeAPICoreV1.PodSpec {
 	return &j.K8SResource.Spec.Template.Spec

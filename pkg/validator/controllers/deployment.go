@@ -13,11 +13,6 @@ type DeploymentController struct {
 	K8SResource kubeAPIAppsV1.Deployment
 }
 
-// GetPodTemplate returns the original template spec
-func (d DeploymentController) GetPodTemplate() *kubeAPICoreV1.PodTemplateSpec {
-	return &d.K8SResource.Spec.Template
-}
-
 // GetPodSpec returns the original kubernetes template pod spec
 func (d DeploymentController) GetPodSpec() *kubeAPICoreV1.PodSpec {
 	return &d.K8SResource.Spec.Template.Spec

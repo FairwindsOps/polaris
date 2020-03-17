@@ -103,11 +103,9 @@ func deduplicateControllers(controllerResults []ControllerResult) []ControllerRe
 // builds a list of ResourceResults organized by namespace.
 func ValidateControllers(config *conf.Configuration, kubeResources *kube.ResourceProvider) ([]ControllerResult, error) {
 	var controllersToAudit []controller.Interface
-	loadedControllers, err := controllers.LoadControllersByKind(conf.NakedPods, kubeResources)
-	if err != nil {
-		logrus.Warn(err)
-	}
+	loadedControllers := controllers.LoadControllers(kubeResources)
 	controllersToAudit = append(controllersToAudit, loadedControllers...)
+
 	results := []ControllerResult{}
 	for _, controller := range controllersToAudit {
 		if !config.DisallowExemptions && hasExemptionAnnotation(controller) {
@@ -115,10 +113,12 @@ func ValidateControllers(config *conf.Configuration, kubeResources *kube.Resourc
 		}
 		result, err := ValidateController(config, controller, kubeResources)
 		if err != nil {
+			logrus.Warn("An error occured validating controller:", err)
 			return nil, err
 		}
 		results = append(results, result)
 	}
+
 	return deduplicateControllers(results), nil
 }
 

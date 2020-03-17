@@ -15,8 +15,9 @@
 package validator
 
 import (
-	"github.com/fairwindsops/polaris/pkg/config"
 	"time"
+
+	"github.com/fairwindsops/polaris/pkg/config"
 )
 
 const (
@@ -37,16 +38,11 @@ type AuditData struct {
 
 // ClusterInfo contains Polaris results as well as some high-level stats
 type ClusterInfo struct {
-	Version                string
-	Nodes                  int
-	Pods                   int
-	Namespaces             int
-	Deployments            int
-	StatefulSets           int
-	DaemonSets             int
-	Jobs                   int
-	CronJobs               int
-	ReplicationControllers int
+	Version     string
+	Nodes       int
+	Pods        int
+	Namespaces  int
+	Controllers int
 }
 
 // ResultMessage is the result of a given check

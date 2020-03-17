@@ -13,7 +13,7 @@ func TestGetTemplateData(t *testing.T) {
 	k8s := test.SetupTestAPI()
 	k8s = test.SetupAddControllers(k8s, "test")
 	k8s = test.SetupAddExtraControllerVersions(k8s, "test-extra")
-	resources, err := kube.CreateResourceProviderFromAPI(k8s, "test")
+	resources, err := kube.CreateResourceProviderFromAPI(k8s, "test", nil)
 	assert.Equal(t, err, nil, "error should be nil")
 
 	c := conf.Configuration{
@@ -33,8 +33,8 @@ func TestGetTemplateData(t *testing.T) {
 
 	sum := CountSummary{
 		Successes: uint(0),
-		Warnings:  uint(9),
-		Errors:    uint(9),
+		Warnings:  uint(1),
+		Errors:    uint(1),
 	}
 
 	actualAudit, err := RunAudit(c, resources)
@@ -48,17 +48,7 @@ func TestGetTemplateData(t *testing.T) {
 		kind    string
 		results int
 	}{
-		{kind: "Deployment", results: 2},
-		{kind: "Deployment", results: 2},
-		{kind: "Deployment", results: 2},
-		{kind: "StatefulSet", results: 2},
-		{kind: "StatefulSet", results: 2},
-		{kind: "StatefulSet", results: 2},
-		{kind: "DaemonSet", results: 2},
-		{kind: "DaemonSet", results: 2},
-		{kind: "Job", results: 0},
-		{kind: "CronJob", results: 0},
-		{kind: "ReplicationController", results: 2},
+		{kind: "NakedPod", results: 2},
 	}
 
 	assert.Equal(t, len(expected), len(actualAudit.Results))

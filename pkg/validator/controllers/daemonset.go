@@ -13,11 +13,6 @@ type DaemonSetController struct {
 	K8SResource kubeAPIAppsV1.DaemonSet
 }
 
-// GetPodTemplate returns the original template spec
-func (d DaemonSetController) GetPodTemplate() *kubeAPICoreV1.PodTemplateSpec {
-	return &d.K8SResource.Spec.Template
-}
-
 // GetPodSpec returns the original kubernetes template pod spec
 func (d DaemonSetController) GetPodSpec() *kubeAPICoreV1.PodSpec {
 	return &d.K8SResource.Spec.Template.Spec

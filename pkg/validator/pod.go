@@ -25,7 +25,6 @@ func ValidatePod(conf *config.Configuration, controller controllers.Interface) (
 	if err != nil {
 		return PodResult{}, err
 	}
-
 	pRes := PodResult{
 		Results:          podResults,
 		ContainerResults: []ContainerResult{},
@@ -35,6 +34,5 @@ func ValidatePod(conf *config.Configuration, controller controllers.Interface) (
 	if err != nil {
 		return pRes, err
 	}
-
 	return pRes, nil
 }

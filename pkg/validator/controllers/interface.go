@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"fmt"
-
 	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
 	kubeAPICoreV1 "k8s.io/api/core/v1"
@@ -13,7 +11,6 @@ import (
 type Interface interface {
 	GetName() string
 	GetNamespace() string
-	GetPodTemplate() *kubeAPICoreV1.PodTemplateSpec
 	GetPodSpec() *kubeAPICoreV1.PodSpec
 	GetKind() config.SupportedController
 	GetObjectMeta() kubeAPIMetaV1.ObjectMeta
@@ -35,41 +32,11 @@ func (g GenericController) GetNamespace() string {
 	return g.Namespace
 }
 
-// LoadControllersByKind loads a list of controllers from the kubeResources by detecting their type
-func LoadControllersByKind(controllerKind config.SupportedController, kubeResources *kube.ResourceProvider) ([]Interface, error) {
+// LoadControllers loads a list of controllers from the kubeResources Pods
+func LoadControllers(kubeResources *kube.ResourceProvider) []Interface {
 	interfaces := []Interface{}
-	switch controllerKind {
-	case config.NakedPods:
-		for _, pod := range kubeResources.Pods {
-			interfaces = append(interfaces, NewNakedPodController(pod))
-		}
-	case config.Deployments:
-		for _, deploy := range kubeResources.Deployments {
-			interfaces = append(interfaces, NewDeploymentController(deploy))
-		}
-	case config.StatefulSets:
-		for _, statefulSet := range kubeResources.StatefulSets {
-			interfaces = append(interfaces, NewStatefulSetController(statefulSet))
-		}
-	case config.DaemonSets:
-		for _, daemonSet := range kubeResources.DaemonSets {
-			interfaces = append(interfaces, NewDaemonSetController(daemonSet))
-		}
-	case config.Jobs:
-		for _, job := range kubeResources.Jobs {
-			interfaces = append(interfaces, NewJobController(job))
-		}
-	case config.CronJobs:
-		for _, cronJob := range kubeResources.CronJobs {
-			interfaces = append(interfaces, NewCronJobController(cronJob))
-		}
-	case config.ReplicationControllers:
-		for _, replicationController := range kubeResources.ReplicationControllers {
-			interfaces = append(interfaces, NewReplicationControllerController(replicationController))
-		}
+	for _, pod := range kubeResources.Pods {
+		interfaces = append(interfaces, NewNakedPodController(pod))
 	}
-	if len(interfaces) > 0 {
-		return interfaces, nil
-	}
-	return nil, fmt.Errorf("Controller type (%s) does not have a generator", controllerKind)
+	return interfaces
 }

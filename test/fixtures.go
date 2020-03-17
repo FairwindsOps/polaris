@@ -32,6 +32,13 @@ func MockPod() corev1.PodTemplateSpec {
 	return p
 }
 
+// MockNakedPod created a pod object.
+func MockNakedPod() corev1.Pod {
+	return corev1.Pod{
+		Spec: MockPod().Spec,
+	}
+}
+
 // MockDeploy creates a Deployment object.
 func MockDeploy() appsv1.Deployment {
 	p := MockPod()
@@ -129,6 +136,11 @@ func SetupAddControllers(k kubernetes.Interface, namespace string) kubernetes.In
 
 	rc1 := MockReplicationController()
 	if _, err := k.CoreV1().ReplicationControllers(namespace).Create(&rc1); err != nil {
+		panic(err)
+	}
+
+	p1 := MockNakedPod()
+	if _, err := k.CoreV1().Pods(namespace).Create(&p1); err != nil {
 		panic(err)
 	}
 

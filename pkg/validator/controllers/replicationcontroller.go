@@ -15,11 +15,6 @@ type ReplicationControllerController struct {
 	K8SResource kubeAPICoreV1.ReplicationController
 }
 
-// GetPodTemplate returns the original template spec
-func (r ReplicationControllerController) GetPodTemplate() *kubeAPICoreV1.PodTemplateSpec {
-	return r.K8SResource.Spec.Template
-}
-
 // GetPodSpec returns the original kubernetes template pod spec
 func (r ReplicationControllerController) GetPodSpec() *kubeAPICoreV1.PodSpec {
 	return &r.K8SResource.Spec.Template.Spec

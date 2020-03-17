@@ -13,11 +13,6 @@ type StatefulSetController struct {
 	K8SResource kubeAPIAppsV1.StatefulSet
 }
 
-// GetPodTemplate returns the kubernetes template spec
-func (s StatefulSetController) GetPodTemplate() *kubeAPICoreV1.PodTemplateSpec {
-	return &s.K8SResource.Spec.Template
-}
-
 // GetPodSpec returns the podspec from the original kubernetes resource
 func (s StatefulSetController) GetPodSpec() *kubeAPICoreV1.PodSpec {
 	return &s.K8SResource.Spec.Template.Spec

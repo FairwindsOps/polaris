@@ -12,11 +12,6 @@ type NakedPodController struct {
 	K8SResource kubeAPICoreV1.Pod
 }
 
-// GetPodTemplate returns the original template spec
-func (n NakedPodController) GetPodTemplate() *kubeAPICoreV1.PodTemplateSpec {
-	return nil
-}
-
 // GetPodSpec returns the original kubernetes template pod spec
 func (n NakedPodController) GetPodSpec() *kubeAPICoreV1.PodSpec {
 	return &n.K8SResource.Spec
