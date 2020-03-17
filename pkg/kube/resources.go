@@ -2,7 +2,6 @@ package kube
 
 import (
 	"bytes"
-	"encoding/json"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -11,9 +10,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	appsv1 "k8s.io/api/apps/v1"
-	batchv1 "k8s.io/api/batch/v1"
-	batchv1beta1 "k8s.io/api/batch/v1beta1"
+	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -27,21 +24,15 @@ import (
 
 // ResourceProvider contains k8s resources to be audited
 type ResourceProvider struct {
-	ServerVersion          string
-	CreationTime           time.Time
-	SourceName             string
-	SourceType             string
-	Nodes                  []corev1.Node
-	Deployments            []appsv1.Deployment
-	StatefulSets           []appsv1.StatefulSet
-	DaemonSets             []appsv1.DaemonSet
-	Jobs                   []batchv1.Job
-	CronJobs               []batchv1beta1.CronJob
-	ReplicationControllers []corev1.ReplicationController
-	Namespaces             []corev1.Namespace
-	Pods                   []corev1.Pod
-	DynamicClient          *dynamic.Interface
-	RestMapper             *meta.RESTMapper
+	ServerVersion string
+	CreationTime  time.Time
+	SourceName    string
+	SourceType    string
+	Nodes         []corev1.Node
+	Namespaces    []corev1.Namespace
+	Pods          []corev1.Pod
+	DynamicClient *dynamic.Interface
+	RestMapper    *meta.RESTMapper
 }
 
 type k8sResource struct {
@@ -59,18 +50,12 @@ func CreateResourceProvider(directory string) (*ResourceProvider, error) {
 // CreateResourceProviderFromPath returns a new ResourceProvider using the YAML files in a directory
 func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error) {
 	resources := ResourceProvider{
-		ServerVersion:          "unknown",
-		SourceType:             "Path",
-		SourceName:             directory,
-		Nodes:                  []corev1.Node{},
-		Deployments:            []appsv1.Deployment{},
-		StatefulSets:           []appsv1.StatefulSet{},
-		DaemonSets:             []appsv1.DaemonSet{},
-		Jobs:                   []batchv1.Job{},
-		CronJobs:               []batchv1beta1.CronJob{},
-		ReplicationControllers: []corev1.ReplicationController{},
-		Namespaces:             []corev1.Namespace{},
-		Pods:                   []corev1.Pod{},
+		ServerVersion: "unknown",
+		SourceType:    "Path",
+		SourceName:    directory,
+		Nodes:         []corev1.Node{},
+		Namespaces:    []corev1.Namespace{},
+		Pods:          []corev1.Pod{},
 	}
 
 	addYaml := func(contents string) error {
@@ -135,11 +120,7 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 		logrus.Errorf("Error fetching Cluster API version: %v", err)
 		return nil, err
 	}
-	jobs, err := kube.BatchV1().Jobs("").List(listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching Jobs: %v", err)
-		return nil, err
-	}
+
 	nodes, err := kube.CoreV1().Nodes().List(listOpts)
 	if err != nil {
 		logrus.Errorf("Error fetching Nodes: %v", err)
@@ -168,7 +149,6 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 		SourceType:    "Cluster",
 		SourceName:    clusterName,
 		CreationTime:  time.Now(),
-		Jobs:          jobs.Items,
 		Nodes:         nodes.Items,
 		Namespaces:    namespaces.Items,
 		Pods:          pods.Items,
@@ -178,41 +158,28 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 	return &api, nil
 }
 
+func getPodSpec(yaml map[string]interface{}) interface{} {
+	if childYaml, ok := yaml["spec"]; ok {
+		return getPodSpec(childYaml.(map[string]interface{}))
+	}
+	if childYaml, ok := yaml["template"]; ok {
+		return getPodSpec(childYaml.(map[string]interface{}))
+	}
+	return yaml
+}
+
 func addResourceFromString(contents string, resources *ResourceProvider) error {
 	contentBytes := []byte(contents)
 	decoder := k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(contentBytes), 1000)
 	resource := k8sResource{}
 	err := decoder.Decode(&resource)
+	decoder = k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(contentBytes), 1000)
+
 	if err != nil {
 		logrus.Errorf("Invalid YAML: %s", string(contents))
 		return err
 	}
-	decoder = k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(contentBytes), 1000)
-	if resource.Kind == "Deployment" {
-		controller := appsv1.Deployment{}
-		err = decoder.Decode(&controller)
-		resources.Deployments = append(resources.Deployments, controller)
-	} else if resource.Kind == "StatefulSet" {
-		controller := appsv1.StatefulSet{}
-		err = decoder.Decode(&controller)
-		resources.StatefulSets = append(resources.StatefulSets, controller)
-	} else if resource.Kind == "DaemonSet" {
-		controller := appsv1.DaemonSet{}
-		err = decoder.Decode(&controller)
-		resources.DaemonSets = append(resources.DaemonSets, controller)
-	} else if resource.Kind == "Job" {
-		controller := batchv1.Job{}
-		err = decoder.Decode(&controller)
-		resources.Jobs = append(resources.Jobs, controller)
-	} else if resource.Kind == "CronJob" {
-		controller := batchv1beta1.CronJob{}
-		err = decoder.Decode(&controller)
-		resources.CronJobs = append(resources.CronJobs, controller)
-	} else if resource.Kind == "ReplicationController" {
-		controller := corev1.ReplicationController{}
-		err = decoder.Decode(&controller)
-		resources.ReplicationControllers = append(resources.ReplicationControllers, controller)
-	} else if resource.Kind == "Namespace" {
+	if resource.Kind == "Namespace" {
 		ns := corev1.Namespace{}
 		err = decoder.Decode(&ns)
 		resources.Namespaces = append(resources.Namespaces, ns)
@@ -220,130 +187,27 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 		pod := corev1.Pod{}
 		err = decoder.Decode(&pod)
 		resources.Pods = append(resources.Pods, pod)
-	}
-	if err != nil {
-		logrus.Errorf("Error parsing %s: %v", resource.Kind, err)
-		return err
-	}
-	return nil
-}
-
-func getDeployments(kube kubernetes.Interface) ([]appsv1.Deployment, error) {
-	listOpts := metav1.ListOptions{}
-	deployList, err := kube.AppsV1().Deployments("").List(listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching Deployments: %v", err)
-		return nil, err
-	}
-	deploys := deployList.Items
-
-	oldDeploys := make([]interface{}, 0)
-	deploysV1B1, err := kube.AppsV1beta1().Deployments("").List(listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching Deployments v1beta1: %v", err)
-		return nil, err
-	}
-	for _, oldDeploy := range deploysV1B1.Items {
-		oldDeploys = append(oldDeploys, oldDeploy)
-	}
-	deploysV1B2, err := kube.AppsV1beta2().Deployments("").List(listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching Deployments v1beta2: %v", err)
-		return nil, err
-	}
-	for _, oldDeploy := range deploysV1B2.Items {
-		oldDeploys = append(oldDeploys, oldDeploy)
-	}
-
-	for _, oldDeploy := range oldDeploys {
-		str, err := json.Marshal(oldDeploy)
+	} else {
+		yamlNode := make(map[string]interface{})
+		err = yaml.Unmarshal(contentBytes, &yamlNode)
 		if err != nil {
-			logrus.Errorf("Error marshaling old deployment version: %v", err)
-			return nil, err
+			logrus.Errorf("Invalid YAML: %s", string(contents))
+			return err
 		}
-		deploy := appsv1.Deployment{}
-		err = json.Unmarshal(str, &deploy)
+		finalDoc := make(map[string]interface{})
+		finalDoc["metadata"] = yamlNode["metadata"]
+		finalDoc["apiVersion"] = "v1"
+		finalDoc["kind"] = "Pod"
+		finalDoc["spec"] = getPodSpec(yamlNode)
+		marshelledYaml, err := yaml.Marshal(finalDoc)
 		if err != nil {
-			logrus.Errorf("Error unmarshaling old deployment version: %v", err)
-			return nil, err
+			logrus.Errorf("Could not marshell yaml: %v", err)
+			return err
 		}
-		deploys = append(deploys, deploy)
+		decoder := k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(marshelledYaml), 1000)
+		pod := corev1.Pod{}
+		err = decoder.Decode(&pod)
+		resources.Pods = append(resources.Pods, pod)
 	}
-	return deploys, nil
-}
-
-func getStatefulSets(kube kubernetes.Interface) ([]appsv1.StatefulSet, error) {
-	listOpts := metav1.ListOptions{}
-	controllerList, err := kube.AppsV1().StatefulSets("").List(listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching StatefulSets: %v", err)
-		return nil, err
-	}
-	controllers := controllerList.Items
-
-	oldControllers := make([]interface{}, 0)
-	controllersV1B1, err := kube.AppsV1beta1().StatefulSets("").List(listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching StatefulSets v1beta1: %v", err)
-		return nil, err
-	}
-	for _, oldController := range controllersV1B1.Items {
-		oldControllers = append(oldControllers, oldController)
-	}
-	controllersV1B2, err := kube.AppsV1beta2().StatefulSets("").List(listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching StatefulSets v1beta2: %v", err)
-		return nil, err
-	}
-	for _, oldController := range controllersV1B2.Items {
-		oldControllers = append(oldControllers, oldController)
-	}
-
-	for _, oldController := range oldControllers {
-		str, err := json.Marshal(oldController)
-		if err != nil {
-			logrus.Errorf("Error marshaling old StatefulSet version: %v", err)
-			return nil, err
-		}
-		controller := appsv1.StatefulSet{}
-		err = json.Unmarshal(str, &controller)
-		if err != nil {
-			logrus.Errorf("Error unmarshaling old StatefulSet version: %v", err)
-			return nil, err
-		}
-		controllers = append(controllers, controller)
-	}
-	return controllers, nil
-}
-
-func getDaemonSets(kube kubernetes.Interface) ([]appsv1.DaemonSet, error) {
-	listOpts := metav1.ListOptions{}
-	controllerList, err := kube.AppsV1().DaemonSets("").List(listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching DaemonSets: %v", err)
-		return nil, err
-	}
-	controllers := controllerList.Items
-
-	controllersV1B2, err := kube.AppsV1beta2().DaemonSets("").List(listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching DaemonSets v1beta2: %v", err)
-		return nil, err
-	}
-
-	for _, oldController := range controllersV1B2.Items {
-		str, err := json.Marshal(oldController)
-		if err != nil {
-			logrus.Errorf("Error marshaling old DaemonSet version: %v", err)
-			return nil, err
-		}
-		controller := appsv1.DaemonSet{}
-		err = json.Unmarshal(str, &controller)
-		if err != nil {
-			logrus.Errorf("Error unmarshaling old DaemonSet version: %v", err)
-			return nil, err
-		}
-		controllers = append(controllers, controller)
-	}
-	return controllers, nil
+	return err
 }
