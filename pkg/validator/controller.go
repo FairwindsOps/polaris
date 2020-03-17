@@ -36,13 +36,17 @@ func ValidateController(conf *conf.Configuration, controller controller.Interfac
 		return ControllerResult{}, err
 	}
 	result := ControllerResult{
-		Kind:        controller.GetKind().String(),
-		Name:        controller.GetName(),
-		Namespace:   controller.GetObjectMeta().Namespace,
-		Results:     ResultSet{},
-		PodResult:   podResult,
-		CreatedTime: controller.GetObjectMeta().CreationTimestamp.Time,
+		Kind:      controller.GetKind().String(),
+		Name:      controller.GetName(),
+		Namespace: controller.GetObjectMeta().Namespace,
+		Results:   ResultSet{},
+		PodResult: podResult,
 	}
+	if kubeResources.DynamicClient == nil {
+		return result, nil
+	}
+	result.CreatedTime = controller.GetObjectMeta().CreationTimestamp.Time
+
 	owners := controller.GetObjectMeta().OwnerReferences
 	// If an owner exists then set the name to the controller.
 	// This allows us to handle CRDs creating Controllers or DeploymentConfigs in OpenShift.
@@ -50,25 +54,22 @@ func ValidateController(conf *conf.Configuration, controller controller.Interfac
 		firstOwner := owners[0]
 		result.Kind = firstOwner.Kind
 		result.Name = firstOwner.Name
-		if kubeResources.DynamicClient != nil {
 
-			dynamicClient := *kubeResources.DynamicClient
-			restMapper := *kubeResources.RestMapper
-			fqKind := schema.FromAPIVersionAndKind(firstOwner.APIVersion, firstOwner.Kind)
-			mapping, err := restMapper.RESTMapping(fqKind.GroupKind(), fqKind.Version)
-			if err != nil {
-				logrus.Warnf("Error retrieving mapping %s of API %s and Kind %s because of error: %v ", firstOwner.Name, firstOwner.APIVersion, firstOwner.Kind, err)
-				return result, nil
-			}
-			getParents, err := dynamicClient.Resource(mapping.Resource).Namespace(controller.GetObjectMeta().Namespace).Get(firstOwner.Name, metav1.GetOptions{})
-			if err != nil {
-				logrus.Warnf("Error retrieving parent object %s of API %s and Kind %s because of error: %v ", firstOwner.Name, firstOwner.APIVersion, firstOwner.Kind, err)
-				return result, nil
-			}
-			owners = getParents.GetOwnerReferences()
-		} else {
-			break
+		dynamicClient := *kubeResources.DynamicClient
+		restMapper := *kubeResources.RestMapper
+		fqKind := schema.FromAPIVersionAndKind(firstOwner.APIVersion, firstOwner.Kind)
+		mapping, err := restMapper.RESTMapping(fqKind.GroupKind(), fqKind.Version)
+		if err != nil {
+			logrus.Warnf("Error retrieving mapping %s of API %s and Kind %s because of error: %v ", firstOwner.Name, firstOwner.APIVersion, firstOwner.Kind, err)
+			return result, nil
 		}
+		getParents, err := dynamicClient.Resource(mapping.Resource).Namespace(controller.GetObjectMeta().Namespace).Get(firstOwner.Name, metav1.GetOptions{})
+		if err != nil {
+			logrus.Warnf("Error retrieving parent object %s of API %s and Kind %s because of error: %v ", firstOwner.Name, firstOwner.APIVersion, firstOwner.Kind, err)
+			return result, nil
+		}
+		owners = getParents.GetOwnerReferences()
+
 	}
 
 	return result, nil
