@@ -18,8 +18,26 @@ type Interface interface {
 
 // GenericController is a base implementation with some free methods for inherited structs
 type GenericController struct {
-	Name      string
-	Namespace string
+	Name       string
+	Namespace  string
+	PodSpec    kubeAPICoreV1.PodSpec
+	ObjectMeta kubeAPIMetaV1.ObjectMeta
+	Kind       config.SupportedController
+}
+
+// GetPodSpec returns the original kubernetes template pod spec
+func (g GenericController) GetPodSpec() *kubeAPICoreV1.PodSpec {
+	return &g.PodSpec
+}
+
+// GetObjectMeta returns the metadata
+func (g GenericController) GetObjectMeta() kubeAPIMetaV1.ObjectMeta {
+	return g.ObjectMeta
+}
+
+// GetKind returns the supportedcontroller enum type
+func (g GenericController) GetKind() config.SupportedController {
+	return g.Kind
 }
 
 // GetName is inherited by all controllers using generic controller to get the name of the controller

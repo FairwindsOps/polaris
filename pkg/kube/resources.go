@@ -159,11 +159,11 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 }
 
 func getPodSpec(yaml map[string]interface{}) interface{} {
-	if childYaml, ok := yaml["spec"]; ok {
-		return getPodSpec(childYaml.(map[string]interface{}))
-	}
-	if childYaml, ok := yaml["template"]; ok {
-		return getPodSpec(childYaml.(map[string]interface{}))
+	allowedChildren := []string{"jobTemplate", "spec", "template"}
+	for _, child := range allowedChildren {
+		if childYaml, ok := yaml[child]; ok {
+			return getPodSpec(childYaml.(map[string]interface{}))
+		}
 	}
 	return yaml
 }
