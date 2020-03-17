@@ -17,7 +17,7 @@ require (
 	github.com/go-logr/zapr v0.1.1
 	github.com/gobuffalo/depgen v0.1.0 // indirect
 	github.com/gobuffalo/envy v1.8.1
-	github.com/gobuffalo/genny v0.4.1
+	github.com/gobuffalo/genny v0.6.0
 	github.com/gobuffalo/gogen v0.2.0
 	github.com/gobuffalo/logger v1.0.3
 	github.com/gobuffalo/mapi v1.2.0
