@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go v0.39.0
 	contrib.go.opencensus.io/exporter/ocagent v0.4.12
 	git.apache.org/thrift.git v0.12.0 // indirect
-	github.com/Azure/go-autorest v12.0.0+incompatible
+	github.com/Azure/go-autorest v12.4.3+incompatible
 	github.com/appscode/jsonpatch v0.0.0-20190108182946-7c0e3b262f30
 	github.com/beorn7/perks v1.0.0
 	github.com/census-instrumentation/opencensus-proto v0.2.0
