@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go v0.39.0
 	contrib.go.opencensus.io/exporter/ocagent v0.4.12
 	git.apache.org/thrift.git v0.12.0 // indirect
-	github.com/Azure/go-autorest v12.0.0+incompatible
+	github.com/Azure/go-autorest v12.4.3+incompatible
 	github.com/appscode/jsonpatch v0.0.0-20190108182946-7c0e3b262f30
 	github.com/beorn7/perks v1.0.0
 	github.com/census-instrumentation/opencensus-proto v0.2.0
@@ -69,7 +69,7 @@ require (
 	gitlab.com/golang-commonmark/puny v0.0.0-20180912090636-2cd490539afe
 	go.opencensus.io v0.21.0
 	go.uber.org/atomic v1.4.0
-	go.uber.org/multierr v1.1.0
+	go.uber.org/multierr v1.5.0
 	go.uber.org/zap v1.14.0
 	golang.org/x/crypto v0.0.0-20191219195013-becbf705a915
 	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
