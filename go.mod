@@ -69,7 +69,7 @@ require (
 	gitlab.com/golang-commonmark/puny v0.0.0-20180912090636-2cd490539afe
 	go.opencensus.io v0.21.0
 	go.uber.org/atomic v1.4.0
-	go.uber.org/multierr v1.1.0
+	go.uber.org/multierr v1.5.0
 	go.uber.org/zap v1.14.0
 	golang.org/x/crypto v0.0.0-20191219195013-becbf705a915
 	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
