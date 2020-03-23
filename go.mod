@@ -36,7 +36,7 @@ require (
 	github.com/gorilla/mux v1.7.2
 	github.com/gregjones/httpcache v0.0.0-20190212212710-3befbb6ad0cc
 	github.com/grpc-ecosystem/grpc-gateway v1.9.0
-	github.com/hashicorp/golang-lru v0.5.1
+	github.com/hashicorp/golang-lru v0.5.4
 	github.com/imdario/mergo v0.3.7
 	github.com/joho/godotenv v1.3.0
 	github.com/json-iterator/go v1.1.6
