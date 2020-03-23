@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go v0.39.0
 	contrib.go.opencensus.io/exporter/ocagent v0.4.12
 	git.apache.org/thrift.git v0.12.0 // indirect
-	github.com/Azure/go-autorest v12.0.0+incompatible
+	github.com/Azure/go-autorest v12.4.3+incompatible
 	github.com/appscode/jsonpatch v0.0.0-20190108182946-7c0e3b262f30
 	github.com/beorn7/perks v1.0.0
 	github.com/census-instrumentation/opencensus-proto v0.2.0
@@ -17,7 +17,7 @@ require (
 	github.com/go-logr/zapr v0.1.1
 	github.com/gobuffalo/depgen v0.1.0 // indirect
 	github.com/gobuffalo/envy v1.8.1
-	github.com/gobuffalo/genny v0.4.1
+	github.com/gobuffalo/genny v0.6.0
 	github.com/gobuffalo/gogen v0.2.0
 	github.com/gobuffalo/logger v1.0.3
 	github.com/gobuffalo/mapi v1.2.0
@@ -61,7 +61,7 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.5.1
 	gitlab.com/golang-commonmark/html v0.0.0-20180917080848-cfaf75183c4a
 	gitlab.com/golang-commonmark/linkify v0.0.0-20180917065525-c22b7bdb1179
 	gitlab.com/golang-commonmark/markdown v0.0.0-20181102083822-772775880e1f
@@ -69,8 +69,8 @@ require (
 	gitlab.com/golang-commonmark/puny v0.0.0-20180912090636-2cd490539afe
 	go.opencensus.io v0.21.0
 	go.uber.org/atomic v1.4.0
-	go.uber.org/multierr v1.1.0
-	go.uber.org/zap v1.10.0
+	go.uber.org/multierr v1.5.0
+	go.uber.org/zap v1.14.0
 	golang.org/x/crypto v0.0.0-20191219195013-becbf705a915
 	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
 	golang.org/x/oauth2 v0.0.0-20190517181255-950ef44c6e07
