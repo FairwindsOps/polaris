@@ -6,7 +6,7 @@ import (
 )
 
 // NewJobController builds a new controller interface for Deployments
-func NewJobController(originalResource kubeAPIBatchV1.Job) Interface {
+func NewJobController(originalResource kubeAPIBatchV1.Job) GenericController {
 	controller := GenericController{}
 	controller.Name = originalResource.Name
 	controller.Namespace = originalResource.Namespace

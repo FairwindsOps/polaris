@@ -36,7 +36,7 @@ func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider) (
 		ClusterInfo: ClusterInfo{
 			Version:     kubeResources.ServerVersion,
 			Nodes:       len(kubeResources.Nodes),
-			Pods:        len(kubeResources.Pods),
+			Pods:        len(kubeResources.Controllers), // TODO validate that this is still valuable
 			Namespaces:  len(kubeResources.Namespaces),
 			Controllers: len(results),
 		},

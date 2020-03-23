@@ -6,7 +6,7 @@ import (
 )
 
 // NewDaemonSetController builds a new controller interface for Deployments
-func NewDaemonSetController(originalResource kubeAPIAppsV1.DaemonSet) Interface {
+func NewDaemonSetController(originalResource kubeAPIAppsV1.DaemonSet) GenericController {
 	controller := GenericController{}
 	controller.Name = originalResource.Name
 	controller.Namespace = originalResource.Namespace

@@ -7,7 +7,7 @@ import (
 )
 
 // NewCronJobController builds a new controller interface for Deployments
-func NewCronJobController(originalResource kubeAPIBatchV1beta1.CronJob) Interface {
+func NewCronJobController(originalResource kubeAPIBatchV1beta1.CronJob) GenericController {
 	controller := GenericController{}
 	controller.Name = originalResource.Name
 	controller.Namespace = originalResource.Namespace

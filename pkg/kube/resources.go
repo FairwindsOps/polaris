@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fairwindsops/polaris/pkg/validator/controllers"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sYaml "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/dynamic"
@@ -30,9 +30,7 @@ type ResourceProvider struct {
 	SourceType    string
 	Nodes         []corev1.Node
 	Namespaces    []corev1.Namespace
-	Pods          []corev1.Pod
-	DynamicClient *dynamic.Interface
-	RestMapper    *meta.RESTMapper
+	Controllers   []controllers.GenericController
 }
 
 type k8sResource struct {
@@ -55,7 +53,7 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 		SourceName:    directory,
 		Nodes:         []corev1.Node{},
 		Namespaces:    []corev1.Namespace{},
-		Pods:          []corev1.Pod{},
+		Controllers:   []controllers.GenericController{},
 	}
 
 	addYaml := func(contents string) error {
@@ -143,7 +141,6 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 		return nil, err
 	}
 	restMapper := restmapper.NewDiscoveryRESTMapper(resources)
-
 	api := ResourceProvider{
 		ServerVersion: serverVersion.Major + "." + serverVersion.Minor,
 		SourceType:    "Cluster",
@@ -151,9 +148,7 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 		CreationTime:  time.Now(),
 		Nodes:         nodes.Items,
 		Namespaces:    namespaces.Items,
-		Pods:          pods.Items,
-		DynamicClient: dynamic,
-		RestMapper:    &restMapper,
+		Controllers:   controllers.LoadControllers(pods.Items, dynamic, &restMapper),
 	}
 	return &api, nil
 }
@@ -186,7 +181,7 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 	} else if resource.Kind == "Pod" {
 		pod := corev1.Pod{}
 		err = decoder.Decode(&pod)
-		resources.Pods = append(resources.Pods, pod)
+		resources.Controllers = append(resources.Controllers, controllers.NewGenericPodController(pod, nil, nil))
 	} else {
 		yamlNode := make(map[string]interface{})
 		err = yaml.Unmarshal(contentBytes, &yamlNode)
@@ -199,15 +194,17 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 		finalDoc["apiVersion"] = "v1"
 		finalDoc["kind"] = "Pod"
 		finalDoc["spec"] = getPodSpec(yamlNode)
-		marshelledYaml, err := yaml.Marshal(finalDoc)
+		marshaledYaml, err := yaml.Marshal(finalDoc)
 		if err != nil {
-			logrus.Errorf("Could not marshell yaml: %v", err)
+			logrus.Errorf("Could not marshal yaml: %v", err)
 			return err
 		}
-		decoder := k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(marshelledYaml), 1000)
+		decoder := k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(marshaledYaml), 1000)
 		pod := corev1.Pod{}
 		err = decoder.Decode(&pod)
-		resources.Pods = append(resources.Pods, pod)
+		newController := controllers.NewGenericPodController(pod, nil, nil)
+		newController.KindString = resource.Kind
+		resources.Controllers = append(resources.Controllers, newController)
 	}
 	return err
 }

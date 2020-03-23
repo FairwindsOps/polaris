@@ -6,7 +6,7 @@ import (
 )
 
 // NewNakedPodController builds a new controller interface for NakedPods
-func NewNakedPodController(originalResource kubeAPICoreV1.Pod) Interface {
+func NewNakedPodController(originalResource kubeAPICoreV1.Pod) GenericController {
 	controller := GenericController{}
 	controller.Name = originalResource.Name
 	controller.Namespace = originalResource.Namespace

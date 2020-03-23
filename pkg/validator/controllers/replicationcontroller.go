@@ -6,7 +6,7 @@ import (
 )
 
 // NewReplicationControllerController builds a new controller interface for Deployments
-func NewReplicationControllerController(originalResource kubeAPICoreV1.ReplicationController) Interface {
+func NewReplicationControllerController(originalResource kubeAPICoreV1.ReplicationController) GenericController {
 	controller := GenericController{}
 	controller.Name = originalResource.Name
 	controller.Namespace = originalResource.Namespace

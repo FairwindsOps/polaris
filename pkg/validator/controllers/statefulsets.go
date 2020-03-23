@@ -7,7 +7,7 @@ import (
 )
 
 // NewStatefulSetController builds a statefulset controller
-func NewStatefulSetController(originalResource kubeAPIAppsV1.StatefulSet) Interface {
+func NewStatefulSetController(originalResource kubeAPIAppsV1.StatefulSet) GenericController {
 	controller := GenericController{}
 	controller.Name = originalResource.Name
 	controller.Namespace = originalResource.Namespace

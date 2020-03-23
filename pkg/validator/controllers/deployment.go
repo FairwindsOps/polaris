@@ -6,7 +6,7 @@ import (
 )
 
 // NewDeploymentController builds a new controller interface for Deployments
-func NewDeploymentController(originalResource kubeAPIAppsV1.Deployment) Interface {
+func NewDeploymentController(originalResource kubeAPIAppsV1.Deployment) GenericController {
 	controller := GenericController{}
 	controller.Name = originalResource.Name
 	controller.Namespace = originalResource.Namespace
