@@ -12,7 +12,7 @@ func NewNakedPodController(originalResource kubeAPICoreV1.Pod) GenericController
 	controller.Namespace = originalResource.Namespace
 	controller.PodSpec = originalResource.Spec
 	controller.ObjectMeta = originalResource.ObjectMeta
-	controller.Kind = config.NakedPods
+	controller.Kind = config.NakedPods.String()
 
 	return controller
 }

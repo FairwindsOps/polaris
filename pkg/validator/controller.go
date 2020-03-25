@@ -33,7 +33,7 @@ func ValidateController(conf *conf.Configuration, controller controller.GenericC
 		return ControllerResult{}, err
 	}
 	result := ControllerResult{
-		Kind:      controller.GetKindString(),
+		Kind:      controller.GetKind(),
 		Name:      controller.GetName(),
 		Namespace: controller.GetObjectMeta().Namespace,
 		Results:   ResultSet{},

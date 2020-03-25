@@ -137,7 +137,7 @@ func TestControllerExemptions(t *testing.T) {
 		},
 	}
 	newController := test.MockGenericController()
-	newController.KindString = "Deployment"
+	newController.Kind = "Deployment"
 	resources := &kube.ResourceProvider{
 		Controllers: []controller.GenericController{newController},
 	}

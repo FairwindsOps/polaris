@@ -12,6 +12,6 @@ func NewJobController(originalResource kubeAPIBatchV1.Job) GenericController {
 	controller.Namespace = originalResource.Namespace
 	controller.PodSpec = originalResource.Spec.Template.Spec
 	controller.ObjectMeta = originalResource.ObjectMeta
-	controller.Kind = config.Jobs
+	controller.Kind = config.Jobs.String()
 	return controller
 }

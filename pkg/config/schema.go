@@ -144,13 +144,13 @@ func (check SchemaCheck) CheckObject(obj interface{}) (bool, error) {
 }
 
 // IsActionable decides if this check applies to a particular target
-func (check SchemaCheck) IsActionable(target TargetKind, controllerType SupportedController, isInit bool) bool {
+func (check SchemaCheck) IsActionable(target TargetKind, controllerType string, isInit bool) bool {
 	if check.Target != target {
 		return false
 	}
 	isIncluded := len(check.Controllers.Include) == 0
 	for _, inclusion := range check.Controllers.Include {
-		if GetSupportedControllerFromString(inclusion) == controllerType {
+		if inclusion == controllerType {
 			isIncluded = true
 			break
 		}
@@ -159,7 +159,7 @@ func (check SchemaCheck) IsActionable(target TargetKind, controllerType Supporte
 		return false
 	}
 	for _, exclusion := range check.Controllers.Exclude {
-		if GetSupportedControllerFromString(exclusion) == controllerType {
+		if exclusion == controllerType {
 			return false
 		}
 	}

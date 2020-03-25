@@ -3,7 +3,6 @@ package controllers
 import (
 	"time"
 
-	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/sirupsen/logrus"
 	kubeAPICoreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -18,8 +17,7 @@ type GenericController struct {
 	Namespace   string
 	PodSpec     kubeAPICoreV1.PodSpec
 	ObjectMeta  kubeAPIMetaV1.ObjectMeta
-	Kind        config.SupportedController
-	KindString  string
+	Kind        string
 	CreatedTime time.Time
 }
 
@@ -34,16 +32,8 @@ func (g GenericController) GetObjectMeta() kubeAPIMetaV1.ObjectMeta {
 }
 
 // GetKind returns the supportedcontroller enum type
-func (g GenericController) GetKind() config.SupportedController {
+func (g GenericController) GetKind() string {
 	return g.Kind
-}
-
-// GetKindString returns a string representing what kind of object the top level controller is.
-func (g GenericController) GetKindString() string {
-	if g.KindString == "" {
-		return g.Kind.String()
-	}
-	return g.KindString
 }
 
 // GetName is inherited by all controllers using generic controller to get the name of the controller
@@ -56,33 +46,6 @@ func (g GenericController) GetNamespace() string {
 	return g.Namespace
 }
 
-// LoadControllers loads a list of controllers from the kubeResources Pods
-func LoadControllers(pods []kubeAPICoreV1.Pod, dynamicClientPointer *dynamic.Interface, restMapperPointer *meta.RESTMapper) []GenericController {
-	interfaces := []GenericController{}
-	for _, pod := range pods {
-		interfaces = append(interfaces, NewGenericPodController(pod, dynamicClientPointer, restMapperPointer))
-	}
-	return deduplicateControllers(interfaces)
-}
-
-// Because the controllers with an Owner take on the name of the Owner, this eliminates any duplicates.
-// In cases like CronJobs older children can hang around, so this takes the most recent.
-func deduplicateControllers(controllers []GenericController) []GenericController {
-	controllerMap := make(map[string]GenericController)
-	for _, controller := range controllers {
-		key := controller.GetNamespace() + "/" + controller.GetKindString() + "/" + controller.Name
-		oldController, ok := controllerMap[key]
-		if !ok || controller.CreatedTime.After(oldController.CreatedTime) {
-			controllerMap[key] = controller
-		}
-	}
-	results := make([]GenericController, 0)
-	for _, controller := range controllerMap {
-		results = append(results, controller)
-	}
-	return results
-}
-
 // NewGenericPodController builds a new controller interface for anytype of Pod
 func NewGenericPodController(originalResource kubeAPICoreV1.Pod, dynamicClientPointer *dynamic.Interface, restMapperPointer *meta.RESTMapper) GenericController {
 	controller := GenericController{}
@@ -90,8 +53,7 @@ func NewGenericPodController(originalResource kubeAPICoreV1.Pod, dynamicClientPo
 	controller.Namespace = originalResource.Namespace
 	controller.PodSpec = originalResource.Spec
 	controller.ObjectMeta = originalResource.ObjectMeta
-	controller.Kind = config.NakedPods
-	controller.KindString = "Pod"
+	controller.Kind = "Pod"
 	controller.CreatedTime = controller.GetObjectMeta().CreationTimestamp.Time
 
 	owners := controller.GetObjectMeta().OwnerReferences
@@ -101,8 +63,11 @@ func NewGenericPodController(originalResource kubeAPICoreV1.Pod, dynamicClientPo
 	// If an owner exists then set the name to the controller.
 	// This allows us to handle CRDs creating Controllers or DeploymentConfigs in OpenShift.
 	for len(owners) > 0 {
+		if len(owners) > 1 {
+			logrus.Warn("More than 1 owner found")
+		}
 		firstOwner := owners[0]
-		controller.KindString = firstOwner.Kind
+		controller.Kind = firstOwner.Kind
 		controller.Name = firstOwner.Name
 
 		dynamicClient := *dynamicClientPointer

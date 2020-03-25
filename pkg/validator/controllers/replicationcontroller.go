@@ -12,6 +12,6 @@ func NewReplicationControllerController(originalResource kubeAPICoreV1.Replicati
 	controller.Namespace = originalResource.Namespace
 	controller.PodSpec = originalResource.Spec.Template.Spec
 	controller.ObjectMeta = originalResource.ObjectMeta
-	controller.Kind = config.ReplicationControllers
+	controller.Kind = config.ReplicationControllers.String()
 	return controller
 }

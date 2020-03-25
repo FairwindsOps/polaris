@@ -12,6 +12,6 @@ func NewDaemonSetController(originalResource kubeAPIAppsV1.DaemonSet) GenericCon
 	controller.Namespace = originalResource.Namespace
 	controller.PodSpec = originalResource.Spec.Template.Spec
 	controller.ObjectMeta = originalResource.ObjectMeta
-	controller.Kind = config.DaemonSets
+	controller.Kind = config.DaemonSets.String()
 	return controller
 }

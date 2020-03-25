@@ -12,6 +12,6 @@ func NewDeploymentController(originalResource kubeAPIAppsV1.Deployment) GenericC
 	controller.Namespace = originalResource.Namespace
 	controller.PodSpec = originalResource.Spec.Template.Spec
 	controller.ObjectMeta = originalResource.ObjectMeta
-	controller.Kind = config.Deployments
+	controller.Kind = config.Deployments.String()
 	return controller
 }

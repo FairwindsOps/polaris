@@ -13,7 +13,7 @@ func NewCronJobController(originalResource kubeAPIBatchV1beta1.CronJob) GenericC
 	controller.Namespace = originalResource.Namespace
 	controller.PodSpec = originalResource.Spec.JobTemplate.Spec.Template.Spec
 	controller.ObjectMeta = originalResource.ObjectMeta
-	controller.Kind = config.CronJobs
+	controller.Kind = config.CronJobs.String()
 	if controller.Name == "" {
 		logrus.Warn("Name is missing from controller", originalResource.Namespace)
 	}

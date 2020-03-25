@@ -13,7 +13,7 @@ func NewStatefulSetController(originalResource kubeAPIAppsV1.StatefulSet) Generi
 	controller.Namespace = originalResource.Namespace
 	controller.PodSpec = originalResource.Spec.Template.Spec
 	controller.ObjectMeta = originalResource.ObjectMeta
-	controller.Kind = config.StatefulSets
+	controller.Kind = config.StatefulSets.String()
 	if controller.Name == "" {
 		logrus.Warn("Name is missing from controller", originalResource.Namespace)
 	}

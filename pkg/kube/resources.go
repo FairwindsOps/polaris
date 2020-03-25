@@ -13,6 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sYaml "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/dynamic"
@@ -148,9 +149,36 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 		CreationTime:  time.Now(),
 		Nodes:         nodes.Items,
 		Namespaces:    namespaces.Items,
-		Controllers:   controllers.LoadControllers(pods.Items, dynamic, &restMapper),
+		Controllers:   LoadControllers(pods.Items, dynamic, &restMapper),
 	}
 	return &api, nil
+}
+
+// LoadControllers loads a list of controllers from the kubeResources Pods
+func LoadControllers(pods []corev1.Pod, dynamicClientPointer *dynamic.Interface, restMapperPointer *meta.RESTMapper) []controllers.GenericController {
+	interfaces := []controllers.GenericController{}
+	for _, pod := range pods {
+		interfaces = append(interfaces, controllers.NewGenericPodController(pod, dynamicClientPointer, restMapperPointer))
+	}
+	return deduplicateControllers(interfaces)
+}
+
+// Because the controllers with an Owner take on the name of the Owner, this eliminates any duplicates.
+// In cases like CronJobs older children can hang around, so this takes the most recent.
+func deduplicateControllers(inputControllers []controllers.GenericController) []controllers.GenericController {
+	controllerMap := make(map[string]controllers.GenericController)
+	for _, controller := range inputControllers {
+		key := controller.GetNamespace() + "/" + controller.GetKind() + "/" + controller.Name
+		oldController, ok := controllerMap[key]
+		if !ok || controller.CreatedTime.After(oldController.CreatedTime) {
+			controllerMap[key] = controller
+		}
+	}
+	results := make([]controllers.GenericController, 0)
+	for _, controller := range controllerMap {
+		results = append(results, controller)
+	}
+	return results
 }
 
 func getPodSpec(yaml map[string]interface{}) interface{} {
@@ -203,7 +231,7 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 		pod := corev1.Pod{}
 		err = decoder.Decode(&pod)
 		newController := controllers.NewGenericPodController(pod, nil, nil)
-		newController.KindString = resource.Kind
+		newController.Kind = resource.Kind
 		resources.Controllers = append(resources.Controllers, newController)
 	}
 	return err
