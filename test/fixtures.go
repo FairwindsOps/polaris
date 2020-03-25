@@ -1,12 +1,16 @@
 package test
 
 import (
+	"github.com/fairwindsops/polaris/pkg/validator/controllers"
 	appsv1 "k8s.io/api/apps/v1"
 	appsv1beta1 "k8s.io/api/apps/v1beta1"
 	appsv1beta2 "k8s.io/api/apps/v1beta2"
 	batchv1 "k8s.io/api/batch/v1"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/dynamic"
+	dynamicFake "k8s.io/client-go/dynamic/fake"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 )
@@ -32,7 +36,14 @@ func MockPod() corev1.PodTemplateSpec {
 	return p
 }
 
-// MockNakedPod created a pod object.
+// MockGenericController creates a generic controller object for testing.
+func MockGenericController() controllers.GenericController {
+	return controllers.GenericController{
+		PodSpec: MockPod().Spec,
+	}
+}
+
+// MockNakedPod creates a pod object.
 func MockNakedPod() corev1.Pod {
 	return corev1.Pod{
 		Spec: MockPod().Spec,
@@ -103,8 +114,10 @@ func MockReplicationController() corev1.ReplicationController {
 }
 
 // SetupTestAPI creates a test kube API struct.
-func SetupTestAPI() kubernetes.Interface {
-	return fake.NewSimpleClientset()
+func SetupTestAPI() (kubernetes.Interface, dynamic.Interface) {
+	scheme := runtime.NewScheme()
+
+	return fake.NewSimpleClientset(), dynamicFake.NewSimpleDynamicClient(scheme)
 }
 
 // SetupAddControllers creates mock controllers and adds them to the test clientset.

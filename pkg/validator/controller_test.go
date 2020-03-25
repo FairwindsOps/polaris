@@ -45,7 +45,7 @@ func TestValidateController(t *testing.T) {
 		"hostPIDSet": {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "error", Category: "Security"},
 	}
 
-	actualResult, err := ValidateController(&c, deployment, &kube.ResourceProvider{})
+	actualResult, err := ValidateController(&c, deployment)
 	if err != nil {
 		panic(err)
 	}
@@ -83,7 +83,7 @@ func TestSkipHealthChecks(t *testing.T) {
 		"readinessProbeMissing": {ID: "readinessProbeMissing", Message: "Readiness probe should be configured", Success: false, Severity: "error", Category: "Health Checks"},
 		"livenessProbeMissing":  {ID: "livenessProbeMissing", Message: "Liveness probe should be configured", Success: false, Severity: "warning", Category: "Health Checks"},
 	}
-	actualResult, err := ValidateController(&c, deployment, &kube.ResourceProvider{})
+	actualResult, err := ValidateController(&c, deployment)
 	if err != nil {
 		panic(err)
 	}
@@ -100,7 +100,7 @@ func TestSkipHealthChecks(t *testing.T) {
 		Errors:    uint(0),
 	}
 	expectedResults = ResultSet{}
-	actualResult, err = ValidateController(&c, job, &kube.ResourceProvider{})
+	actualResult, err = ValidateController(&c, job)
 	if err != nil {
 		panic(err)
 	}
@@ -116,7 +116,7 @@ func TestSkipHealthChecks(t *testing.T) {
 		Errors:    uint(0),
 	}
 	expectedResults = ResultSet{}
-	actualResult, err = ValidateController(&c, cronjob, &kube.ResourceProvider{})
+	actualResult, err = ValidateController(&c, cronjob)
 	if err != nil {
 		panic(err)
 	}
@@ -136,8 +136,10 @@ func TestControllerExemptions(t *testing.T) {
 			conf.Deployments,
 		},
 	}
+	newController := test.MockGenericController()
+	newController.KindString = "Deployment"
 	resources := &kube.ResourceProvider{
-		Pods: []corev1.Pod{test.MockNakedPod()},
+		Controllers: []controller.GenericController{newController},
 	}
 
 	expectedSum := CountSummary{
@@ -150,10 +152,10 @@ func TestControllerExemptions(t *testing.T) {
 		panic(err)
 	}
 	assert.Equal(t, 1, len(actualResults))
-	assert.Equal(t, "NakedPod", actualResults[0].Kind)
+	assert.Equal(t, "Deployment", actualResults[0].Kind)
 	assert.EqualValues(t, expectedSum, actualResults[0].GetSummary())
 
-	resources.Pods[0].ObjectMeta.Annotations = map[string]string{
+	resources.Controllers[0].ObjectMeta.Annotations = map[string]string{
 		exemptionAnnotationKey: "true",
 	}
 	actualResults, err = ValidateControllers(&c, resources)

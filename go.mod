@@ -7,6 +7,7 @@ require (
 	contrib.go.opencensus.io/exporter/ocagent v0.4.12
 	git.apache.org/thrift.git v0.12.0 // indirect
 	github.com/Azure/go-autorest v12.4.3+incompatible
+	github.com/Azure/go-autorest/autorest v0.10.0 // indirect
 	github.com/appscode/jsonpatch v0.0.0-20190108182946-7c0e3b262f30
 	github.com/beorn7/perks v1.0.0
 	github.com/census-instrumentation/opencensus-proto v0.2.0
@@ -68,7 +69,7 @@ require (
 	gitlab.com/golang-commonmark/mdurl v0.0.0-20180912090424-e5bce34c34f2
 	gitlab.com/golang-commonmark/puny v0.0.0-20180912090636-2cd490539afe
 	go.opencensus.io v0.21.0
-	go.uber.org/atomic v1.4.0
+	go.uber.org/atomic v1.6.0
 	go.uber.org/multierr v1.5.0
 	go.uber.org/zap v1.14.0
 	golang.org/x/crypto v0.0.0-20191219195013-becbf705a915
@@ -78,13 +79,13 @@ require (
 	golang.org/x/sys v0.0.0-20191218084908-4a24b4065292
 	golang.org/x/text v0.3.2
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
-	golang.org/x/tools v0.0.0-20191219212307-145a1e401f50
+	golang.org/x/tools v0.0.0-20191224055732-dd894d0a8a40
 	google.golang.org/api v0.5.0
 	google.golang.org/appengine v1.6.0
 	google.golang.org/genproto v0.0.0-20190516172635-bb713bdc0e52
 	google.golang.org/grpc v1.20.1
 	gopkg.in/inf.v0 v0.9.1
-	gopkg.in/yaml.v2 v2.2.2
+	gopkg.in/yaml.v2 v2.2.7
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 	k8s.io/api v0.0.0-20181213150558-05914d821849
 	k8s.io/apimachinery v0.0.0-20181127025237-2b1284ed4c93

@@ -36,7 +36,7 @@ func TestValidatePod(t *testing.T) {
 		},
 	}
 
-	k8s := test.SetupTestAPI()
+	k8s, _ := test.SetupTestAPI()
 	k8s = test.SetupAddControllers(k8s, "test")
 	p := test.MockPod()
 	deployment := controllers.NewDeploymentController(appsv1.Deployment{Spec: appsv1.DeploymentSpec{Template: p}})
@@ -73,7 +73,7 @@ func TestInvalidIPCPod(t *testing.T) {
 		},
 	}
 
-	k8s := test.SetupTestAPI()
+	k8s, _ := test.SetupTestAPI()
 	k8s = test.SetupAddControllers(k8s, "test")
 	p := test.MockPod()
 	p.Spec.HostIPC = true
@@ -110,7 +110,7 @@ func TestInvalidNeworkPod(t *testing.T) {
 		},
 	}
 
-	k8s := test.SetupTestAPI()
+	k8s, _ := test.SetupTestAPI()
 	k8s = test.SetupAddControllers(k8s, "test")
 	p := test.MockPod()
 	p.Spec.HostNetwork = true
@@ -148,7 +148,7 @@ func TestInvalidPIDPod(t *testing.T) {
 		},
 	}
 
-	k8s := test.SetupTestAPI()
+	k8s, _ := test.SetupTestAPI()
 	k8s = test.SetupAddControllers(k8s, "test")
 	p := test.MockPod()
 	p.Spec.HostPID = true
@@ -192,7 +192,7 @@ func TestExemption(t *testing.T) {
 		},
 	}
 
-	k8s := test.SetupTestAPI()
+	k8s, _ := test.SetupTestAPI()
 	k8s = test.SetupAddControllers(k8s, "test")
 	p := test.MockPod()
 	p.Spec.HostIPC = true

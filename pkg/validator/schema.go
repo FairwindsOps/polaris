@@ -120,9 +120,7 @@ func applyPodSchemaChecks(conf *config.Configuration, controller controllers.Gen
 			continue
 		}
 		check, err := resolveCheck(conf, checkID, controller, config.TargetPod, false)
-		if err != nil {
-			return nil, err
-		}
+
 		if err != nil {
 			return nil, err
 		} else if check == nil {

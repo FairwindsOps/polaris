@@ -27,7 +27,7 @@ import (
 const exemptionAnnotationKey = "polaris.fairwinds.com/exempt"
 
 // ValidateController validates a single controller, returns a ControllerResult.
-func ValidateController(conf *conf.Configuration, controller controller.GenericController, kubeResources *kube.ResourceProvider) (ControllerResult, error) {
+func ValidateController(conf *conf.Configuration, controller controller.GenericController) (ControllerResult, error) {
 	podResult, err := ValidatePod(conf, controller)
 	if err != nil {
 		return ControllerResult{}, err
@@ -46,16 +46,14 @@ func ValidateController(conf *conf.Configuration, controller controller.GenericC
 // ValidateControllers validates that each deployment conforms to the Polaris config,
 // builds a list of ResourceResults organized by namespace.
 func ValidateControllers(config *conf.Configuration, kubeResources *kube.ResourceProvider) ([]ControllerResult, error) {
-	var controllersToAudit []controller.GenericController
-	loadedControllers := kubeResources.Controllers
-	controllersToAudit = append(controllersToAudit, loadedControllers...)
+	controllersToAudit := kubeResources.Controllers
 
 	results := []ControllerResult{}
 	for _, controller := range controllersToAudit {
 		if !config.DisallowExemptions && hasExemptionAnnotation(controller) {
 			continue
 		}
-		result, err := ValidateController(config, controller, kubeResources)
+		result, err := ValidateController(config, controller)
 		if err != nil {
 			logrus.Warn("An error occured validating controller:", err)
 			return nil, err

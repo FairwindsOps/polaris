@@ -40,6 +40,9 @@ func (g GenericController) GetKind() config.SupportedController {
 
 // GetKindString returns a string representing what kind of object the top level controller is.
 func (g GenericController) GetKindString() string {
+	if g.KindString == "" {
+		return g.Kind.String()
+	}
 	return g.KindString
 }
 

@@ -10,10 +10,12 @@ import (
 )
 
 func TestGetTemplateData(t *testing.T) {
-	k8s := test.SetupTestAPI()
+	k8s, dynamicClient := test.SetupTestAPI()
 	k8s = test.SetupAddControllers(k8s, "test")
 	k8s = test.SetupAddExtraControllerVersions(k8s, "test-extra")
-	resources, err := kube.CreateResourceProviderFromAPI(k8s, "test", nil)
+	// TODO figure out how to mock out dynamic client.
+	// and add in pods for all controllers to fill out tests.
+	resources, err := kube.CreateResourceProviderFromAPI(k8s, "test", &dynamicClient)
 	assert.Equal(t, err, nil, "error should be nil")
 
 	c := conf.Configuration{
@@ -48,7 +50,7 @@ func TestGetTemplateData(t *testing.T) {
 		kind    string
 		results int
 	}{
-		{kind: "NakedPod", results: 2},
+		{kind: "Pod", results: 2},
 	}
 
 	assert.Equal(t, len(expected), len(actualAudit.Results))
