@@ -9,7 +9,7 @@ require (
 	github.com/Azure/go-autorest v12.4.3+incompatible
 	github.com/appscode/jsonpatch v0.0.0-20190108182946-7c0e3b262f30
 	github.com/beorn7/perks v1.0.0
-	github.com/census-instrumentation/opencensus-proto v0.2.0
+	github.com/census-instrumentation/opencensus-proto v0.2.1
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/evanphx/json-patch v4.2.0+incompatible
