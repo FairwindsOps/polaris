@@ -10,7 +10,7 @@ require (
 	github.com/Azure/go-autorest/autorest v0.10.0 // indirect
 	github.com/appscode/jsonpatch v0.0.0-20190108182946-7c0e3b262f30
 	github.com/beorn7/perks v1.0.0
-	github.com/census-instrumentation/opencensus-proto v0.2.0
+	github.com/census-instrumentation/opencensus-proto v0.2.1
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/evanphx/json-patch v4.2.0+incompatible
@@ -28,7 +28,7 @@ require (
 	github.com/gogo/protobuf v1.2.1
 	github.com/golang/groupcache v0.0.0-20190129154638-5b532d6fd5ef
 	github.com/golang/lint v0.0.0-20180702182130-06c8688daad7 // indirect
-	github.com/golang/protobuf v1.3.1
+	github.com/golang/protobuf v1.3.5
 	github.com/google/btree v1.0.0
 	github.com/google/gofuzz v1.0.0
 	github.com/google/uuid v1.1.1
