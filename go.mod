@@ -27,7 +27,7 @@ require (
 	github.com/gogo/protobuf v1.2.1
 	github.com/golang/groupcache v0.0.0-20190129154638-5b532d6fd5ef
 	github.com/golang/lint v0.0.0-20180702182130-06c8688daad7 // indirect
-	github.com/golang/protobuf v1.3.1
+	github.com/golang/protobuf v1.3.5
 	github.com/google/btree v1.0.0
 	github.com/google/gofuzz v1.0.0
 	github.com/google/uuid v1.1.1
