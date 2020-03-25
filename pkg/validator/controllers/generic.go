@@ -59,8 +59,25 @@ func LoadControllers(pods []kubeAPICoreV1.Pod, dynamicClientPointer *dynamic.Int
 	for _, pod := range pods {
 		interfaces = append(interfaces, NewGenericPodController(pod, dynamicClientPointer, restMapperPointer))
 	}
-	// TODO DeDupe
-	return interfaces
+	return deduplicateControllers(interfaces)
+}
+
+// Because the controllers with an Owner take on the name of the Owner, this eliminates any duplicates.
+// In cases like CronJobs older children can hang around, so this takes the most recent.
+func deduplicateControllers(controllers []GenericController) []GenericController {
+	controllerMap := make(map[string]GenericController)
+	for _, controller := range controllers {
+		key := controller.GetNamespace() + "/" + controller.GetKindString() + "/" + controller.Name
+		oldController, ok := controllerMap[key]
+		if !ok || controller.CreatedTime.After(oldController.CreatedTime) {
+			controllerMap[key] = controller
+		}
+	}
+	results := make([]GenericController, 0)
+	for _, controller := range controllerMap {
+		results = append(results, controller)
+	}
+	return results
 }
 
 // NewGenericPodController builds a new controller interface for anytype of Pod

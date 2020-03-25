@@ -43,31 +43,6 @@ func ValidateController(conf *conf.Configuration, controller controller.GenericC
 	return result, nil
 }
 
-// Because the controllers with an Owner take on the name of the Owner, this eliminates any duplicates.
-// In cases like CronJobs older children can hang around, so this takes the most recent.
-func deduplicateControllers(controllerResults []ControllerResult) []ControllerResult {
-	controllerMap := make(map[string][]ControllerResult)
-	for _, controller := range controllerResults {
-		key := controller.Namespace + "/" + controller.Kind + "/" + controller.Name
-		controllerMap[key] = append(controllerMap[key], controller)
-	}
-	results := make([]ControllerResult, 0)
-	for _, controllers := range controllerMap {
-		if len(controllers) == 1 {
-			results = append(results, controllers[0])
-		} else {
-			latestController := controllers[0]
-			for _, controller := range controllers[1:] {
-				if controller.CreatedTime.After(latestController.CreatedTime) {
-					latestController = controller
-				}
-			}
-			results = append(results, latestController)
-		}
-	}
-	return results
-}
-
 // ValidateControllers validates that each deployment conforms to the Polaris config,
 // builds a list of ResourceResults organized by namespace.
 func ValidateControllers(config *conf.Configuration, kubeResources *kube.ResourceProvider) ([]ControllerResult, error) {
@@ -88,7 +63,7 @@ func ValidateControllers(config *conf.Configuration, kubeResources *kube.Resourc
 		results = append(results, result)
 	}
 
-	return deduplicateControllers(results), nil
+	return results, nil
 }
 
 func hasExemptionAnnotation(ctrl controller.GenericController) bool {
