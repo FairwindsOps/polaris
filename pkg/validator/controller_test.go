@@ -18,7 +18,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 
 	conf "github.com/fairwindsops/polaris/pkg/config"
@@ -137,8 +136,10 @@ func TestControllerExemptions(t *testing.T) {
 			conf.Deployments,
 		},
 	}
+	newController := test.MockGenericController()
+	newController.Kind = "Deployment"
 	resources := &kube.ResourceProvider{
-		Deployments: []appsv1.Deployment{test.MockDeploy()},
+		Controllers: []controller.GenericController{newController},
 	}
 
 	expectedSum := CountSummary{
@@ -154,7 +155,7 @@ func TestControllerExemptions(t *testing.T) {
 	assert.Equal(t, "Deployment", actualResults[0].Kind)
 	assert.EqualValues(t, expectedSum, actualResults[0].GetSummary())
 
-	resources.Deployments[0].ObjectMeta.Annotations = map[string]string{
+	resources.Controllers[0].ObjectMeta.Annotations = map[string]string{
 		exemptionAnnotationKey: "true",
 	}
 	actualResults, err = ValidateControllers(&c, resources)

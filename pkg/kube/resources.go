@@ -2,7 +2,6 @@ package kube
 
 import (
 	"bytes"
-	"encoding/json"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -10,33 +9,29 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fairwindsops/polaris/pkg/validator/controllers"
 	"github.com/sirupsen/logrus"
-	appsv1 "k8s.io/api/apps/v1"
-	batchv1 "k8s.io/api/batch/v1"
-	batchv1beta1 "k8s.io/api/batch/v1beta1"
+	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sYaml "k8s.io/apimachinery/pkg/util/yaml"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth" // Required for other auth providers like GKE.
+	"k8s.io/client-go/restmapper"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 )
 
 // ResourceProvider contains k8s resources to be audited
 type ResourceProvider struct {
-	ServerVersion          string
-	CreationTime           time.Time
-	SourceName             string
-	SourceType             string
-	Nodes                  []corev1.Node
-	Deployments            []appsv1.Deployment
-	StatefulSets           []appsv1.StatefulSet
-	DaemonSets             []appsv1.DaemonSet
-	Jobs                   []batchv1.Job
-	CronJobs               []batchv1beta1.CronJob
-	ReplicationControllers []corev1.ReplicationController
-	Namespaces             []corev1.Namespace
-	Pods                   []corev1.Pod
+	ServerVersion string
+	CreationTime  time.Time
+	SourceName    string
+	SourceType    string
+	Nodes         []corev1.Node
+	Namespaces    []corev1.Namespace
+	Controllers   []controllers.GenericController
 }
 
 type k8sResource struct {
@@ -54,18 +49,12 @@ func CreateResourceProvider(directory string) (*ResourceProvider, error) {
 // CreateResourceProviderFromPath returns a new ResourceProvider using the YAML files in a directory
 func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error) {
 	resources := ResourceProvider{
-		ServerVersion:          "unknown",
-		SourceType:             "Path",
-		SourceName:             directory,
-		Nodes:                  []corev1.Node{},
-		Deployments:            []appsv1.Deployment{},
-		StatefulSets:           []appsv1.StatefulSet{},
-		DaemonSets:             []appsv1.DaemonSet{},
-		Jobs:                   []batchv1.Job{},
-		CronJobs:               []batchv1beta1.CronJob{},
-		ReplicationControllers: []corev1.ReplicationController{},
-		Namespaces:             []corev1.Namespace{},
-		Pods:                   []corev1.Pod{},
+		ServerVersion: "unknown",
+		SourceType:    "Path",
+		SourceName:    directory,
+		Nodes:         []corev1.Node{},
+		Namespaces:    []corev1.Namespace{},
+		Controllers:   []controllers.GenericController{},
 	}
 
 	addYaml := func(contents string) error {
@@ -114,44 +103,23 @@ func CreateResourceProviderFromCluster() (*ResourceProvider, error) {
 		logrus.Errorf("Error creating Kubernetes client: %v", err)
 		return nil, err
 	}
-	return CreateResourceProviderFromAPI(api, kubeConf.Host)
+	dynamicInterface, err := dynamic.NewForConfig(kubeConf)
+	if err != nil {
+		logrus.Errorf("Error connecting to dynamic interface: %v", err)
+		return nil, err
+	}
+	return CreateResourceProviderFromAPI(api, kubeConf.Host, &dynamicInterface)
 }
 
 // CreateResourceProviderFromAPI creates a new ResourceProvider from an existing k8s interface
-func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string) (*ResourceProvider, error) {
+func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string, dynamic *dynamic.Interface) (*ResourceProvider, error) {
 	listOpts := metav1.ListOptions{}
 	serverVersion, err := kube.Discovery().ServerVersion()
 	if err != nil {
 		logrus.Errorf("Error fetching Cluster API version: %v", err)
 		return nil, err
 	}
-	deploys, err := getDeployments(kube)
-	if err != nil {
-		return nil, err
-	}
-	statefulSets, err := getStatefulSets(kube)
-	if err != nil {
-		return nil, err
-	}
-	cronJobs, err := getCronJobs(kube)
-	if err != nil {
-		return nil, err
-	}
-	daemonSets, err := getDaemonSets(kube)
-	if err != nil {
-		return nil, err
-	}
 
-	jobs, err := kube.BatchV1().Jobs("").List(listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching Jobs: %v", err)
-		return nil, err
-	}
-	replicationControllers, err := kube.CoreV1().ReplicationControllers("").List(listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching ReplicationControllers: %v", err)
-		return nil, err
-	}
 	nodes, err := kube.CoreV1().Nodes().List(listOpts)
 	if err != nil {
 		logrus.Errorf("Error fetching Nodes: %v", err)
@@ -168,22 +136,59 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 		return nil, err
 	}
 
+	resources, err := restmapper.GetAPIGroupResources(kube.Discovery())
+	if err != nil {
+		logrus.Errorf("Error getting API Group resources: %v", err)
+		return nil, err
+	}
+	restMapper := restmapper.NewDiscoveryRESTMapper(resources)
 	api := ResourceProvider{
-		ServerVersion:          serverVersion.Major + "." + serverVersion.Minor,
-		SourceType:             "Cluster",
-		SourceName:             clusterName,
-		CreationTime:           time.Now(),
-		Deployments:            deploys,
-		StatefulSets:           statefulSets,
-		DaemonSets:             daemonSets,
-		CronJobs:               cronJobs,
-		Jobs:                   jobs.Items,
-		ReplicationControllers: replicationControllers.Items,
-		Nodes:                  nodes.Items,
-		Namespaces:             namespaces.Items,
-		Pods:                   pods.Items,
+		ServerVersion: serverVersion.Major + "." + serverVersion.Minor,
+		SourceType:    "Cluster",
+		SourceName:    clusterName,
+		CreationTime:  time.Now(),
+		Nodes:         nodes.Items,
+		Namespaces:    namespaces.Items,
+		Controllers:   LoadControllers(pods.Items, dynamic, &restMapper),
 	}
 	return &api, nil
+}
+
+// LoadControllers loads a list of controllers from the kubeResources Pods
+func LoadControllers(pods []corev1.Pod, dynamicClientPointer *dynamic.Interface, restMapperPointer *meta.RESTMapper) []controllers.GenericController {
+	interfaces := []controllers.GenericController{}
+	for _, pod := range pods {
+		interfaces = append(interfaces, controllers.NewGenericPodController(pod, dynamicClientPointer, restMapperPointer))
+	}
+	return deduplicateControllers(interfaces)
+}
+
+// Because the controllers with an Owner take on the name of the Owner, this eliminates any duplicates.
+// In cases like CronJobs older children can hang around, so this takes the most recent.
+func deduplicateControllers(inputControllers []controllers.GenericController) []controllers.GenericController {
+	controllerMap := make(map[string]controllers.GenericController)
+	for _, controller := range inputControllers {
+		key := controller.GetNamespace() + "/" + controller.GetKind() + "/" + controller.Name
+		oldController, ok := controllerMap[key]
+		if !ok || controller.CreatedTime.After(oldController.CreatedTime) {
+			controllerMap[key] = controller
+		}
+	}
+	results := make([]controllers.GenericController, 0)
+	for _, controller := range controllerMap {
+		results = append(results, controller)
+	}
+	return results
+}
+
+func getPodSpec(yaml map[string]interface{}) interface{} {
+	allowedChildren := []string{"jobTemplate", "spec", "template"}
+	for _, child := range allowedChildren {
+		if childYaml, ok := yaml[child]; ok {
+			return getPodSpec(childYaml.(map[string]interface{}))
+		}
+	}
+	return yaml
 }
 
 func addResourceFromString(contents string, resources *ResourceProvider) error {
@@ -191,199 +196,43 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 	decoder := k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(contentBytes), 1000)
 	resource := k8sResource{}
 	err := decoder.Decode(&resource)
+	decoder = k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(contentBytes), 1000)
+
 	if err != nil {
 		logrus.Errorf("Invalid YAML: %s", string(contents))
 		return err
 	}
-	decoder = k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(contentBytes), 1000)
-	if resource.Kind == "Deployment" {
-		controller := appsv1.Deployment{}
-		err = decoder.Decode(&controller)
-		resources.Deployments = append(resources.Deployments, controller)
-	} else if resource.Kind == "StatefulSet" {
-		controller := appsv1.StatefulSet{}
-		err = decoder.Decode(&controller)
-		resources.StatefulSets = append(resources.StatefulSets, controller)
-	} else if resource.Kind == "DaemonSet" {
-		controller := appsv1.DaemonSet{}
-		err = decoder.Decode(&controller)
-		resources.DaemonSets = append(resources.DaemonSets, controller)
-	} else if resource.Kind == "Job" {
-		controller := batchv1.Job{}
-		err = decoder.Decode(&controller)
-		resources.Jobs = append(resources.Jobs, controller)
-	} else if resource.Kind == "CronJob" {
-		controller := batchv1beta1.CronJob{}
-		err = decoder.Decode(&controller)
-		resources.CronJobs = append(resources.CronJobs, controller)
-	} else if resource.Kind == "ReplicationController" {
-		controller := corev1.ReplicationController{}
-		err = decoder.Decode(&controller)
-		resources.ReplicationControllers = append(resources.ReplicationControllers, controller)
-	} else if resource.Kind == "Namespace" {
+	if resource.Kind == "Namespace" {
 		ns := corev1.Namespace{}
 		err = decoder.Decode(&ns)
 		resources.Namespaces = append(resources.Namespaces, ns)
 	} else if resource.Kind == "Pod" {
 		pod := corev1.Pod{}
 		err = decoder.Decode(&pod)
-		resources.Pods = append(resources.Pods, pod)
-	}
-	if err != nil {
-		logrus.Errorf("Error parsing %s: %v", resource.Kind, err)
-		return err
-	}
-	return nil
-}
-
-func getDeployments(kube kubernetes.Interface) ([]appsv1.Deployment, error) {
-	listOpts := metav1.ListOptions{}
-	deployList, err := kube.AppsV1().Deployments("").List(listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching Deployments: %v", err)
-		return nil, err
-	}
-	deploys := deployList.Items
-
-	oldDeploys := make([]interface{}, 0)
-	deploysV1B1, err := kube.AppsV1beta1().Deployments("").List(listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching Deployments v1beta1: %v", err)
-		return nil, err
-	}
-	for _, oldDeploy := range deploysV1B1.Items {
-		oldDeploys = append(oldDeploys, oldDeploy)
-	}
-	deploysV1B2, err := kube.AppsV1beta2().Deployments("").List(listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching Deployments v1beta2: %v", err)
-		return nil, err
-	}
-	for _, oldDeploy := range deploysV1B2.Items {
-		oldDeploys = append(oldDeploys, oldDeploy)
-	}
-
-	for _, oldDeploy := range oldDeploys {
-		str, err := json.Marshal(oldDeploy)
+		resources.Controllers = append(resources.Controllers, controllers.NewGenericPodController(pod, nil, nil))
+	} else {
+		yamlNode := make(map[string]interface{})
+		err = yaml.Unmarshal(contentBytes, &yamlNode)
 		if err != nil {
-			logrus.Errorf("Error marshaling old deployment version: %v", err)
-			return nil, err
+			logrus.Errorf("Invalid YAML: %s", string(contents))
+			return err
 		}
-		deploy := appsv1.Deployment{}
-		err = json.Unmarshal(str, &deploy)
+		finalDoc := make(map[string]interface{})
+		finalDoc["metadata"] = yamlNode["metadata"]
+		finalDoc["apiVersion"] = "v1"
+		finalDoc["kind"] = "Pod"
+		finalDoc["spec"] = getPodSpec(yamlNode)
+		marshaledYaml, err := yaml.Marshal(finalDoc)
 		if err != nil {
-			logrus.Errorf("Error unmarshaling old deployment version: %v", err)
-			return nil, err
+			logrus.Errorf("Could not marshal yaml: %v", err)
+			return err
 		}
-		deploys = append(deploys, deploy)
+		decoder := k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(marshaledYaml), 1000)
+		pod := corev1.Pod{}
+		err = decoder.Decode(&pod)
+		newController := controllers.NewGenericPodController(pod, nil, nil)
+		newController.Kind = resource.Kind
+		resources.Controllers = append(resources.Controllers, newController)
 	}
-	return deploys, nil
-}
-
-func getStatefulSets(kube kubernetes.Interface) ([]appsv1.StatefulSet, error) {
-	listOpts := metav1.ListOptions{}
-	controllerList, err := kube.AppsV1().StatefulSets("").List(listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching StatefulSets: %v", err)
-		return nil, err
-	}
-	controllers := controllerList.Items
-
-	oldControllers := make([]interface{}, 0)
-	controllersV1B1, err := kube.AppsV1beta1().StatefulSets("").List(listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching StatefulSets v1beta1: %v", err)
-		return nil, err
-	}
-	for _, oldController := range controllersV1B1.Items {
-		oldControllers = append(oldControllers, oldController)
-	}
-	controllersV1B2, err := kube.AppsV1beta2().StatefulSets("").List(listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching StatefulSets v1beta2: %v", err)
-		return nil, err
-	}
-	for _, oldController := range controllersV1B2.Items {
-		oldControllers = append(oldControllers, oldController)
-	}
-
-	for _, oldController := range oldControllers {
-		str, err := json.Marshal(oldController)
-		if err != nil {
-			logrus.Errorf("Error marshaling old StatefulSet version: %v", err)
-			return nil, err
-		}
-		controller := appsv1.StatefulSet{}
-		err = json.Unmarshal(str, &controller)
-		if err != nil {
-			logrus.Errorf("Error unmarshaling old StatefulSet version: %v", err)
-			return nil, err
-		}
-		controllers = append(controllers, controller)
-	}
-	return controllers, nil
-}
-
-func getDaemonSets(kube kubernetes.Interface) ([]appsv1.DaemonSet, error) {
-	listOpts := metav1.ListOptions{}
-	controllerList, err := kube.AppsV1().DaemonSets("").List(listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching DaemonSets: %v", err)
-		return nil, err
-	}
-	controllers := controllerList.Items
-
-	controllersV1B2, err := kube.AppsV1beta2().DaemonSets("").List(listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching DaemonSets v1beta2: %v", err)
-		return nil, err
-	}
-
-	for _, oldController := range controllersV1B2.Items {
-		str, err := json.Marshal(oldController)
-		if err != nil {
-			logrus.Errorf("Error marshaling old DaemonSet version: %v", err)
-			return nil, err
-		}
-		controller := appsv1.DaemonSet{}
-		err = json.Unmarshal(str, &controller)
-		if err != nil {
-			logrus.Errorf("Error unmarshaling old DaemonSet version: %v", err)
-			return nil, err
-		}
-		controllers = append(controllers, controller)
-	}
-	return controllers, nil
-}
-
-func getCronJobs(kube kubernetes.Interface) ([]batchv1beta1.CronJob, error) {
-	listOpts := metav1.ListOptions{}
-	controllerList, err := kube.BatchV1beta1().CronJobs("").List(listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching CronJobs: %v", err)
-		return nil, err
-	}
-	controllers := controllerList.Items
-
-	controllersV2A1, err := kube.BatchV2alpha1().CronJobs("").List(listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching CronJobs v2alpha1: %v", err)
-		return nil, err
-	}
-
-	for _, oldController := range controllersV2A1.Items {
-		str, err := json.Marshal(oldController)
-		if err != nil {
-			logrus.Errorf("Error marshaling old CronJob version: %v", err)
-			return nil, err
-		}
-		controller := batchv1beta1.CronJob{}
-		err = json.Unmarshal(str, &controller)
-		if err != nil {
-			logrus.Errorf("Error unmarshaling old CronJob version: %v", err)
-			return nil, err
-		}
-		controllers = append(controllers, controller)
-	}
-	return controllers, nil
+	return err
 }

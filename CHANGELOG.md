@@ -1,5 +1,7 @@
 # x.x.x (next release)
 * Added the ability to exempt a particular controller from a particular check.
+* Breaking changes in the config format.
+* Added support for finding the Owners, this will allow Polaris to work with types of Controllers it doesn't even know about.
 
 # 0.6.0
 * Fixed webhook support in Kubernetes 1.16

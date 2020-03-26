@@ -74,7 +74,7 @@ func parseCheck(rawBytes []byte) (config.SchemaCheck, error) {
 	}
 }
 
-func resolveCheck(conf *config.Configuration, checkID string, controller controllers.Interface, target config.TargetKind, isInitContainer bool) (*config.SchemaCheck, error) {
+func resolveCheck(conf *config.Configuration, checkID string, controller controllers.GenericController, target config.TargetKind, isInitContainer bool) (*config.SchemaCheck, error) {
 	check, ok := conf.CustomChecks[checkID]
 	if !ok {
 		check, ok = builtInChecks[checkID]
@@ -110,7 +110,7 @@ func getExemptKey(checkID string) string {
 	return fmt.Sprintf("polaris.fairwinds.com/%s-exempt", checkID)
 }
 
-func applyPodSchemaChecks(conf *config.Configuration, controller controllers.Interface) (ResultSet, error) {
+func applyPodSchemaChecks(conf *config.Configuration, controller controllers.GenericController) (ResultSet, error) {
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
 	objectAnnotations := controller.GetObjectMeta().Annotations
@@ -120,9 +120,7 @@ func applyPodSchemaChecks(conf *config.Configuration, controller controllers.Int
 			continue
 		}
 		check, err := resolveCheck(conf, checkID, controller, config.TargetPod, false)
-		if err != nil {
-			return nil, err
-		}
+
 		if err != nil {
 			return nil, err
 		} else if check == nil {
@@ -137,7 +135,7 @@ func applyPodSchemaChecks(conf *config.Configuration, controller controllers.Int
 	return results, nil
 }
 
-func applyContainerSchemaChecks(conf *config.Configuration, controller controllers.Interface, container *corev1.Container, isInit bool) (ResultSet, error) {
+func applyContainerSchemaChecks(conf *config.Configuration, controller controllers.GenericController, container *corev1.Container, isInit bool) (ResultSet, error) {
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
 	objectAnnotations := controller.GetObjectMeta().Annotations

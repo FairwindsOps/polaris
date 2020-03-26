@@ -15,6 +15,8 @@
 package validator
 
 import (
+	"time"
+
 	"github.com/fairwindsops/polaris/pkg/config"
 )
 
@@ -36,16 +38,11 @@ type AuditData struct {
 
 // ClusterInfo contains Polaris results as well as some high-level stats
 type ClusterInfo struct {
-	Version                string
-	Nodes                  int
-	Pods                   int
-	Namespaces             int
-	Deployments            int
-	StatefulSets           int
-	DaemonSets             int
-	Jobs                   int
-	CronJobs               int
-	ReplicationControllers int
+	Version     string
+	Nodes       int
+	Pods        int
+	Namespaces  int
+	Controllers int
 }
 
 // ResultMessage is the result of a given check
@@ -62,11 +59,12 @@ type ResultSet map[string]ResultMessage
 
 // ControllerResult provides results for a controller
 type ControllerResult struct {
-	Name      string
-	Namespace string
-	Kind      string
-	Results   ResultSet
-	PodResult PodResult
+	Name        string
+	Namespace   string
+	Kind        string
+	Results     ResultSet
+	PodResult   PodResult
+	CreatedTime time.Time
 }
 
 // PodResult provides a list of validation messages for each pod.

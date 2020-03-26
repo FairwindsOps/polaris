@@ -51,7 +51,7 @@ exemptions:
     - foo
 `
 
-func getEmptyController(name string) controllers.Interface {
+func getEmptyController(name string) controllers.GenericController {
 	return controllers.NewDeploymentController(appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
@@ -66,7 +66,7 @@ func testValidate(t *testing.T, container *corev1.Container, resourceConf *strin
 	testValidateWithController(t, container, resourceConf, getEmptyController(controllerName), expectedErrors, expectedWarnings, expectedSuccesses)
 }
 
-func testValidateWithController(t *testing.T, container *corev1.Container, resourceConf *string, controller controllers.Interface, expectedErrors []ResultMessage, expectedWarnings []ResultMessage, expectedSuccesses []ResultMessage) {
+func testValidateWithController(t *testing.T, container *corev1.Container, resourceConf *string, controller controllers.GenericController, expectedErrors []ResultMessage, expectedWarnings []ResultMessage, expectedSuccesses []ResultMessage) {
 	parsedConf, err := conf.Parse([]byte(*resourceConf))
 	assert.NoError(t, err, "Expected no error when parsing config")
 
@@ -1184,14 +1184,14 @@ func TestValidateResourcesEmptyContainerCPURequestsExempt(t *testing.T) {
 	}
 
 	expectedSuccesses := []ResultMessage{}
-	
+
 	controller := controllers.NewDeploymentController(appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "foo",
-			Annotations: map[string]string {
-				"polaris.fairwinds.com/cpuRequestsMissing-exempt": "true", // Exempt this controller from cpuRequestsMissing
+			Annotations: map[string]string{
+				"polaris.fairwinds.com/cpuRequestsMissing-exempt":    "true",   // Exempt this controller from cpuRequestsMissing
 				"polaris.fairwinds.com/memoryRequestsMissing-exempt": "truthy", // Don't actually exempt this controller from memoryRequestsMissing
-			} ,
+			},
 		},
 		Spec: appsv1.DeploymentSpec{
 			Template: corev1.PodTemplateSpec{},

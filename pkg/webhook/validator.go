@@ -98,7 +98,7 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 			podResult, err = validator.ValidatePod(&v.Config, nakedPod)
 		}
 	} else {
-		var controller controllers.Interface
+		var controller controllers.GenericController
 		if yes := v.Config.CheckIfKindIsConfiguredForValidation(req.AdmissionRequest.Kind.Kind); !yes {
 			logrus.Warnf("Skipping, kind (%s) isn't something we are configured to scan", req.AdmissionRequest.Kind.Kind)
 			return admission.ValidationResponse(true, fmt.Sprintf("Skipping: (%s) isn't something we're configured to scan.", req.AdmissionRequest.Kind.Kind))

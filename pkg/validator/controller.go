@@ -17,38 +17,36 @@ package validator
 import (
 	"strings"
 
+	"github.com/sirupsen/logrus"
+
 	conf "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
-	"github.com/fairwindsops/polaris/pkg/validator/controllers"
 	controller "github.com/fairwindsops/polaris/pkg/validator/controllers"
 )
 
 const exemptionAnnotationKey = "polaris.fairwinds.com/exempt"
 
 // ValidateController validates a single controller, returns a ControllerResult.
-func ValidateController(conf *conf.Configuration, controller controller.Interface) (ControllerResult, error) {
+func ValidateController(conf *conf.Configuration, controller controller.GenericController) (ControllerResult, error) {
 	podResult, err := ValidatePod(conf, controller)
 	if err != nil {
 		return ControllerResult{}, err
 	}
 	result := ControllerResult{
-		Kind:      controller.GetKind().String(),
+		Kind:      controller.GetKind(),
 		Name:      controller.GetName(),
 		Namespace: controller.GetObjectMeta().Namespace,
 		Results:   ResultSet{},
 		PodResult: podResult,
 	}
+
 	return result, nil
 }
 
 // ValidateControllers validates that each deployment conforms to the Polaris config,
 // builds a list of ResourceResults organized by namespace.
 func ValidateControllers(config *conf.Configuration, kubeResources *kube.ResourceProvider) ([]ControllerResult, error) {
-	var controllersToAudit []controller.Interface
-	for _, supportedControllers := range config.ControllersToScan {
-		loadedControllers, _ := controllers.LoadControllersByKind(supportedControllers, kubeResources)
-		controllersToAudit = append(controllersToAudit, loadedControllers...)
-	}
+	controllersToAudit := kubeResources.Controllers
 
 	results := []ControllerResult{}
 	for _, controller := range controllersToAudit {
@@ -57,14 +55,16 @@ func ValidateControllers(config *conf.Configuration, kubeResources *kube.Resourc
 		}
 		result, err := ValidateController(config, controller)
 		if err != nil {
+			logrus.Warn("An error occured validating controller:", err)
 			return nil, err
 		}
 		results = append(results, result)
 	}
+
 	return results, nil
 }
 
-func hasExemptionAnnotation(ctrl controller.Interface) bool {
+func hasExemptionAnnotation(ctrl controller.GenericController) bool {
 	annot := ctrl.GetObjectMeta().Annotations
 	val := annot[exemptionAnnotationKey]
 	return strings.ToLower(val) == "true"
