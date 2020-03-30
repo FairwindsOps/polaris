@@ -72,13 +72,6 @@ customChecks:
           not:
             pattern: ^quay.io
 
-controllersToScan:
-  - Deployments
-  - StatefulSets
-  - DaemonSets
-  - CronJobs
-  - Jobs
-  - ReplicationControllers
 exemptions:
   - controllerNames:
     - dns-controller

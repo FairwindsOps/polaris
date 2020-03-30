@@ -22,13 +22,6 @@ checks:
   runAsPrivileged: error
   dangerousCapabilities: error
   insecureCapabilities: warning
-controllersToScan:
-  - Deployments
-  - StatefulSets
-  - DaemonSets
-  - CronJobs
-  - Jobs
-  - ReplicationControllers
 exemptions:
   - controllerNames:
       - dns-controller
