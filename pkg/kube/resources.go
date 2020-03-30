@@ -37,6 +37,8 @@ type k8sResource struct {
 	Kind string `yaml:"kind"`
 }
 
+var podSpecFields = []string{"jobTemplate", "spec", "template"}
+
 // CreateResourceProvider returns a new ResourceProvider object to interact with k8s resources
 func CreateResourceProvider(directory string) (*ResourceProvider, error) {
 	if directory != "" {
@@ -180,9 +182,9 @@ func deduplicateControllers(inputControllers []GenericWorkload) []GenericWorkloa
 	return results
 }
 
+// GetPodSpec looks inside arbitrary YAML for a PodSpec
 func GetPodSpec(yaml map[string]interface{}) interface{} {
-	allowedChildren := []string{"jobTemplate", "spec", "template"}
-	for _, child := range allowedChildren {
+	for _, child := range podSpecFields {
 		if childYaml, ok := yaml[child]; ok {
 			return GetPodSpec(childYaml.(map[string]interface{}))
 		}
