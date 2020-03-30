@@ -58,7 +58,7 @@ require (
 	github.com/prometheus/common v0.9.1
 	github.com/prometheus/procfs v0.0.0-20190519111021-9935e8e0588d
 	github.com/qri-io/jsonschema v0.1.1
-	github.com/rogpeppe/go-internal v1.5.1
+	github.com/rogpeppe/go-internal v1.5.2
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
