@@ -37,7 +37,7 @@ var (
 		"hostPortSet",
 		"runAsRootAllowed",
 		"runAsPrivileged",
-		"notReadOnlyRootFileSystem",
+		"notReadOnlyRootFilesystem",
 		"privilegeEscalationAllowed",
 		"dangerousCapabilities",
 		"insecureCapabilities",

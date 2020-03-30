@@ -442,7 +442,7 @@ func TestValidateSecurity(t *testing.T) {
 	standardConf := map[string]conf.Severity{
 		"runAsRootAllowed":           conf.SeverityWarning,
 		"runAsPrivileged":            conf.SeverityError,
-		"notReadOnlyRootFileSystem":  conf.SeverityWarning,
+		"notReadOnlyRootFilesystem":  conf.SeverityWarning,
 		"privilegeEscalationAllowed": conf.SeverityError,
 		"dangerousCapabilities":      conf.SeverityError,
 		"insecureCapabilities":       conf.SeverityWarning,
@@ -450,7 +450,7 @@ func TestValidateSecurity(t *testing.T) {
 	strongConf := map[string]conf.Severity{
 		"runAsRootAllowed":           conf.SeverityError,
 		"runAsPrivileged":            conf.SeverityError,
-		"notReadOnlyRootFileSystem":  conf.SeverityError,
+		"notReadOnlyRootFilesystem":  conf.SeverityError,
 		"privilegeEscalationAllowed": conf.SeverityError,
 		"dangerousCapabilities":      conf.SeverityError,
 		"insecureCapabilities":       conf.SeverityError,
@@ -543,7 +543,7 @@ func TestValidateSecurity(t *testing.T) {
 				Severity: "warning",
 				Category: "Security",
 			}, {
-				ID:       "notReadOnlyRootFileSystem",
+				ID:       "notReadOnlyRootFilesystem",
 				Message:  "Filesystem should be read only",
 				Success:  false,
 				Severity: "warning",
@@ -610,7 +610,7 @@ func TestValidateSecurity(t *testing.T) {
 				Severity: "warning",
 				Category: "Security",
 			}, {
-				ID:       "notReadOnlyRootFileSystem",
+				ID:       "notReadOnlyRootFilesystem",
 				Message:  "Filesystem should be read only",
 				Success:  false,
 				Severity: "warning",
@@ -653,7 +653,7 @@ func TestValidateSecurity(t *testing.T) {
 				Severity: "warning",
 				Category: "Security",
 			}, {
-				ID:       "notReadOnlyRootFileSystem",
+				ID:       "notReadOnlyRootFilesystem",
 				Message:  "Filesystem should be read only",
 				Success:  false,
 				Severity: "warning",
@@ -696,7 +696,7 @@ func TestValidateSecurity(t *testing.T) {
 				Severity: "warning",
 				Category: "Security",
 			}, {
-				ID:       "notReadOnlyRootFileSystem",
+				ID:       "notReadOnlyRootFilesystem",
 				Message:  "Filesystem should be read only",
 				Success:  false,
 				Severity: "warning",
@@ -715,7 +715,7 @@ func TestValidateSecurity(t *testing.T) {
 				Severity: "warning",
 				Category: "Security",
 			}, {
-				ID:       "notReadOnlyRootFileSystem",
+				ID:       "notReadOnlyRootFilesystem",
 				Message:  "Filesystem is read only",
 				Success:  true,
 				Severity: "warning",
@@ -770,7 +770,7 @@ func TestValidateSecurity(t *testing.T) {
 				Severity: "error",
 				Category: "Security",
 			}, {
-				ID:       "notReadOnlyRootFileSystem",
+				ID:       "notReadOnlyRootFilesystem",
 				Message:  "Filesystem is read only",
 				Success:  true,
 				Severity: "error",
@@ -801,7 +801,7 @@ func TestValidateSecurity(t *testing.T) {
 				Severity: "error",
 				Category: "Security",
 			}, {
-				ID:       "notReadOnlyRootFileSystem",
+				ID:       "notReadOnlyRootFilesystem",
 				Message:  "Filesystem is read only",
 				Success:  true,
 				Severity: "error",
@@ -844,7 +844,7 @@ func TestValidateSecurity(t *testing.T) {
 				Severity: "error",
 				Category: "Security",
 			}, {
-				ID:       "notReadOnlyRootFileSystem",
+				ID:       "notReadOnlyRootFilesystem",
 				Message:  "Filesystem is read only",
 				Success:  true,
 				Severity: "error",
@@ -887,7 +887,7 @@ func TestValidateSecurity(t *testing.T) {
 				Severity: "error",
 				Category: "Security",
 			}, {
-				ID:       "notReadOnlyRootFileSystem",
+				ID:       "notReadOnlyRootFilesystem",
 				Message:  "Filesystem is read only",
 				Success:  true,
 				Severity: "error",
