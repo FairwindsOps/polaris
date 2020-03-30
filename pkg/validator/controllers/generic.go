@@ -56,12 +56,12 @@ func NewGenericPodController(originalResource kubeAPICoreV1.Pod, dynamicClientPo
 	controller.Kind = "Pod"
 	controller.CreatedTime = controller.GetObjectMeta().CreationTimestamp.Time
 
-	owners := controller.GetObjectMeta().OwnerReferences
 	if dynamicClientPointer == nil || restMapperPointer == nil {
 		return controller
 	}
 	// If an owner exists then set the name to the controller.
 	// This allows us to handle CRDs creating Controllers or DeploymentConfigs in OpenShift.
+	owners := controller.GetObjectMeta().OwnerReferences
 	for len(owners) > 0 {
 		if len(owners) > 1 {
 			logrus.Warn("More than 1 owner found")

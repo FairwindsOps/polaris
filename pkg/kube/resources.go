@@ -181,11 +181,11 @@ func deduplicateControllers(inputControllers []controllers.GenericController) []
 	return results
 }
 
-func getPodSpec(yaml map[string]interface{}) interface{} {
+func GetPodSpec(yaml map[string]interface{}) interface{} {
 	allowedChildren := []string{"jobTemplate", "spec", "template"}
 	for _, child := range allowedChildren {
 		if childYaml, ok := yaml[child]; ok {
-			return getPodSpec(childYaml.(map[string]interface{}))
+			return GetPodSpec(childYaml.(map[string]interface{}))
 		}
 	}
 	return yaml
@@ -221,7 +221,7 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 		finalDoc["metadata"] = yamlNode["metadata"]
 		finalDoc["apiVersion"] = "v1"
 		finalDoc["kind"] = "Pod"
-		finalDoc["spec"] = getPodSpec(yamlNode)
+		finalDoc["spec"] = GetPodSpec(yamlNode)
 		marshaledYaml, err := yaml.Marshal(finalDoc)
 		if err != nil {
 			logrus.Errorf("Could not marshal yaml: %v", err)

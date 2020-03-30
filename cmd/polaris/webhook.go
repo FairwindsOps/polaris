@@ -105,10 +105,13 @@ var webhookCmd = &cobra.Command{
 		for index, controllerToScan := range config.ControllersToScan {
 			for innerIndex, supportedAPIType := range controllerToScan.ListSupportedAPIVersions() {
 				webhookName := strings.ToLower(fmt.Sprintf("%s-%d-%d", controllerToScan, index, innerIndex))
-				hook := fwebhook.NewWebhook(webhookName, mgr, fwebhook.Validator{Config: config}, supportedAPIType)
-				if hook != nil {
-					webhooks = append(webhooks, hook)
+				hook, err := fwebhook.NewWebhook(webhookName, mgr, fwebhook.Validator{Config: config}, supportedAPIType)
+				if err != nil {
+					logrus.Warningf("Couldn't build webhook %s: %v", webhookName, err)
+					continue
 				}
+				webhooks = append(webhooks, hook)
+				logrus.Infof("%s webhook started", webhookName)
 			}
 		}
 
