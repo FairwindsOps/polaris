@@ -133,6 +133,7 @@ var webhookCmd = &cobra.Command{
 		var webhooks []webhook.Webhook
 		for name, supportedAPIType := range supportedVersions {
 			webhookName := strings.ToLower(name)
+			webhookName = strings.ReplaceAll(webhookName, "/", "-")
 			hook, err := fwebhook.NewWebhook(webhookName, mgr, fwebhook.Validator{Config: config}, supportedAPIType)
 			if err != nil {
 				logrus.Warningf("Couldn't build webhook %s: %v", webhookName, err)
