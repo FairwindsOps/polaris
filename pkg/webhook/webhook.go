@@ -23,7 +23,6 @@ import (
 	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
 	validator "github.com/fairwindsops/polaris/pkg/validator"
-	"github.com/fairwindsops/polaris/pkg/validator/controllers"
 
 	"github.com/sirupsen/logrus"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
@@ -105,7 +104,7 @@ func (v *Validator) handleInternal(ctx context.Context, req types.Request) (*val
 			return nil, err
 		}
 	}
-	controller := controllers.NewGenericPodController(pod, nil, nil)
+	controller := kube.NewGenericWorkload(pod, nil, nil)
 	controller.Kind = req.AdmissionRequest.Kind.Kind
 	controllerResult, err := validator.ValidateController(&v.Config, controller)
 	if err != nil {

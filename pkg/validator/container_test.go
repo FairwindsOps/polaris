@@ -19,10 +19,9 @@ import (
 	"testing"
 
 	conf "github.com/fairwindsops/polaris/pkg/config"
-	"github.com/fairwindsops/polaris/pkg/validator/controllers"
+	"github.com/fairwindsops/polaris/pkg/kube"
 
 	"github.com/stretchr/testify/assert"
-	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -51,26 +50,22 @@ exemptions:
     - foo
 `
 
-func getEmptyController(name string) controllers.GenericController {
-	return controllers.NewDeploymentController(appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-		},
-		Spec: appsv1.DeploymentSpec{
-			Template: corev1.PodTemplateSpec{},
-		},
-	})
+func getEmptyWorkload(name string) kube.GenericWorkload {
+	workload := kube.NewGenericWorkload(corev1.Pod{}, nil, nil)
+	workload.Name = name
+	workload.ObjectMeta.Name = name
+	return workload
 }
 
 func testValidate(t *testing.T, container *corev1.Container, resourceConf *string, controllerName string, expectedErrors []ResultMessage, expectedWarnings []ResultMessage, expectedSuccesses []ResultMessage) {
-	testValidateWithController(t, container, resourceConf, getEmptyController(controllerName), expectedErrors, expectedWarnings, expectedSuccesses)
+	testValidateWithWorkload(t, container, resourceConf, getEmptyWorkload(controllerName), expectedErrors, expectedWarnings, expectedSuccesses)
 }
 
-func testValidateWithController(t *testing.T, container *corev1.Container, resourceConf *string, controller controllers.GenericController, expectedErrors []ResultMessage, expectedWarnings []ResultMessage, expectedSuccesses []ResultMessage) {
+func testValidateWithWorkload(t *testing.T, container *corev1.Container, resourceConf *string, workload kube.GenericWorkload, expectedErrors []ResultMessage, expectedWarnings []ResultMessage, expectedSuccesses []ResultMessage) {
 	parsedConf, err := conf.Parse([]byte(*resourceConf))
 	assert.NoError(t, err, "Expected no error when parsing config")
 
-	results, err := applyContainerSchemaChecks(&parsedConf, controller, container, false)
+	results, err := applyContainerSchemaChecks(&parsedConf, workload, container, false)
 	if err != nil {
 		panic(err)
 	}
@@ -91,7 +86,7 @@ func TestValidateResourcesEmptyConfig(t *testing.T) {
 		Name: "Empty",
 	}
 
-	results, err := applyContainerSchemaChecks(&conf.Configuration{}, getEmptyController(""), container, false)
+	results, err := applyContainerSchemaChecks(&conf.Configuration{}, getEmptyWorkload(""), container, false)
 	if err != nil {
 		panic(err)
 	}
@@ -187,7 +182,7 @@ func TestValidateHealthChecks(t *testing.T) {
 
 	for idx, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			controller := getEmptyController("")
+			controller := getEmptyWorkload("")
 			results, err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.probes}, controller, tt.container, tt.isInit)
 			if err != nil {
 				panic(err)
@@ -301,7 +296,7 @@ func TestValidateImage(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			controller := getEmptyController("")
+			controller := getEmptyWorkload("")
 			results, err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.image}, controller, tt.container, false)
 			if err != nil {
 				panic(err)
@@ -418,7 +413,7 @@ func TestValidateNetworking(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			controller := getEmptyController("")
+			controller := getEmptyWorkload("")
 			results, err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.networkConf}, controller, tt.container, false)
 			if err != nil {
 				panic(err)
@@ -922,17 +917,8 @@ func TestValidateSecurity(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			controller := controllers.NewDeploymentController(appsv1.Deployment{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "",
-				},
-				Spec: appsv1.DeploymentSpec{
-					Template: corev1.PodTemplateSpec{
-						Spec: *tt.pod,
-					},
-				},
-			})
-			results, err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.securityConf}, controller, tt.container, false)
+			workload := kube.NewGenericWorkload(corev1.Pod{Spec: *tt.pod}, nil, nil)
+			results, err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.securityConf}, workload, tt.container, false)
 			if err != nil {
 				panic(err)
 			}
@@ -1075,17 +1061,8 @@ func TestValidateRunAsRoot(t *testing.T) {
 	}
 	for idx, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			controller := controllers.NewDeploymentController(appsv1.Deployment{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "",
-				},
-				Spec: appsv1.DeploymentSpec{
-					Template: corev1.PodTemplateSpec{
-						Spec: *tt.pod,
-					},
-				},
-			})
-			results, err := applyContainerSchemaChecks(&config, controller, tt.container, false)
+			workload := kube.NewGenericWorkload(corev1.Pod{Spec: *tt.pod}, nil, nil)
+			results, err := applyContainerSchemaChecks(&config, workload, tt.container, false)
 			if err != nil {
 				panic(err)
 			}
@@ -1185,17 +1162,13 @@ func TestValidateResourcesEmptyContainerCPURequestsExempt(t *testing.T) {
 
 	expectedSuccesses := []ResultMessage{}
 
-	controller := controllers.NewDeploymentController(appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "foo",
-			Annotations: map[string]string{
-				"polaris.fairwinds.com/cpuRequestsMissing-exempt":    "true",   // Exempt this controller from cpuRequestsMissing
-				"polaris.fairwinds.com/memoryRequestsMissing-exempt": "truthy", // Don't actually exempt this controller from memoryRequestsMissing
-			},
+	workload := kube.NewGenericWorkload(corev1.Pod{}, nil, nil)
+	workload.ObjectMeta = metav1.ObjectMeta{
+		Name: "foo",
+		Annotations: map[string]string{
+			"polaris.fairwinds.com/cpuRequestsMissing-exempt":    "true",   // Exempt this controller from cpuRequestsMissing
+			"polaris.fairwinds.com/memoryRequestsMissing-exempt": "truthy", // Don't actually exempt this controller from memoryRequestsMissing
 		},
-		Spec: appsv1.DeploymentSpec{
-			Template: corev1.PodTemplateSpec{},
-		},
-	})
-	testValidateWithController(t, &container, &resourceConfMinimal, controller, expectedErrors, expectedWarnings, expectedSuccesses)
+	}
+	testValidateWithWorkload(t, &container, &resourceConfMinimal, workload, expectedErrors, expectedWarnings, expectedSuccesses)
 }

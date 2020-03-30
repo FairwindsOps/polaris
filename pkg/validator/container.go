@@ -16,13 +16,13 @@ package validator
 
 import (
 	"github.com/fairwindsops/polaris/pkg/config"
-	"github.com/fairwindsops/polaris/pkg/validator/controllers"
+	"github.com/fairwindsops/polaris/pkg/kube"
 
 	corev1 "k8s.io/api/core/v1"
 )
 
 // ValidateContainer validates a single container from a given controller
-func ValidateContainer(conf *config.Configuration, controller controllers.GenericController, container *corev1.Container, isInit bool) (ContainerResult, error) {
+func ValidateContainer(conf *config.Configuration, controller kube.GenericWorkload, container *corev1.Container, isInit bool) (ContainerResult, error) {
 	results, err := applyContainerSchemaChecks(conf, controller, container, isInit)
 	if err != nil {
 		return ContainerResult{}, err
@@ -37,9 +37,9 @@ func ValidateContainer(conf *config.Configuration, controller controllers.Generi
 }
 
 // ValidateAllContainers validates both init and regular containers
-func ValidateAllContainers(conf *config.Configuration, controller controllers.GenericController) ([]ContainerResult, error) {
+func ValidateAllContainers(conf *config.Configuration, controller kube.GenericWorkload) ([]ContainerResult, error) {
 	results := []ContainerResult{}
-	pod := controller.GetPodSpec()
+	pod := controller.PodSpec
 	for _, container := range pod.InitContainers {
 		result, err := ValidateContainer(conf, controller, &container, true)
 		if err != nil {

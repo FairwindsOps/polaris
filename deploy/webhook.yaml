@@ -311,11 +311,11 @@ spec:
         - name: webhook
           command:
             - polaris
-            - --webhook
+            - webhook
             - --config
             - /opt/app/config.yaml
-          image: 'quay.io/fairwinds/polaris:0.6'
-          imagePullPolicy: 'Always'
+          image: 'quay.io/fairwinds/polaris:dev'
+          imagePullPolicy: 'Never'
           ports:
             - containerPort: 9876
           # These are fairly useless readiness/liveness probes for now

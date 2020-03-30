@@ -31,16 +31,13 @@ var confInvalid = `test`
 var confValidYAML = `
 checks:
   cpuRequestsMissing: warning
-controllersToScan:
-  - Deployments
 `
 
 var confValidJSON = `
 {
   "checks": {
     "cpuRequestsMissing": "warning"
-  },
-  "controllersToScan": ["Deployments"]
+  }
 }
 `
 
@@ -160,5 +157,4 @@ func TestConfigWithCustomChecks(t *testing.T) {
 func testParsedConfig(t *testing.T, config *Configuration) {
 	assert.Equal(t, SeverityWarning, config.Checks["cpuRequestsMissing"])
 	assert.Equal(t, Severity(""), config.Checks["cpuLimitsMissing"])
-	assert.ElementsMatch(t, []SupportedController{Deployments}, config.ControllersToScan)
 }
