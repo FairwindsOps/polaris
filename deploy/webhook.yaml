@@ -46,7 +46,7 @@ data:
       # security
       hostIPCSet: error
       hostPIDSet: error
-      notReadOnlyRootFileSystem: warning
+      notReadOnlyRootFilesystem: warning
       privilegeEscalationAllowed: error
       runAsRootAllowed: warning
       runAsPrivileged: error
@@ -113,7 +113,7 @@ data:
           - tiller
           - kube2iam
         rules:
-          - notReadOnlyRootFileSystem
+          - notReadOnlyRootFilesystem
       - controllerNames:
           - cert-manager
           - dns-controller
@@ -141,7 +141,7 @@ data:
           - goldilocks
           - insights-agent-goldilocks-vpa-install
         rules:
-          - notReadOnlyRootFileSystem
+          - notReadOnlyRootFilesystem
       - controllerNames:
           - insights-agent-goldilocks-controller
         rules:
