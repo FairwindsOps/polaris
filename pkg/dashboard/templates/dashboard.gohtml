@@ -88,11 +88,31 @@
             </div>
           </div>
           <div class="name"><span class="caret-expander"></span>{{ $category }}<span class="category-score">Score: <strong>{{ $summary.GetScore }}%</strong></span></div>
-            <div class="result-messages expandable-content">
+          <div class="result-messages expandable-content">
             <p class="category-info">{{ getCategoryInfo $category }} Refer to the <a href="details/{{ getCategoryLink $category }}">Polaris documentation about {{ $category }}</a> for more information.</p>
           </div>
         </div>
       {{ end }} {{/* end range categories */}}
+    </div>
+  </div>
+
+  <div class="card filters">
+    <div class="expandable-table">
+      <div class="name">
+        <span class="caret-expander"></span>
+        <h3>Namespace Filters</h3>
+      </div>
+      <div class="result-messages expandable-content">
+        <form method="get">
+          {{ range $namespace, $ctrlResults := .AuditData.GetResultsByNamespace }}
+            <div class="namespace-row">
+              <input type="checkbox" name="namespace-{{ $namespace }}" id="namespace-{{ $namespace }}">
+              <label for="namespace-{{ $namespace }}"></label>
+            </div>
+          {{ end }}
+            <input type="submit" value="Apply">
+        </form>
+      </div>
     </div>
   </div>
 
