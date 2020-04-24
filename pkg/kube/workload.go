@@ -42,6 +42,9 @@ func NewGenericWorkload(originalResource kubeAPICoreV1.Pod, dynamicClientPointer
 			logrus.Warn("More than 1 owner found")
 		}
 		firstOwner := owners[0]
+		if firstOwner.Kind == "Node" {
+			break
+		}
 		workload.Kind = firstOwner.Kind
 		workload.Name = firstOwner.Name
 
