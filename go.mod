@@ -47,16 +47,17 @@ require (
 	github.com/markbates/safe v1.0.1
 	github.com/matttproud/golang_protobuf_extensions v1.0.1
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
-	github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742
+	github.com/modern-go/reflect2 v1.0.1
 	github.com/pborman/uuid v0.0.0-20180906182336-adf5a7427709
 	github.com/petar/GoLLRB v0.0.0-20190514000832-33fb24c13b99
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/pmezard/go-difflib v1.0.0
-	github.com/prometheus/client_golang v0.9.3
-	github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90
+	github.com/prometheus/client_golang v1.0.0
+	github.com/prometheus/client_model v0.2.0
 	github.com/prometheus/common v0.9.1
 	github.com/prometheus/procfs v0.0.11
+	github.com/prometheus/tsdb v0.7.1 // indirect
 	github.com/qri-io/jsonschema v0.1.1
 	github.com/rogpeppe/go-internal v1.5.2
 	github.com/sirupsen/logrus v1.4.2
@@ -76,7 +77,7 @@ require (
 	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
 	golang.org/x/oauth2 v0.0.0-20190517181255-950ef44c6e07
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
-	golang.org/x/sys v0.0.0-20191218084908-4a24b4065292
+	golang.org/x/sys v0.0.0-20200106162015-b016eb3dc98e
 	golang.org/x/text v0.3.2
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
 	golang.org/x/tools v0.0.0-20191224055732-dd894d0a8a40
