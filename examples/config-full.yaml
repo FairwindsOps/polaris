@@ -17,7 +17,7 @@ checks:
   # security
   hostIPCSet: error
   hostPIDSet: error
-  notReadOnlyRootFileSystem: warning
+  notReadOnlyRootFilesystem: warning
   privilegeEscalationAllowed: error
   runAsRootAllowed: warning
   runAsPrivileged: error
@@ -72,13 +72,6 @@ customChecks:
           not:
             pattern: ^quay.io
 
-controllersToScan:
-  - Deployments
-  - StatefulSets
-  - DaemonSets
-  - CronJobs
-  - Jobs
-  - ReplicationControllers
 exemptions:
   - controllerNames:
     - dns-controller
@@ -133,7 +126,7 @@ exemptions:
     - tiller
     - kube2iam
     rules:
-    - notReadOnlyRootFileSystem
+    - notReadOnlyRootFilesystem
   - controllerNames:
     - cert-manager
     - dns-controller

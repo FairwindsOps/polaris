@@ -26,7 +26,7 @@ func TestGetResourcesFromPath(t *testing.T) {
 	assert.Equal(t, 8, len(resources.Controllers), "Should have eight controllers")
 	namespaceCount := map[string]int{}
 	for _, controller := range resources.Controllers {
-		namespaceCount[controller.GetNamespace()]++
+		namespaceCount[controller.ObjectMeta.GetNamespace()]++
 	}
 	assert.Equal(t, 7, namespaceCount[""], "Should have seven controller in default namespace")
 	assert.Equal(t, 1, namespaceCount["two"], "Should have one controller in namespace 'two'")
@@ -72,5 +72,5 @@ func TestGetResourceFromAPI(t *testing.T) {
 	assert.Equal(t, 0, len(resources.Nodes), "Should not have any nodes")
 	assert.Equal(t, 1, len(resources.Controllers), "Should have 1 controller")
 
-	assert.Equal(t, "", resources.Controllers[0].ObjectMeta.Name)
+	assert.Equal(t, "", resources.Controllers[0].ObjectMeta.GetName())
 }

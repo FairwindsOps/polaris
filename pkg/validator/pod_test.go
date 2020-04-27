@@ -17,13 +17,12 @@ package validator
 import (
 	"testing"
 
-	conf "github.com/fairwindsops/polaris/pkg/config"
-	"github.com/fairwindsops/polaris/pkg/validator/controllers"
-	"github.com/fairwindsops/polaris/test"
-
 	"github.com/stretchr/testify/assert"
-	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	conf "github.com/fairwindsops/polaris/pkg/config"
+	"github.com/fairwindsops/polaris/pkg/kube"
+	"github.com/fairwindsops/polaris/test"
 )
 
 func TestValidatePod(t *testing.T) {
@@ -39,7 +38,7 @@ func TestValidatePod(t *testing.T) {
 	k8s, _ := test.SetupTestAPI()
 	k8s = test.SetupAddControllers(k8s, "test")
 	p := test.MockPod()
-	deployment := controllers.NewDeploymentController(appsv1.Deployment{Spec: appsv1.DeploymentSpec{Template: p}})
+	deployment := kube.NewGenericWorkload(p, nil, nil)
 
 	expectedSum := CountSummary{
 		Successes: uint(4),
@@ -77,7 +76,7 @@ func TestInvalidIPCPod(t *testing.T) {
 	k8s = test.SetupAddControllers(k8s, "test")
 	p := test.MockPod()
 	p.Spec.HostIPC = true
-	deployment := controllers.NewDeploymentController(appsv1.Deployment{Spec: appsv1.DeploymentSpec{Template: p}})
+	workload := kube.NewGenericWorkload(p, nil, nil)
 
 	expectedSum := CountSummary{
 		Successes: uint(3),
@@ -90,7 +89,7 @@ func TestInvalidIPCPod(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "error", Category: "Security"},
 	}
 
-	actualPodResult, err := ValidatePod(&c, deployment)
+	actualPodResult, err := ValidatePod(&c, workload)
 	if err != nil {
 		panic(err)
 	}
@@ -114,7 +113,7 @@ func TestInvalidNeworkPod(t *testing.T) {
 	k8s = test.SetupAddControllers(k8s, "test")
 	p := test.MockPod()
 	p.Spec.HostNetwork = true
-	deployment := controllers.NewDeploymentController(appsv1.Deployment{Spec: appsv1.DeploymentSpec{Template: p}})
+	workload := kube.NewGenericWorkload(p, nil, nil)
 
 	expectedSum := CountSummary{
 		Successes: uint(3),
@@ -128,7 +127,7 @@ func TestInvalidNeworkPod(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "error", Category: "Security"},
 	}
 
-	actualPodResult, err := ValidatePod(&c, deployment)
+	actualPodResult, err := ValidatePod(&c, workload)
 	if err != nil {
 		panic(err)
 	}
@@ -152,7 +151,7 @@ func TestInvalidPIDPod(t *testing.T) {
 	k8s = test.SetupAddControllers(k8s, "test")
 	p := test.MockPod()
 	p.Spec.HostPID = true
-	deployment := controllers.NewDeploymentController(appsv1.Deployment{Spec: appsv1.DeploymentSpec{Template: p}})
+	workload := kube.NewGenericWorkload(p, nil, nil)
 
 	expectedSum := CountSummary{
 		Successes: uint(3),
@@ -166,7 +165,7 @@ func TestInvalidPIDPod(t *testing.T) {
 		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Success: true, Severity: "warning", Category: "Networking"},
 	}
 
-	actualPodResult, err := ValidatePod(&c, deployment)
+	actualPodResult, err := ValidatePod(&c, workload)
 	if err != nil {
 		panic(err)
 	}
@@ -196,13 +195,10 @@ func TestExemption(t *testing.T) {
 	k8s = test.SetupAddControllers(k8s, "test")
 	p := test.MockPod()
 	p.Spec.HostIPC = true
-	meta := metav1.ObjectMeta{
+	p.ObjectMeta = metav1.ObjectMeta{
 		Name: "foo",
 	}
-	deploySpec := appsv1.DeploymentSpec{
-		Template: p,
-	}
-	deployment := controllers.NewDeploymentController(appsv1.Deployment{ObjectMeta: meta, Spec: deploySpec})
+	workload := kube.NewGenericWorkload(p, nil, nil)
 
 	expectedSum := CountSummary{
 		Successes: uint(3),
@@ -214,7 +210,7 @@ func TestExemption(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "error", Category: "Security"},
 	}
 
-	actualPodResult, err := ValidatePod(&c, deployment)
+	actualPodResult, err := ValidatePod(&c, workload)
 	if err != nil {
 		panic(err)
 	}

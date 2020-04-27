@@ -22,7 +22,6 @@ import (
 
 	conf "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
-	controller "github.com/fairwindsops/polaris/pkg/validator/controllers"
 	"github.com/fairwindsops/polaris/test"
 )
 
@@ -33,7 +32,8 @@ func TestValidateController(t *testing.T) {
 			"hostPIDSet": conf.SeverityError,
 		},
 	}
-	deployment := controller.NewDeploymentController(test.MockDeploy())
+	deployment := kube.NewGenericWorkload(test.MockPod(), nil, nil)
+	deployment.Kind = "Deployment"
 	expectedSum := CountSummary{
 		Successes: uint(2),
 		Warnings:  uint(0),
@@ -62,18 +62,11 @@ func TestSkipHealthChecks(t *testing.T) {
 			"readinessProbeMissing": conf.SeverityError,
 			"livenessProbeMissing":  conf.SeverityWarning,
 		},
-		ControllersToScan: []conf.SupportedController{
-			conf.Deployments,
-			conf.StatefulSets,
-			conf.DaemonSets,
-			conf.Jobs,
-			conf.CronJobs,
-			conf.ReplicationControllers,
-		},
 	}
-	deploymentBase := test.MockDeploy()
-	deploymentBase.Spec.Template.Spec.InitContainers = []corev1.Container{test.MockContainer("test")}
-	deployment := controller.NewDeploymentController(deploymentBase)
+	pod := test.MockPod()
+	pod.Spec.InitContainers = []corev1.Container{test.MockContainer("test")}
+	deployment := kube.NewGenericWorkload(pod, nil, nil)
+	deployment.Kind = "Deployment"
 	expectedSum := CountSummary{
 		Successes: uint(0),
 		Warnings:  uint(1),
@@ -93,7 +86,8 @@ func TestSkipHealthChecks(t *testing.T) {
 	assert.EqualValues(t, ResultSet{}, actualResult.PodResult.ContainerResults[0].Results)
 	assert.EqualValues(t, expectedResults, actualResult.PodResult.ContainerResults[1].Results)
 
-	job := controller.NewJobController(test.MockJob())
+	job := kube.NewGenericWorkload(test.MockPod(), nil, nil)
+	job.Kind = "Job"
 	expectedSum = CountSummary{
 		Successes: uint(0),
 		Warnings:  uint(0),
@@ -109,7 +103,8 @@ func TestSkipHealthChecks(t *testing.T) {
 	assert.EqualValues(t, expectedSum, actualResult.GetSummary())
 	assert.EqualValues(t, expectedResults, actualResult.PodResult.ContainerResults[0].Results)
 
-	cronjob := controller.NewCronJobController(test.MockCronJob())
+	cronjob := kube.NewGenericWorkload(test.MockPod(), nil, nil)
+	cronjob.Kind = "CronJob"
 	expectedSum = CountSummary{
 		Successes: uint(0),
 		Warnings:  uint(0),
@@ -132,14 +127,12 @@ func TestControllerExemptions(t *testing.T) {
 			"readinessProbeMissing": conf.SeverityError,
 			"livenessProbeMissing":  conf.SeverityWarning,
 		},
-		ControllersToScan: []conf.SupportedController{
-			conf.Deployments,
-		},
 	}
-	newController := test.MockGenericController()
-	newController.Kind = "Deployment"
+	pod := test.MockPod()
+	workload := kube.NewGenericWorkload(pod, nil, nil)
+	workload.Kind = "Deployment"
 	resources := &kube.ResourceProvider{
-		Controllers: []controller.GenericController{newController},
+		Controllers: []kube.GenericWorkload{workload},
 	}
 
 	expectedSum := CountSummary{
@@ -155,9 +148,9 @@ func TestControllerExemptions(t *testing.T) {
 	assert.Equal(t, "Deployment", actualResults[0].Kind)
 	assert.EqualValues(t, expectedSum, actualResults[0].GetSummary())
 
-	resources.Controllers[0].ObjectMeta.Annotations = map[string]string{
+	resources.Controllers[0].ObjectMeta.SetAnnotations(map[string]string{
 		exemptionAnnotationKey: "true",
-	}
+	})
 	actualResults, err = ValidateControllers(&c, resources)
 	if err != nil {
 		panic(err)

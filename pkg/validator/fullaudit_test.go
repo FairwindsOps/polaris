@@ -23,14 +23,6 @@ func TestGetTemplateData(t *testing.T) {
 			"readinessProbeMissing": conf.SeverityError,
 			"livenessProbeMissing":  conf.SeverityWarning,
 		},
-		ControllersToScan: []conf.SupportedController{
-			conf.Deployments,
-			conf.StatefulSets,
-			conf.DaemonSets,
-			conf.Jobs,
-			conf.CronJobs,
-			conf.ReplicationControllers,
-		},
 	}
 
 	sum := CountSummary{

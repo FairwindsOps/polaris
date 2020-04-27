@@ -21,21 +21,20 @@ import (
 
 	conf "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
-	controller "github.com/fairwindsops/polaris/pkg/validator/controllers"
 )
 
 const exemptionAnnotationKey = "polaris.fairwinds.com/exempt"
 
 // ValidateController validates a single controller, returns a ControllerResult.
-func ValidateController(conf *conf.Configuration, controller controller.GenericController) (ControllerResult, error) {
+func ValidateController(conf *conf.Configuration, controller kube.GenericWorkload) (ControllerResult, error) {
 	podResult, err := ValidatePod(conf, controller)
 	if err != nil {
 		return ControllerResult{}, err
 	}
 	result := ControllerResult{
-		Kind:      controller.GetKind(),
-		Name:      controller.GetName(),
-		Namespace: controller.GetObjectMeta().Namespace,
+		Kind:      controller.Kind,
+		Name:      controller.ObjectMeta.GetName(),
+		Namespace: controller.ObjectMeta.GetNamespace(),
 		Results:   ResultSet{},
 		PodResult: podResult,
 	}
@@ -64,8 +63,8 @@ func ValidateControllers(config *conf.Configuration, kubeResources *kube.Resourc
 	return results, nil
 }
 
-func hasExemptionAnnotation(ctrl controller.GenericController) bool {
-	annot := ctrl.GetObjectMeta().Annotations
+func hasExemptionAnnotation(ctrl kube.GenericWorkload) bool {
+	annot := ctrl.ObjectMeta.GetAnnotations()
 	val := annot[exemptionAnnotationKey]
 	return strings.ToLower(val) == "true"
 }

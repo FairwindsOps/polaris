@@ -12,7 +12,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/fairwindsops/polaris/pkg/config"
-	"github.com/fairwindsops/polaris/pkg/validator/controllers"
+	"github.com/fairwindsops/polaris/pkg/kube"
 )
 
 var (
@@ -37,7 +37,7 @@ var (
 		"hostPortSet",
 		"runAsRootAllowed",
 		"runAsPrivileged",
-		"notReadOnlyRootFileSystem",
+		"notReadOnlyRootFilesystem",
 		"privilegeEscalationAllowed",
 		"dangerousCapabilities",
 		"insecureCapabilities",
@@ -74,7 +74,7 @@ func parseCheck(rawBytes []byte) (config.SchemaCheck, error) {
 	}
 }
 
-func resolveCheck(conf *config.Configuration, checkID string, controller controllers.GenericController, target config.TargetKind, isInitContainer bool) (*config.SchemaCheck, error) {
+func resolveCheck(conf *config.Configuration, checkID string, controller kube.GenericWorkload, target config.TargetKind, isInitContainer bool) (*config.SchemaCheck, error) {
 	check, ok := conf.CustomChecks[checkID]
 	if !ok {
 		check, ok = builtInChecks[checkID]
@@ -82,10 +82,10 @@ func resolveCheck(conf *config.Configuration, checkID string, controller control
 	if !ok {
 		return nil, fmt.Errorf("Check %s not found", checkID)
 	}
-	if !conf.IsActionable(check.ID, controller.GetName()) {
+	if !conf.IsActionable(check.ID, controller.ObjectMeta.GetName()) {
 		return nil, nil
 	}
-	if !check.IsActionable(target, controller.GetKind(), isInitContainer) {
+	if !check.IsActionable(target, controller.Kind, isInitContainer) {
 		return nil, nil
 	}
 	return &check, nil
@@ -110,10 +110,10 @@ func getExemptKey(checkID string) string {
 	return fmt.Sprintf("polaris.fairwinds.com/%s-exempt", checkID)
 }
 
-func applyPodSchemaChecks(conf *config.Configuration, controller controllers.GenericController) (ResultSet, error) {
+func applyPodSchemaChecks(conf *config.Configuration, controller kube.GenericWorkload) (ResultSet, error) {
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
-	objectAnnotations := controller.GetObjectMeta().Annotations
+	objectAnnotations := controller.ObjectMeta.GetAnnotations()
 	for _, checkID := range checkIDs {
 		exemptValue := objectAnnotations[getExemptKey(checkID)]
 		if strings.ToLower(exemptValue) == "true" {
@@ -126,7 +126,7 @@ func applyPodSchemaChecks(conf *config.Configuration, controller controllers.Gen
 		} else if check == nil {
 			continue
 		}
-		passes, err := check.CheckPod(controller.GetPodSpec())
+		passes, err := check.CheckPod(&controller.PodSpec)
 		if err != nil {
 			return nil, err
 		}
@@ -135,10 +135,10 @@ func applyPodSchemaChecks(conf *config.Configuration, controller controllers.Gen
 	return results, nil
 }
 
-func applyContainerSchemaChecks(conf *config.Configuration, controller controllers.GenericController, container *corev1.Container, isInit bool) (ResultSet, error) {
+func applyContainerSchemaChecks(conf *config.Configuration, controller kube.GenericWorkload, container *corev1.Container, isInit bool) (ResultSet, error) {
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
-	objectAnnotations := controller.GetObjectMeta().Annotations
+	objectAnnotations := controller.ObjectMeta.GetAnnotations()
 	for _, checkID := range checkIDs {
 		exemptValue := objectAnnotations[getExemptKey(checkID)]
 		if strings.ToLower(exemptValue) == "true" {
@@ -152,7 +152,7 @@ func applyContainerSchemaChecks(conf *config.Configuration, controller controlle
 		}
 		var passes bool
 		if check.SchemaTarget == config.TargetPod {
-			podCopy := *controller.GetPodSpec()
+			podCopy := controller.PodSpec
 			podCopy.InitContainers = []corev1.Container{}
 			podCopy.Containers = []corev1.Container{*container}
 			passes, err = check.CheckPod(&podCopy)

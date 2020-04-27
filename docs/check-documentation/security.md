@@ -6,7 +6,7 @@ key | default | description
 ----|---------|------------
 `security.hostIPCSet` | `error` | Fails when `hostIPC` attribute is configured.
 `security.hostPIDSet` | `error` | Fails when `hostPID` attribute is configured.
-`security.notReadOnlyRootFileSystem` | `warning` | Fails when `securityContext.readOnlyRootFilesystem` is not true.
+`security.notReadOnlyRootFilesystem` | `warning` | Fails when `securityContext.readOnlyRootFilesystem` is not true.
 `security.privilegeEscalationAllowed` | `error` | Fails when `securityContext.allowPrivilegeEscalation` is true.
 `security.runAsRootAllowed` | `error` | Fails when `securityContext.runAsNonRoot` is not true.
 `security.runAsPrivileged` | `error` | Fails when `securityContext.privileged` is true.

@@ -15,7 +15,6 @@
 package cmd
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -23,12 +22,42 @@ import (
 	fwebhook "github.com/fairwindsops/polaris/pkg/webhook"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	appsv1 "k8s.io/api/apps/v1"
+	appsv1beta1 "k8s.io/api/apps/v1beta1"
+	appsv1beta2 "k8s.io/api/apps/v1beta2"
+	batchv1 "k8s.io/api/batch/v1"
+	batchv1beta1 "k8s.io/api/batch/v1beta1"
+	batchv2alpha1 "k8s.io/api/batch/v2alpha1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	apitypes "k8s.io/apimachinery/pkg/types"
 	k8sConfig "sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
+
+var supportedVersions = map[string]runtime.Object{
+	"appsv1/Deployment":      &appsv1.Deployment{},
+	"appsv1beta1/Deployment": &appsv1beta1.Deployment{},
+	"appsv1beta2/Deployment": &appsv1beta2.Deployment{},
+
+	"appsv1/StatefulSet":      &appsv1.StatefulSet{},
+	"appsv1beta1/StatefulSet": &appsv1beta1.StatefulSet{},
+	"appsv1beta2/StatefulSet": &appsv1beta2.StatefulSet{},
+
+	"appsv1/DaemonSet":      &appsv1.DaemonSet{},
+	"appsv1beta2/DaemonSet": &appsv1beta2.DaemonSet{},
+
+	"batchv1/Job": &batchv1.Job{},
+
+	"batchv1beta1/CronJob":  &batchv1beta1.CronJob{},
+	"batchv2alpha1/CronJob": &batchv2alpha1.CronJob{},
+
+	"corev1/ReplicationController": &corev1.ReplicationController{},
+
+	"corev1/Pod": &corev1.Pod{},
+}
 
 var webhookPort int
 var disableWebhookConfigInstaller bool
@@ -102,14 +131,16 @@ var webhookCmd = &cobra.Command{
 		// Should only register controllers that are configured to be scanned
 		logrus.Debug("Registering webhooks to the webhook server")
 		var webhooks []webhook.Webhook
-		for index, controllerToScan := range config.ControllersToScan {
-			for innerIndex, supportedAPIType := range controllerToScan.ListSupportedAPIVersions() {
-				webhookName := strings.ToLower(fmt.Sprintf("%s-%d-%d", controllerToScan, index, innerIndex))
-				hook := fwebhook.NewWebhook(webhookName, mgr, fwebhook.Validator{Config: config}, supportedAPIType)
-				if hook != nil {
-					webhooks = append(webhooks, hook)
-				}
+		for name, supportedAPIType := range supportedVersions {
+			webhookName := strings.ToLower(name)
+			webhookName = strings.ReplaceAll(webhookName, "/", "-")
+			hook, err := fwebhook.NewWebhook(webhookName, mgr, fwebhook.Validator{Config: config}, supportedAPIType)
+			if err != nil {
+				logrus.Warningf("Couldn't build webhook %s: %v", webhookName, err)
+				continue
 			}
+			webhooks = append(webhooks, hook)
+			logrus.Infof("%s webhook started", webhookName)
 		}
 
 		if err = as.Register(webhooks...); err != nil {

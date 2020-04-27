@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fairwindsops/polaris/pkg/validator/controllers"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
@@ -31,12 +30,14 @@ type ResourceProvider struct {
 	SourceType    string
 	Nodes         []corev1.Node
 	Namespaces    []corev1.Namespace
-	Controllers   []controllers.GenericController
+	Controllers   []GenericWorkload
 }
 
 type k8sResource struct {
 	Kind string `yaml:"kind"`
 }
+
+var podSpecFields = []string{"jobTemplate", "spec", "template"}
 
 // CreateResourceProvider returns a new ResourceProvider object to interact with k8s resources
 func CreateResourceProvider(directory string) (*ResourceProvider, error) {
@@ -54,7 +55,7 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 		SourceName:    directory,
 		Nodes:         []corev1.Node{},
 		Namespaces:    []corev1.Namespace{},
-		Controllers:   []controllers.GenericController{},
+		Controllers:   []GenericWorkload{},
 	}
 
 	addYaml := func(contents string) error {
@@ -155,37 +156,46 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 }
 
 // LoadControllers loads a list of controllers from the kubeResources Pods
-func LoadControllers(pods []corev1.Pod, dynamicClientPointer *dynamic.Interface, restMapperPointer *meta.RESTMapper) []controllers.GenericController {
-	interfaces := []controllers.GenericController{}
+func LoadControllers(pods []corev1.Pod, dynamicClientPointer *dynamic.Interface, restMapperPointer *meta.RESTMapper) []GenericWorkload {
+	interfaces := []GenericWorkload{}
+	deduped := map[string]corev1.Pod{}
 	for _, pod := range pods {
-		interfaces = append(interfaces, controllers.NewGenericPodController(pod, dynamicClientPointer, restMapperPointer))
+		owners := pod.ObjectMeta.OwnerReferences
+		if len(owners) == 0 {
+			deduped[pod.ObjectMeta.Namespace+"/Pod/"+pod.ObjectMeta.Name] = pod
+			continue
+		}
+		deduped[pod.ObjectMeta.Namespace+"/"+owners[0].Kind+"/"+owners[0].Name] = pod
+	}
+	for _, pod := range deduped {
+		interfaces = append(interfaces, NewGenericWorkload(pod, dynamicClientPointer, restMapperPointer))
 	}
 	return deduplicateControllers(interfaces)
 }
 
 // Because the controllers with an Owner take on the name of the Owner, this eliminates any duplicates.
 // In cases like CronJobs older children can hang around, so this takes the most recent.
-func deduplicateControllers(inputControllers []controllers.GenericController) []controllers.GenericController {
-	controllerMap := make(map[string]controllers.GenericController)
+func deduplicateControllers(inputControllers []GenericWorkload) []GenericWorkload {
+	controllerMap := make(map[string]GenericWorkload)
 	for _, controller := range inputControllers {
-		key := controller.GetNamespace() + "/" + controller.GetKind() + "/" + controller.Name
+		key := controller.ObjectMeta.GetNamespace() + "/" + controller.Kind + "/" + controller.ObjectMeta.GetName()
 		oldController, ok := controllerMap[key]
-		if !ok || controller.CreatedTime.After(oldController.CreatedTime) {
+		if !ok || controller.ObjectMeta.GetCreationTimestamp().Time.After(oldController.ObjectMeta.GetCreationTimestamp().Time) {
 			controllerMap[key] = controller
 		}
 	}
-	results := make([]controllers.GenericController, 0)
+	results := make([]GenericWorkload, 0)
 	for _, controller := range controllerMap {
 		results = append(results, controller)
 	}
 	return results
 }
 
-func getPodSpec(yaml map[string]interface{}) interface{} {
-	allowedChildren := []string{"jobTemplate", "spec", "template"}
-	for _, child := range allowedChildren {
+// GetPodSpec looks inside arbitrary YAML for a PodSpec
+func GetPodSpec(yaml map[string]interface{}) interface{} {
+	for _, child := range podSpecFields {
 		if childYaml, ok := yaml[child]; ok {
-			return getPodSpec(childYaml.(map[string]interface{}))
+			return GetPodSpec(childYaml.(map[string]interface{}))
 		}
 	}
 	return yaml
@@ -209,7 +219,7 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 	} else if resource.Kind == "Pod" {
 		pod := corev1.Pod{}
 		err = decoder.Decode(&pod)
-		resources.Controllers = append(resources.Controllers, controllers.NewGenericPodController(pod, nil, nil))
+		resources.Controllers = append(resources.Controllers, NewGenericWorkload(pod, nil, nil))
 	} else {
 		yamlNode := make(map[string]interface{})
 		err = yaml.Unmarshal(contentBytes, &yamlNode)
@@ -221,7 +231,7 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 		finalDoc["metadata"] = yamlNode["metadata"]
 		finalDoc["apiVersion"] = "v1"
 		finalDoc["kind"] = "Pod"
-		finalDoc["spec"] = getPodSpec(yamlNode)
+		finalDoc["spec"] = GetPodSpec(yamlNode)
 		marshaledYaml, err := yaml.Marshal(finalDoc)
 		if err != nil {
 			logrus.Errorf("Could not marshal yaml: %v", err)
@@ -230,7 +240,7 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 		decoder := k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(marshaledYaml), 1000)
 		pod := corev1.Pod{}
 		err = decoder.Decode(&pod)
-		newController := controllers.NewGenericPodController(pod, nil, nil)
+		newController := NewGenericWorkload(pod, nil, nil)
 		newController.Kind = resource.Kind
 		resources.Controllers = append(resources.Controllers, newController)
 	}

@@ -16,11 +16,11 @@ package validator
 
 import (
 	"github.com/fairwindsops/polaris/pkg/config"
-	"github.com/fairwindsops/polaris/pkg/validator/controllers"
+	"github.com/fairwindsops/polaris/pkg/kube"
 )
 
 // ValidatePod validates that each pod conforms to the Polaris config, returns a ResourceResult.
-func ValidatePod(conf *config.Configuration, controller controllers.GenericController) (PodResult, error) {
+func ValidatePod(conf *config.Configuration, controller kube.GenericWorkload) (PodResult, error) {
 	podResults, err := applyPodSchemaChecks(conf, controller)
 	if err != nil {
 		return PodResult{}, err

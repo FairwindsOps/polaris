@@ -16,18 +16,16 @@ package webhook
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/fairwindsops/polaris/pkg/config"
+	"github.com/fairwindsops/polaris/pkg/kube"
 	validator "github.com/fairwindsops/polaris/pkg/validator"
-	"github.com/fairwindsops/polaris/pkg/validator/controllers"
 
 	"github.com/sirupsen/logrus"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
-	appsv1 "k8s.io/api/apps/v1"
-	batchv1 "k8s.io/api/batch/v1"
-	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -64,7 +62,7 @@ func (v *Validator) InjectDecoder(d types.Decoder) error {
 var _ admission.Handler = &Validator{}
 
 // NewWebhook creates a validating admission webhook for the apiType.
-func NewWebhook(name string, mgr manager.Manager, validator Validator, apiType runtime.Object) *admission.Webhook {
+func NewWebhook(name string, mgr manager.Manager, validator Validator, apiType runtime.Object) (*admission.Webhook, error) {
 	name = fmt.Sprintf("%s.k8s.io", name)
 	path := fmt.Sprintf("/validating-%s", name)
 
@@ -78,86 +76,56 @@ func NewWebhook(name string, mgr manager.Manager, validator Validator, apiType r
 		Handlers(&validator).
 		Build()
 	if err != nil {
-		logrus.Errorf("Error building webhook: %v", err)
-		return nil
+		return nil, err
 	}
-	logrus.Info(name + " webhook started")
-	return webhook
+	return webhook, nil
+}
+
+func (v *Validator) handleInternal(ctx context.Context, req types.Request) (*validator.PodResult, error) {
+	pod := corev1.Pod{}
+	if req.AdmissionRequest.Kind.Kind == "Pod" {
+		err := v.decoder.Decode(req, &pod)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		decoded := map[string]interface{}{}
+		err := json.Unmarshal(req.AdmissionRequest.Object.Raw, &decoded)
+		if err != nil {
+			return nil, err
+		}
+		podMap := kube.GetPodSpec(decoded)
+		encoded, err := json.Marshal(podMap)
+		if err != nil {
+			return nil, err
+		}
+		err = json.Unmarshal(encoded, &pod.Spec)
+		if err != nil {
+			return nil, err
+		}
+	}
+	controller := kube.NewGenericWorkload(pod, nil, nil)
+	controller.Kind = req.AdmissionRequest.Kind.Kind
+	controllerResult, err := validator.ValidateController(&v.Config, controller)
+	if err != nil {
+		return nil, err
+	}
+	return &controllerResult.PodResult, nil
 }
 
 // Handle for Validator to run validation checks.
 func (v *Validator) Handle(ctx context.Context, req types.Request) types.Response {
-	var err error
-	var podResult validator.PodResult
-
-	if req.AdmissionRequest.Kind.Kind == "Pod" {
-		pod := corev1.Pod{}
-		err = v.decoder.Decode(req, &pod) // err is handled below
-		nakedPod := controllers.NewNakedPodController(pod)
-		if err == nil {
-			podResult, err = validator.ValidatePod(&v.Config, nakedPod)
-		}
-	} else {
-		var controller controllers.GenericController
-		if yes := v.Config.CheckIfKindIsConfiguredForValidation(req.AdmissionRequest.Kind.Kind); !yes {
-			logrus.Warnf("Skipping, kind (%s) isn't something we are configured to scan", req.AdmissionRequest.Kind.Kind)
-			return admission.ValidationResponse(true, fmt.Sprintf("Skipping: (%s) isn't something we're configured to scan.", req.AdmissionRequest.Kind.Kind))
-		}
-
-		// We should never hit this case unless something is misconfiured in CheckIfKindIsConfiguredForValidation
-		controllerType := config.GetSupportedControllerFromString(req.AdmissionRequest.Kind.Kind)
-		if controllerType == config.Unsupported {
-			msg := fmt.Errorf("Expected Kind (%s) to be a supported type", req.AdmissionRequest.Kind.Kind)
-			logrus.Error(msg)
-			return admission.ErrorResponse(http.StatusInternalServerError, msg)
-		}
-
-		// For each type, perform the scan
-		// TODO: This isn't really that elegant due to the decoder and NewXXXController setup :( could use love
-		switch controllerType {
-		case config.Deployments:
-			deploy := appsv1.Deployment{}
-			err = v.decoder.Decode(req, &deploy)
-			controller = controllers.NewDeploymentController(deploy)
-		case config.StatefulSets:
-			statefulSet := appsv1.StatefulSet{}
-			err = v.decoder.Decode(req, &statefulSet)
-			controller = controllers.NewStatefulSetController(statefulSet)
-		case config.DaemonSets:
-			daemonSet := appsv1.DaemonSet{}
-			err = v.decoder.Decode(req, &daemonSet)
-			controller = controllers.NewDaemonSetController(daemonSet)
-		case config.Jobs:
-			job := batchv1.Job{}
-			err = v.decoder.Decode(req, &job)
-			controller = controllers.NewJobController(job)
-		case config.CronJobs:
-			cronJob := batchv1beta1.CronJob{}
-			err = v.decoder.Decode(req, &cronJob)
-			controller = controllers.NewCronJobController(cronJob)
-		case config.ReplicationControllers:
-			replicationController := corev1.ReplicationController{}
-			err = v.decoder.Decode(req, &replicationController)
-			controller = controllers.NewReplicationControllerController(replicationController)
-		}
-		if err == nil {
-			var controllerResult validator.ControllerResult
-			controllerResult, err = validator.ValidateController(&v.Config, controller)
-			podResult = controllerResult.PodResult
-		}
-	}
-
+	podResult, err := v.handleInternal(ctx, req)
 	if err != nil {
 		logrus.Errorf("Error validating request: %v", err)
 		return admission.ErrorResponse(http.StatusBadRequest, err)
 	}
-
 	allowed := true
 	reason := ""
 	numErrors := podResult.GetSummary().Errors
 	if numErrors > 0 {
 		allowed = false
-		reason = getFailureReason(podResult)
+		reason = getFailureReason(*podResult)
 	}
 	logrus.Infof("%d validation errors found when validating %s", numErrors, podResult.Name)
 	return admission.ValidationResponse(allowed, reason)

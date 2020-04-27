@@ -30,7 +30,6 @@ import (
 type Configuration struct {
 	DisplayName        string                 `json:"displayName"`
 	Checks             map[string]Severity    `json:"checks"`
-	ControllersToScan  []SupportedController  `json:"controllersToScan"`
 	CustomChecks       map[string]SchemaCheck `json:"customChecks"`
 	Exemptions         []Exemption            `json:"exemptions"`
 	DisallowExemptions bool                   `json:"disallowExemptions"`

@@ -1,7 +1,6 @@
 package test
 
 import (
-	"github.com/fairwindsops/polaris/pkg/validator/controllers"
 	appsv1 "k8s.io/api/apps/v1"
 	appsv1beta1 "k8s.io/api/apps/v1beta1"
 	appsv1beta2 "k8s.io/api/apps/v1beta2"
@@ -24,9 +23,9 @@ func MockContainer(name string) corev1.Container {
 }
 
 // MockPod creates a pod object.
-func MockPod() corev1.PodTemplateSpec {
+func MockPod() corev1.Pod {
 	c1 := MockContainer("test")
-	p := corev1.PodTemplateSpec{
+	p := corev1.Pod{
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
 				c1,
@@ -34,13 +33,6 @@ func MockPod() corev1.PodTemplateSpec {
 		},
 	}
 	return p
-}
-
-// MockGenericController creates a generic controller object for testing.
-func MockGenericController() controllers.GenericController {
-	return controllers.GenericController{
-		PodSpec: MockPod().Spec,
-	}
 }
 
 // MockNakedPod creates a pod object.
@@ -55,7 +47,7 @@ func MockDeploy() appsv1.Deployment {
 	p := MockPod()
 	d := appsv1.Deployment{
 		Spec: appsv1.DeploymentSpec{
-			Template: p,
+			Template: corev1.PodTemplateSpec{Spec: p.Spec},
 		},
 	}
 	return d
@@ -66,7 +58,7 @@ func MockStatefulSet() appsv1.StatefulSet {
 	p := MockPod()
 	s := appsv1.StatefulSet{
 		Spec: appsv1.StatefulSetSpec{
-			Template: p,
+			Template: corev1.PodTemplateSpec{Spec: p.Spec},
 		},
 	}
 	return s
@@ -74,29 +66,32 @@ func MockStatefulSet() appsv1.StatefulSet {
 
 // MockDaemonSet creates a DaemonSet object.
 func MockDaemonSet() appsv1.DaemonSet {
+	p := MockPod()
 	return appsv1.DaemonSet{
 		Spec: appsv1.DaemonSetSpec{
-			Template: MockPod(),
+			Template: corev1.PodTemplateSpec{Spec: p.Spec},
 		},
 	}
 }
 
 // MockJob creates a Job object.
 func MockJob() batchv1.Job {
+	p := MockPod()
 	return batchv1.Job{
 		Spec: batchv1.JobSpec{
-			Template: MockPod(),
+			Template: corev1.PodTemplateSpec{Spec: p.Spec},
 		},
 	}
 }
 
 // MockCronJob creates a CronJob object.
 func MockCronJob() batchv1beta1.CronJob {
+	p := MockPod()
 	return batchv1beta1.CronJob{
 		Spec: batchv1beta1.CronJobSpec{
 			JobTemplate: batchv1beta1.JobTemplateSpec{
 				Spec: batchv1.JobSpec{
-					Template: MockPod(),
+					Template: corev1.PodTemplateSpec{Spec: p.Spec},
 				},
 			},
 		},
@@ -108,7 +103,7 @@ func MockReplicationController() corev1.ReplicationController {
 	p := MockPod()
 	return corev1.ReplicationController{
 		Spec: corev1.ReplicationControllerSpec{
-			Template: &p,
+			Template: &corev1.PodTemplateSpec{Spec: p.Spec},
 		},
 	}
 }
@@ -166,7 +161,7 @@ func SetupAddExtraControllerVersions(k kubernetes.Interface, namespace string) k
 
 	dv1b1 := appsv1beta1.Deployment{
 		Spec: appsv1beta1.DeploymentSpec{
-			Template: p,
+			Template: corev1.PodTemplateSpec{Spec: p.Spec},
 		},
 	}
 	if _, err := k.AppsV1beta1().Deployments(namespace).Create(&dv1b1); err != nil {
@@ -175,7 +170,7 @@ func SetupAddExtraControllerVersions(k kubernetes.Interface, namespace string) k
 
 	dv1b2 := appsv1beta2.Deployment{
 		Spec: appsv1beta2.DeploymentSpec{
-			Template: p,
+			Template: corev1.PodTemplateSpec{Spec: p.Spec},
 		},
 	}
 	if _, err := k.AppsV1beta2().Deployments(namespace).Create(&dv1b2); err != nil {
@@ -184,7 +179,7 @@ func SetupAddExtraControllerVersions(k kubernetes.Interface, namespace string) k
 
 	ssv1b1 := appsv1beta1.StatefulSet{
 		Spec: appsv1beta1.StatefulSetSpec{
-			Template: p,
+			Template: corev1.PodTemplateSpec{Spec: p.Spec},
 		},
 	}
 	if _, err := k.AppsV1beta1().StatefulSets(namespace).Create(&ssv1b1); err != nil {
@@ -193,7 +188,7 @@ func SetupAddExtraControllerVersions(k kubernetes.Interface, namespace string) k
 
 	ssv1b2 := appsv1beta2.StatefulSet{
 		Spec: appsv1beta2.StatefulSetSpec{
-			Template: p,
+			Template: corev1.PodTemplateSpec{Spec: p.Spec},
 		},
 	}
 	if _, err := k.AppsV1beta2().StatefulSets(namespace).Create(&ssv1b2); err != nil {
@@ -202,7 +197,7 @@ func SetupAddExtraControllerVersions(k kubernetes.Interface, namespace string) k
 
 	dsv1b2 := appsv1beta2.DaemonSet{
 		Spec: appsv1beta2.DaemonSetSpec{
-			Template: p,
+			Template: corev1.PodTemplateSpec{Spec: p.Spec},
 		},
 	}
 	if _, err := k.AppsV1beta2().DaemonSets(namespace).Create(&dsv1b2); err != nil {
