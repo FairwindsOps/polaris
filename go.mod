@@ -82,7 +82,7 @@ require (
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
 	golang.org/x/tools v0.0.0-20191224055732-dd894d0a8a40
 	google.golang.org/api v0.5.0
-	google.golang.org/appengine v1.6.0
+	google.golang.org/appengine v1.6.6
 	google.golang.org/genproto v0.0.0-20190516172635-bb713bdc0e52
 	google.golang.org/grpc v1.20.1
 	gopkg.in/inf.v0 v0.9.1
