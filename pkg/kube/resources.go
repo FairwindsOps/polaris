@@ -2,6 +2,7 @@ package kube
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -13,6 +14,7 @@ import (
 	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
+	kubeAPIMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sYaml "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/dynamic"
@@ -143,6 +145,77 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 		return nil, err
 	}
 	restMapper := restmapper.NewDiscoveryRESTMapper(resources)
+
+	objectCache := map[string]kubeAPIMetaV1.Object{}
+
+	rs, err := kube.AppsV1().ReplicaSets("").List(listOpts)
+
+	if err != nil {
+		logrus.Errorf("Error getting Replica Sets: %v", err)
+		return nil, err
+	}
+
+	for id, replica := range rs.Items {
+		key := fmt.Sprintf("ReplicaSet-%s-%s", replica.ObjectMeta.GetNamespace(), replica.Name)
+		objMeta, err := meta.Accessor(&rs.Items[id])
+		if err != nil {
+			logrus.Warnf("Error converting replica set to object ", replica.Name, replica.APIVersion, replica.Kind, err)
+			break
+		}
+		objectCache[key] = objMeta
+	}
+
+	deployments, err := kube.AppsV1().Deployments("").List(listOpts)
+
+	if err != nil {
+		logrus.Errorf("Error getting Deployments: %v", err)
+		return nil, err
+	}
+
+	for id, deployment := range deployments.Items {
+		key := fmt.Sprintf("Deployment-%s-%s", deployment.ObjectMeta.GetNamespace(), deployment.Name)
+		objMeta, err := meta.Accessor(&deployments.Items[id])
+		if err != nil {
+			logrus.Warnf("Error converting deployment to object ", deployment.Name, deployment.APIVersion, deployment.Kind, err)
+			break
+		}
+		objectCache[key] = objMeta
+	}
+
+	jobs, err := kube.BatchV1().Jobs("").List(listOpts)
+
+	if err != nil {
+		logrus.Errorf("Error getting Jobs: %v", err)
+		return nil, err
+	}
+
+	for id, job := range jobs.Items {
+		key := fmt.Sprintf("Job-%s-%s", job.ObjectMeta.GetNamespace(), job.Name)
+		objMeta, err := meta.Accessor(&jobs.Items[id])
+		if err != nil {
+			logrus.Warnf("Error converting job to object ", job.Name, job.APIVersion, job.Kind, err)
+			break
+		}
+		objectCache[key] = objMeta
+	}
+
+	cronJobs, err := kube.BatchV1beta1().CronJobs("").List(listOpts)
+
+	if err != nil {
+		logrus.Errorf("Error getting CronJobs: %v", err)
+		return nil, err
+	}
+
+	for id, cronJob := range cronJobs.Items {
+		key := fmt.Sprintf("CronJob-%s-%s", cronJob.ObjectMeta.GetNamespace(), cronJob.Name)
+		objMeta, err := meta.Accessor(&cronJobs.Items[id])
+		if err != nil {
+			logrus.Warnf("Error converting cronJob to object ", cronJob.Name, cronJob.APIVersion, cronJob.Kind, err)
+			break
+		}
+		objectCache[key] = objMeta
+	}
+
 	api := ResourceProvider{
 		ServerVersion: serverVersion.Major + "." + serverVersion.Minor,
 		SourceType:    "Cluster",
@@ -150,13 +223,13 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 		CreationTime:  time.Now(),
 		Nodes:         nodes.Items,
 		Namespaces:    namespaces.Items,
-		Controllers:   LoadControllers(pods.Items, dynamic, &restMapper),
+		Controllers:   LoadControllers(pods.Items, dynamic, &restMapper, objectCache),
 	}
 	return &api, nil
 }
 
 // LoadControllers loads a list of controllers from the kubeResources Pods
-func LoadControllers(pods []corev1.Pod, dynamicClientPointer *dynamic.Interface, restMapperPointer *meta.RESTMapper) []GenericWorkload {
+func LoadControllers(pods []corev1.Pod, dynamicClientPointer *dynamic.Interface, restMapperPointer *meta.RESTMapper, objectCache map[string]kubeAPIMetaV1.Object) []GenericWorkload {
 	interfaces := []GenericWorkload{}
 	deduped := map[string]corev1.Pod{}
 	for _, pod := range pods {
@@ -168,7 +241,7 @@ func LoadControllers(pods []corev1.Pod, dynamicClientPointer *dynamic.Interface,
 		deduped[pod.ObjectMeta.Namespace+"/"+owners[0].Kind+"/"+owners[0].Name] = pod
 	}
 	for _, pod := range deduped {
-		interfaces = append(interfaces, NewGenericWorkload(pod, dynamicClientPointer, restMapperPointer))
+		interfaces = append(interfaces, NewGenericWorkload(pod, dynamicClientPointer, restMapperPointer, objectCache))
 	}
 	return deduplicateControllers(interfaces)
 }
@@ -219,7 +292,7 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 	} else if resource.Kind == "Pod" {
 		pod := corev1.Pod{}
 		err = decoder.Decode(&pod)
-		resources.Controllers = append(resources.Controllers, NewGenericWorkload(pod, nil, nil))
+		resources.Controllers = append(resources.Controllers, NewGenericWorkloadFromPod(pod))
 	} else {
 		yamlNode := make(map[string]interface{})
 		err = yaml.Unmarshal(contentBytes, &yamlNode)
@@ -240,7 +313,7 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 		decoder := k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(marshaledYaml), 1000)
 		pod := corev1.Pod{}
 		err = decoder.Decode(&pod)
-		newController := NewGenericWorkload(pod, nil, nil)
+		newController := NewGenericWorkloadFromPod(pod)
 		newController.Kind = resource.Kind
 		resources.Controllers = append(resources.Controllers, newController)
 	}
