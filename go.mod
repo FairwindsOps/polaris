@@ -60,7 +60,7 @@ require (
 	github.com/prometheus/tsdb v0.7.1 // indirect
 	github.com/qri-io/jsonschema v0.1.1
 	github.com/rogpeppe/go-internal v1.5.2
-	github.com/sirupsen/logrus v1.4.2
+	github.com/sirupsen/logrus v1.5.0
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.5.1
