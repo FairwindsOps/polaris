@@ -195,11 +195,10 @@ func TestExemption(t *testing.T) {
 	k8s = test.SetupAddControllers(k8s, "test")
 	p := test.MockPod()
 	p.Spec.HostIPC = true
-	workload := kube.NewGenericWorkload(p, nil, nil)
-	workload.Name = "foo"
-	workload.ObjectMeta = metav1.ObjectMeta{
+	p.ObjectMeta = metav1.ObjectMeta{
 		Name: "foo",
 	}
+	workload := kube.NewGenericWorkload(p, nil, nil)
 
 	expectedSum := CountSummary{
 		Successes: uint(3),

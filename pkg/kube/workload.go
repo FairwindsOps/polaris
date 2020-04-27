@@ -1,7 +1,7 @@
 package kube
 
 import (
-	"time"
+	"fmt"
 
 	"github.com/sirupsen/logrus"
 	kubeAPICoreV1 "k8s.io/api/core/v1"
@@ -13,30 +13,25 @@ import (
 
 // GenericWorkload is a base implementation with some free methods for inherited structs
 type GenericWorkload struct {
-	Name        string
-	Namespace   string
-	PodSpec     kubeAPICoreV1.PodSpec
-	ObjectMeta  kubeAPIMetaV1.ObjectMeta
-	Kind        string
-	CreatedTime time.Time
+	Kind       string
+	PodSpec    kubeAPICoreV1.PodSpec
+	ObjectMeta kubeAPIMetaV1.Object
 }
 
 // NewGenericWorkload builds a new workload for a given Pod
 func NewGenericWorkload(originalResource kubeAPICoreV1.Pod, dynamicClientPointer *dynamic.Interface, restMapperPointer *meta.RESTMapper) GenericWorkload {
 	workload := GenericWorkload{}
-	workload.Name = originalResource.Name
-	workload.Namespace = originalResource.Namespace
 	workload.PodSpec = originalResource.Spec
-	workload.ObjectMeta = originalResource.ObjectMeta
+	workload.ObjectMeta = originalResource.ObjectMeta.GetObjectMeta()
 	workload.Kind = "Pod"
-	workload.CreatedTime = workload.ObjectMeta.CreationTimestamp.Time
+	fmt.Println("get workload", workload.ObjectMeta.GetNamespace(), workload.ObjectMeta.GetName())
 
 	if dynamicClientPointer == nil || restMapperPointer == nil {
 		return workload
 	}
 	// If an owner exists then set the name to the workload.
 	// This allows us to handle CRDs creating Workloads or DeploymentConfigs in OpenShift.
-	owners := workload.ObjectMeta.OwnerReferences
+	owners := workload.ObjectMeta.GetOwnerReferences()
 	for len(owners) > 0 {
 		if len(owners) > 1 {
 			logrus.Warn("More than 1 owner found")
@@ -46,7 +41,6 @@ func NewGenericWorkload(originalResource kubeAPICoreV1.Pod, dynamicClientPointer
 			break
 		}
 		workload.Kind = firstOwner.Kind
-		workload.Name = firstOwner.Name
 
 		dynamicClient := *dynamicClientPointer
 		restMapper := *restMapperPointer
@@ -56,12 +50,14 @@ func NewGenericWorkload(originalResource kubeAPICoreV1.Pod, dynamicClientPointer
 			logrus.Warnf("Error retrieving mapping %s of API %s and Kind %s because of error: %v ", firstOwner.Name, firstOwner.APIVersion, firstOwner.Kind, err)
 			return workload
 		}
-		getParents, err := dynamicClient.Resource(mapping.Resource).Namespace(workload.ObjectMeta.Namespace).Get(firstOwner.Name, kubeAPIMetaV1.GetOptions{})
+		parent, err := dynamicClient.Resource(mapping.Resource).Namespace(workload.ObjectMeta.GetNamespace()).Get(firstOwner.Name, kubeAPIMetaV1.GetOptions{})
 		if err != nil {
 			logrus.Warnf("Error retrieving parent object %s of API %s and Kind %s because of error: %v ", firstOwner.Name, firstOwner.APIVersion, firstOwner.Kind, err)
 			return workload
 		}
-		owners = getParents.GetOwnerReferences()
+		objMeta, err := meta.Accessor(parent)
+		workload.ObjectMeta = objMeta
+		owners = parent.GetOwnerReferences()
 	}
 
 	return workload

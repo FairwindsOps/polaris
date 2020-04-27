@@ -33,8 +33,8 @@ func ValidateController(conf *conf.Configuration, controller kube.GenericWorkloa
 	}
 	result := ControllerResult{
 		Kind:      controller.Kind,
-		Name:      controller.Name,
-		Namespace: controller.ObjectMeta.Namespace,
+		Name:      controller.ObjectMeta.GetName(),
+		Namespace: controller.ObjectMeta.GetNamespace(),
 		Results:   ResultSet{},
 		PodResult: podResult,
 	}
@@ -64,7 +64,7 @@ func ValidateControllers(config *conf.Configuration, kubeResources *kube.Resourc
 }
 
 func hasExemptionAnnotation(ctrl kube.GenericWorkload) bool {
-	annot := ctrl.ObjectMeta.Annotations
+	annot := ctrl.ObjectMeta.GetAnnotations()
 	val := annot[exemptionAnnotationKey]
 	return strings.ToLower(val) == "true"
 }

@@ -82,7 +82,7 @@ func resolveCheck(conf *config.Configuration, checkID string, controller kube.Ge
 	if !ok {
 		return nil, fmt.Errorf("Check %s not found", checkID)
 	}
-	if !conf.IsActionable(check.ID, controller.Name) {
+	if !conf.IsActionable(check.ID, controller.ObjectMeta.GetName()) {
 		return nil, nil
 	}
 	if !check.IsActionable(target, controller.Kind, isInitContainer) {
@@ -113,7 +113,7 @@ func getExemptKey(checkID string) string {
 func applyPodSchemaChecks(conf *config.Configuration, controller kube.GenericWorkload) (ResultSet, error) {
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
-	objectAnnotations := controller.ObjectMeta.Annotations
+	objectAnnotations := controller.ObjectMeta.GetAnnotations()
 	for _, checkID := range checkIDs {
 		exemptValue := objectAnnotations[getExemptKey(checkID)]
 		if strings.ToLower(exemptValue) == "true" {
@@ -138,7 +138,7 @@ func applyPodSchemaChecks(conf *config.Configuration, controller kube.GenericWor
 func applyContainerSchemaChecks(conf *config.Configuration, controller kube.GenericWorkload, container *corev1.Container, isInit bool) (ResultSet, error) {
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
-	objectAnnotations := controller.ObjectMeta.Annotations
+	objectAnnotations := controller.ObjectMeta.GetAnnotations()
 	for _, checkID := range checkIDs {
 		exemptValue := objectAnnotations[getExemptKey(checkID)]
 		if strings.ToLower(exemptValue) == "true" {

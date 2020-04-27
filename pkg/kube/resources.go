@@ -158,7 +158,16 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 // LoadControllers loads a list of controllers from the kubeResources Pods
 func LoadControllers(pods []corev1.Pod, dynamicClientPointer *dynamic.Interface, restMapperPointer *meta.RESTMapper) []GenericWorkload {
 	interfaces := []GenericWorkload{}
+	deduped := map[string]corev1.Pod{}
 	for _, pod := range pods {
+		owners := pod.ObjectMeta.OwnerReferences
+		if len(owners) == 0 {
+			deduped[pod.ObjectMeta.Namespace+"/Pod/"+pod.ObjectMeta.Name] = pod
+			continue
+		}
+		deduped[pod.ObjectMeta.Namespace+"/"+owners[0].Kind+"/"+owners[0].Name] = pod
+	}
+	for _, pod := range deduped {
 		interfaces = append(interfaces, NewGenericWorkload(pod, dynamicClientPointer, restMapperPointer))
 	}
 	return deduplicateControllers(interfaces)
@@ -169,9 +178,9 @@ func LoadControllers(pods []corev1.Pod, dynamicClientPointer *dynamic.Interface,
 func deduplicateControllers(inputControllers []GenericWorkload) []GenericWorkload {
 	controllerMap := make(map[string]GenericWorkload)
 	for _, controller := range inputControllers {
-		key := controller.Namespace + "/" + controller.Kind + "/" + controller.Name
+		key := controller.ObjectMeta.GetNamespace() + "/" + controller.Kind + "/" + controller.ObjectMeta.GetName()
 		oldController, ok := controllerMap[key]
-		if !ok || controller.CreatedTime.After(oldController.CreatedTime) {
+		if !ok || controller.ObjectMeta.GetCreationTimestamp().Time.After(oldController.ObjectMeta.GetCreationTimestamp().Time) {
 			controllerMap[key] = controller
 		}
 	}

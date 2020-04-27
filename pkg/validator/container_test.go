@@ -51,9 +51,11 @@ exemptions:
 `
 
 func getEmptyWorkload(name string) kube.GenericWorkload {
-	workload := kube.NewGenericWorkload(corev1.Pod{}, nil, nil)
-	workload.Name = name
-	workload.ObjectMeta.Name = name
+	workload := kube.NewGenericWorkload(corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+	}, nil, nil)
 	return workload
 }
 
@@ -1162,13 +1164,14 @@ func TestValidateResourcesEmptyContainerCPURequestsExempt(t *testing.T) {
 
 	expectedSuccesses := []ResultMessage{}
 
-	workload := kube.NewGenericWorkload(corev1.Pod{}, nil, nil)
-	workload.ObjectMeta = metav1.ObjectMeta{
-		Name: "foo",
-		Annotations: map[string]string{
-			"polaris.fairwinds.com/cpuRequestsMissing-exempt":    "true",   // Exempt this controller from cpuRequestsMissing
-			"polaris.fairwinds.com/memoryRequestsMissing-exempt": "truthy", // Don't actually exempt this controller from memoryRequestsMissing
+	workload := kube.NewGenericWorkload(corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "foo",
+			Annotations: map[string]string{
+				"polaris.fairwinds.com/cpuRequestsMissing-exempt":    "true",   // Exempt this controller from cpuRequestsMissing
+				"polaris.fairwinds.com/memoryRequestsMissing-exempt": "truthy", // Don't actually exempt this controller from memoryRequestsMissing
+			},
 		},
-	}
+	}, nil, nil)
 	testValidateWithWorkload(t, &container, &resourceConfMinimal, workload, expectedErrors, expectedWarnings, expectedSuccesses)
 }

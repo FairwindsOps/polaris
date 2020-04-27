@@ -148,9 +148,9 @@ func TestControllerExemptions(t *testing.T) {
 	assert.Equal(t, "Deployment", actualResults[0].Kind)
 	assert.EqualValues(t, expectedSum, actualResults[0].GetSummary())
 
-	resources.Controllers[0].ObjectMeta.Annotations = map[string]string{
+	resources.Controllers[0].ObjectMeta.SetAnnotations(map[string]string{
 		exemptionAnnotationKey: "true",
-	}
+	})
 	actualResults, err = ValidateControllers(&c, resources)
 	if err != nil {
 		panic(err)
