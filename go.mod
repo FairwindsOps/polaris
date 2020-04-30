@@ -60,7 +60,7 @@ require (
 	github.com/prometheus/tsdb v0.7.1 // indirect
 	github.com/qri-io/jsonschema v0.1.1
 	github.com/rogpeppe/go-internal v1.5.2
-	github.com/sirupsen/logrus v1.4.2
+	github.com/sirupsen/logrus v1.5.0
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.5.1
@@ -82,7 +82,7 @@ require (
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
 	golang.org/x/tools v0.0.0-20191224055732-dd894d0a8a40
 	google.golang.org/api v0.5.0
-	google.golang.org/appengine v1.6.0
+	google.golang.org/appengine v1.6.6
 	google.golang.org/genproto v0.0.0-20190516172635-bb713bdc0e52
 	google.golang.org/grpc v1.20.1
 	gopkg.in/inf.v0 v0.9.1
