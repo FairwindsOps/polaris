@@ -56,14 +56,30 @@ func NewGenericWorkload(originalResource kubeAPICoreV1.Pod, dynamicClientPointer
 			owners = objMeta.GetOwnerReferences()
 
 			continue
-		} else {
-			logrus.Warnf("Cache missed %s", key)
 		}
 		fqKind := schema.FromAPIVersionAndKind(firstOwner.APIVersion, firstOwner.Kind)
 		mapping, err := restMapper.RESTMapping(fqKind.GroupKind(), fqKind.Version)
 		if err != nil {
 			logrus.Warnf("Error retrieving mapping %s of API %s and Kind %s because of error: %v ", firstOwner.Name, firstOwner.APIVersion, firstOwner.Kind, err)
 			return workload
+		}
+		err = cacheAllObjectsOfKind(dynamicClient, mapping.Resource, objectCache)
+		if err != nil {
+			logrus.Warnf("Error getting objects of Kind %s %v", firstOwner.Kind, err)
+			return workload
+		}
+
+		objMeta, ok = objectCache[key]
+		if ok {
+			if objMeta.GetNamespace() != workload.ObjectMeta.GetNamespace() || objMeta.GetName() != firstOwner.Name {
+				logrus.Errorf("Objects not matching %s %s %s %s", objMeta.GetNamespace(), workload.ObjectMeta.GetNamespace(), objMeta.GetName(), firstOwner.Name)
+			}
+			workload.ObjectMeta = objMeta
+			owners = objMeta.GetOwnerReferences()
+
+			continue
+		} else {
+			logrus.Errorf("Cache missed again %s", key)
 		}
 		parent, err := dynamicClient.Resource(mapping.Resource).Namespace(workload.ObjectMeta.GetNamespace()).Get(firstOwner.Name, kubeAPIMetaV1.GetOptions{})
 		if err != nil {

@@ -16,6 +16,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	kubeAPIMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	k8sYaml "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -148,74 +149,6 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 
 	objectCache := map[string]kubeAPIMetaV1.Object{}
 
-	rs, err := kube.AppsV1().ReplicaSets("").List(listOpts)
-
-	if err != nil {
-		logrus.Errorf("Error getting Replica Sets: %v", err)
-		return nil, err
-	}
-
-	for id, replica := range rs.Items {
-		key := fmt.Sprintf("ReplicaSet-%s-%s", replica.ObjectMeta.GetNamespace(), replica.Name)
-		objMeta, err := meta.Accessor(&rs.Items[id])
-		if err != nil {
-			logrus.Warnf("Error converting replica set to object ", replica.Name, replica.APIVersion, replica.Kind, err)
-			break
-		}
-		objectCache[key] = objMeta
-	}
-
-	deployments, err := kube.AppsV1().Deployments("").List(listOpts)
-
-	if err != nil {
-		logrus.Errorf("Error getting Deployments: %v", err)
-		return nil, err
-	}
-
-	for id, deployment := range deployments.Items {
-		key := fmt.Sprintf("Deployment-%s-%s", deployment.ObjectMeta.GetNamespace(), deployment.Name)
-		objMeta, err := meta.Accessor(&deployments.Items[id])
-		if err != nil {
-			logrus.Warnf("Error converting deployment to object ", deployment.Name, deployment.APIVersion, deployment.Kind, err)
-			break
-		}
-		objectCache[key] = objMeta
-	}
-
-	jobs, err := kube.BatchV1().Jobs("").List(listOpts)
-
-	if err != nil {
-		logrus.Errorf("Error getting Jobs: %v", err)
-		return nil, err
-	}
-
-	for id, job := range jobs.Items {
-		key := fmt.Sprintf("Job-%s-%s", job.ObjectMeta.GetNamespace(), job.Name)
-		objMeta, err := meta.Accessor(&jobs.Items[id])
-		if err != nil {
-			logrus.Warnf("Error converting job to object ", job.Name, job.APIVersion, job.Kind, err)
-			break
-		}
-		objectCache[key] = objMeta
-	}
-
-	cronJobs, err := kube.BatchV1beta1().CronJobs("").List(listOpts)
-
-	if err != nil {
-		logrus.Errorf("Error getting CronJobs: %v", err)
-		return nil, err
-	}
-
-	for id, cronJob := range cronJobs.Items {
-		key := fmt.Sprintf("CronJob-%s-%s", cronJob.ObjectMeta.GetNamespace(), cronJob.Name)
-		objMeta, err := meta.Accessor(&cronJobs.Items[id])
-		if err != nil {
-			logrus.Warnf("Error converting cronJob to object ", cronJob.Name, cronJob.APIVersion, cronJob.Kind, err)
-			break
-		}
-		objectCache[key] = objMeta
-	}
-
 	api := ResourceProvider{
 		ServerVersion: serverVersion.Major + "." + serverVersion.Minor,
 		SourceType:    "Cluster",
@@ -226,6 +159,25 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 		Controllers:   LoadControllers(pods.Items, dynamic, &restMapper, objectCache),
 	}
 	return &api, nil
+}
+
+func cacheAllObjectsOfKind(dynamicClient dynamic.Interface, groupVersionResource schema.GroupVersionResource, objectCache map[string]kubeAPIMetaV1.Object) error {
+	objects, err := dynamicClient.Resource(groupVersionResource).Namespace("").List(metav1.ListOptions{})
+	if err != nil {
+		logrus.Warnf("Error retrieving parent object API %s and Kind %s because of error: %v ", groupVersionResource.Version, groupVersionResource.Resource, err)
+		return err
+	}
+	for idx, object := range objects.Items {
+
+		key := fmt.Sprintf("%s-%s-%s", object.GetKind(), object.GetNamespace(), object.GetName())
+		objMeta, err := meta.Accessor(&objects.Items[idx])
+		if err != nil {
+			logrus.Warnf("Error converting object to meta object %s %v", object.GetName(), err)
+			return err
+		}
+		objectCache[key] = objMeta
+	}
+	return nil
 }
 
 // LoadControllers loads a list of controllers from the kubeResources Pods
