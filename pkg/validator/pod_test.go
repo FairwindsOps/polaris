@@ -76,7 +76,7 @@ func TestInvalidIPCPod(t *testing.T) {
 	k8s = test.SetupAddControllers(k8s, "test")
 	p := test.MockPod()
 	p.Spec.HostIPC = true
-	workload := kube.NewGenericWorkload(p, nil, nil)
+	workload := kube.NewGenericWorkloadFromPod(p)
 
 	expectedSum := CountSummary{
 		Successes: uint(3),
