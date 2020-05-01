@@ -51,11 +51,11 @@ exemptions:
 `
 
 func getEmptyWorkload(name string) kube.GenericWorkload {
-	workload := kube.NewGenericWorkload(corev1.Pod{
+	workload := kube.NewGenericWorkloadFromPod(corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
-	}, nil, nil)
+	})
 	return workload
 }
 
@@ -919,7 +919,7 @@ func TestValidateSecurity(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			workload := kube.NewGenericWorkload(corev1.Pod{Spec: *tt.pod}, nil, nil)
+			workload := kube.NewGenericWorkloadFromPod(corev1.Pod{Spec: *tt.pod})
 			results, err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.securityConf}, workload, tt.container, false)
 			if err != nil {
 				panic(err)
@@ -1063,7 +1063,7 @@ func TestValidateRunAsRoot(t *testing.T) {
 	}
 	for idx, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			workload := kube.NewGenericWorkload(corev1.Pod{Spec: *tt.pod}, nil, nil)
+			workload := kube.NewGenericWorkloadFromPod(corev1.Pod{Spec: *tt.pod})
 			results, err := applyContainerSchemaChecks(&config, workload, tt.container, false)
 			if err != nil {
 				panic(err)
@@ -1164,7 +1164,7 @@ func TestValidateResourcesEmptyContainerCPURequestsExempt(t *testing.T) {
 
 	expectedSuccesses := []ResultMessage{}
 
-	workload := kube.NewGenericWorkload(corev1.Pod{
+	workload := kube.NewGenericWorkloadFromPod(corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "foo",
 			Annotations: map[string]string{
@@ -1172,6 +1172,6 @@ func TestValidateResourcesEmptyContainerCPURequestsExempt(t *testing.T) {
 				"polaris.fairwinds.com/memoryRequestsMissing-exempt": "truthy", // Don't actually exempt this controller from memoryRequestsMissing
 			},
 		},
-	}, nil, nil)
+	})
 	testValidateWithWorkload(t, &container, &resourceConfMinimal, workload, expectedErrors, expectedWarnings, expectedSuccesses)
 }

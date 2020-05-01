@@ -32,7 +32,7 @@ func TestValidateController(t *testing.T) {
 			"hostPIDSet": conf.SeverityError,
 		},
 	}
-	deployment := kube.NewGenericWorkload(test.MockPod(), nil, nil)
+	deployment := kube.NewGenericWorkloadFromPod(test.MockPod())
 	deployment.Kind = "Deployment"
 	expectedSum := CountSummary{
 		Successes: uint(2),
@@ -65,7 +65,7 @@ func TestSkipHealthChecks(t *testing.T) {
 	}
 	pod := test.MockPod()
 	pod.Spec.InitContainers = []corev1.Container{test.MockContainer("test")}
-	deployment := kube.NewGenericWorkload(pod, nil, nil)
+	deployment := kube.NewGenericWorkloadFromPod(pod)
 	deployment.Kind = "Deployment"
 	expectedSum := CountSummary{
 		Successes: uint(0),
@@ -86,7 +86,7 @@ func TestSkipHealthChecks(t *testing.T) {
 	assert.EqualValues(t, ResultSet{}, actualResult.PodResult.ContainerResults[0].Results)
 	assert.EqualValues(t, expectedResults, actualResult.PodResult.ContainerResults[1].Results)
 
-	job := kube.NewGenericWorkload(test.MockPod(), nil, nil)
+	job := kube.NewGenericWorkloadFromPod(test.MockPod())
 	job.Kind = "Job"
 	expectedSum = CountSummary{
 		Successes: uint(0),
@@ -103,7 +103,7 @@ func TestSkipHealthChecks(t *testing.T) {
 	assert.EqualValues(t, expectedSum, actualResult.GetSummary())
 	assert.EqualValues(t, expectedResults, actualResult.PodResult.ContainerResults[0].Results)
 
-	cronjob := kube.NewGenericWorkload(test.MockPod(), nil, nil)
+	cronjob := kube.NewGenericWorkloadFromPod(test.MockPod())
 	cronjob.Kind = "CronJob"
 	expectedSum = CountSummary{
 		Successes: uint(0),
@@ -129,7 +129,7 @@ func TestControllerExemptions(t *testing.T) {
 		},
 	}
 	pod := test.MockPod()
-	workload := kube.NewGenericWorkload(pod, nil, nil)
+	workload := kube.NewGenericWorkloadFromPod(pod)
 	workload.Kind = "Deployment"
 	resources := &kube.ResourceProvider{
 		Controllers: []kube.GenericWorkload{workload},

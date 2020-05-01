@@ -38,7 +38,7 @@ func TestValidatePod(t *testing.T) {
 	k8s, _ := test.SetupTestAPI()
 	k8s = test.SetupAddControllers(k8s, "test")
 	p := test.MockPod()
-	deployment := kube.NewGenericWorkload(p, nil, nil)
+	deployment := kube.NewGenericWorkloadFromPod(p)
 
 	expectedSum := CountSummary{
 		Successes: uint(4),
@@ -76,7 +76,7 @@ func TestInvalidIPCPod(t *testing.T) {
 	k8s = test.SetupAddControllers(k8s, "test")
 	p := test.MockPod()
 	p.Spec.HostIPC = true
-	workload := kube.NewGenericWorkload(p, nil, nil)
+	workload := kube.NewGenericWorkloadFromPod(p)
 
 	expectedSum := CountSummary{
 		Successes: uint(3),
@@ -113,7 +113,7 @@ func TestInvalidNeworkPod(t *testing.T) {
 	k8s = test.SetupAddControllers(k8s, "test")
 	p := test.MockPod()
 	p.Spec.HostNetwork = true
-	workload := kube.NewGenericWorkload(p, nil, nil)
+	workload := kube.NewGenericWorkloadFromPod(p)
 
 	expectedSum := CountSummary{
 		Successes: uint(3),
@@ -151,7 +151,7 @@ func TestInvalidPIDPod(t *testing.T) {
 	k8s = test.SetupAddControllers(k8s, "test")
 	p := test.MockPod()
 	p.Spec.HostPID = true
-	workload := kube.NewGenericWorkload(p, nil, nil)
+	workload := kube.NewGenericWorkloadFromPod(p)
 
 	expectedSum := CountSummary{
 		Successes: uint(3),
@@ -198,7 +198,7 @@ func TestExemption(t *testing.T) {
 	p.ObjectMeta = metav1.ObjectMeta{
 		Name: "foo",
 	}
-	workload := kube.NewGenericWorkload(p, nil, nil)
+	workload := kube.NewGenericWorkloadFromPod(p)
 
 	expectedSum := CountSummary{
 		Successes: uint(3),

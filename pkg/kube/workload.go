@@ -18,17 +18,21 @@ type GenericWorkload struct {
 	ObjectMeta kubeAPIMetaV1.Object
 }
 
-// NewGenericWorkload builds a new workload for a given Pod
-func NewGenericWorkload(originalResource kubeAPICoreV1.Pod, dynamicClientPointer *dynamic.Interface, restMapperPointer *meta.RESTMapper) GenericWorkload {
+// NewGenericWorkloadFromPod builds a new workload for a given Pod without looking at parents
+func NewGenericWorkloadFromPod(originalResource kubeAPICoreV1.Pod) GenericWorkload {
 	workload := GenericWorkload{}
 	workload.PodSpec = originalResource.Spec
 	workload.ObjectMeta = originalResource.ObjectMeta.GetObjectMeta()
 	workload.Kind = "Pod"
-	fmt.Println("get workload", workload.ObjectMeta.GetNamespace(), workload.ObjectMeta.GetName())
+	return workload
+}
 
-	if dynamicClientPointer == nil || restMapperPointer == nil {
-		return workload
-	}
+// NewGenericWorkload builds a new workload for a given Pod
+func NewGenericWorkload(originalResource kubeAPICoreV1.Pod, dynamicClientPointer *dynamic.Interface, restMapperPointer *meta.RESTMapper, objectCache map[string]kubeAPIMetaV1.Object) GenericWorkload {
+	workload := NewGenericWorkloadFromPod(originalResource)
+
+	dynamicClient := *dynamicClientPointer
+	restMapper := *restMapperPointer
 	// If an owner exists then set the name to the workload.
 	// This allows us to handle CRDs creating Workloads or DeploymentConfigs in OpenShift.
 	owners := workload.ObjectMeta.GetOwnerReferences()
@@ -41,22 +45,47 @@ func NewGenericWorkload(originalResource kubeAPICoreV1.Pod, dynamicClientPointer
 			break
 		}
 		workload.Kind = firstOwner.Kind
+		key := fmt.Sprintf("%s/%s/%s", firstOwner.Kind, workload.ObjectMeta.GetNamespace(), firstOwner.Name)
+		objMeta, ok := objectCache[key]
+		if ok {
+			workload.ObjectMeta = objMeta
+			owners = objMeta.GetOwnerReferences()
 
-		dynamicClient := *dynamicClientPointer
-		restMapper := *restMapperPointer
+			continue
+		}
 		fqKind := schema.FromAPIVersionAndKind(firstOwner.APIVersion, firstOwner.Kind)
 		mapping, err := restMapper.RESTMapping(fqKind.GroupKind(), fqKind.Version)
 		if err != nil {
 			logrus.Warnf("Error retrieving mapping %s of API %s and Kind %s because of error: %v ", firstOwner.Name, firstOwner.APIVersion, firstOwner.Kind, err)
 			return workload
 		}
+		err = cacheAllObjectsOfKind(dynamicClient, mapping.Resource, objectCache)
+		if err != nil {
+			logrus.Warnf("Error getting objects of Kind %s %v", firstOwner.Kind, err)
+			return workload
+		}
+
+		objMeta, ok = objectCache[key]
+		if ok {
+			workload.ObjectMeta = objMeta
+			owners = objMeta.GetOwnerReferences()
+
+			continue
+		} else {
+			logrus.Errorf("Cache missed again %s", key)
+		}
 		parent, err := dynamicClient.Resource(mapping.Resource).Namespace(workload.ObjectMeta.GetNamespace()).Get(firstOwner.Name, kubeAPIMetaV1.GetOptions{})
 		if err != nil {
 			logrus.Warnf("Error retrieving parent object %s of API %s and Kind %s because of error: %v ", firstOwner.Name, firstOwner.APIVersion, firstOwner.Kind, err)
 			return workload
 		}
-		objMeta, err := meta.Accessor(parent)
+		objMeta, err = meta.Accessor(parent)
+		if err != nil {
+			logrus.Warnf("Error retrieving parent metadata %s of API %s and Kind %s because of error: %v ", firstOwner.Name, firstOwner.APIVersion, firstOwner.Kind, err)
+			return workload
+		}
 		workload.ObjectMeta = objMeta
+		objectCache[key] = objMeta
 		owners = parent.GetOwnerReferences()
 	}
 

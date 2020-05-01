@@ -2,6 +2,7 @@ package kube
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -14,6 +15,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	k8sYaml "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -143,6 +145,9 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 		return nil, err
 	}
 	restMapper := restmapper.NewDiscoveryRESTMapper(resources)
+
+	objectCache := map[string]metav1.Object{}
+
 	api := ResourceProvider{
 		ServerVersion: serverVersion.Major + "." + serverVersion.Minor,
 		SourceType:    "Cluster",
@@ -150,13 +155,32 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 		CreationTime:  time.Now(),
 		Nodes:         nodes.Items,
 		Namespaces:    namespaces.Items,
-		Controllers:   LoadControllers(pods.Items, dynamic, &restMapper),
+		Controllers:   LoadControllers(pods.Items, dynamic, &restMapper, objectCache),
 	}
 	return &api, nil
 }
 
+func cacheAllObjectsOfKind(dynamicClient dynamic.Interface, groupVersionResource schema.GroupVersionResource, objectCache map[string]metav1.Object) error {
+	objects, err := dynamicClient.Resource(groupVersionResource).Namespace("").List(metav1.ListOptions{})
+	if err != nil {
+		logrus.Warnf("Error retrieving parent object API %s and Kind %s because of error: %v ", groupVersionResource.Version, groupVersionResource.Resource, err)
+		return err
+	}
+	for idx, object := range objects.Items {
+
+		key := fmt.Sprintf("%s/%s/%s", object.GetKind(), object.GetNamespace(), object.GetName())
+		objMeta, err := meta.Accessor(&objects.Items[idx])
+		if err != nil {
+			logrus.Warnf("Error converting object to meta object %s %v", object.GetName(), err)
+			return err
+		}
+		objectCache[key] = objMeta
+	}
+	return nil
+}
+
 // LoadControllers loads a list of controllers from the kubeResources Pods
-func LoadControllers(pods []corev1.Pod, dynamicClientPointer *dynamic.Interface, restMapperPointer *meta.RESTMapper) []GenericWorkload {
+func LoadControllers(pods []corev1.Pod, dynamicClientPointer *dynamic.Interface, restMapperPointer *meta.RESTMapper, objectCache map[string]metav1.Object) []GenericWorkload {
 	interfaces := []GenericWorkload{}
 	deduped := map[string]corev1.Pod{}
 	for _, pod := range pods {
@@ -168,7 +192,7 @@ func LoadControllers(pods []corev1.Pod, dynamicClientPointer *dynamic.Interface,
 		deduped[pod.ObjectMeta.Namespace+"/"+owners[0].Kind+"/"+owners[0].Name] = pod
 	}
 	for _, pod := range deduped {
-		interfaces = append(interfaces, NewGenericWorkload(pod, dynamicClientPointer, restMapperPointer))
+		interfaces = append(interfaces, NewGenericWorkload(pod, dynamicClientPointer, restMapperPointer, objectCache))
 	}
 	return deduplicateControllers(interfaces)
 }
@@ -219,7 +243,7 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 	} else if resource.Kind == "Pod" {
 		pod := corev1.Pod{}
 		err = decoder.Decode(&pod)
-		resources.Controllers = append(resources.Controllers, NewGenericWorkload(pod, nil, nil))
+		resources.Controllers = append(resources.Controllers, NewGenericWorkloadFromPod(pod))
 	} else {
 		yamlNode := make(map[string]interface{})
 		err = yaml.Unmarshal(contentBytes, &yamlNode)
@@ -240,7 +264,7 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 		decoder := k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(marshaledYaml), 1000)
 		pod := corev1.Pod{}
 		err = decoder.Decode(&pod)
-		newController := NewGenericWorkload(pod, nil, nil)
+		newController := NewGenericWorkloadFromPod(pod)
 		newController.Kind = resource.Kind
 		resources.Controllers = append(resources.Controllers, newController)
 	}

@@ -104,7 +104,7 @@ func (v *Validator) handleInternal(ctx context.Context, req types.Request) (*val
 			return nil, err
 		}
 	}
-	controller := kube.NewGenericWorkload(pod, nil, nil)
+	controller := kube.NewGenericWorkloadFromPod(pod)
 	controller.Kind = req.AdmissionRequest.Kind.Kind
 	controllerResult, err := validator.ValidateController(&v.Config, controller)
 	if err != nil {
