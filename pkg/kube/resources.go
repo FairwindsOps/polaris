@@ -14,7 +14,6 @@ import (
 	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
-	kubeAPIMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	k8sYaml "k8s.io/apimachinery/pkg/util/yaml"
@@ -147,7 +146,7 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 	}
 	restMapper := restmapper.NewDiscoveryRESTMapper(resources)
 
-	objectCache := map[string]kubeAPIMetaV1.Object{}
+	objectCache := map[string]metav1.Object{}
 
 	api := ResourceProvider{
 		ServerVersion: serverVersion.Major + "." + serverVersion.Minor,
@@ -161,7 +160,7 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 	return &api, nil
 }
 
-func cacheAllObjectsOfKind(dynamicClient dynamic.Interface, groupVersionResource schema.GroupVersionResource, objectCache map[string]kubeAPIMetaV1.Object) error {
+func cacheAllObjectsOfKind(dynamicClient dynamic.Interface, groupVersionResource schema.GroupVersionResource, objectCache map[string]metav1.Object) error {
 	objects, err := dynamicClient.Resource(groupVersionResource).Namespace("").List(metav1.ListOptions{})
 	if err != nil {
 		logrus.Warnf("Error retrieving parent object API %s and Kind %s because of error: %v ", groupVersionResource.Version, groupVersionResource.Resource, err)
@@ -169,7 +168,7 @@ func cacheAllObjectsOfKind(dynamicClient dynamic.Interface, groupVersionResource
 	}
 	for idx, object := range objects.Items {
 
-		key := fmt.Sprintf("%s-%s-%s", object.GetKind(), object.GetNamespace(), object.GetName())
+		key := fmt.Sprintf("%s/%s/%s", object.GetKind(), object.GetNamespace(), object.GetName())
 		objMeta, err := meta.Accessor(&objects.Items[idx])
 		if err != nil {
 			logrus.Warnf("Error converting object to meta object %s %v", object.GetName(), err)
@@ -181,7 +180,7 @@ func cacheAllObjectsOfKind(dynamicClient dynamic.Interface, groupVersionResource
 }
 
 // LoadControllers loads a list of controllers from the kubeResources Pods
-func LoadControllers(pods []corev1.Pod, dynamicClientPointer *dynamic.Interface, restMapperPointer *meta.RESTMapper, objectCache map[string]kubeAPIMetaV1.Object) []GenericWorkload {
+func LoadControllers(pods []corev1.Pod, dynamicClientPointer *dynamic.Interface, restMapperPointer *meta.RESTMapper, objectCache map[string]metav1.Object) []GenericWorkload {
 	interfaces := []GenericWorkload{}
 	deduped := map[string]corev1.Pod{}
 	for _, pod := range pods {

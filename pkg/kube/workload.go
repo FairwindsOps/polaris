@@ -24,7 +24,6 @@ func NewGenericWorkloadFromPod(originalResource kubeAPICoreV1.Pod) GenericWorklo
 	workload.PodSpec = originalResource.Spec
 	workload.ObjectMeta = originalResource.ObjectMeta.GetObjectMeta()
 	workload.Kind = "Pod"
-	fmt.Println("get workload", workload.ObjectMeta.GetNamespace(), workload.ObjectMeta.GetName())
 	return workload
 }
 
@@ -46,12 +45,9 @@ func NewGenericWorkload(originalResource kubeAPICoreV1.Pod, dynamicClientPointer
 			break
 		}
 		workload.Kind = firstOwner.Kind
-		key := fmt.Sprintf("%s-%s-%s", firstOwner.Kind, workload.ObjectMeta.GetNamespace(), firstOwner.Name)
+		key := fmt.Sprintf("%s/%s/%s", firstOwner.Kind, workload.ObjectMeta.GetNamespace(), firstOwner.Name)
 		objMeta, ok := objectCache[key]
 		if ok {
-			if objMeta.GetNamespace() != workload.ObjectMeta.GetNamespace() || objMeta.GetName() != firstOwner.Name {
-				logrus.Errorf("Objects not matching %s %s %s %s", objMeta.GetNamespace(), workload.ObjectMeta.GetNamespace(), objMeta.GetName(), firstOwner.Name)
-			}
 			workload.ObjectMeta = objMeta
 			owners = objMeta.GetOwnerReferences()
 
@@ -71,9 +67,6 @@ func NewGenericWorkload(originalResource kubeAPICoreV1.Pod, dynamicClientPointer
 
 		objMeta, ok = objectCache[key]
 		if ok {
-			if objMeta.GetNamespace() != workload.ObjectMeta.GetNamespace() || objMeta.GetName() != firstOwner.Name {
-				logrus.Errorf("Objects not matching %s %s %s %s", objMeta.GetNamespace(), workload.ObjectMeta.GetNamespace(), objMeta.GetName(), firstOwner.Name)
-			}
 			workload.ObjectMeta = objMeta
 			owners = objMeta.GetOwnerReferences()
 
