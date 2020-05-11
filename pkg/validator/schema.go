@@ -21,6 +21,8 @@ var (
 	// We explicitly set the order to avoid thrash in the
 	// tests as we migrate toward JSON schema
 	checkOrder = []string{
+		// Controller Checks
+		"multipleReplicasForDeployment",
 		// Pod checks
 		"hostIPCSet",
 		"hostPIDSet",
