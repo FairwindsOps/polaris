@@ -138,7 +138,7 @@ func TestValidateResourcesPartiallyValid(t *testing.T) {
 
 func TestValidateResourcesInit(t *testing.T) {
 	emptyContainer := &corev1.Container{}
-	controller := getEmptyWorkload("")
+	controller := getEmptyWorkload(t, "")
 
 	parsedConf, err := conf.Parse([]byte(resourceConfRanges))
 	assert.NoError(t, err, "Expected no error when parsing config")

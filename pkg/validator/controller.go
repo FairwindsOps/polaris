@@ -31,6 +31,7 @@ func ValidateController(conf *conf.Configuration, controller kube.GenericWorkloa
 	if err != nil {
 		return ControllerResult{}, err
 	}
+
 	result := ControllerResult{
 		Kind:      controller.Kind,
 		Name:      controller.ObjectMeta.GetName(),

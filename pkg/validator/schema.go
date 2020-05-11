@@ -124,6 +124,17 @@ func applyPodSchemaChecks(conf *config.Configuration, controller kube.GenericWor
 		if err != nil {
 			return nil, err
 		} else if check == nil {
+			check, err = resolveCheck(conf, checkID, controller, config.TargetController, false)
+			if err != nil {
+				return nil, err
+			} else if check == nil {
+				continue
+			}
+			passes, err := check.CheckController(controller.OriginalObjectJSON)
+			if err != nil {
+				return nil, err
+			}
+			results[check.ID] = makeResult(conf, check, passes)
 			continue
 		}
 		passes, err := check.CheckPod(&controller.PodSpec)
