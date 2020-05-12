@@ -23,7 +23,7 @@ Polaris can be run in three different modes:
 * As a [validating webhook](#webhook), so you can automatically reject workloads that don't adhere to your organization's policies.
 * As a [command-line tool](#cli), so you can test local YAML files, e.g. as part of a CI/CD process.
 
-**Want to learn more?** Reach out on [the Slack channel](https://fairwindscommunity.slack.com/messages/polaris) ([request invite](https://join.slack.com/t/fairwindscommunity/shared_invite/zt-cxss92z7-YjfnJwpUwlviViBFjYV2gg)), send an email to `opensource@fairwinds.com`, or join us for [office hours on Zoom](https://fairwindscommunity.slack.com/messages/office-hours)
+**Want to learn more?** Reach out on [the Slack channel](https://fairwindscommunity.slack.com/messages/polaris) ([request invite](https://join.slack.com/t/fairwindscommunity/shared_invite/zt-e3c6vj4l-3lIH6dvKqzWII5fSSFDi1g)), send an email to `opensource@fairwinds.com`, or join us for [office hours on Zoom](https://fairwindscommunity.slack.com/messages/office-hours)
 
 # Dashboard Quickstart
 
