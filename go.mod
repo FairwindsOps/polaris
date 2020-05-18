@@ -22,7 +22,7 @@ require (
 	github.com/gobuffalo/gogen v0.2.0
 	github.com/gobuffalo/logger v1.0.3
 	github.com/gobuffalo/mapi v1.2.0
-	github.com/gobuffalo/packd v0.3.0
+	github.com/gobuffalo/packd v0.4.0
 	github.com/gobuffalo/packr/v2 v2.7.1
 	github.com/gobuffalo/syncx v0.1.0
 	github.com/gogo/protobuf v1.2.1
