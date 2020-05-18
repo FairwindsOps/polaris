@@ -13,7 +13,7 @@ require (
 	github.com/census-instrumentation/opencensus-proto v0.2.1
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/evanphx/json-patch v4.2.0+incompatible
+	github.com/evanphx/json-patch v4.5.0+incompatible
 	github.com/go-logr/logr v0.1.0
 	github.com/go-logr/zapr v0.1.1
 	github.com/gobuffalo/depgen v0.1.0 // indirect
