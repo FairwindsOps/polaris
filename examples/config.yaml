@@ -24,7 +24,78 @@ checks:
   runAsPrivileged: error
   dangerousCapabilities: error
   insecureCapabilities: warning
+
 exemptions:
+  - controllerNames:
+      - kube-apiserver
+      - kube-proxy
+      - kube-scheduler
+      - etcd-manager-events
+      - kube-controller-manager
+      - kube-dns
+      - etcd-manager-main
+    rules:
+      - hostPortSet
+      - hostNetworkSet
+      - readinessProbeMissing
+      - livenessProbeMissing
+      - cpuRequestsMissing
+      - cpuLimitsMissing
+      - memoryRequestsMissing
+      - memoryLimitsMissing
+      - runAsRootAllowed
+      - runAsPrivileged
+      - notReadOnlyRootFilesystem
+      - hostPIDSet
+
+  - controllerNames:
+      - kube-flannel-ds
+    rules:
+      - notReadOnlyRootFilesystem
+      - runAsRootAllowed
+      - notReadOnlyRootFilesystem
+      - readinessProbeMissing
+      - livenessProbeMissing
+      - cpuLimitsMissing
+
+  - controllerNames:
+      - cert-manager
+    rules:
+      - notReadOnlyRootFilesystem
+      - runAsRootAllowed
+      - readinessProbeMissing
+      - livenessProbeMissing
+
+  - controllerNames:
+      - cluster-autoscaler
+    rules:
+      - notReadOnlyRootFilesystem
+      - runAsRootAllowed
+      - readinessProbeMissing
+
+  - controllerNames:
+      - vpa
+    rules:
+      - runAsRootAllowed
+      - readinessProbeMissing
+      - livenessProbeMissing
+      - notReadOnlyRootFilesystem
+
+  - controllerNames:
+      - datadog
+    rules:
+      - runAsRootAllowed
+      - readinessProbeMissing
+      - livenessProbeMissing
+      - notReadOnlyRootFilesystem
+
+  - controllerNames:
+      - nginx-ingress-controller
+    rules:
+      - privilegeEscalationAllowed
+      - insecureCapabilities
+      - runAsRootAllowed
+
   - controllerNames:
       - dns-controller
       - datadog-datadog
@@ -35,6 +106,7 @@ exemptions:
       - kube2iam
     rules:
       - hostNetworkSet
+
   - controllerNames:
       - aws-iam-authenticator
       - aws-cluster-autoscaler
@@ -49,9 +121,9 @@ exemptions:
     rules:
       - readinessProbeMissing
       - livenessProbeMissing
+
   - controllerNames:
       - aws-iam-authenticator
-      - nginx-ingress-controller
       - nginx-ingress-default-backend
       - aws-cluster-autoscaler
       - kube-state-metrics
@@ -64,6 +136,7 @@ exemptions:
       - kube2iam
     rules:
       - runAsRootAllowed
+
   - controllerNames:
       - aws-iam-authenticator
       - nginx-ingress-controller
@@ -79,6 +152,7 @@ exemptions:
       - kube2iam
     rules:
       - notReadOnlyRootFilesystem
+
   - controllerNames:
       - cert-manager
       - dns-controller
@@ -86,20 +160,24 @@ exemptions:
       - dnsmasq
       - autoscaler
       - insights-agent-goldilocks-vpa-install
+      - datadog
     rules:
       - cpuRequestsMissing
       - cpuLimitsMissing
       - memoryRequestsMissing
       - memoryLimitsMissing
+
   - controllerNames:
       - kube2iam
       - kube-flannel-ds
     rules:
       - runAsPrivileged
+
   - controllerNames:
       - kube-hunter
     rules:
       - hostPIDSet
+
   - controllerNames:
       - polaris
       - kube-hunter
@@ -107,11 +185,13 @@ exemptions:
       - insights-agent-goldilocks-vpa-install
     rules:
       - notReadOnlyRootFilesystem
+
   - controllerNames:
       - insights-agent-goldilocks-controller
     rules:
       - livenessProbeMissing
       - readinessProbeMissing
+
   - controllerNames:
       - insights-agent-goldilocks-vpa-install
       - kube-hunter
