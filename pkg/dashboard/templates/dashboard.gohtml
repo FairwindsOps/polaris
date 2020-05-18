@@ -13,6 +13,9 @@
           <div class="sailing">{{ getWeatherText .AuditData.GetSummary }}</div>
           <div class="scores"><span>Grade: </span><strong>{{ getGrade .AuditData.GetSummary }}</strong></div>
           <div class="scores"><span>Score: </span><strong>{{ .AuditData.GetSummary.GetScore }}%</strong></div>
+          <p class="score-description">
+            Score is the percentage of passing checks. Warnings get half the weight of dangerous checks.
+          </p>
         </div>
       </div>
       <div class="graph">
@@ -20,38 +23,53 @@
       </div>
       <div class="result-messages">
         <ul class="message-list">
-          <li class="success"><i class="message-icon fas fa-check"></i> {{ .AuditData.GetSummary.Successes }} checks passed</li>
-          <li class="failure warning"><i class="message-icon fas fa-exclamation"></i> {{ .AuditData.GetSummary.Warnings }} checks had warnings</li>
-          <li class="failure error"><i class="message-icon fas fa-times"></i> {{ .AuditData.GetSummary.Errors }} checks had errors</li>
+          <li class="success">
+            <i class="message-icon fas fa-check"></i>
+            <div class="message-group">
+              <span class="count"> {{ .AuditData.GetSummary.Successes }}</span>
+              <span class="message"> passing checks</span>
+            </div>
+          </li>
+          <li class="failure warning">
+            <i class="message-icon fas fa-exclamation"></i>
+            <div class="message-group">
+              <span class="count"> {{ .AuditData.GetSummary.Warnings }}</span>
+              <span class="message"> warning checks</span>
+            </div>
+          </li>
+          <li class="failure danger">
+            <i class="message-icon fas fa-times"></i>
+            <div class="message-group">
+              <span class="count"> {{ .AuditData.GetSummary.Dangers }}</span>
+              <span class="message"> dangerous checks</span>
+            </div>
+          </li>
         </ul>
       </div>
     </div>
     <div class="cluster-overview-footer">
-      <p class="score-description">
-        Score is the percentage of passing checks. Warnings get half the weight of errors.
-      </p>
-      <p class="kubernetes-overview">
-          <span class="kubernetes-stat">
+      <div class="kubernetes-stats">
+          <div class="kubernetes-stat">
             <span>Kubernetes Version:</span>
             <strong>{{.AuditData.ClusterInfo.Version}}</strong>
-          </span>
-          <span class="kubernetes-stat">
+          </div>
+          <div class="kubernetes-stat">
             <span>Nodes:</span>
             <strong>{{.AuditData.ClusterInfo.Nodes}}</strong>
-          </span>
-          <span class="kubernetes-stat">
-            <span>Pods:</span>
-            <strong>{{.AuditData.ClusterInfo.Pods}}</strong>
-          </span>
-          <span class="kubernetes-stat">
-            <span>Controllers:</span>
-            <strong>{{.AuditData.ClusterInfo.Controllers}}</strong>
-          </span>
-          <span class="kubernetes-stat">
+          </div>
+          <div class="kubernetes-stat">
             <span>Namespaces:</span>
             <strong>{{.AuditData.ClusterInfo.Namespaces}}</strong>
-          </span>
-      </p>
+          </div>
+          <div class="kubernetes-stat">
+            <span>Controllers:</span>
+            <strong>{{.AuditData.ClusterInfo.Controllers}}</strong>
+          </div>
+          <div class="kubernetes-stat">
+            <span>Pods:</span>
+            <strong>{{.AuditData.ClusterInfo.Pods}}</strong>
+          </div>
+      </div>
     </div>
   </div>
 
