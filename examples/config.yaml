@@ -22,7 +22,48 @@ checks:
   runAsPrivileged: error
   dangerousCapabilities: error
   insecureCapabilities: warning
+
 exemptions:
+  - controllerNames:
+      - kube-apiserver
+      - kube-proxy
+      - kube-scheduler
+      - etcd-manager-events
+      - kube-controller-manager
+      - kube-dns
+      - etcd-manager-main
+    rules:
+      - hostPortSet
+      - hostNetworkSet
+      - readinessProbeMissing
+      - livenessProbeMissing
+      - cpuRequestsMissing
+      - cpuLimitsMissing
+      - memoryRequestsMissing
+      - memoryLimitsMissing
+      - runAsRootAllowed
+      - runAsPrivileged
+      - notReadOnlyRootFilesystem
+      - hostPIDSet
+
+  - controllerNames:
+      - kube-flannel-ds
+    rules:
+      - notReadOnlyRootFilesystem
+      - runAsRootAllowed
+      - notReadOnlyRootFilesystem
+      - readinessProbeMissing
+      - livenessProbeMissing
+      - cpuLimitsMissing
+
+  - controllerNames:
+      - vpa
+    rules:
+      - runAsRootAllowed
+      - readinessProbeMissing
+      - livenessProbeMissing
+      - notReadOnlyRootFilesystem
+
   - controllerNames:
       - dns-controller
       - datadog-datadog
