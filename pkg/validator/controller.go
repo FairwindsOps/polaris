@@ -31,11 +31,17 @@ func ValidateController(conf *conf.Configuration, controller kube.GenericWorkloa
 	if err != nil {
 		return ControllerResult{}, err
 	}
+
+	controllerResult, err := applyControllerSchemaChecks(conf, controller)
+	if err != nil {
+		return ControllerResult{}, err
+	}
+
 	result := ControllerResult{
 		Kind:      controller.Kind,
 		Name:      controller.ObjectMeta.GetName(),
 		Namespace: controller.ObjectMeta.GetNamespace(),
-		Results:   ResultSet{},
+		Results:   controllerResult,
 		PodResult: podResult,
 	}
 

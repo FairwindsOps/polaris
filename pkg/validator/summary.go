@@ -1,9 +1,6 @@
 package validator
 
 import (
-	"sort"
-	"strings"
-
 	"github.com/fairwindsops/polaris/pkg/config"
 )
 
@@ -145,19 +142,6 @@ func (a AuditData) GetResultsByNamespace() map[string][]*ControllerResult {
 		}
 		nsResults = append(nsResults, &a.Results[idx])
 		allResults[ctrlResult.Namespace] = nsResults
-	}
-	for ns := range allResults {
-		sort.SliceStable(allResults[ns], func(i, j int) bool {
-			kind := strings.Compare(allResults[ns][i].Kind, allResults[ns][j].Kind)
-			if kind != 0 {
-				return kind == -1
-			}
-			name := strings.Compare(allResults[ns][i].Name, allResults[ns][j].Name)
-			if name != 0 {
-				return name == -1
-			}
-			return true
-		})
 	}
 	return allResults
 }

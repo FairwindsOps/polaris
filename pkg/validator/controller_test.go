@@ -32,7 +32,8 @@ func TestValidateController(t *testing.T) {
 			"hostPIDSet": conf.SeverityError,
 		},
 	}
-	deployment := kube.NewGenericWorkloadFromPod(test.MockPod())
+	deployment, err := kube.NewGenericWorkloadFromPod(test.MockPod(), nil)
+	assert.NoError(t, err)
 	deployment.Kind = "Deployment"
 	expectedSum := CountSummary{
 		Successes: uint(2),
@@ -56,6 +57,44 @@ func TestValidateController(t *testing.T) {
 	assert.EqualValues(t, expectedResults, actualResult.PodResult.Results)
 }
 
+func TestControllerLevelChecks(t *testing.T) {
+	c := conf.Configuration{
+		Checks: map[string]conf.Severity{
+			"multipleReplicasForDeployment": conf.SeverityError,
+		},
+	}
+	resources, err := kube.CreateResourceProviderFromPath("../kube/test_files/test_1")
+
+	assert.Equal(t, nil, err, "Error should be nil")
+
+	assert.Equal(t, 8, len(resources.Controllers), "Should have eight controllers")
+
+	expectedSum := CountSummary{
+		Successes: uint(0),
+		Warnings:  uint(0),
+		Errors:    uint(1),
+	}
+
+	expectedResults := ResultSet{
+		"multipleReplicasForDeployment": {ID: "multipleReplicasForDeployment", Message: "Only one replica is scheduled", Success: false, Severity: "error", Category: "Reliability"},
+	}
+
+	for _, controller := range resources.Controllers {
+		if controller.Kind == "Deployment" && controller.ObjectMeta.GetName() == "test-deployment" {
+			actualResult, err := ValidateController(&c, controller)
+			if err != nil {
+				panic(err)
+			}
+
+			assert.Equal(t, "Deployment", actualResult.Kind)
+			assert.Equal(t, 1, len(actualResult.Results), "should be equal")
+			assert.EqualValues(t, expectedSum, actualResult.GetSummary())
+			assert.EqualValues(t, expectedResults, actualResult.Results)
+		}
+	}
+
+}
+
 func TestSkipHealthChecks(t *testing.T) {
 	c := conf.Configuration{
 		Checks: map[string]conf.Severity{
@@ -65,7 +104,8 @@ func TestSkipHealthChecks(t *testing.T) {
 	}
 	pod := test.MockPod()
 	pod.Spec.InitContainers = []corev1.Container{test.MockContainer("test")}
-	deployment := kube.NewGenericWorkloadFromPod(pod)
+	deployment, err := kube.NewGenericWorkloadFromPod(pod, nil)
+	assert.NoError(t, err)
 	deployment.Kind = "Deployment"
 	expectedSum := CountSummary{
 		Successes: uint(0),
@@ -86,7 +126,8 @@ func TestSkipHealthChecks(t *testing.T) {
 	assert.EqualValues(t, ResultSet{}, actualResult.PodResult.ContainerResults[0].Results)
 	assert.EqualValues(t, expectedResults, actualResult.PodResult.ContainerResults[1].Results)
 
-	job := kube.NewGenericWorkloadFromPod(test.MockPod())
+	job, err := kube.NewGenericWorkloadFromPod(test.MockPod(), nil)
+	assert.NoError(t, err)
 	job.Kind = "Job"
 	expectedSum = CountSummary{
 		Successes: uint(0),
@@ -103,7 +144,8 @@ func TestSkipHealthChecks(t *testing.T) {
 	assert.EqualValues(t, expectedSum, actualResult.GetSummary())
 	assert.EqualValues(t, expectedResults, actualResult.PodResult.ContainerResults[0].Results)
 
-	cronjob := kube.NewGenericWorkloadFromPod(test.MockPod())
+	cronjob, err := kube.NewGenericWorkloadFromPod(test.MockPod(), nil)
+	assert.NoError(t, err)
 	cronjob.Kind = "CronJob"
 	expectedSum = CountSummary{
 		Successes: uint(0),
@@ -129,7 +171,8 @@ func TestControllerExemptions(t *testing.T) {
 		},
 	}
 	pod := test.MockPod()
-	workload := kube.NewGenericWorkloadFromPod(pod)
+	workload, err := kube.NewGenericWorkloadFromPod(pod, nil)
+	assert.NoError(t, err)
 	workload.Kind = "Deployment"
 	resources := &kube.ResourceProvider{
 		Controllers: []kube.GenericWorkload{workload},

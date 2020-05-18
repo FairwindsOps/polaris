@@ -21,6 +21,8 @@ var (
 	// We explicitly set the order to avoid thrash in the
 	// tests as we migrate toward JSON schema
 	checkOrder = []string{
+		// Controller Checks
+		"multipleReplicasForDeployment",
 		// Pod checks
 		"hostIPCSet",
 		"hostPIDSet",
@@ -127,6 +129,31 @@ func applyPodSchemaChecks(conf *config.Configuration, controller kube.GenericWor
 			continue
 		}
 		passes, err := check.CheckPod(&controller.PodSpec)
+		if err != nil {
+			return nil, err
+		}
+		results[check.ID] = makeResult(conf, check, passes)
+	}
+	return results, nil
+}
+
+func applyControllerSchemaChecks(conf *config.Configuration, controller kube.GenericWorkload) (ResultSet, error) {
+	results := ResultSet{}
+	checkIDs := getSortedKeys(conf.Checks)
+	objectAnnotations := controller.ObjectMeta.GetAnnotations()
+	for _, checkID := range checkIDs {
+		exemptValue := objectAnnotations[getExemptKey(checkID)]
+		if strings.ToLower(exemptValue) == "true" {
+			continue
+		}
+		check, err := resolveCheck(conf, checkID, controller, config.TargetController, false)
+
+		if err != nil {
+			return nil, err
+		} else if check == nil {
+			continue
+		}
+		passes, err := check.CheckController(controller.OriginalObjectJSON)
 		if err != nil {
 			return nil, err
 		}
