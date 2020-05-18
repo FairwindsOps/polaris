@@ -11,7 +11,7 @@ import (
 type CountSummary struct {
 	Successes uint
 	Warnings  uint
-	Errors    uint
+	Dangers    uint
 }
 
 // CountSummaryByCategory is a map from category to CountSummary
@@ -19,7 +19,7 @@ type CountSummaryByCategory map[string]CountSummary
 
 // GetScore returns an overall score in [0, 100] for the CountSummary
 func (cs CountSummary) GetScore() uint {
-	total := (cs.Successes * 2) + cs.Warnings + (cs.Errors * 2)
+	total := (cs.Successes * 2) + cs.Warnings + (cs.Dangers * 2)
 	if total == 0 {
 		return 0 // Prevent divide by 0.
 	}
@@ -30,7 +30,7 @@ func (cs CountSummary) GetScore() uint {
 func (cs *CountSummary) AddSummary(other CountSummary) {
 	cs.Successes += other.Successes
 	cs.Warnings += other.Warnings
-	cs.Errors += other.Errors
+	cs.Dangers += other.Dangers
 }
 
 // AddResult adds a single result to the summary
@@ -39,7 +39,7 @@ func (cs *CountSummary) AddResult(result ResultMessage) {
 		if result.Severity == config.SeverityWarning {
 			cs.Warnings++
 		} else {
-			cs.Errors++
+			cs.Dangers++
 		}
 	} else {
 		cs.Successes++
@@ -184,11 +184,11 @@ func (rs ResultSet) GetWarnings() []ResultMessage {
 	return warnings
 }
 
-// GetErrors returns the error messages in a result set
-func (rs ResultSet) GetErrors() []ResultMessage {
+// GetDangers returns the error messages in a result set
+func (rs ResultSet) GetDangers() []ResultMessage {
 	errors := []ResultMessage{}
 	for _, msg := range rs {
-		if msg.Success == false && msg.Severity == config.SeverityError {
+		if msg.Success == false && msg.Severity == config.SeverityDanger {
 			errors = append(errors, msg)
 		}
 	}
@@ -198,7 +198,7 @@ func (rs ResultSet) GetErrors() []ResultMessage {
 // GetSortedResults returns messages sorted as errors, then warnings, then successes
 func (rs ResultSet) GetSortedResults() []ResultMessage {
 	messages := []ResultMessage{}
-	messages = append(messages, rs.GetErrors()...)
+	messages = append(messages, rs.GetDangers()...)
 	messages = append(messages, rs.GetWarnings()...)
 	messages = append(messages, rs.GetSuccesses()...)
 	return messages

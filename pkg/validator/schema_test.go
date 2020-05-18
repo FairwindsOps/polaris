@@ -12,7 +12,7 @@ import (
 
 var customCheckExemptions = `
 checks:
-  foo: error
+  foo: danger
 customChecks:
   foo:
     successMessage: success!
@@ -32,7 +32,7 @@ exemptions:
 
 var resourceConfRanges = `
 checks:
-  memoryRequestsRange: error
+  memoryRequestsRange: danger
   memoryLimitsRange: warning
 customChecks:
   memoryLimitsRange:
@@ -121,11 +121,11 @@ func TestValidateResourcesPartiallyValid(t *testing.T) {
 		},
 	}
 
-	expectedErrors := []ResultMessage{
+	expectedDangers := []ResultMessage{
 		{
 			ID:       "memoryRequestsRange",
 			Success:  false,
-			Severity: "error",
+			Severity: "danger",
 			Message:  "Memory requests should be within the required range",
 			Category: "Resources",
 		},
@@ -133,7 +133,7 @@ func TestValidateResourcesPartiallyValid(t *testing.T) {
 
 	expectedSuccesses := []ResultMessage{}
 
-	testValidate(t, &container, &resourceConfRanges, "foo", expectedErrors, expectedWarnings, expectedSuccesses)
+	testValidate(t, &container, &resourceConfRanges, "foo", expectedDangers, expectedWarnings, expectedSuccesses)
 }
 
 func TestValidateResourcesInit(t *testing.T) {
@@ -147,14 +147,14 @@ func TestValidateResourcesInit(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	assert.Equal(t, uint(1), results.GetSummary().Errors)
+	assert.Equal(t, uint(1), results.GetSummary().Dangers)
 	assert.Equal(t, uint(1), results.GetSummary().Warnings)
 
 	results, err = applyContainerSchemaChecks(&parsedConf, controller, emptyContainer, true)
 	if err != nil {
 		panic(err)
 	}
-	assert.Equal(t, uint(0), results.GetSummary().Errors)
+	assert.Equal(t, uint(0), results.GetSummary().Dangers)
 	assert.Equal(t, uint(0), results.GetSummary().Warnings)
 }
 
@@ -189,7 +189,7 @@ func TestValidateResourcesFullyValid(t *testing.T) {
 		{
 			ID:       "memoryRequestsRange",
 			Success:  true,
-			Severity: "error",
+			Severity: "danger",
 			Message:  "Memory requests are within the required range",
 			Category: "Resources",
 		},
@@ -222,14 +222,14 @@ func TestValidateResourcesFullyValid(t *testing.T) {
 		{
 			ID:       "cpuLimitsMissing",
 			Success:  true,
-			Severity: "error",
+			Severity: "danger",
 			Message:  "CPU limits are set",
 			Category: "Resources",
 		},
 		{
 			ID:       "memoryLimitsMissing",
 			Success:  true,
-			Severity: "error",
+			Severity: "danger",
 			Message:  "Memory limits are set",
 			Category: "Resources",
 		},
@@ -245,18 +245,18 @@ func TestValidateCustomCheckExemptions(t *testing.T) {
 	}
 
 	expectedWarnings := []ResultMessage{}
-	expectedErrors := []ResultMessage{}
+	expectedDangers := []ResultMessage{}
 	expectedSuccesses := []ResultMessage{}
-	testValidate(t, &container, &customCheckExemptions, "exempt", expectedErrors, expectedWarnings, expectedSuccesses)
+	testValidate(t, &container, &customCheckExemptions, "exempt", expectedDangers, expectedWarnings, expectedSuccesses)
 
-	expectedErrors = []ResultMessage{
+	expectedDangers = []ResultMessage{
 		{
 			ID:       "foo",
 			Success:  false,
-			Severity: "error",
+			Severity: "danger",
 			Message:  "fail!",
 			Category: "Security",
 		},
 	}
-	testValidate(t, &container, &customCheckExemptions, "notexempt", expectedErrors, expectedWarnings, expectedSuccesses)
+	testValidate(t, &container, &customCheckExemptions, "notexempt", expectedDangers, expectedWarnings, expectedSuccesses)
 }

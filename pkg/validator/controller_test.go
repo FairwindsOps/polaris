@@ -28,8 +28,8 @@ import (
 func TestValidateController(t *testing.T) {
 	c := conf.Configuration{
 		Checks: map[string]conf.Severity{
-			"hostIPCSet": conf.SeverityError,
-			"hostPIDSet": conf.SeverityError,
+			"hostIPCSet": conf.SeverityDanger,
+			"hostPIDSet": conf.SeverityDanger,
 		},
 	}
 	deployment, err := kube.NewGenericWorkloadFromPod(test.MockPod(), nil)
@@ -38,12 +38,12 @@ func TestValidateController(t *testing.T) {
 	expectedSum := CountSummary{
 		Successes: uint(2),
 		Warnings:  uint(0),
-		Errors:    uint(0),
+		Dangers:    uint(0),
 	}
 
 	expectedResults := ResultSet{
-		"hostIPCSet": {ID: "hostIPCSet", Message: "Host IPC is not configured", Success: true, Severity: "error", Category: "Security"},
-		"hostPIDSet": {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "error", Category: "Security"},
+		"hostIPCSet": {ID: "hostIPCSet", Message: "Host IPC is not configured", Success: true, Severity: "danger", Category: "Security"},
+		"hostPIDSet": {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
 	actualResult, err := ValidateController(&c, deployment)
@@ -60,7 +60,7 @@ func TestValidateController(t *testing.T) {
 func TestControllerLevelChecks(t *testing.T) {
 	c := conf.Configuration{
 		Checks: map[string]conf.Severity{
-			"multipleReplicasForDeployment": conf.SeverityError,
+			"multipleReplicasForDeployment": conf.SeverityDanger,
 		},
 	}
 	resources, err := kube.CreateResourceProviderFromPath("../kube/test_files/test_1")
@@ -72,11 +72,11 @@ func TestControllerLevelChecks(t *testing.T) {
 	expectedSum := CountSummary{
 		Successes: uint(0),
 		Warnings:  uint(0),
-		Errors:    uint(1),
+		Dangers:    uint(1),
 	}
 
 	expectedResults := ResultSet{
-		"multipleReplicasForDeployment": {ID: "multipleReplicasForDeployment", Message: "Only one replica is scheduled", Success: false, Severity: "error", Category: "Reliability"},
+		"multipleReplicasForDeployment": {ID: "multipleReplicasForDeployment", Message: "Only one replica is scheduled", Success: false, Severity: "danger", Category: "Reliability"},
 	}
 
 	for _, controller := range resources.Controllers {
@@ -98,7 +98,7 @@ func TestControllerLevelChecks(t *testing.T) {
 func TestSkipHealthChecks(t *testing.T) {
 	c := conf.Configuration{
 		Checks: map[string]conf.Severity{
-			"readinessProbeMissing": conf.SeverityError,
+			"readinessProbeMissing": conf.SeverityDanger,
 			"livenessProbeMissing":  conf.SeverityWarning,
 		},
 	}
@@ -110,10 +110,10 @@ func TestSkipHealthChecks(t *testing.T) {
 	expectedSum := CountSummary{
 		Successes: uint(0),
 		Warnings:  uint(1),
-		Errors:    uint(1),
+		Dangers:    uint(1),
 	}
 	expectedResults := ResultSet{
-		"readinessProbeMissing": {ID: "readinessProbeMissing", Message: "Readiness probe should be configured", Success: false, Severity: "error", Category: "Health Checks"},
+		"readinessProbeMissing": {ID: "readinessProbeMissing", Message: "Readiness probe should be configured", Success: false, Severity: "danger", Category: "Health Checks"},
 		"livenessProbeMissing":  {ID: "livenessProbeMissing", Message: "Liveness probe should be configured", Success: false, Severity: "warning", Category: "Health Checks"},
 	}
 	actualResult, err := ValidateController(&c, deployment)
@@ -132,7 +132,7 @@ func TestSkipHealthChecks(t *testing.T) {
 	expectedSum = CountSummary{
 		Successes: uint(0),
 		Warnings:  uint(0),
-		Errors:    uint(0),
+		Dangers:    uint(0),
 	}
 	expectedResults = ResultSet{}
 	actualResult, err = ValidateController(&c, job)
@@ -150,7 +150,7 @@ func TestSkipHealthChecks(t *testing.T) {
 	expectedSum = CountSummary{
 		Successes: uint(0),
 		Warnings:  uint(0),
-		Errors:    uint(0),
+		Dangers:    uint(0),
 	}
 	expectedResults = ResultSet{}
 	actualResult, err = ValidateController(&c, cronjob)
@@ -166,7 +166,7 @@ func TestSkipHealthChecks(t *testing.T) {
 func TestControllerExemptions(t *testing.T) {
 	c := conf.Configuration{
 		Checks: map[string]conf.Severity{
-			"readinessProbeMissing": conf.SeverityError,
+			"readinessProbeMissing": conf.SeverityDanger,
 			"livenessProbeMissing":  conf.SeverityWarning,
 		},
 	}
@@ -181,7 +181,7 @@ func TestControllerExemptions(t *testing.T) {
 	expectedSum := CountSummary{
 		Successes: uint(0),
 		Warnings:  uint(1),
-		Errors:    uint(1),
+		Dangers:    uint(1),
 	}
 	actualResults, err := ValidateControllers(&c, resources)
 	if err != nil {

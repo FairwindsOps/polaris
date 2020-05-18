@@ -39,7 +39,7 @@ var auditOutputFormat string
 func init() {
 	rootCmd.AddCommand(auditCmd)
 	auditCmd.PersistentFlags().StringVar(&auditPath, "audit-path", "", "If specified, audits one or more YAML files instead of a cluster.")
-	auditCmd.PersistentFlags().BoolVar(&setExitCode, "set-exit-code-on-error", false, "Set an exit code of 3 when the audit contains error-level issues.")
+	auditCmd.PersistentFlags().BoolVar(&setExitCode, "set-exit-code-on-danger", false, "Set an exit code of 3 when the audit contains danger-level issues.")
 	auditCmd.PersistentFlags().IntVar(&minScore, "set-exit-code-below-score", 0, "Set an exit code of 4 when the score is below this threshold (1-100).")
 	auditCmd.PersistentFlags().StringVar(&auditOutputURL, "output-url", "", "Destination URL to send audit results.")
 	auditCmd.PersistentFlags().StringVar(&auditOutputFile, "output-file", "", "Destination file for audit results.")
@@ -60,8 +60,8 @@ var auditCmd = &cobra.Command{
 
 		summary := auditData.GetSummary()
 		score := summary.GetScore()
-		if setExitCode && summary.Errors > 0 {
-			logrus.Infof("%d errors found in audit", summary.Errors)
+		if setExitCode && summary.Dangers > 0 {
+			logrus.Infof("%d danger items found in audit", summary.Dangers)
 			os.Exit(3)
 		} else if minScore != 0 && score < uint(minScore) {
 			logrus.Infof("Audit score of %d is less than the provided minimum of %d", score, minScore)

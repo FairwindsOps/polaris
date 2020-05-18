@@ -7,7 +7,7 @@ $(function () {
         data: [
           polarisSummary.Successes,
           polarisSummary.Warnings,
-          polarisSummary.Errors,
+          polarisSummary.Dangers,
         ],
         backgroundColor: ['#8BD2DC', '#f26c21', '#a11f4c'],
       }]

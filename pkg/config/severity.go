@@ -24,11 +24,11 @@ const (
 	// SeverityWarning warns on validation failures
 	SeverityWarning Severity = "warning"
 
-	// SeverityError errors on validation failures
-	SeverityError Severity = "error"
+	// SeverityDanger errors on validation failures
+	SeverityDanger Severity = "danger"
 )
 
 // IsActionable returns true if the severity level is warning or error
 func (severity *Severity) IsActionable() bool {
-	return *severity == SeverityWarning || *severity == SeverityError
+	return *severity == SeverityWarning || *severity == SeverityDanger
 }

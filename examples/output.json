@@ -29,7 +29,7 @@
             "ID": "hostIPCSet",
             "Message": "Host IPC is not configured",
             "Success": true,
-            "Severity": "error",
+            "Severity": "danger",
             "Category": "Security"
           },
           "hostNetworkSet": {
@@ -43,7 +43,7 @@
             "ID": "hostPIDSet",
             "Message": "Host PID is not configured",
             "Success": true,
-            "Severity": "error",
+            "Severity": "danger",
             "Category": "Security"
           }
         },
@@ -69,7 +69,7 @@
                 "ID": "dangerousCapabilities",
                 "Message": "Container does not have any dangerous capabilities",
                 "Success": true,
-                "Severity": "error",
+                "Severity": "danger",
                 "Category": "Security"
               },
               "hostPortSet": {
@@ -111,7 +111,7 @@
                 "ID": "privilegeEscalationAllowed",
                 "Message": "Privilege escalation not allowed",
                 "Success": true,
-                "Severity": "error",
+                "Severity": "danger",
                 "Category": "Security"
               },
               "readinessProbeMissing": {
@@ -125,7 +125,7 @@
                 "ID": "runAsPrivileged",
                 "Message": "Not running as privileged",
                 "Success": true,
-                "Severity": "error",
+                "Severity": "danger",
                 "Category": "Security"
               },
               "runAsRootAllowed": {
@@ -139,7 +139,7 @@
                 "ID": "tagNotSpecified",
                 "Message": "Image tag is specified",
                 "Success": true,
-                "Severity": "error",
+                "Severity": "danger",
                 "Category": "Images"
               }
             }
@@ -159,7 +159,7 @@
             "ID": "hostIPCSet",
             "Message": "Host IPC is not configured",
             "Success": true,
-            "Severity": "error",
+            "Severity": "danger",
             "Category": "Security"
           },
           "hostNetworkSet": {
@@ -173,7 +173,7 @@
             "ID": "hostPIDSet",
             "Message": "Host PID is not configured",
             "Success": true,
-            "Severity": "error",
+            "Severity": "danger",
             "Category": "Security"
           }
         },
@@ -199,7 +199,7 @@
                 "ID": "dangerousCapabilities",
                 "Message": "Container does not have any dangerous capabilities",
                 "Success": true,
-                "Severity": "error",
+                "Severity": "danger",
                 "Category": "Security"
               },
               "hostPortSet": {
@@ -241,7 +241,7 @@
                 "ID": "privilegeEscalationAllowed",
                 "Message": "Privilege escalation not allowed",
                 "Success": true,
-                "Severity": "error",
+                "Severity": "danger",
                 "Category": "Security"
               },
               "readinessProbeMissing": {
@@ -255,7 +255,7 @@
                 "ID": "runAsPrivileged",
                 "Message": "Not running as privileged",
                 "Success": true,
-                "Severity": "error",
+                "Severity": "danger",
                 "Category": "Security"
               },
               "runAsRootAllowed": {
@@ -269,7 +269,7 @@
                 "ID": "tagNotSpecified",
                 "Message": "Image tag is specified",
                 "Success": true,
-                "Severity": "error",
+                "Severity": "danger",
                 "Category": "Images"
               }
             }
