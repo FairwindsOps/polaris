@@ -87,9 +87,9 @@ func TestControllerLevelChecks(t *testing.T) {
 			}
 
 			assert.Equal(t, "Deployment", actualResult.Kind)
-			assert.Equal(t, 1, len(actualResult.PodResult.ContainerResults), "should be equal")
+			assert.Equal(t, 1, len(actualResult.Results), "should be equal")
 			assert.EqualValues(t, expectedSum, actualResult.GetSummary())
-			assert.EqualValues(t, expectedResults, actualResult.PodResult.Results)
+			assert.EqualValues(t, expectedResults, actualResult.Results)
 		}
 	}
 
