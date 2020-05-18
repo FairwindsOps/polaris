@@ -41,13 +41,21 @@ type Exemption struct {
 	ControllerNames []string `json:"controllerNames"`
 }
 
+var configBox = (*packr.Box)(nil)
+
+func getConfigBox() *packr.Box {
+	if configBox == (*packr.Box)(nil) {
+		configBox = packr.New("Config", "../../examples")
+	}
+	return configBox
+}
+
 // ParseFile parses config from a file.
 func ParseFile(path string) (Configuration, error) {
 	var rawBytes []byte
 	var err error
 	if path == "" {
-		configBox := packr.New("Config", "../../examples")
-		rawBytes, err = configBox.Find("config.yaml")
+		rawBytes, err = getConfigBox().Find("config.yaml")
 	} else if strings.HasPrefix(path, "https://") || strings.HasPrefix(path, "http://") {
 		//path is a url
 		response, err2 := http.Get(path)
