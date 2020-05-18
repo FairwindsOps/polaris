@@ -32,7 +32,7 @@ require (
 	github.com/google/btree v1.0.0
 	github.com/google/gofuzz v1.1.0
 	github.com/google/uuid v1.1.1
-	github.com/googleapis/gnostic v0.3.1
+	github.com/googleapis/gnostic v0.4.1
 	github.com/gophercloud/gophercloud v0.0.0-20190516165734-b3a23cc94cc5
 	github.com/gorilla/mux v1.7.4
 	github.com/gregjones/httpcache v0.0.0-20190212212710-3befbb6ad0cc
