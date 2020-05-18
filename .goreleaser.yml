@@ -1,29 +1,17 @@
-builds:
-- env:
-  - CGO_ENABLED=0
-  binary: polaris
-archive:
-  replacements:
-    darwin: Darwin
-    linux: Linux
-    windows: Windows
-    386: i386
-    amd64: x86_64
 checksum:
   name_template: 'checksums.txt'
-snapshot:
-  name_template: "{{ .Tag }}-next"
 changelog:
   sort: asc
   filters:
     exclude:
     - '^docs:'
     - '^test:'
-brew:
-  github:
-    owner: FairwindsOps
-    name: homebrew-tap
-  folder: Formula
-  description: Open Source Best Practices for Kubernetes
-  test: |
-    system "#{bin}/polaris --version"
+brews:
+  - name: polaris
+    github:
+      owner: FairwindsOps
+      name: homebrew-tap
+    folder: Formula
+    description: Open Source Best Practices for Kubernetes
+    test: |
+      system "#{bin}/polaris version"
