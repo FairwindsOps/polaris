@@ -57,6 +57,44 @@ func TestValidateController(t *testing.T) {
 	assert.EqualValues(t, expectedResults, actualResult.PodResult.Results)
 }
 
+func TestControllerLevelChecks(t *testing.T) {
+	c := conf.Configuration{
+		Checks: map[string]conf.Severity{
+			"multipleReplicasForDeployment": conf.SeverityError,
+		},
+	}
+	resources, err := kube.CreateResourceProviderFromPath("../kube/test_files/test_1")
+
+	assert.Equal(t, nil, err, "Error should be nil")
+
+	assert.Equal(t, 8, len(resources.Controllers), "Should have eight controllers")
+
+	expectedSum := CountSummary{
+		Successes: uint(0),
+		Warnings:  uint(0),
+		Errors:    uint(1),
+	}
+
+	expectedResults := ResultSet{
+		"multipleReplicasForDeployment": {ID: "multipleReplicasForDeployment", Message: "Only one replica is scheduled", Success: false, Severity: "error", Category: "Reliability"},
+	}
+
+	for _, controller := range resources.Controllers {
+		if controller.Kind == "Deployment" && controller.ObjectMeta.GetName() == "test-deployment" {
+			actualResult, err := ValidateController(&c, controller)
+			if err != nil {
+				panic(err)
+			}
+
+			assert.Equal(t, "Deployment", actualResult.Kind)
+			assert.Equal(t, 1, len(actualResult.PodResult.ContainerResults), "should be equal")
+			assert.EqualValues(t, expectedSum, actualResult.GetSummary())
+			assert.EqualValues(t, expectedResults, actualResult.PodResult.Results)
+		}
+	}
+
+}
+
 func TestSkipHealthChecks(t *testing.T) {
 	c := conf.Configuration{
 		Checks: map[string]conf.Severity{
