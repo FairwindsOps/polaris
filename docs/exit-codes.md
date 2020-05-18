@@ -7,7 +7,7 @@
   <dt>Exit 2</dt>
   <dd>Unused</dd>
   <dt>Exit 3</dt>
-  <dd>Exiting due to `--set-exit-code-on-error` being set and at least one error was found after an audit.</dd>
+  <dd>Exiting due to `--set-exit-code-on-danger` being set and at least one danger was found after an audit.</dd>
   <dt>Edit 4</dd>
   <dd>Exiting due to `--set-exit-code-below-score` being set and the audit resulted in a score less than the minimum score value.</dd>
 </dl>

@@ -4,12 +4,12 @@ Polaris supports a number of checks related to security.
 
 key | default | description
 ----|---------|------------
-`security.hostIPCSet` | `error` | Fails when `hostIPC` attribute is configured.
-`security.hostPIDSet` | `error` | Fails when `hostPID` attribute is configured.
+`security.hostIPCSet` | `danger` | Fails when `hostIPC` attribute is configured.
+`security.hostPIDSet` | `danger` | Fails when `hostPID` attribute is configured.
 `security.notReadOnlyRootFilesystem` | `warning` | Fails when `securityContext.readOnlyRootFilesystem` is not true.
-`security.privilegeEscalationAllowed` | `error` | Fails when `securityContext.allowPrivilegeEscalation` is true.
-`security.runAsRootAllowed` | `error` | Fails when `securityContext.runAsNonRoot` is not true.
-`security.runAsPrivileged` | `error` | Fails when `securityContext.privileged` is true.
+`security.privilegeEscalationAllowed` | `danger` | Fails when `securityContext.allowPrivilegeEscalation` is true.
+`security.runAsRootAllowed` | `danger` | Fails when `securityContext.runAsNonRoot` is not true.
+`security.runAsPrivileged` | `danger` | Fails when `securityContext.privileged` is true.
 
 ## Security Capabilities
 

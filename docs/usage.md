@@ -10,7 +10,7 @@ The [default configuration](/examples/config.yaml) contains a number of those ch
 
 
 ### Checks
-Each check can be assigned a `severity`. Only checks with a severity of `error` or `warning` will be validated. The results of these validations are visible on the dashboard. In the case of the validating webhook, only failures with a severity of `error` will result in a change being rejected.
+Each check can be assigned a `severity`. Only checks with a severity of `danger` or `warning` will be validated. The results of these validations are visible on the dashboard. In the case of the validating webhook, only failures with a severity of `danger` will result in a change being rejected.
 
 Polaris validation checks fall into several different categories:
 
@@ -149,10 +149,10 @@ polaris audit --audit-path ./deploy/
 
 #### Running with CI/CD
 You can integrate Polaris into CI/CD for repositories containing infrastructure-as-code.
-For example, to fail if polaris detects *any* error-level issues, or if the score drops below 90%:
+For example, to fail if polaris detects *any* danger-level issues, or if the score drops below 90%:
 ```bash
 polaris audit --audit-path ./deploy/ \
-  --set-exit-code-on-error \
+  --set-exit-code-on-danger \
   --set-exit-code-below-score 90
 ```
 
@@ -212,8 +212,8 @@ webhook
       Destination URL to send audit results
 --set-exit-code-below-score int
       Set an exit code of 4 when the score is below this threshold (1-100)
---set-exit-code-on-error
-      Set an exit code of 3 when the audit contains error-level issues.
+--set-exit-code-on-danger
+      Set an exit code of 3 when the audit contains danger-level issues.
 
 # webhook flags
 --disable-webhook-config-installer
