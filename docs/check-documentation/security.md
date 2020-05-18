@@ -10,6 +10,8 @@ key | default | description
 `security.privilegeEscalationAllowed` | `danger` | Fails when `securityContext.allowPrivilegeEscalation` is true.
 `security.runAsRootAllowed` | `danger` | Fails when `securityContext.runAsNonRoot` is not true.
 `security.runAsPrivileged` | `danger` | Fails when `securityContext.privileged` is true.
+`security.insecureCapabilities` | `warning` | Fails when `securityContext.capabilities` includes one of the capabilities [listed here](/checks/insecureCapabilities.yaml)
+`security.dangerousCapabilities` | `danger` | Fails when `securityContext.capabilities` includes one of the capabilities [listed here](/checks/dangerousCapabilities.yaml)
 
 ## Security Capabilities
 
@@ -25,3 +27,5 @@ Much of this configuration can be found in the `securityContext` attribute for b
 - [Kubernetes Docs: Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
 - [KubeCon 2018 Keynote: Running with Scissors](https://www.youtube.com/watch?v=ltrV-Qmh3oY)
 - [Kubernetes Security Book](https://kubernetes-security.info/)
+- [Kubernetes Docs: Set capabilities for a Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-capabilities-for-a-container)
+- [Linux Programmer's Manual: Capabilities](http://man7.org/linux/man-pages/man7/capabilities.7.html)

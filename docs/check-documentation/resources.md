@@ -13,17 +13,6 @@ key | default | description
 `resources.cpuLimitsMissing` | `danger` | Fails when `resources.limits.cpu` attribute is not configured.
 `resources.memoryLimitsMissing` | `danger` | Fails when `resources.limits.memory` attribute is not configured.
 
-## Range Checks
-
-Polaris can also verify that those values fall within a certain range. These checks are not enabled by default, and as such do not have default values. The `cpuRequestRanges`, `cpuLimitRanges`, `memoryRequestRanges`, and `memoryLimitRanges` all support the following attributes:
-
-key | description
-----|------------
-`warning.below` | Warn when resource is below this value (or not defined)
-`warning.above` | Warn when resource is above this value
-`danger.below` | Error when resource is below this value (or not defined)
-`danger.above` | Error when resource is above this value
-
 ## Background
 
 Configuring resource requests and limits for containers running in Kubernetes is an important best practice to follow. Setting appropriate resource requests will ensure that all your applications have sufficient compute resources. Setting appropriate resource limits will ensure that your applications do not consume too many resources.
