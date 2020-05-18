@@ -55,8 +55,6 @@ var supportedVersions = map[string]runtime.Object{
 	"batchv2alpha1/CronJob": &batchv2alpha1.CronJob{},
 
 	"corev1/ReplicationController": &corev1.ReplicationController{},
-
-	"corev1/Pod": &corev1.Pod{},
 }
 
 var webhookPort int
