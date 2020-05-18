@@ -55,7 +55,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0
 	github.com/prometheus/client_golang v1.6.0
 	github.com/prometheus/client_model v0.2.0
-	github.com/prometheus/common v0.9.1
+	github.com/prometheus/common v0.10.0
 	github.com/prometheus/procfs v0.0.11
 	github.com/prometheus/tsdb v0.7.1 // indirect
 	github.com/qri-io/jsonschema v0.1.1
