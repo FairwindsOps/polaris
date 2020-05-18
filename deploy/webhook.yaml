@@ -19,6 +19,7 @@ stringData:
   cert.pem: ''
 ---
 # Source: polaris/templates/configmap.yaml
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -27,142 +28,268 @@ metadata:
   labels:
     app: polaris
 data:
-  config.yaml:  |-
-    checks:
-      # resources
-      cpuRequestsMissing: warning
-      cpuLimitsMissing: warning
-      memoryRequestsMissing: warning
-      memoryLimitsMissing: warning
-      # images
-      tagNotSpecified: danger
-      pullPolicyNotAlways: ignore
-      # healthChecks
-      readinessProbeMissing: warning
-      livenessProbeMissing: warning
-      # networking
-      hostNetworkSet: warning
-      hostPortSet: warning
-      # security
-      hostIPCSet: danger
-      hostPIDSet: danger
-      notReadOnlyRootFilesystem: warning
-      privilegeEscalationAllowed: danger
-      runAsRootAllowed: warning
-      runAsPrivileged: danger
-      dangerousCapabilities: danger
-      insecureCapabilities: warning
-    controllersToScan:
-      - Deployments
-      - StatefulSets
-      - DaemonSets
-      - CronJobs
-      - Jobs
-      - ReplicationControllers
-    exemptions:
-      - controllerNames:
-          - dns-controller
-          - datadog-datadog
-          - kube-flannel-ds
-          - kube2iam
-          - aws-iam-authenticator
-          - datadog
-          - kube2iam
-        rules:
-          - hostNetworkSet
-      - controllerNames:
-          - aws-iam-authenticator
-          - aws-cluster-autoscaler
-          - kube-state-metrics
-          - dns-controller
-          - external-dns
-          - dnsmasq
-          - autoscaler
-          - kubernetes-dashboard
-          - install-cni
-          - kube2iam
-        rules:
-          - readinessProbeMissing
-          - livenessProbeMissing
-      - controllerNames:
-          - aws-iam-authenticator
-          - nginx-ingress-controller
-          - nginx-ingress-default-backend
-          - aws-cluster-autoscaler
-          - kube-state-metrics
-          - dns-controller
-          - external-dns
-          - kubedns
-          - dnsmasq
-          - autoscaler
-          - tiller
-          - kube2iam
-        rules:
-          - runAsRootAllowed
-      - controllerNames:
-          - aws-iam-authenticator
-          - nginx-ingress-controller
-          - nginx-ingress-default-backend
-          - aws-cluster-autoscaler
-          - kube-state-metrics
-          - dns-controller
-          - external-dns
-          - kubedns
-          - dnsmasq
-          - autoscaler
-          - tiller
-          - kube2iam
-        rules:
-          - notReadOnlyRootFilesystem
-      - controllerNames:
-          - cert-manager
-          - dns-controller
-          - kubedns
-          - dnsmasq
-          - autoscaler
-          - insights-agent-goldilocks-vpa-install
-        rules:
-          - cpuRequestsMissing
-          - cpuLimitsMissing
-          - memoryRequestsMissing
-          - memoryLimitsMissing
-      - controllerNames:
-          - kube2iam
-          - kube-flannel-ds
-        rules:
-          - runAsPrivileged
-      - controllerNames:
-          - kube-hunter
-        rules:
-          - hostPIDSet
-      - controllerNames:
-          - polaris
-          - kube-hunter
-          - goldilocks
-          - insights-agent-goldilocks-vpa-install
-        rules:
-          - notReadOnlyRootFilesystem
-      - controllerNames:
-          - insights-agent-goldilocks-controller
-        rules:
-          - livenessProbeMissing
-          - readinessProbeMissing
-      - controllerNames:
-          - insights-agent-goldilocks-vpa-install
-          - kube-hunter
-        rules:
-          - runAsRootAllowed
-  
+  config.yaml: |
+    |-
+      checks:
+        # reliability
+        multipleReplicasForDeployment: ignore
+        # resources
+        cpuRequestsMissing: warning
+        cpuLimitsMissing: warning
+        memoryRequestsMissing: warning
+        memoryLimitsMissing: warning
+        # images
+        tagNotSpecified: error
+        pullPolicyNotAlways: ignore
+        # healthChecks
+        readinessProbeMissing: warning
+        livenessProbeMissing: warning
+        # networking
+        hostNetworkSet: warning
+        hostPortSet: warning
+        # security
+        hostIPCSet: error
+        hostPIDSet: error
+        notReadOnlyRootFilesystem: warning
+        privilegeEscalationAllowed: error
+        runAsRootAllowed: warning
+        runAsPrivileged: error
+        dangerousCapabilities: error
+        insecureCapabilities: warning
+    
+      exemptions:
+        - controllerNames:
+            - kube-apiserver
+            - kube-proxy
+            - kube-scheduler
+            - etcd-manager-events
+            - kube-controller-manager
+            - kube-dns
+            - etcd-manager-main
+          rules:
+            - hostPortSet
+            - hostNetworkSet
+            - readinessProbeMissing
+            - livenessProbeMissing
+            - cpuRequestsMissing
+            - cpuLimitsMissing
+            - memoryRequestsMissing
+            - memoryLimitsMissing
+            - runAsRootAllowed
+            - runAsPrivileged
+            - notReadOnlyRootFilesystem
+            - hostPIDSet
+    
+        - controllerNames:
+            - kube-flannel-ds
+          rules:
+            - notReadOnlyRootFilesystem
+            - runAsRootAllowed
+            - notReadOnlyRootFilesystem
+            - readinessProbeMissing
+            - livenessProbeMissing
+            - cpuLimitsMissing
+    
+        - controllerNames:
+            - cert-manager
+          rules:
+            - notReadOnlyRootFilesystem
+            - runAsRootAllowed
+            - readinessProbeMissing
+            - livenessProbeMissing
+    
+        - controllerNames:
+            - cluster-autoscaler
+          rules:
+            - notReadOnlyRootFilesystem
+            - runAsRootAllowed
+            - readinessProbeMissing
+    
+        - controllerNames:
+            - vpa
+          rules:
+            - runAsRootAllowed
+            - readinessProbeMissing
+            - livenessProbeMissing
+            - notReadOnlyRootFilesystem
+    
+        - controllerNames:
+            - datadog
+          rules:
+            - runAsRootAllowed
+            - readinessProbeMissing
+            - livenessProbeMissing
+            - notReadOnlyRootFilesystem
+    
+        - controllerNames:
+            - nginx-ingress-controller
+          rules:
+            - privilegeEscalationAllowed
+            - insecureCapabilities
+            - runAsRootAllowed
+    
+        - controllerNames:
+            - dns-controller
+            - datadog-datadog
+            - kube-flannel-ds
+            - kube2iam
+            - aws-iam-authenticator
+            - datadog
+            - kube2iam
+          rules:
+            - hostNetworkSet
+    
+        - controllerNames:
+            - aws-iam-authenticator
+            - aws-cluster-autoscaler
+            - kube-state-metrics
+            - dns-controller
+            - external-dns
+            - dnsmasq
+            - autoscaler
+            - kubernetes-dashboard
+            - install-cni
+            - kube2iam
+          rules:
+            - readinessProbeMissing
+            - livenessProbeMissing
+    
+        - controllerNames:
+            - aws-iam-authenticator
+            - nginx-ingress-default-backend
+            - aws-cluster-autoscaler
+            - kube-state-metrics
+            - dns-controller
+            - external-dns
+            - kubedns
+            - dnsmasq
+            - autoscaler
+            - tiller
+            - kube2iam
+          rules:
+            - runAsRootAllowed
+    
+        - controllerNames:
+            - aws-iam-authenticator
+            - nginx-ingress-controller
+            - nginx-ingress-default-backend
+            - aws-cluster-autoscaler
+            - kube-state-metrics
+            - dns-controller
+            - external-dns
+            - kubedns
+            - dnsmasq
+            - autoscaler
+            - tiller
+            - kube2iam
+          rules:
+            - notReadOnlyRootFilesystem
+    
+        - controllerNames:
+            - cert-manager
+            - dns-controller
+            - kubedns
+            - dnsmasq
+            - autoscaler
+            - insights-agent-goldilocks-vpa-install
+            - datadog
+          rules:
+            - cpuRequestsMissing
+            - cpuLimitsMissing
+            - memoryRequestsMissing
+            - memoryLimitsMissing
+    
+        - controllerNames:
+            - kube2iam
+            - kube-flannel-ds
+          rules:
+            - runAsPrivileged
+    
+        - controllerNames:
+            - kube-hunter
+          rules:
+            - hostPIDSet
+    
+        - controllerNames:
+            - polaris
+            - kube-hunter
+            - goldilocks
+            - insights-agent-goldilocks-vpa-install
+          rules:
+            - notReadOnlyRootFilesystem
+    
+        - controllerNames:
+            - insights-agent-goldilocks-controller
+          rules:
+            - livenessProbeMissing
+            - readinessProbeMissing
+    
+        - controllerNames:
+            - insights-agent-goldilocks-vpa-install
+            - kube-hunter
+          rules:
+            - runAsRootAllowed
+    
+
 ---
-# Source: polaris/templates/webhook.rbac.yaml
+# Source: polaris/templates/rbac.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: polaris-webhook
+  name: polaris
   namespace: polaris
   labels:
     app: polaris
 ---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: polaris-view
+  labels:
+    app: polaris
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+  - kind: ServiceAccount
+    name: polaris
+    namespace: polaris
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: polaris
+  labels:
+    app: polaris
+rules:
+  # required by controller-runtime code doing a cluster wide lookup
+  # when it seems namespace would suffice
+  - apiGroups:
+      - ''
+    resources:
+      - 'nodes'
+    verbs:
+      - 'get'
+      - 'list'
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: polaris
+  labels:
+    app: polaris
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: polaris
+subjects:
+  - kind: ServiceAccount
+    name: polaris
+    namespace: polaris
+
+---
+# Source: polaris/templates/webhook.rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
@@ -170,35 +297,6 @@ metadata:
   labels:
     app: polaris
 rules:
-  # auditor rules rbac
-  - apiGroups:
-      - 'apps'
-      - 'extensions'
-    resources:
-      - 'deployments'
-      - 'statefulsets'
-      - 'daemonsets'
-    verbs:
-      - 'get'
-      - 'list'
-  - apiGroups:
-      - 'batch'
-    resources:
-      - 'jobs'
-      - 'cronjobs'
-    verbs:
-      - 'get'
-      - 'list'
-  - apiGroups:
-      - ''
-    resources:
-      - 'nodes'
-      - 'namespaces'
-      - 'pods'
-      - 'replicationcontrollers'
-    verbs:
-      - 'get'
-      - 'list'
   # required by controller-runtime code doing a cluster wide lookup
   # when it seems namespace would suffice
   - apiGroups:
@@ -229,7 +327,7 @@ roleRef:
   name: polaris-webhook
 subjects:
   - kind: ServiceAccount
-    name: polaris-webhook
+    name: polaris
     namespace: polaris
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -262,7 +360,7 @@ roleRef:
   name: polaris-webhook
 subjects:
   - kind: ServiceAccount
-    name: polaris-webhook
+    name: polaris
     namespace: polaris
 ---
 # Source: polaris/templates/webhook.service.yaml
@@ -302,7 +400,8 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 'eb6d6b194c6786d62400fc0578dd5ea5158212b5b29d93d3cde3fa14da8ac501'
+        checksum/config: '6d81e17a247f6863b8a02224ffbfa309b583aa9d26e4ecf4098d00796652f844'
+      labels:
       labels:
         app: polaris
         component: webhook
@@ -311,10 +410,10 @@ spec:
         - name: webhook
           command:
             - polaris
-            - --webhook
+            - webhook
             - --config
             - /opt/app/config.yaml
-          image: 'quay.io/fairwinds/polaris:0.6'
+          image: 'quay.io/fairwinds/polaris:1'
           imagePullPolicy: 'Always'
           ports:
             - containerPort: 9876
@@ -363,7 +462,7 @@ spec:
             - name: cr-logs
               mountPath: /tmp/
               readOnly: false
-      serviceAccountName:  polaris-webhook
+      serviceAccountName:  polaris
       nodeSelector:
       tolerations:
       volumes:
@@ -383,9 +482,6 @@ spec:
 
 ---
 # Source: polaris/templates/dashboard.deployment.yaml
-
----
-# Source: polaris/templates/dashboard.rbac.yaml
 
 ---
 # Source: polaris/templates/dashboard.service.yaml
