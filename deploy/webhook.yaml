@@ -18,220 +18,6 @@ type: Opaque
 stringData:
   cert.pem: ''
 ---
-# Source: polaris/templates/configmap.yaml
-
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: polaris
-  namespace: polaris
-  labels:
-    app: polaris
-data:
-  config.yaml: |
-    |-
-      checks:
-        # reliability
-        multipleReplicasForDeployment: ignore
-        # resources
-        cpuRequestsMissing: warning
-        cpuLimitsMissing: warning
-        memoryRequestsMissing: warning
-        memoryLimitsMissing: warning
-        # images
-        tagNotSpecified: error
-        pullPolicyNotAlways: ignore
-        # healthChecks
-        readinessProbeMissing: warning
-        livenessProbeMissing: warning
-        # networking
-        hostNetworkSet: warning
-        hostPortSet: warning
-        # security
-        hostIPCSet: error
-        hostPIDSet: error
-        notReadOnlyRootFilesystem: warning
-        privilegeEscalationAllowed: error
-        runAsRootAllowed: warning
-        runAsPrivileged: error
-        dangerousCapabilities: error
-        insecureCapabilities: warning
-    
-      exemptions:
-        - controllerNames:
-            - kube-apiserver
-            - kube-proxy
-            - kube-scheduler
-            - etcd-manager-events
-            - kube-controller-manager
-            - kube-dns
-            - etcd-manager-main
-          rules:
-            - hostPortSet
-            - hostNetworkSet
-            - readinessProbeMissing
-            - livenessProbeMissing
-            - cpuRequestsMissing
-            - cpuLimitsMissing
-            - memoryRequestsMissing
-            - memoryLimitsMissing
-            - runAsRootAllowed
-            - runAsPrivileged
-            - notReadOnlyRootFilesystem
-            - hostPIDSet
-    
-        - controllerNames:
-            - kube-flannel-ds
-          rules:
-            - notReadOnlyRootFilesystem
-            - runAsRootAllowed
-            - notReadOnlyRootFilesystem
-            - readinessProbeMissing
-            - livenessProbeMissing
-            - cpuLimitsMissing
-    
-        - controllerNames:
-            - cert-manager
-          rules:
-            - notReadOnlyRootFilesystem
-            - runAsRootAllowed
-            - readinessProbeMissing
-            - livenessProbeMissing
-    
-        - controllerNames:
-            - cluster-autoscaler
-          rules:
-            - notReadOnlyRootFilesystem
-            - runAsRootAllowed
-            - readinessProbeMissing
-    
-        - controllerNames:
-            - vpa
-          rules:
-            - runAsRootAllowed
-            - readinessProbeMissing
-            - livenessProbeMissing
-            - notReadOnlyRootFilesystem
-    
-        - controllerNames:
-            - datadog
-          rules:
-            - runAsRootAllowed
-            - readinessProbeMissing
-            - livenessProbeMissing
-            - notReadOnlyRootFilesystem
-    
-        - controllerNames:
-            - nginx-ingress-controller
-          rules:
-            - privilegeEscalationAllowed
-            - insecureCapabilities
-            - runAsRootAllowed
-    
-        - controllerNames:
-            - dns-controller
-            - datadog-datadog
-            - kube-flannel-ds
-            - kube2iam
-            - aws-iam-authenticator
-            - datadog
-            - kube2iam
-          rules:
-            - hostNetworkSet
-    
-        - controllerNames:
-            - aws-iam-authenticator
-            - aws-cluster-autoscaler
-            - kube-state-metrics
-            - dns-controller
-            - external-dns
-            - dnsmasq
-            - autoscaler
-            - kubernetes-dashboard
-            - install-cni
-            - kube2iam
-          rules:
-            - readinessProbeMissing
-            - livenessProbeMissing
-    
-        - controllerNames:
-            - aws-iam-authenticator
-            - nginx-ingress-default-backend
-            - aws-cluster-autoscaler
-            - kube-state-metrics
-            - dns-controller
-            - external-dns
-            - kubedns
-            - dnsmasq
-            - autoscaler
-            - tiller
-            - kube2iam
-          rules:
-            - runAsRootAllowed
-    
-        - controllerNames:
-            - aws-iam-authenticator
-            - nginx-ingress-controller
-            - nginx-ingress-default-backend
-            - aws-cluster-autoscaler
-            - kube-state-metrics
-            - dns-controller
-            - external-dns
-            - kubedns
-            - dnsmasq
-            - autoscaler
-            - tiller
-            - kube2iam
-          rules:
-            - notReadOnlyRootFilesystem
-    
-        - controllerNames:
-            - cert-manager
-            - dns-controller
-            - kubedns
-            - dnsmasq
-            - autoscaler
-            - insights-agent-goldilocks-vpa-install
-            - datadog
-          rules:
-            - cpuRequestsMissing
-            - cpuLimitsMissing
-            - memoryRequestsMissing
-            - memoryLimitsMissing
-    
-        - controllerNames:
-            - kube2iam
-            - kube-flannel-ds
-          rules:
-            - runAsPrivileged
-    
-        - controllerNames:
-            - kube-hunter
-          rules:
-            - hostPIDSet
-    
-        - controllerNames:
-            - polaris
-            - kube-hunter
-            - goldilocks
-            - insights-agent-goldilocks-vpa-install
-          rules:
-            - notReadOnlyRootFilesystem
-    
-        - controllerNames:
-            - insights-agent-goldilocks-controller
-          rules:
-            - livenessProbeMissing
-            - readinessProbeMissing
-    
-        - controllerNames:
-            - insights-agent-goldilocks-vpa-install
-            - kube-hunter
-          rules:
-            - runAsRootAllowed
-    
-
----
 # Source: polaris/templates/rbac.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -399,9 +185,6 @@ spec:
       component: webhook
   template:
     metadata:
-      annotations:
-        checksum/config: '6d81e17a247f6863b8a02224ffbfa309b583aa9d26e4ecf4098d00796652f844'
-      labels:
       labels:
         app: polaris
         component: webhook
@@ -411,8 +194,6 @@ spec:
           command:
             - polaris
             - webhook
-            - --config
-            - /opt/app/config.yaml
           image: 'quay.io/fairwinds/polaris:1'
           imagePullPolicy: 'Always'
           ports:
@@ -452,10 +233,6 @@ spec:
               drop:
                 - ALL
           volumeMounts:
-            - name: config
-              mountPath: /opt/app/config.yaml
-              subPath: config.yaml
-              readOnly: true
             - name: secret
               mountPath: /opt/cert/
               readOnly: true
@@ -466,9 +243,6 @@ spec:
       nodeSelector:
       tolerations:
       volumes:
-        - name: config
-          configMap:
-            name: polaris
         - name: secret
           secret:
             secretName: polaris-webhook
@@ -479,6 +253,10 @@ spec:
 
 ---
 # Source: polaris/templates/audit.rbac.yaml
+
+---
+# Source: polaris/templates/configmap.yaml
+
 
 ---
 # Source: polaris/templates/dashboard.deployment.yaml
