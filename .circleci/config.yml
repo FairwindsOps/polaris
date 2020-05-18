@@ -92,7 +92,7 @@ references:
 
   docker_build: &docker_build
     run:
-      name: Docker login, build, and push
+      name: Docker login and build
       command: |
         docker-pull -f .circleci/build.config
         docker-build -f .circleci/build.config
