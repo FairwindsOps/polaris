@@ -89,6 +89,10 @@ func (v *Validator) handleInternal(ctx context.Context, req types.Request) (*val
 		if err != nil {
 			return nil, err
 		}
+		if len(pod.ObjectMeta.OwnerReferences) > 0 {
+			logrus.Infof("Allowing owned pod %s/%s to pass through webhook", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name)
+			return nil, nil
+		}
 		originalObject = pod
 	} else {
 		decoded := map[string]interface{}{}
@@ -128,12 +132,14 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 	}
 	allowed := true
 	reason := ""
-	numErrors := podResult.GetSummary().Errors
-	if numErrors > 0 {
-		allowed = false
-		reason = getFailureReason(*podResult)
+	if podResult != nil {
+		numErrors := podResult.GetSummary().Errors
+		if numErrors > 0 {
+			allowed = false
+			reason = getFailureReason(*podResult)
+		}
+		logrus.Infof("%d validation errors found when validating %s", numErrors, podResult.Name)
 	}
-	logrus.Infof("%d validation errors found when validating %s", numErrors, podResult.Name)
 	return admission.ValidationResponse(allowed, reason)
 }
 

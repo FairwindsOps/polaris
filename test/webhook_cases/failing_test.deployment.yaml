@@ -5,7 +5,7 @@ metadata:
   labels:
     app: nginx
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: nginx
@@ -21,7 +21,7 @@ spec:
         - containerPort: 80
         securityContext:
           allowPrivilegeEscalation: true
-          privileged: false 
+          privileged: false
           readOnlyRootFilesystem: true
           runAsNonRoot: true
           capabilities:

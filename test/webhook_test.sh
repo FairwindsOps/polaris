@@ -55,6 +55,10 @@ function grab_logs() {
     kubectl -n polaris logs -l app=polaris
 }
 
+# Install a bad deployment
+kubectl create ns scale-test
+kubectl apply -n scale-test -f ./test/webhook_cases/failing_test.deployment.yaml
+
 # Install the webhook 
 kubectl apply -f ./deploy/webhook.yaml &> /dev/null
 
@@ -85,6 +89,15 @@ for filename in test/webhook_cases/failing_test.*.yaml; do
         kubectl logs -n polaris $(kubectl get po -oname -n polaris | grep webhook)
     fi
 done
+
+kubectl -n scale-test scale deployment nginx-deployment --replicas=2
+sleep 5
+kubectl get po -n scale-test
+pod_count=$(kubectl get po -n scale-test -oname | wc -l)
+if [ $pod_count != 2 ]; then
+  ALL_TESTS_PASSED=0
+  echo "Existing deployment was unable to scale after webhook installed: found $pod_count pods"
+fi
 
 clean_up
 
