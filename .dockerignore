@@ -1,5 +1,4 @@
 deploy
-examples
 .gitignore
 .git/*
 Dockerfile

@@ -17,13 +17,13 @@ require (
 	github.com/go-logr/logr v0.1.0
 	github.com/go-logr/zapr v0.1.1
 	github.com/gobuffalo/depgen v0.1.0 // indirect
-	github.com/gobuffalo/envy v1.8.1
+	github.com/gobuffalo/envy v1.9.0
 	github.com/gobuffalo/genny v0.6.0
 	github.com/gobuffalo/gogen v0.2.0
 	github.com/gobuffalo/logger v1.0.3
 	github.com/gobuffalo/mapi v1.2.0
-	github.com/gobuffalo/packd v0.4.0
-	github.com/gobuffalo/packr/v2 v2.7.1
+	github.com/gobuffalo/packd v1.0.0
+	github.com/gobuffalo/packr/v2 v2.8.0
 	github.com/gobuffalo/syncx v0.1.0
 	github.com/gogo/protobuf v1.2.1
 	github.com/golang/groupcache v0.0.0-20190129154638-5b532d6fd5ef
@@ -57,11 +57,10 @@ require (
 	github.com/prometheus/client_model v0.2.0
 	github.com/prometheus/common v0.10.0
 	github.com/prometheus/procfs v0.0.11
-	github.com/prometheus/tsdb v0.7.1 // indirect
 	github.com/qri-io/jsonschema v0.1.1
-	github.com/rogpeppe/go-internal v1.5.2
-	github.com/sirupsen/logrus v1.5.0
-	github.com/spf13/cobra v0.0.5
+	github.com/rogpeppe/go-internal v1.6.0
+	github.com/sirupsen/logrus v1.6.0
+	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.5.1
 	gitlab.com/golang-commonmark/html v0.0.0-20180917080848-cfaf75183c4a
@@ -73,18 +72,18 @@ require (
 	go.uber.org/atomic v1.6.0
 	go.uber.org/multierr v1.5.0
 	go.uber.org/zap v1.15.0
-	golang.org/x/crypto v0.0.0-20191219195013-becbf705a915
-	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
+	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
+	golang.org/x/net v0.0.0-20200226121028-0de0cce0169b
 	golang.org/x/oauth2 v0.0.0-20190517181255-950ef44c6e07
-	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
-	golang.org/x/sys v0.0.0-20200420163511-1957bb5e6d1f
+	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
+	golang.org/x/sys v0.0.0-20200515095857-1151b9dac4a9
 	golang.org/x/text v0.3.2
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
-	golang.org/x/tools v0.0.0-20191224055732-dd894d0a8a40
+	golang.org/x/tools v0.0.0-20200518172458-c79c01b1c51c
 	google.golang.org/api v0.5.0
 	google.golang.org/appengine v1.6.6
 	google.golang.org/genproto v0.0.0-20190516172635-bb713bdc0e52
-	google.golang.org/grpc v1.20.1
+	google.golang.org/grpc v1.21.0
 	gopkg.in/inf.v0 v0.9.1
 	gopkg.in/yaml.v2 v2.2.8
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
