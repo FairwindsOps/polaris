@@ -89,18 +89,23 @@ references:
         echo "8dbad6683d6fc9367e637e6eed8e01a0d63c9660  goreleaser.deb" | sha1sum -c
         sudo dpkg -i goreleaser.deb
         rm goreleaser.deb
+
+  docker_build: &docker_build
+    run:
+      name: Docker login and build
+      command: |
+        docker-pull -f .circleci/build.config
+        docker-build -f .circleci/build.config
+
   docker_build_and_push: &docker_build_and_push
     run:
       name: Docker login, build, and push
       command: |
         docker-pull -f .circleci/build.config
         docker-build -f .circleci/build.config
-        if [[ -z $CIRCLE_PR_NUMBER ]]; then
-          docker login quay.io -u="${fairwinds_quay_user}" -p="${fairwinds_quay_token}"
-          docker-push -f .circleci/build.config
-        else
-          echo "Skipping docker push for forked PR"
-        fi
+        docker login quay.io -u="${fairwinds_quay_user}" -p="${fairwinds_quay_token}"
+        docker-push -f .circleci/build.config
+
   release_deploy_configs: &release_deploy_configs
     run:
       name: Release deploy configs
@@ -112,6 +117,15 @@ references:
 
 jobs:
   build:
+    docker:
+      - image: quay.io/reactiveops/ci-images:v8.0-stretch
+    steps:
+      - checkout
+      - setup_remote_docker
+      - *set_environment_variables
+      - *docker_build
+
+  push:
     docker:
       - image: quay.io/reactiveops/ci-images:v8.0-stretch
     steps:
@@ -170,20 +184,27 @@ jobs:
 
 workflows:
   version: 2
+
   build:
     jobs:
       - test
       - build:
           requires:
             - test
+      - push:
           context: org-global
-          # Allow using testing tags for testing circle test + build steps
-          filters:
-            tags:
-              only: /^testing-.*/
-      - test_k8s:
           requires:
             - build
+          filters:
+            branches:
+              ignore: /pull\/[0-9]+/
+      - test_k8s:
+          requires:
+            - push
+          filters:
+            branches:
+              ignore: /pull\/[0-9]+/
+
   release:
     jobs:
       - release_binary:
