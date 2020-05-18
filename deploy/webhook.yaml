@@ -35,7 +35,7 @@ data:
       memoryRequestsMissing: warning
       memoryLimitsMissing: warning
       # images
-      tagNotSpecified: error
+      tagNotSpecified: danger
       pullPolicyNotAlways: ignore
       # healthChecks
       readinessProbeMissing: warning
@@ -44,13 +44,13 @@ data:
       hostNetworkSet: warning
       hostPortSet: warning
       # security
-      hostIPCSet: error
-      hostPIDSet: error
+      hostIPCSet: danger
+      hostPIDSet: danger
       notReadOnlyRootFilesystem: warning
-      privilegeEscalationAllowed: error
+      privilegeEscalationAllowed: danger
       runAsRootAllowed: warning
-      runAsPrivileged: error
-      dangerousCapabilities: error
+      runAsPrivileged: danger
+      dangerousCapabilities: danger
       insecureCapabilities: warning
     controllersToScan:
       - Deployments
