@@ -17,6 +17,8 @@ const (
 	TargetContainer TargetKind = "Container"
 	// TargetPod points to the pod spec
 	TargetPod TargetKind = "Pod"
+	// TargetController points to the controller's spec
+	TargetController TargetKind = "Controller"
 )
 
 // SchemaCheck is a Polaris check that runs using JSON Schema
@@ -126,6 +128,12 @@ func (check *SchemaCheck) Initialize(id string) error {
 // CheckPod checks a pod spec against the schema
 func (check SchemaCheck) CheckPod(pod *corev1.PodSpec) (bool, error) {
 	return check.CheckObject(pod)
+}
+
+// CheckController checks a controler's spec against the schema
+func (check SchemaCheck) CheckController(bytes []byte) (bool, error) {
+	errs, err := check.Schema.ValidateBytes(bytes)
+	return len(errs) == 0, err
 }
 
 // CheckContainer checks a container spec against the schema

@@ -50,17 +50,18 @@ exemptions:
     - foo
 `
 
-func getEmptyWorkload(name string) kube.GenericWorkload {
-	workload := kube.NewGenericWorkloadFromPod(corev1.Pod{
+func getEmptyWorkload(t *testing.T, name string) kube.GenericWorkload {
+	workload, err := kube.NewGenericWorkloadFromPod(corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
-	})
+	}, nil)
+	assert.NoError(t, err)
 	return workload
 }
 
 func testValidate(t *testing.T, container *corev1.Container, resourceConf *string, controllerName string, expectedErrors []ResultMessage, expectedWarnings []ResultMessage, expectedSuccesses []ResultMessage) {
-	testValidateWithWorkload(t, container, resourceConf, getEmptyWorkload(controllerName), expectedErrors, expectedWarnings, expectedSuccesses)
+	testValidateWithWorkload(t, container, resourceConf, getEmptyWorkload(t, controllerName), expectedErrors, expectedWarnings, expectedSuccesses)
 }
 
 func testValidateWithWorkload(t *testing.T, container *corev1.Container, resourceConf *string, workload kube.GenericWorkload, expectedErrors []ResultMessage, expectedWarnings []ResultMessage, expectedSuccesses []ResultMessage) {
@@ -88,7 +89,7 @@ func TestValidateResourcesEmptyConfig(t *testing.T) {
 		Name: "Empty",
 	}
 
-	results, err := applyContainerSchemaChecks(&conf.Configuration{}, getEmptyWorkload(""), container, false)
+	results, err := applyContainerSchemaChecks(&conf.Configuration{}, getEmptyWorkload(t, ""), container, false)
 	if err != nil {
 		panic(err)
 	}
@@ -184,7 +185,7 @@ func TestValidateHealthChecks(t *testing.T) {
 
 	for idx, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			controller := getEmptyWorkload("")
+			controller := getEmptyWorkload(t, "")
 			results, err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.probes}, controller, tt.container, tt.isInit)
 			if err != nil {
 				panic(err)
@@ -298,7 +299,7 @@ func TestValidateImage(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			controller := getEmptyWorkload("")
+			controller := getEmptyWorkload(t, "")
 			results, err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.image}, controller, tt.container, false)
 			if err != nil {
 				panic(err)
@@ -415,7 +416,7 @@ func TestValidateNetworking(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			controller := getEmptyWorkload("")
+			controller := getEmptyWorkload(t, "")
 			results, err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.networkConf}, controller, tt.container, false)
 			if err != nil {
 				panic(err)
@@ -919,7 +920,8 @@ func TestValidateSecurity(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			workload := kube.NewGenericWorkloadFromPod(corev1.Pod{Spec: *tt.pod})
+			workload, err := kube.NewGenericWorkloadFromPod(corev1.Pod{Spec: *tt.pod}, nil)
+			assert.NoError(t, err)
 			results, err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.securityConf}, workload, tt.container, false)
 			if err != nil {
 				panic(err)
@@ -1063,7 +1065,8 @@ func TestValidateRunAsRoot(t *testing.T) {
 	}
 	for idx, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			workload := kube.NewGenericWorkloadFromPod(corev1.Pod{Spec: *tt.pod})
+			workload, err := kube.NewGenericWorkloadFromPod(corev1.Pod{Spec: *tt.pod}, nil)
+			assert.NoError(t, err)
 			results, err := applyContainerSchemaChecks(&config, workload, tt.container, false)
 			if err != nil {
 				panic(err)
@@ -1164,7 +1167,7 @@ func TestValidateResourcesEmptyContainerCPURequestsExempt(t *testing.T) {
 
 	expectedSuccesses := []ResultMessage{}
 
-	workload := kube.NewGenericWorkloadFromPod(corev1.Pod{
+	workload, err := kube.NewGenericWorkloadFromPod(corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "foo",
 			Annotations: map[string]string{
@@ -1172,6 +1175,7 @@ func TestValidateResourcesEmptyContainerCPURequestsExempt(t *testing.T) {
 				"polaris.fairwinds.com/memoryRequestsMissing-exempt": "truthy", // Don't actually exempt this controller from memoryRequestsMissing
 			},
 		},
-	})
+	}, nil)
+	assert.NoError(t, err)
 	testValidateWithWorkload(t, &container, &resourceConfMinimal, workload, expectedErrors, expectedWarnings, expectedSuccesses)
 }

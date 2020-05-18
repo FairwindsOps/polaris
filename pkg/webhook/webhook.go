@@ -83,11 +83,13 @@ func NewWebhook(name string, mgr manager.Manager, validator Validator, apiType r
 
 func (v *Validator) handleInternal(ctx context.Context, req types.Request) (*validator.PodResult, error) {
 	pod := corev1.Pod{}
+	var originalObject interface{}
 	if req.AdmissionRequest.Kind.Kind == "Pod" {
 		err := v.decoder.Decode(req, &pod)
 		if err != nil {
 			return nil, err
 		}
+		originalObject = pod
 	} else {
 		decoded := map[string]interface{}{}
 		err := json.Unmarshal(req.AdmissionRequest.Object.Raw, &decoded)
@@ -103,8 +105,12 @@ func (v *Validator) handleInternal(ctx context.Context, req types.Request) (*val
 		if err != nil {
 			return nil, err
 		}
+		originalObject = decoded
 	}
-	controller := kube.NewGenericWorkloadFromPod(pod)
+	controller, err := kube.NewGenericWorkloadFromPod(pod, originalObject)
+	if err != nil {
+		return nil, err
+	}
 	controller.Kind = req.AdmissionRequest.Kind.Kind
 	controllerResult, err := validator.ValidateController(&v.Config, controller)
 	if err != nil {
