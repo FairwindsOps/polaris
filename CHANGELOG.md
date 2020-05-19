@@ -5,7 +5,10 @@
 * Breaking changes in both input and output formats. See [Examples](/examples) for examples of the new formats.
     * removed config-level configuration for checks like max/min memory settings
     * changed severity `error` to `danger`
-* CLI flag `--set-exit-code-on-error` is now `--set-exit-code-on-danger`
+* Breaking changes [to the CLI](/docs/usage.md#cli-options)
+    * CLI flag `--set-exit-code-on-error` is now `--set-exit-code-on-danger`
+    * Flags `--version`, `--dashboard`, `--webhook`, and `--audit` are now arguments
+    * Port flags are now just `--port`
 * Added support for arbitrary controllers, rather than a pre-configured set
     * removed support for `controllers_to_scan` in config
 * Added support for custom checks using JSON Schema
