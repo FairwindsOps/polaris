@@ -30,16 +30,16 @@ var resourceConfMinimal = `---
 checks:
   cpuRequestsMissing: warning
   memoryRequestsMissing: warning
-  cpuLimitsMissing: error
-  memoryLimitsMissing: error
+  cpuLimitsMissing: danger
+  memoryLimitsMissing: danger
 `
 
 var resourceConfExemptions = `---
 checks:
   cpuRequestsMissing: warning
   memoryRequestsMissing: warning
-  cpuLimitsMissing: error
-  memoryLimitsMissing: error
+  cpuLimitsMissing: danger
+  memoryLimitsMissing: danger
 exemptions:
   - rules:
     - cpuRequestsMissing
@@ -60,11 +60,11 @@ func getEmptyWorkload(t *testing.T, name string) kube.GenericWorkload {
 	return workload
 }
 
-func testValidate(t *testing.T, container *corev1.Container, resourceConf *string, controllerName string, expectedErrors []ResultMessage, expectedWarnings []ResultMessage, expectedSuccesses []ResultMessage) {
-	testValidateWithWorkload(t, container, resourceConf, getEmptyWorkload(t, controllerName), expectedErrors, expectedWarnings, expectedSuccesses)
+func testValidate(t *testing.T, container *corev1.Container, resourceConf *string, controllerName string, expectedDangers []ResultMessage, expectedWarnings []ResultMessage, expectedSuccesses []ResultMessage) {
+	testValidateWithWorkload(t, container, resourceConf, getEmptyWorkload(t, controllerName), expectedDangers, expectedWarnings, expectedSuccesses)
 }
 
-func testValidateWithWorkload(t *testing.T, container *corev1.Container, resourceConf *string, workload kube.GenericWorkload, expectedErrors []ResultMessage, expectedWarnings []ResultMessage, expectedSuccesses []ResultMessage) {
+func testValidateWithWorkload(t *testing.T, container *corev1.Container, resourceConf *string, workload kube.GenericWorkload, expectedDangers []ResultMessage, expectedWarnings []ResultMessage, expectedSuccesses []ResultMessage) {
 	parsedConf, err := conf.Parse([]byte(*resourceConf))
 	assert.NoError(t, err, "Expected no error when parsing config")
 
@@ -77,8 +77,8 @@ func testValidateWithWorkload(t *testing.T, container *corev1.Container, resourc
 	assert.Equal(t, uint(len(expectedWarnings)), summary.Warnings)
 	assert.ElementsMatch(t, expectedWarnings, results.GetWarnings())
 
-	assert.Equal(t, uint(len(expectedErrors)), summary.Errors)
-	assert.ElementsMatch(t, expectedErrors, results.GetErrors())
+	assert.Equal(t, uint(len(expectedDangers)), summary.Dangers)
+	assert.ElementsMatch(t, expectedDangers, results.GetDangers())
 
 	assert.Equal(t, uint(len(expectedSuccesses)), summary.Successes)
 	assert.ElementsMatch(t, expectedSuccesses, results.GetSuccesses())
@@ -93,7 +93,7 @@ func TestValidateResourcesEmptyConfig(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	assert.Equal(t, uint(0), results.GetSummary().Errors)
+	assert.Equal(t, uint(0), results.GetSummary().Dangers)
 }
 
 func TestValidateResourcesEmptyContainer(t *testing.T) {
@@ -118,18 +118,18 @@ func TestValidateResourcesEmptyContainer(t *testing.T) {
 		},
 	}
 
-	expectedErrors := []ResultMessage{
+	expectedDangers := []ResultMessage{
 		{
 			ID:       "cpuLimitsMissing",
 			Success:  false,
-			Severity: "error",
+			Severity: "danger",
 			Message:  "CPU limits should be set",
 			Category: "Resources",
 		},
 		{
 			ID:       "memoryLimitsMissing",
 			Success:  false,
-			Severity: "error",
+			Severity: "danger",
 			Message:  "Memory limits should be set",
 			Category: "Resources",
 		},
@@ -137,7 +137,7 @@ func TestValidateResourcesEmptyContainer(t *testing.T) {
 
 	expectedSuccesses := []ResultMessage{}
 
-	testValidate(t, &container, &resourceConfMinimal, "foo", expectedErrors, expectedWarnings, expectedSuccesses)
+	testValidate(t, &container, &resourceConfMinimal, "foo", expectedDangers, expectedWarnings, expectedSuccesses)
 }
 
 func TestValidateHealthChecks(t *testing.T) {
@@ -149,7 +149,7 @@ func TestValidateHealthChecks(t *testing.T) {
 		"livenessProbeMissing":  conf.SeverityIgnore,
 	}
 	p3 := map[string]conf.Severity{
-		"readinessProbeMissing": conf.SeverityError,
+		"readinessProbeMissing": conf.SeverityDanger,
 		"livenessProbeMissing":  conf.SeverityWarning,
 	}
 
@@ -162,7 +162,7 @@ func TestValidateHealthChecks(t *testing.T) {
 	}
 
 	l := ResultMessage{ID: "livenessProbeMissing", Success: false, Severity: "warning", Message: "Liveness probe should be configured", Category: "Health Checks"}
-	r := ResultMessage{ID: "readinessProbeMissing", Success: false, Severity: "error", Message: "Readiness probe should be configured", Category: "Health Checks"}
+	r := ResultMessage{ID: "readinessProbeMissing", Success: false, Severity: "danger", Message: "Readiness probe should be configured", Category: "Health Checks"}
 	f1 := []ResultMessage{}
 	f2 := []ResultMessage{r}
 	w1 := []ResultMessage{l}
@@ -172,15 +172,15 @@ func TestValidateHealthChecks(t *testing.T) {
 		probes    map[string]conf.Severity
 		container *corev1.Container
 		isInit    bool
-		errors    *[]ResultMessage
+		dangers   *[]ResultMessage
 		warnings  *[]ResultMessage
 	}{
-		{name: "probes not configured", probes: p1, container: emptyContainer, errors: &f1},
-		{name: "probes not required", probes: p2, container: emptyContainer, errors: &f1},
-		{name: "probes required & configured", probes: p3, container: goodContainer, errors: &f1},
-		{name: "probes required, not configured, but init", probes: p3, container: emptyContainer, isInit: true, errors: &f1},
-		{name: "probes required & not configured", probes: p3, container: emptyContainer, errors: &f2, warnings: &w1},
-		{name: "probes configured, but not required", probes: p2, container: goodContainer, errors: &f1},
+		{name: "probes not configured", probes: p1, container: emptyContainer, dangers: &f1},
+		{name: "probes not required", probes: p2, container: emptyContainer, dangers: &f1},
+		{name: "probes required & configured", probes: p3, container: goodContainer, dangers: &f1},
+		{name: "probes required, not configured, but init", probes: p3, container: emptyContainer, isInit: true, dangers: &f1},
+		{name: "probes required & not configured", probes: p3, container: emptyContainer, dangers: &f2, warnings: &w1},
+		{name: "probes configured, but not required", probes: p2, container: goodContainer, dangers: &f1},
 	}
 
 	for idx, tt := range testCases {
@@ -198,10 +198,10 @@ func TestValidateHealthChecks(t *testing.T) {
 				assert.ElementsMatch(t, warnings, *tt.warnings, message)
 			}
 
-			if tt.errors != nil {
-				errors := results.GetErrors()
-				assert.Len(t, errors, len(*tt.errors), message)
-				assert.ElementsMatch(t, errors, *tt.errors, message)
+			if tt.dangers != nil {
+				dangers := results.GetDangers()
+				assert.Len(t, dangers, len(*tt.dangers), message)
+				assert.ElementsMatch(t, dangers, *tt.dangers, message)
 			}
 		})
 	}
@@ -210,12 +210,12 @@ func TestValidateHealthChecks(t *testing.T) {
 func TestValidateImage(t *testing.T) {
 	emptyConf := make(map[string]conf.Severity)
 	standardConf := map[string]conf.Severity{
-		"tagNotSpecified":     conf.SeverityError,
+		"tagNotSpecified":     conf.SeverityDanger,
 		"pullPolicyNotAlways": conf.SeverityIgnore,
 	}
 	strongConf := map[string]conf.Severity{
-		"tagNotSpecified":     conf.SeverityError,
-		"pullPolicyNotAlways": conf.SeverityError,
+		"tagNotSpecified":     conf.SeverityDanger,
+		"pullPolicyNotAlways": conf.SeverityDanger,
 	}
 
 	emptyContainer := &corev1.Container{}
@@ -243,7 +243,7 @@ func TestValidateImage(t *testing.T) {
 				ID:       "tagNotSpecified",
 				Message:  "Image tag should be specified",
 				Success:  false,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Images",
 			}},
 		},
@@ -255,7 +255,7 @@ func TestValidateImage(t *testing.T) {
 				ID:       "tagNotSpecified",
 				Message:  "Image tag should be specified",
 				Success:  false,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Images",
 			}},
 		},
@@ -267,7 +267,7 @@ func TestValidateImage(t *testing.T) {
 				ID:       "tagNotSpecified",
 				Message:  "Image tag should be specified",
 				Success:  false,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Images",
 			}},
 		},
@@ -279,13 +279,13 @@ func TestValidateImage(t *testing.T) {
 				ID:       "pullPolicyNotAlways",
 				Message:  "Image pull policy should be \"Always\"",
 				Success:  false,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Images",
 			}, {
 				ID:       "tagNotSpecified",
 				Message:  "Image tag should be specified",
 				Success:  false,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Images",
 			}},
 		},
@@ -304,9 +304,9 @@ func TestValidateImage(t *testing.T) {
 			if err != nil {
 				panic(err)
 			}
-			errors := results.GetErrors()
-			assert.Len(t, errors, len(tt.expected))
-			assert.ElementsMatch(t, errors, tt.expected)
+			dangers := results.GetDangers()
+			assert.Len(t, dangers, len(tt.expected))
+			assert.ElementsMatch(t, dangers, tt.expected)
 		})
 	}
 }
@@ -318,7 +318,7 @@ func TestValidateNetworking(t *testing.T) {
 		"hostPortSet": conf.SeverityWarning,
 	}
 	strongConf := map[string]conf.Severity{
-		"hostPortSet": conf.SeverityError,
+		"hostPortSet": conf.SeverityDanger,
 	}
 
 	emptyContainer := &corev1.Container{Name: ""}
@@ -408,7 +408,7 @@ func TestValidateNetworking(t *testing.T) {
 				ID:       "hostPortSet",
 				Message:  "Host port should not be configured",
 				Success:  false,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Networking",
 			}},
 		},
@@ -439,19 +439,19 @@ func TestValidateSecurity(t *testing.T) {
 	emptyConf := map[string]conf.Severity{}
 	standardConf := map[string]conf.Severity{
 		"runAsRootAllowed":           conf.SeverityWarning,
-		"runAsPrivileged":            conf.SeverityError,
+		"runAsPrivileged":            conf.SeverityDanger,
 		"notReadOnlyRootFilesystem":  conf.SeverityWarning,
-		"privilegeEscalationAllowed": conf.SeverityError,
-		"dangerousCapabilities":      conf.SeverityError,
+		"privilegeEscalationAllowed": conf.SeverityDanger,
+		"dangerousCapabilities":      conf.SeverityDanger,
 		"insecureCapabilities":       conf.SeverityWarning,
 	}
 	strongConf := map[string]conf.Severity{
-		"runAsRootAllowed":           conf.SeverityError,
-		"runAsPrivileged":            conf.SeverityError,
-		"notReadOnlyRootFilesystem":  conf.SeverityError,
-		"privilegeEscalationAllowed": conf.SeverityError,
-		"dangerousCapabilities":      conf.SeverityError,
-		"insecureCapabilities":       conf.SeverityError,
+		"runAsRootAllowed":           conf.SeverityDanger,
+		"runAsPrivileged":            conf.SeverityDanger,
+		"notReadOnlyRootFilesystem":  conf.SeverityDanger,
+		"privilegeEscalationAllowed": conf.SeverityDanger,
+		"dangerousCapabilities":      conf.SeverityDanger,
+		"insecureCapabilities":       conf.SeverityDanger,
 	}
 
 	emptyContainer := &corev1.Container{Name: ""}
@@ -550,13 +550,13 @@ func TestValidateSecurity(t *testing.T) {
 				ID:       "runAsPrivileged",
 				Message:  "Not running as privileged",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation not allowed",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "insecureCapabilities",
@@ -568,7 +568,7 @@ func TestValidateSecurity(t *testing.T) {
 				ID:       "dangerousCapabilities",
 				Message:  "Container does not have any dangerous capabilities",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}},
 		},
@@ -581,19 +581,19 @@ func TestValidateSecurity(t *testing.T) {
 				ID:       "dangerousCapabilities",
 				Message:  "Container should not have dangerous capabilities",
 				Success:  false,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation should not be allowed",
 				Success:  false,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "runAsPrivileged",
 				Message:  "Should not be running as privileged",
 				Success:  false,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "insecureCapabilities",
@@ -624,19 +624,19 @@ func TestValidateSecurity(t *testing.T) {
 				ID:       "dangerousCapabilities",
 				Message:  "Container should not have dangerous capabilities",
 				Success:  false,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation should not be allowed",
 				Success:  false,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "runAsPrivileged",
 				Message:  "Should not be running as privileged",
 				Success:  false,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "insecureCapabilities",
@@ -667,7 +667,7 @@ func TestValidateSecurity(t *testing.T) {
 				ID:       "dangerousCapabilities",
 				Message:  "Container should not have dangerous capabilities",
 				Success:  false,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "insecureCapabilities",
@@ -679,13 +679,13 @@ func TestValidateSecurity(t *testing.T) {
 				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation should not be allowed",
 				Success:  false,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "runAsPrivileged",
 				Message:  "Should not be running as privileged",
 				Success:  false,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "runAsRootAllowed",
@@ -722,19 +722,19 @@ func TestValidateSecurity(t *testing.T) {
 				ID:       "runAsPrivileged",
 				Message:  "Not running as privileged",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation not allowed",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "dangerousCapabilities",
 				Message:  "Container does not have any dangerous capabilities",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "insecureCapabilities",
@@ -753,37 +753,37 @@ func TestValidateSecurity(t *testing.T) {
 				ID:       "dangerousCapabilities",
 				Message:  "Container does not have any dangerous capabilities",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "insecureCapabilities",
 				Message:  "Container does not have any insecure capabilities",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "runAsRootAllowed",
 				Message:  "Is not allowed to run as root",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "notReadOnlyRootFilesystem",
 				Message:  "Filesystem is read only",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "runAsPrivileged",
 				Message:  "Not running as privileged",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation not allowed",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}},
 		},
@@ -796,37 +796,37 @@ func TestValidateSecurity(t *testing.T) {
 				ID:       "runAsRootAllowed",
 				Message:  "Is not allowed to run as root",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "notReadOnlyRootFilesystem",
 				Message:  "Filesystem is read only",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "runAsPrivileged",
 				Message:  "Not running as privileged",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation not allowed",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "dangerousCapabilities",
 				Message:  "Container does not have any dangerous capabilities",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "insecureCapabilities",
 				Message:  "Container does not have any insecure capabilities",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}},
 		},
@@ -839,37 +839,37 @@ func TestValidateSecurity(t *testing.T) {
 				ID:       "runAsRootAllowed",
 				Message:  "Is not allowed to run as root",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "notReadOnlyRootFilesystem",
 				Message:  "Filesystem is read only",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "runAsPrivileged",
 				Message:  "Not running as privileged",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation not allowed",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "dangerousCapabilities",
 				Message:  "Container does not have any dangerous capabilities",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "insecureCapabilities",
 				Message:  "Container does not have any insecure capabilities",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}},
 		},
@@ -882,37 +882,37 @@ func TestValidateSecurity(t *testing.T) {
 				ID:       "runAsRootAllowed",
 				Message:  "Is not allowed to run as root",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "notReadOnlyRootFilesystem",
 				Message:  "Filesystem is read only",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "runAsPrivileged",
 				Message:  "Not running as privileged",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation not allowed",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "dangerousCapabilities",
 				Message:  "Container does not have any dangerous capabilities",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "insecureCapabilities",
 				Message:  "Container does not have any insecure capabilities",
 				Success:  true,
-				Severity: "error",
+				Severity: "danger",
 				Category: "Security",
 			}},
 		},
@@ -1089,10 +1089,10 @@ func TestValidateResourcesExemption(t *testing.T) {
 	}
 
 	expectedWarnings := []ResultMessage{}
-	expectedErrors := []ResultMessage{}
+	expectedDangers := []ResultMessage{}
 	expectedSuccesses := []ResultMessage{}
 
-	testValidate(t, &container, &resourceConfExemptions, "foo", expectedErrors, expectedWarnings, expectedSuccesses)
+	testValidate(t, &container, &resourceConfExemptions, "foo", expectedDangers, expectedWarnings, expectedSuccesses)
 
 	expectedWarnings = []ResultMessage{
 		{
@@ -1111,18 +1111,18 @@ func TestValidateResourcesExemption(t *testing.T) {
 		},
 	}
 
-	expectedErrors = []ResultMessage{
+	expectedDangers = []ResultMessage{
 		{
 			ID:       "cpuLimitsMissing",
 			Success:  false,
-			Severity: "error",
+			Severity: "danger",
 			Message:  "CPU limits should be set",
 			Category: "Resources",
 		},
 		{
 			ID:       "memoryLimitsMissing",
 			Success:  false,
-			Severity: "error",
+			Severity: "danger",
 			Message:  "Memory limits should be set",
 			Category: "Resources",
 		},
@@ -1130,7 +1130,7 @@ func TestValidateResourcesExemption(t *testing.T) {
 
 	disallowExemptionsConf := resourceConfExemptions + "\ndisallowExemptions: true"
 
-	testValidate(t, &container, &disallowExemptionsConf, "foo", expectedErrors, expectedWarnings, expectedSuccesses)
+	testValidate(t, &container, &disallowExemptionsConf, "foo", expectedDangers, expectedWarnings, expectedSuccesses)
 }
 
 func TestValidateResourcesEmptyContainerCPURequestsExempt(t *testing.T) {
@@ -1148,18 +1148,18 @@ func TestValidateResourcesEmptyContainerCPURequestsExempt(t *testing.T) {
 		},
 	}
 
-	expectedErrors := []ResultMessage{
+	expectedDangers := []ResultMessage{
 		{
 			ID:       "cpuLimitsMissing",
 			Success:  false,
-			Severity: "error",
+			Severity: "danger",
 			Message:  "CPU limits should be set",
 			Category: "Resources",
 		},
 		{
 			ID:       "memoryLimitsMissing",
 			Success:  false,
-			Severity: "error",
+			Severity: "danger",
 			Message:  "Memory limits should be set",
 			Category: "Resources",
 		},
@@ -1177,5 +1177,5 @@ func TestValidateResourcesEmptyContainerCPURequestsExempt(t *testing.T) {
 		},
 	}, nil)
 	assert.NoError(t, err)
-	testValidateWithWorkload(t, &container, &resourceConfMinimal, workload, expectedErrors, expectedWarnings, expectedSuccesses)
+	testValidateWithWorkload(t, &container, &resourceConfMinimal, workload, expectedDangers, expectedWarnings, expectedSuccesses)
 }

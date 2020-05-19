@@ -133,12 +133,12 @@ func (v *Validator) Handle(ctx context.Context, req types.Request) types.Respons
 	allowed := true
 	reason := ""
 	if podResult != nil {
-		numErrors := podResult.GetSummary().Errors
-		if numErrors > 0 {
+		numDangers := podResult.GetSummary().Dangers
+		if numDangers > 0 {
 			allowed = false
 			reason = getFailureReason(*podResult)
 		}
-		logrus.Infof("%d validation errors found when validating %s", numErrors, podResult.Name)
+		logrus.Infof("%d validation errors found when validating %s", numDangers, podResult.Name)
 	}
 	return admission.ValidationResponse(allowed, reason)
 }
@@ -147,14 +147,14 @@ func getFailureReason(podResult validator.PodResult) string {
 	reason := "\nPolaris prevented this deployment due to configuration problems:\n"
 
 	for _, message := range podResult.Results {
-		if !message.Success && message.Severity == config.SeverityError {
+		if !message.Success && message.Severity == config.SeverityDanger {
 			reason += fmt.Sprintf("- Pod: %s\n", message.Message)
 		}
 	}
 
 	for _, containerResult := range podResult.ContainerResults {
 		for _, message := range containerResult.Results {
-			if !message.Success && message.Severity == config.SeverityError {
+			if !message.Success && message.Severity == config.SeverityDanger {
 				reason += fmt.Sprintf("- Container %s: %s\n", containerResult.Name, message.Message)
 			}
 		}

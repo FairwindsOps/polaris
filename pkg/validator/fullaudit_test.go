@@ -20,7 +20,7 @@ func TestGetTemplateData(t *testing.T) {
 
 	c := conf.Configuration{
 		Checks: map[string]conf.Severity{
-			"readinessProbeMissing": conf.SeverityError,
+			"readinessProbeMissing": conf.SeverityDanger,
 			"livenessProbeMissing":  conf.SeverityWarning,
 		},
 	}
@@ -28,7 +28,7 @@ func TestGetTemplateData(t *testing.T) {
 	sum := CountSummary{
 		Successes: uint(0),
 		Warnings:  uint(1),
-		Errors:    uint(1),
+		Dangers:    uint(1),
 	}
 
 	actualAudit, err := RunAudit(c, resources)

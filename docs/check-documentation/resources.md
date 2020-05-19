@@ -8,10 +8,10 @@ To simplify ensure that these values have been set, the following attributes are
 
 key | default | description
 ----|---------|------------
-`resources.cpuRequestsMissing` | `error` | Fails when `resources.requests.cpu` attribute is not configured.
-`resources.memoryRequestsMissing` | `error` | Fails when `resources.requests.memory` attribute is not configured.
-`resources.cpuLimitsMissing` | `error` | Fails when `resources.limits.cpu` attribute is not configured.
-`resources.memoryLimitsMissing` | `error` | Fails when `resources.limits.memory` attribute is not configured.
+`resources.cpuRequestsMissing` | `danger` | Fails when `resources.requests.cpu` attribute is not configured.
+`resources.memoryRequestsMissing` | `danger` | Fails when `resources.requests.memory` attribute is not configured.
+`resources.cpuLimitsMissing` | `danger` | Fails when `resources.limits.cpu` attribute is not configured.
+`resources.memoryLimitsMissing` | `danger` | Fails when `resources.limits.memory` attribute is not configured.
 
 ## Range Checks
 
@@ -21,8 +21,8 @@ key | description
 ----|------------
 `warning.below` | Warn when resource is below this value (or not defined)
 `warning.above` | Warn when resource is above this value
-`error.below` | Error when resource is below this value (or not defined)
-`error.above` | Error when resource is above this value
+`danger.below` | Error when resource is below this value (or not defined)
+`danger.above` | Error when resource is above this value
 
 ## Background
 

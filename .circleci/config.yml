@@ -154,7 +154,7 @@ jobs:
       - run: go list ./... | grep -v vendor | xargs golint -set_exit_status
       - run: go list ./... | grep -v vendor | xargs go vet
       - run: go test ./pkg/... -coverprofile=coverage.txt -covermode=count
-      - run: go run main.go audit --audit-path ./deploy --set-exit-code-below-score 100 --set-exit-code-on-error
+      - run: go run main.go audit --audit-path ./deploy --set-exit-code-below-score 100 --set-exit-code-on-danger
       - *update_coverage
       - *test_binary_dashboard
 

@@ -28,10 +28,10 @@ import (
 func TestValidatePod(t *testing.T) {
 	c := conf.Configuration{
 		Checks: map[string]conf.Severity{
-			"hostIPCSet":     conf.SeverityError,
-			"hostPIDSet":     conf.SeverityError,
+			"hostIPCSet":     conf.SeverityDanger,
+			"hostPIDSet":     conf.SeverityDanger,
 			"hostNetworkSet": conf.SeverityWarning,
-			"hostPortSet":    conf.SeverityError,
+			"hostPortSet":    conf.SeverityDanger,
 		},
 	}
 
@@ -43,13 +43,13 @@ func TestValidatePod(t *testing.T) {
 	expectedSum := CountSummary{
 		Successes: uint(4),
 		Warnings:  uint(0),
-		Errors:    uint(0),
+		Dangers:    uint(0),
 	}
 
 	expectedResults := ResultSet{
-		"hostIPCSet":     {ID: "hostIPCSet", Message: "Host IPC is not configured", Success: true, Severity: "error", Category: "Security"},
+		"hostIPCSet":     {ID: "hostIPCSet", Message: "Host IPC is not configured", Success: true, Severity: "danger", Category: "Security"},
 		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Success: true, Severity: "warning", Category: "Networking"},
-		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "error", Category: "Security"},
+		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
 	actualPodResult, err := ValidatePod(&c, deployment)
@@ -65,10 +65,10 @@ func TestValidatePod(t *testing.T) {
 func TestInvalidIPCPod(t *testing.T) {
 	c := conf.Configuration{
 		Checks: map[string]conf.Severity{
-			"hostIPCSet":     conf.SeverityError,
-			"hostPIDSet":     conf.SeverityError,
+			"hostIPCSet":     conf.SeverityDanger,
+			"hostPIDSet":     conf.SeverityDanger,
 			"hostNetworkSet": conf.SeverityWarning,
-			"hostPortSet":    conf.SeverityError,
+			"hostPortSet":    conf.SeverityDanger,
 		},
 	}
 
@@ -81,12 +81,12 @@ func TestInvalidIPCPod(t *testing.T) {
 	expectedSum := CountSummary{
 		Successes: uint(3),
 		Warnings:  uint(0),
-		Errors:    uint(1),
+		Dangers:    uint(1),
 	}
 	expectedResults := ResultSet{
-		"hostIPCSet":     {ID: "hostIPCSet", Message: "Host IPC should not be configured", Success: false, Severity: "error", Category: "Security"},
+		"hostIPCSet":     {ID: "hostIPCSet", Message: "Host IPC should not be configured", Success: false, Severity: "danger", Category: "Security"},
 		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Success: true, Severity: "warning", Category: "Networking"},
-		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "error", Category: "Security"},
+		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
 	actualPodResult, err := ValidatePod(&c, workload)
@@ -103,9 +103,9 @@ func TestInvalidNeworkPod(t *testing.T) {
 	c := conf.Configuration{
 		Checks: map[string]conf.Severity{
 			"hostNetworkSet": conf.SeverityWarning,
-			"hostPortSet":    conf.SeverityError,
-			"hostIPCSet":     conf.SeverityError,
-			"hostPIDSet":     conf.SeverityError,
+			"hostPortSet":    conf.SeverityDanger,
+			"hostIPCSet":     conf.SeverityDanger,
+			"hostPIDSet":     conf.SeverityDanger,
 		},
 	}
 
@@ -118,13 +118,13 @@ func TestInvalidNeworkPod(t *testing.T) {
 	expectedSum := CountSummary{
 		Successes: uint(3),
 		Warnings:  uint(1),
-		Errors:    uint(0),
+		Dangers:    uint(0),
 	}
 
 	expectedResults := ResultSet{
 		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network should not be configured", Success: false, Severity: "warning", Category: "Networking"},
-		"hostIPCSet":     {ID: "hostIPCSet", Message: "Host IPC is not configured", Success: true, Severity: "error", Category: "Security"},
-		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "error", Category: "Security"},
+		"hostIPCSet":     {ID: "hostIPCSet", Message: "Host IPC is not configured", Success: true, Severity: "danger", Category: "Security"},
+		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
 	actualPodResult, err := ValidatePod(&c, workload)
@@ -140,10 +140,10 @@ func TestInvalidNeworkPod(t *testing.T) {
 func TestInvalidPIDPod(t *testing.T) {
 	c := conf.Configuration{
 		Checks: map[string]conf.Severity{
-			"hostIPCSet":     conf.SeverityError,
-			"hostPIDSet":     conf.SeverityError,
+			"hostIPCSet":     conf.SeverityDanger,
+			"hostPIDSet":     conf.SeverityDanger,
 			"hostNetworkSet": conf.SeverityWarning,
-			"hostPortSet":    conf.SeverityError,
+			"hostPortSet":    conf.SeverityDanger,
 		},
 	}
 
@@ -156,12 +156,12 @@ func TestInvalidPIDPod(t *testing.T) {
 	expectedSum := CountSummary{
 		Successes: uint(3),
 		Warnings:  uint(0),
-		Errors:    uint(1),
+		Dangers:    uint(1),
 	}
 
 	expectedResults := ResultSet{
-		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID should not be configured", Success: false, Severity: "error", Category: "Security"},
-		"hostIPCSet":     {ID: "hostIPCSet", Message: "Host IPC is not configured", Success: true, Severity: "error", Category: "Security"},
+		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID should not be configured", Success: false, Severity: "danger", Category: "Security"},
+		"hostIPCSet":     {ID: "hostIPCSet", Message: "Host IPC is not configured", Success: true, Severity: "danger", Category: "Security"},
 		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Success: true, Severity: "warning", Category: "Networking"},
 	}
 
@@ -178,10 +178,10 @@ func TestInvalidPIDPod(t *testing.T) {
 func TestExemption(t *testing.T) {
 	c := conf.Configuration{
 		Checks: map[string]conf.Severity{
-			"hostIPCSet":     conf.SeverityError,
+			"hostIPCSet":     conf.SeverityDanger,
 			"hostNetworkSet": conf.SeverityWarning,
-			"hostPIDSet":     conf.SeverityError,
-			"hostPortSet":    conf.SeverityError,
+			"hostPIDSet":     conf.SeverityDanger,
+			"hostPortSet":    conf.SeverityDanger,
 		},
 		Exemptions: []conf.Exemption{
 			conf.Exemption{
@@ -203,11 +203,11 @@ func TestExemption(t *testing.T) {
 	expectedSum := CountSummary{
 		Successes: uint(3),
 		Warnings:  uint(0),
-		Errors:    uint(0),
+		Dangers:    uint(0),
 	}
 	expectedResults := ResultSet{
 		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Success: true, Severity: "warning", Category: "Networking"},
-		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "error", Category: "Security"},
+		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
 	actualPodResult, err := ValidatePod(&c, workload)

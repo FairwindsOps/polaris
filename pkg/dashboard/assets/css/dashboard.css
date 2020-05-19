@@ -40,11 +40,9 @@
   width: 32%;
   vertical-align: top;
 }
-.cluster-overview .cluster-score{
-  padding-top: 15px;
-}
+.cluster-overview .cluster-score,
 .cluster-overview .result-messages {
-  padding-top: 70px;
+  padding-top: 15px;
 }
 
 .cluster-overview .graph canvas {
@@ -93,45 +91,24 @@
 
 .cluster-overview .result-messages ul {
   font-size: 20px;
-  line-height: 35px;
+  line-height: 42px;
 }
 
 .cluster-overview-footer {
   position: absolute;
   bottom: 0px;
-  right: 10px;
+  right: 40px;
   left: 40px;
 }
 
-.cluster-overview-footer p {
-  display: inline-block;
+.cluster-overview-footer .kubernetes-stats {
   font-size: 11px;
   color: #777;
-  width: 48%;
 }
 
-.cluster-overview-footer p.kubernetes-overview {
-  text-align: right;
-}
-
-.cluster-overview-footer p.kubernetes-overview .kubernetes-stat {
-  margin-left: 15px;
-}
-
-.kubernetes-overview ul {
-  list-style-type: none;
-  margin: 0;
-  padding: 0 10px;
-  text-align: right;
-}
-
-.kubernetes-overview li {
-  display: inline-block;
-  margin: 20px 0 0 10px;
-}
-
-.kubernetes-overview li span {
-  margin-right: 3px;
+.cluster-overview-footer .kubernetes-stats {
+  display: flex;
+  justify-content: space-between;
 }
 
 .category .name {
@@ -236,6 +213,26 @@ ul.message-list {
 
 .cluster-overview ul.message-list {
   margin: 0px;
+  text-align: right;
+}
+
+.cluster-overview ul.message-list .message-group {
+  display: inline-block;
+  min-width: 130px;
+}
+
+.cluster-overview ul.message-list .message {
+  display: block;
+  font-size: 12px;
+  line-height: 12px;
+}
+
+.cluster-overview ul.message-list li i.message-icon {
+  font-size: 42px;
+  text-align: center;
+  min-width: 42px;
+  vertical-align: top;
+  margin-top: 8px;
 }
 
 ul.message-list li {
@@ -261,7 +258,7 @@ ul.message-list li i.message-icon {
   color: #f26c21;
 }
 
-.result-messages .failure.error i.message-icon {
+.result-messages .failure.danger i.message-icon {
   color: #a11f4c;
 }
 
