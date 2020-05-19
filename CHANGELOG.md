@@ -1,7 +1,14 @@
 # x.x.x (next release)
 
 # 1.0.0
+## New Features
+* Added support for custom checks using JSON Schema
+* Added support for arbitrary controllers, rather than a pre-configured set
+    * removed support for `controllers_to_scan` in config
 * Added the ability to exempt a particular controller from a particular check.
+* Docker image now includes the default config
+
+## Breaking Changes
 * Breaking changes in both input and output formats. See [Examples](/examples) for examples of the new formats.
     * removed config-level configuration for checks like max/min memory settings
     * changed severity `error` to `danger`
@@ -9,9 +16,6 @@
     * CLI flag `--set-exit-code-on-error` is now `--set-exit-code-on-danger`
     * Flags `--version`, `--dashboard`, `--webhook`, and `--audit` are now arguments
     * Port flags are now just `--port`
-* Added support for arbitrary controllers, rather than a pre-configured set
-    * removed support for `controllers_to_scan` in config
-* Added support for custom checks using JSON Schema
 
 # 0.6.0
 * Fixed webhook support in Kubernetes 1.16
