@@ -13,10 +13,6 @@ key | default | description
 `security.insecureCapabilities` | `warning` | Fails when `securityContext.capabilities` includes one of the capabilities [listed here](/checks/insecureCapabilities.yaml)
 `security.dangerousCapabilities` | `danger` | Fails when `securityContext.capabilities` includes one of the capabilities [listed here](/checks/dangerousCapabilities.yaml)
 
-## Security Capabilities
-
-Additional validations are available to ensure pods are running with a limited set of capabilities. More information is available in our [Security Capabilities documentation](security-capabilities.md).
-
 ## Background
 
 Securing workloads in Kubernetes is an important part of overall cluster security. The overall goal should be to ensure that containers are running with as minimal privileges as possible. This includes avoiding privilege escalation, not running containers with a root user, and using read only file systems wherever possible.
