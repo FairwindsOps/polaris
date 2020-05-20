@@ -5,183 +5,43 @@ kind: Namespace
 metadata:
   name: polaris
 ---
-# Source: polaris/templates/configmap.yaml
+# Source: polaris/templates/rbac.yaml
 apiVersion: v1
-kind: ConfigMap
+kind: ServiceAccount
 metadata:
   name: polaris
   namespace: polaris
   labels:
     app: polaris
-data:
-  config.yaml:  |-
-    checks:
-      # resources
-      cpuRequestsMissing: warning
-      cpuLimitsMissing: warning
-      memoryRequestsMissing: warning
-      memoryLimitsMissing: warning
-      # images
-      tagNotSpecified: danger
-      pullPolicyNotAlways: ignore
-      # healthChecks
-      readinessProbeMissing: warning
-      livenessProbeMissing: warning
-      # networking
-      hostNetworkSet: warning
-      hostPortSet: warning
-      # security
-      hostIPCSet: danger
-      hostPIDSet: danger
-      notReadOnlyRootFilesystem: warning
-      privilegeEscalationAllowed: danger
-      runAsRootAllowed: warning
-      runAsPrivileged: danger
-      dangerousCapabilities: danger
-      insecureCapabilities: warning
-    controllersToScan:
-      - Deployments
-      - StatefulSets
-      - DaemonSets
-      - CronJobs
-      - Jobs
-      - ReplicationControllers
-    exemptions:
-      - controllerNames:
-          - dns-controller
-          - datadog-datadog
-          - kube-flannel-ds
-          - kube2iam
-          - aws-iam-authenticator
-          - datadog
-          - kube2iam
-        rules:
-          - hostNetworkSet
-      - controllerNames:
-          - aws-iam-authenticator
-          - aws-cluster-autoscaler
-          - kube-state-metrics
-          - dns-controller
-          - external-dns
-          - dnsmasq
-          - autoscaler
-          - kubernetes-dashboard
-          - install-cni
-          - kube2iam
-        rules:
-          - readinessProbeMissing
-          - livenessProbeMissing
-      - controllerNames:
-          - aws-iam-authenticator
-          - nginx-ingress-controller
-          - nginx-ingress-default-backend
-          - aws-cluster-autoscaler
-          - kube-state-metrics
-          - dns-controller
-          - external-dns
-          - kubedns
-          - dnsmasq
-          - autoscaler
-          - tiller
-          - kube2iam
-        rules:
-          - runAsRootAllowed
-      - controllerNames:
-          - aws-iam-authenticator
-          - nginx-ingress-controller
-          - nginx-ingress-default-backend
-          - aws-cluster-autoscaler
-          - kube-state-metrics
-          - dns-controller
-          - external-dns
-          - kubedns
-          - dnsmasq
-          - autoscaler
-          - tiller
-          - kube2iam
-        rules:
-          - notReadOnlyRootFilesystem
-      - controllerNames:
-          - cert-manager
-          - dns-controller
-          - kubedns
-          - dnsmasq
-          - autoscaler
-          - insights-agent-goldilocks-vpa-install
-        rules:
-          - cpuRequestsMissing
-          - cpuLimitsMissing
-          - memoryRequestsMissing
-          - memoryLimitsMissing
-      - controllerNames:
-          - kube2iam
-          - kube-flannel-ds
-        rules:
-          - runAsPrivileged
-      - controllerNames:
-          - kube-hunter
-        rules:
-          - hostPIDSet
-      - controllerNames:
-          - polaris
-          - kube-hunter
-          - goldilocks
-          - insights-agent-goldilocks-vpa-install
-        rules:
-          - notReadOnlyRootFilesystem
-      - controllerNames:
-          - insights-agent-goldilocks-controller
-        rules:
-          - livenessProbeMissing
-          - readinessProbeMissing
-      - controllerNames:
-          - insights-agent-goldilocks-vpa-install
-          - kube-hunter
-        rules:
-          - runAsRootAllowed
-  
 ---
-# Source: polaris/templates/dashboard.rbac.yaml
-apiVersion: v1
-kind: ServiceAccount
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
 metadata:
-  name: polaris-dashboard
-  namespace: polaris
+  name: polaris-view
   labels:
     app: polaris
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+  - kind: ServiceAccount
+    name: polaris
+    namespace: polaris
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
-  name: polaris-dashboard
+  name: polaris
   labels:
     app: polaris
 rules:
-  - apiGroups:
-      - 'apps'
-      - 'extensions'
-    resources:
-      - 'deployments'
-      - 'statefulsets'
-      - 'daemonsets'
-    verbs:
-      - 'get'
-      - 'list'
-  - apiGroups:
-      - 'batch'
-    resources:
-      - 'jobs'
-      - 'cronjobs'
-    verbs:
-      - 'get'
-      - 'list'
+  # required by controller-runtime code doing a cluster wide lookup
+  # when it seems namespace would suffice
   - apiGroups:
       - ''
     resources:
       - 'nodes'
-      - 'namespaces'
-      - 'pods'
-      - 'replicationcontrollers'
     verbs:
       - 'get'
       - 'list'
@@ -189,17 +49,18 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
-  name: polaris-dashboard
+  name: polaris
   labels:
     app: polaris
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: polaris-dashboard
+  name: polaris
 subjects:
   - kind: ServiceAccount
-    name: polaris-dashboard
+    name: polaris
     namespace: polaris
+
 ---
 # Source: polaris/templates/dashboard.service.yaml
 apiVersion: v1
@@ -212,7 +73,7 @@ metadata:
   annotations:
 spec:
   ports:
-  - name: dashboard
+  - name: http-dashboard
     port: 80
     protocol: TCP
     targetPort: 8080
@@ -238,23 +99,15 @@ spec:
       component: dashboard
   template:
     metadata:
-      annotations:
-        checksum/config: 'eb6d6b194c6786d62400fc0578dd5ea5158212b5b29d93d3cde3fa14da8ac501'
       labels:
         app: polaris
         component: dashboard
     spec:
-      volumes:
-      - name: config
-        configMap:
-          name: polaris
       containers:
       - command:
         - polaris
-        - --dashboard
-        - --config
-        - /opt/app/config.yaml
-        image: 'quay.io/fairwinds/polaris:0.6'
+        - dashboard
+        image: 'quay.io/fairwinds/polaris:1'
         imagePullPolicy: 'Always'
         name: dashboard
         ports:
@@ -286,12 +139,7 @@ spec:
           capabilities:
             drop:
               - ALL
-        volumeMounts:
-        - name: config
-          mountPath: /opt/app/config.yaml
-          subPath: config.yaml
-          readOnly: true
-      serviceAccountName: polaris-dashboard
+      serviceAccountName: polaris
       nodeSelector:
       tolerations:
 ---
@@ -299,6 +147,10 @@ spec:
 
 ---
 # Source: polaris/templates/audit.rbac.yaml
+
+---
+# Source: polaris/templates/configmap.yaml
+
 
 ---
 # Source: polaris/templates/ingress.yaml

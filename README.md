@@ -1,11 +1,11 @@
 <div align="center">
-  <img src="/polaris-logo.png" alt="Polaris Logo" />
+  <img src="/img/polaris-logo.png" alt="Polaris Logo" />
   <br>
 
   [![Version][version-image]][version-link] [![CircleCI][circleci-image]][circleci-link] [![Go Report Card][goreport-image]][goreport-link]
 </div>
 
-[version-image]: https://img.shields.io/static/v1.svg?label=Version&message=0.6.0&color=239922
+[version-image]: https://img.shields.io/static/v1.svg?label=Version&message=1.0.0&color=239922
 [version-link]: https://github.com/FairwindsOps/polaris
 
 [goreport-image]: https://goreportcard.com/badge/github.com/FairwindsOps/polaris
@@ -43,7 +43,7 @@ With the port forwarding in place, you can open http://localhost:8080 in your br
 The Polaris dashboard is a way to get a simple visual overview of the current state of your Kubernetes workloads as well as a roadmap for what can be improved. The dashboard provides a cluster wide overview as well as breaking out results by category, namespace, and workload.
 
 <p align="center">
-  <img src="/dashboard-screenshot.png" alt="Polaris Dashboard" />
+  <img src="/img/dashboard-screenshot.png" alt="Polaris Dashboard" width="550"/>
 </p>
 
 Our default standards in Polaris are rather high, so don’t be surprised if your score is lower than you might expect. A key goal for Polaris was to set a high standard and aim for great configuration by default. If the defaults we’ve included are too strict, it’s easy to adjust the configuration as part of the deployment configuration to better suit your workloads.

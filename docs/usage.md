@@ -60,6 +60,10 @@ strings like `1000m` and `1G`. You can see an example in [the extended config](/
 There are additional examples in the [checks folder](/checks).
 
 ### Exemptions
+Sometimes a workload really does need to do things that Polaris considers insecure. For instance,
+many of the `kube-system` workloads need to run as root, or need access to the host network. In these
+cases, we can add **exemptions** to allow the workload to pass Polaris checks.
+
 Exemptions can be added two ways: by annotating a controller, or editing the Polaris config.
 
 To exempt a controller from all checks via annotations, use the annotation `polaris.fairwinds.com/exempt=true`, e.g.
