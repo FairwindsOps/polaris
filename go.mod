@@ -76,10 +76,10 @@ require (
 	golang.org/x/net v0.0.0-20200226121028-0de0cce0169b
 	golang.org/x/oauth2 v0.0.0-20190517181255-950ef44c6e07
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
-	golang.org/x/sys v0.0.0-20200515095857-1151b9dac4a9
+	golang.org/x/sys v0.0.0-20200519105757-fe76b779f299
 	golang.org/x/text v0.3.2
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
-	golang.org/x/tools v0.0.0-20200518172458-c79c01b1c51c
+	golang.org/x/tools v0.0.0-20200519205726-57a9e4404bf7
 	google.golang.org/api v0.5.0
 	google.golang.org/appengine v1.6.6
 	google.golang.org/genproto v0.0.0-20190516172635-bb713bdc0e52
