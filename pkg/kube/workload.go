@@ -67,7 +67,7 @@ func NewGenericWorkload(podResource kubeAPICoreV1.Pod, dynamicClientPointer *dyn
 			mapping, err := restMapper.RESTMapping(fqKind.GroupKind(), fqKind.Version)
 			if err != nil {
 				logrus.Warnf("Error retrieving mapping %s of API %s and Kind %s because of error: %v ", firstOwner.Name, firstOwner.APIVersion, firstOwner.Kind, err)
-				return workload, nil
+				return workload, err
 			}
 
 			cacheAllObjectsOfKind(dynamicClient, mapping.Resource, objectCache)
@@ -77,7 +77,7 @@ func NewGenericWorkload(podResource kubeAPICoreV1.Pod, dynamicClientPointer *dyn
 			}
 			abstractObject, ok = objectCache[key]
 			if !ok {
-				logrus.Errorf("Cache missed again %s", key)
+				logrus.Errorf("Cache missed %s again", key)
 				return workload, errors.New("Could not retrieve parent object")
 			}
 		}
