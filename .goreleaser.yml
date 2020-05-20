@@ -6,6 +6,19 @@ changelog:
     exclude:
     - '^docs:'
     - '^test:'
+builds:
+  - id: watcher
+    env:
+      - CGO_ENABLED=0
+      - GO111MODULE=on
+    goarch:
+      - amd64
+      - arm
+      - arm64
+      - 386
+    goarm:
+      - 6
+      - 7
 brews:
   - name: polaris
     github:
