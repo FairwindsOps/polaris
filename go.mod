@@ -79,7 +79,7 @@ require (
 	golang.org/x/sys v0.0.0-20200519105757-fe76b779f299
 	golang.org/x/text v0.3.2
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
-	golang.org/x/tools v0.0.0-20200519205726-57a9e4404bf7
+	golang.org/x/tools v0.0.0-20200520220537-cf2d1e09c845
 	google.golang.org/api v0.5.0
 	google.golang.org/appengine v1.6.6
 	google.golang.org/genproto v0.0.0-20190516172635-bb713bdc0e52
