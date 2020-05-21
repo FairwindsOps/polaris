@@ -62,48 +62,35 @@ func NewGenericWorkload(podResource kubeAPICoreV1.Pod, dynamicClientPointer *dyn
 		key := fmt.Sprintf("%s/%s/%s", firstOwner.Kind, workload.ObjectMeta.GetNamespace(), firstOwner.Name)
 		lastKey = key
 		abstractObject, ok := objectCache[key]
-		if ok {
-
-			objMeta, err := meta.Accessor(&abstractObject)
+		if !ok {
+			fqKind := schema.FromAPIVersionAndKind(firstOwner.APIVersion, firstOwner.Kind)
+			mapping, err := restMapper.RESTMapping(fqKind.GroupKind(), fqKind.Version)
 			if err != nil {
-				logrus.Warnf("Error retrieving parent metadata %s of API %s and Kind %s because of error: %v ", firstOwner.Name, firstOwner.APIVersion, firstOwner.Kind, err)
+				logrus.Warnf("Error retrieving mapping %s of API %s and Kind %s because of error: %v ", firstOwner.Name, firstOwner.APIVersion, firstOwner.Kind, err)
 				return workload, err
 			}
-			workload.ObjectMeta = objMeta
-			owners = abstractObject.GetOwnerReferences()
 
-			continue
+			cacheAllObjectsOfKind(dynamicClient, mapping.Resource, objectCache)
+			if err != nil {
+				logrus.Warnf("Error getting objects of Kind %s %v", firstOwner.Kind, err)
+				return workload, nil // Note -we don't return an error so we can recover from the case where RBAC is insufficient
+			}
+			abstractObject, ok = objectCache[key]
+			if !ok {
+				logrus.Errorf("Cache missed %s again", key)
+				return workload, errors.New("Could not retrieve parent object")
+			}
 		}
-		fqKind := schema.FromAPIVersionAndKind(firstOwner.APIVersion, firstOwner.Kind)
-		mapping, err := restMapper.RESTMapping(fqKind.GroupKind(), fqKind.Version)
+
+		objMeta, err := meta.Accessor(&abstractObject)
 		if err != nil {
-			logrus.Warnf("Error retrieving mapping %s of API %s and Kind %s because of error: %v ", firstOwner.Name, firstOwner.APIVersion, firstOwner.Kind, err)
-			return workload, nil
-		}
-		err = cacheAllObjectsOfKind(dynamicClient, mapping.Resource, objectCache)
-		if err != nil {
-			logrus.Warnf("Error getting objects of Kind %s %v", firstOwner.Kind, err)
+			logrus.Warnf("Error retrieving parent metadata %s of API %s and Kind %s because of error: %v ", firstOwner.Name, firstOwner.APIVersion, firstOwner.Kind, err)
 			return workload, err
 		}
-
-		abstractObject, ok = objectCache[key]
-		if ok {
-
-			objMeta, err := meta.Accessor(&abstractObject)
-			if err != nil {
-				logrus.Warnf("Error retrieving parent metadata %s of API %s and Kind %s because of error: %v ", firstOwner.Name, firstOwner.APIVersion, firstOwner.Kind, err)
-				return workload, err
-			}
-			workload.ObjectMeta = objMeta
-			owners = abstractObject.GetOwnerReferences()
-
-			continue
-		} else {
-			logrus.Errorf("Cache missed again %s", key)
-			return workload, errors.New("Could not retrieve parent object")
-		}
-
+		workload.ObjectMeta = objMeta
+		owners = abstractObject.GetOwnerReferences()
 	}
+
 	if lastKey != "" {
 		bytes, err := json.Marshal(objectCache[lastKey])
 		if err != nil {
