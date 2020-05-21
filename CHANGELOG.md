@@ -1,5 +1,11 @@
 # x.x.x (next release)
 
+# 1.0.2
+* Fixed case where custom CRDs are not covered by RBAC
+
+# 1.0.1
+* Added ARM binaries to releases
+
 # 1.0.0
 ## New Features
 * Added support for custom checks using JSON Schema
