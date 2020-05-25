@@ -82,8 +82,8 @@ require (
 	golang.org/x/tools v0.0.0-20200520220537-cf2d1e09c845
 	google.golang.org/api v0.5.0
 	google.golang.org/appengine v1.6.6
-	google.golang.org/genproto v0.0.0-20190516172635-bb713bdc0e52
-	google.golang.org/grpc v1.21.0
+	google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55
+	google.golang.org/grpc v1.29.1
 	gopkg.in/inf.v0 v0.9.1
 	gopkg.in/yaml.v2 v2.2.8
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
