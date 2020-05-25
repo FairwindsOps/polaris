@@ -57,7 +57,7 @@ require (
 	github.com/prometheus/client_model v0.2.0
 	github.com/prometheus/common v0.10.0
 	github.com/prometheus/procfs v0.0.11
-	github.com/qri-io/jsonschema v0.1.1
+	github.com/qri-io/jsonschema v0.2.0
 	github.com/rogpeppe/go-internal v1.6.0
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/cobra v1.0.0
