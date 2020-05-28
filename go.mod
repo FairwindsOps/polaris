@@ -36,7 +36,7 @@ require (
 	github.com/gophercloud/gophercloud v0.0.0-20190516165734-b3a23cc94cc5
 	github.com/gorilla/mux v1.7.4
 	github.com/gregjones/httpcache v0.0.0-20190212212710-3befbb6ad0cc
-	github.com/grpc-ecosystem/grpc-gateway v1.9.0
+	github.com/grpc-ecosystem/grpc-gateway v1.14.6
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/imdario/mergo v0.3.7
 	github.com/joho/godotenv v1.3.0
@@ -74,7 +74,7 @@ require (
 	go.uber.org/zap v1.15.0
 	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
 	golang.org/x/net v0.0.0-20200226121028-0de0cce0169b
-	golang.org/x/oauth2 v0.0.0-20190517181255-950ef44c6e07
+	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
 	golang.org/x/sys v0.0.0-20200519105757-fe76b779f299
 	golang.org/x/text v0.3.2
@@ -82,8 +82,8 @@ require (
 	golang.org/x/tools v0.0.0-20200520220537-cf2d1e09c845
 	google.golang.org/api v0.5.0
 	google.golang.org/appengine v1.6.6
-	google.golang.org/genproto v0.0.0-20190516172635-bb713bdc0e52
-	google.golang.org/grpc v1.21.0
+	google.golang.org/genproto v0.0.0-20200513103714-09dca8ec2884
+	google.golang.org/grpc v1.29.1
 	gopkg.in/inf.v0 v0.9.1
 	gopkg.in/yaml.v2 v2.2.8
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
