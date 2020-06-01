@@ -148,6 +148,8 @@ github.com/gobuffalo/mapi v1.0.1/go.mod h1:4VAGh89y6rVOvm5A8fKFxYG+wIW6LO1FMTG9h
 github.com/gobuffalo/mapi v1.0.2 h1:fq9WcL1BYrm36SzK6+aAnZ8hcp+SrmnDyAxhNx8dvJk=
 github.com/gobuffalo/mapi v1.0.2/go.mod h1:4VAGh89y6rVOvm5A8fKFxYG+wIW6LO1FMTG9hnKStFc=
 github.com/gobuffalo/mapi v1.2.0/go.mod h1:g9JQQDtZGqzMYDWuMguzjXQmq1VpjN5aUVC42vvfPbg=
+github.com/gobuffalo/mapi v1.2.1 h1:TyfbtQaW7GvS4DXdF1KQOSGrW6L0uiFmGDz+JgEIMbM=
+github.com/gobuffalo/mapi v1.2.1/go.mod h1:giGJ2AUESRepOFYAzWpq8Gf/s/QDryxoEHisQtFN3cY=
 github.com/gobuffalo/packd v0.0.0-20190315124812-a385830c7fc0/go.mod h1:M2Juc+hhDXf/PnmBANFCqx4DM3wRbgDvnVWeG2RIxq4=
 github.com/gobuffalo/packd v0.1.0 h1:4sGKOD8yaYJ+dek1FDkwcxCHA40M4kfKgFHx8N2kwbU=
 github.com/gobuffalo/packd v0.1.0/go.mod h1:M2Juc+hhDXf/PnmBANFCqx4DM3wRbgDvnVWeG2RIxq4=
