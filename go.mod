@@ -90,7 +90,7 @@ require (
 	k8s.io/api v0.0.0-20181213150558-05914d821849
 	k8s.io/apimachinery v0.0.0-20181127025237-2b1284ed4c93
 	k8s.io/client-go v0.0.0-20181213151034-8d9ed539ba31
-	k8s.io/klog v0.3.0
+	k8s.io/klog v0.4.0
 	k8s.io/kube-openapi v0.0.0-20190510232812-a01b7d5d6c22
 	sigs.k8s.io/controller-runtime v0.1.10
 	sigs.k8s.io/yaml v1.2.0
