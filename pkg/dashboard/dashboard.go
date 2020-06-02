@@ -81,10 +81,11 @@ func GetMarkdownBox() *packr.Box {
 
 // templateData is passed to the dashboard HTML template
 type templateData struct {
-	BasePath  string
-	Config    config.Configuration
-	AuditData validator.AuditData
-	JSON      template.JS
+	BasePath          string
+	Config            config.Configuration
+	AuditData         validator.AuditData
+	FilteredAuditData validator.AuditData
+	JSON              template.JS
 }
 
 // GetBaseTemplate puts together the dashboard template. Individual pieces can be overridden before rendering.
@@ -148,6 +149,16 @@ func getConfigForQuery(base config.Configuration, query url.Values) config.Confi
 		c.DisallowExemptions = true
 	}
 	return c
+}
+
+func stripUnselectedNamespaces(data *validator.AuditData, selectedNamespaces []string) {
+	newResults := []validator.ControllerResult{}
+	for _, res := range data.Results {
+		if stringInSlice(res.Namespace, selectedNamespaces) {
+			newResults = append(newResults, res)
+		}
+	}
+	data.Results = newResults
 }
 
 // GetRouter returns a mux router serving all routes necessary for the dashboard
@@ -237,11 +248,18 @@ func MainHandler(w http.ResponseWriter, r *http.Request, c config.Configuration,
 		return
 	}
 
+	filteredAuditData := auditData
+	namespaces := r.URL.Query()["ns"]
+	if len(namespaces) > 0 {
+		stripUnselectedNamespaces(&filteredAuditData, namespaces)
+	}
+
 	data := templateData{
-		BasePath:  basePath,
-		AuditData: auditData,
-		JSON:      template.JS(jsonData),
-		Config:    c,
+		BasePath:          basePath,
+		AuditData:         auditData,
+		FilteredAuditData: filteredAuditData,
+		JSON:              template.JS(jsonData),
+		Config:            c,
 	}
 	tmpl, err := GetBaseTemplate("main")
 	if err != nil {

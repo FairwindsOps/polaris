@@ -4,6 +4,7 @@
   position: relative;
 }
 
+.filters .title,
 .card h3 {
   margin: 0;
   font-weight: 300;
@@ -168,7 +169,7 @@
   cursor: pointer;
 }
 
-.expandable-table .resource-info .caret-expander {
+.resource-info .caret-expander {
   display: inline-block;
   width: 15px;
   height: 15px;
@@ -179,16 +180,16 @@
   background-position: 2px center;
 }
 
-.expandable-table .resource-info.expanded .caret-expander {
+.resource-info.expanded .caret-expander {
   background-image: url('../images/caret-bottom.svg');
   background-position: center 2px;
 }
 
-.expandable-table .resource-info .expandable-content {
+.resource-info .expandable-content {
   display: none;
 }
 
-.expandable-table .resource-info.expanded .expandable-content {
+.resource-info.expanded .expandable-content {
   display: block;
 }
 
@@ -315,4 +316,33 @@ a.more-info:hover {
 @keyframes fadeIn {
   0% {opacity: 0;}
   100% {opacity: 1;}
+}
+
+.filters .title {
+  padding-left: 0;
+}
+
+.filters .caret-expander {
+  margin-bottom: 2px;
+  margin-top: 8px;
+}
+
+.filters input[type="submit"] {
+  margin-top: 5px;
+}
+
+form.namespace-list {
+  line-height: 20px;
+  margin: 5px 35px;
+  padding: 0;
+}
+
+.namespace-row {
+  display: flex;
+  padding: 3px 0;
+}
+
+.namespace-row label {
+  margin-left: 4px;
+  font-size: 20px;
 }

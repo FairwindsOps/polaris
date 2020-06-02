@@ -10,9 +10,9 @@
       <div class="cluster-score">
         <div class="score-details">
           <div class="weather"><i class="fas {{ getWeatherIcon .AuditData.GetSummary }}"></i></div>
-          <div class="sailing">{{ getWeatherText .AuditData.GetSummary }}</div>
-          <div class="scores"><span>Grade: </span><strong>{{ getGrade .AuditData.GetSummary }}</strong></div>
-          <div class="scores"><span>Score: </span><strong>{{ .AuditData.GetSummary.GetScore }}%</strong></div>
+          <div class="sailing">{{ getWeatherText .FilteredAuditData.GetSummary }}</div>
+          <div class="scores"><span>Grade: </span><strong>{{ getGrade .FilteredAuditData.GetSummary }}</strong></div>
+          <div class="scores"><span>Score: </span><strong>{{ .FilteredAuditData.GetSummary.GetScore }}%</strong></div>
           <p class="score-description">
             Score is the percentage of passing checks. Warnings get half the weight of dangerous checks.
           </p>
@@ -26,21 +26,21 @@
           <li class="success">
             <i class="message-icon fas fa-check"></i>
             <div class="message-group">
-              <span class="count"> {{ .AuditData.GetSummary.Successes }}</span>
+              <span class="count"> {{ .FilteredAuditData.GetSummary.Successes }}</span>
               <span class="message"> passing checks</span>
             </div>
           </li>
           <li class="failure warning">
             <i class="message-icon fas fa-exclamation"></i>
             <div class="message-group">
-              <span class="count"> {{ .AuditData.GetSummary.Warnings }}</span>
+              <span class="count"> {{ .FilteredAuditData.GetSummary.Warnings }}</span>
               <span class="message"> warning checks</span>
             </div>
           </li>
           <li class="failure danger">
             <i class="message-icon fas fa-times"></i>
             <div class="message-group">
-              <span class="count"> {{ .AuditData.GetSummary.Dangers }}</span>
+              <span class="count"> {{ .FilteredAuditData.GetSummary.Dangers }}</span>
               <span class="message"> dangerous checks</span>
             </div>
           </li>
@@ -51,23 +51,23 @@
       <div class="kubernetes-stats">
           <div class="kubernetes-stat">
             <span>Kubernetes Version:</span>
-            <strong>{{.AuditData.ClusterInfo.Version}}</strong>
+            <strong>{{.FilteredAuditData.ClusterInfo.Version}}</strong>
           </div>
           <div class="kubernetes-stat">
             <span>Nodes:</span>
-            <strong>{{.AuditData.ClusterInfo.Nodes}}</strong>
+            <strong>{{.FilteredAuditData.ClusterInfo.Nodes}}</strong>
           </div>
           <div class="kubernetes-stat">
             <span>Namespaces:</span>
-            <strong>{{.AuditData.ClusterInfo.Namespaces}}</strong>
+            <strong>{{.FilteredAuditData.ClusterInfo.Namespaces}}</strong>
           </div>
           <div class="kubernetes-stat">
             <span>Controllers:</span>
-            <strong>{{.AuditData.ClusterInfo.Controllers}}</strong>
+            <strong>{{.FilteredAuditData.ClusterInfo.Controllers}}</strong>
           </div>
           <div class="kubernetes-stat">
             <span>Pods:</span>
-            <strong>{{.AuditData.ClusterInfo.Pods}}</strong>
+            <strong>{{.FilteredAuditData.ClusterInfo.Pods}}</strong>
           </div>
       </div>
     </div>
@@ -76,7 +76,7 @@
   <div class="card category">
     <h3>Results by Category</h3>
     <div class="expandable-table">
-      {{ range $category, $summary := .AuditData.GetSummaryByCategory }}
+      {{ range $category, $summary := .FilteredAuditData.GetSummaryByCategory }}
         <div class="resource-info">
           <div class="status-bar">
             <div class="status">
@@ -97,17 +97,17 @@
   </div>
 
   <div class="card filters">
-    <div class="expandable-table">
+    <div class="resource-info">
       <div class="name">
         <span class="caret-expander"></span>
-        <h3>Namespace Filters</h3>
+        <span class="title">Filter by Namespace</span>
       </div>
       <div class="result-messages expandable-content">
-        <form method="get">
+        <form id="namespaceFiltersForm" class="namespace-list">
           {{ range $namespace, $ctrlResults := .AuditData.GetResultsByNamespace }}
             <div class="namespace-row">
-              <input type="checkbox" name="namespace-{{ $namespace }}" id="namespace-{{ $namespace }}">
-              <label for="namespace-{{ $namespace }}"></label>
+              <input type="checkbox" name="{{ $namespace }}" id="namespace-{{ $namespace }}">
+              <label for="namespace-{{ $namespace }}">{{ $namespace }}</label>
             </div>
           {{ end }}
             <input type="submit" value="Apply">
@@ -116,7 +116,7 @@
     </div>
   </div>
 
-  {{ range $namespace, $ctrlResults := .AuditData.GetResultsByNamespace }}
+  {{ range $namespace, $ctrlResults := .FilteredAuditData.GetResultsByNamespace }}
     <div class="card namespace">
       <h3>Namespace: <strong>{{ $namespace }}</strong></h3>
       <div class="expandable-table">
@@ -170,6 +170,6 @@
       </div>
     </div>
   {{ end }} {{/* end range .AuditData.GetResultsByNamespace */}}
-  <script src="static/js/charts.js">
-  </script>
+  <script src="static/js/charts.js"></script>
+  <script src="static/js/filter.js"></script>
 {{end}}
