@@ -1,5 +1,9 @@
 # x.x.x (next release)
 
+# 1.0.3
+* Fixed case where parent resources trigger error
+* Fixed dashboard link when `--base-path` is set
+
 # 1.0.2
 * Fixed case where custom CRDs are not covered by RBAC
 
