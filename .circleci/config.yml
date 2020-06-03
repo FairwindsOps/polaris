@@ -118,7 +118,7 @@ references:
 jobs:
   build:
     docker:
-      - image: quay.io/reactiveops/ci-images:v8.0-stretch
+      - image: quay.io/reactiveops/ci-images:v11.0-stretch
     steps:
       - checkout
       - setup_remote_docker
@@ -127,7 +127,7 @@ jobs:
 
   push:
     docker:
-      - image: quay.io/reactiveops/ci-images:v8.0-stretch
+      - image: quay.io/reactiveops/ci-images:v11.0-stretch
     steps:
       - checkout
       - setup_remote_docker
@@ -168,6 +168,7 @@ jobs:
       - *set_environment_variables
       - *install_goreleaser
       - run: go get -u github.com/gobuffalo/packr/v2/packr2
+      - run: git checkout -- . # FIXME: the go get makes the directory dirty
       - run: packr2
       - run: goreleaser
       - *release_deploy_configs
@@ -175,7 +176,7 @@ jobs:
   release_images:
     working_directory: /go/src/github.com/fairwindsops/polaris/
     docker:
-      - image: quay.io/reactiveops/ci-images:v8.0-stretch
+      - image: quay.io/reactiveops/ci-images:v11.0-stretch
     steps:
       - checkout
       - setup_remote_docker
