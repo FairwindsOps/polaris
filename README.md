@@ -54,6 +54,9 @@ Our default standards in Polaris are rather high, so don’t be surprised if you
 
 Polaris can be run as an admission controller that acts as a validating webhook. This accepts the same configuration as the dashboard, and can run the same validations. This webhook will reject any workloads that trigger a danger-level check. This is indicative of the greater goal of Polaris, not just to encourage better configuration through dashboard visibility, but to actually enforce it with this webhook. Polaris will not fix your workloads, only block them. 
 
+The webhook only supports a fixed set of controller types. You can see the
+[list of supported controllers here](https://github.com/FairwindsOps/polaris/blob/master/cmd/polaris/webhook.go#L40)
+
 Unfortunately we have not found a way to display warnings as part of `kubectl` output unless we are rejecting a workload altogether. That means that any checks with a severity of `warning` will still pass webhook validation, and the only evidence of that warning will either be in the Polaris dashboard or the Polaris webhook logs.
 
 ## CLI
