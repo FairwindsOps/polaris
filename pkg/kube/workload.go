@@ -70,7 +70,7 @@ func NewGenericWorkload(podResource kubeAPICoreV1.Pod, dynamicClientPointer *dyn
 				return workload, err
 			}
 
-			cacheAllObjectsOfKind(dynamicClient, mapping.Resource, objectCache)
+			err = cacheAllObjectsOfKind(dynamicClient, mapping.Resource, objectCache)
 			if err != nil {
 				logrus.Warnf("Error getting objects of Kind %s %v", firstOwner.Kind, err)
 				return workload, nil // Note -we don't return an error so we can recover from the case where RBAC is insufficient
