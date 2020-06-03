@@ -168,6 +168,7 @@ jobs:
       - *set_environment_variables
       - *install_goreleaser
       - run: go get -u github.com/gobuffalo/packr/v2/packr2
+      - run: git checkout -- . # FIXME: the go get makes the directory dirty
       - run: packr2
       - run: goreleaser
       - *release_deploy_configs
