@@ -327,8 +327,22 @@ a.more-info:hover {
   margin-top: 8px;
 }
 
+.filters input[type="checkbox"] {
+  margin-top: 4px;
+}
+
+
 .filters input[type="submit"] {
-  margin-top: 5px;
+  padding: 4px 10px;
+  box-shadow: none;
+  background-color: #23103A;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 20px;
+  width: 100px;
+  margin-top: 15px;
 }
 
 form.namespace-list {
