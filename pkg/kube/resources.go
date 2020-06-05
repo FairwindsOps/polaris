@@ -228,7 +228,10 @@ func GetPodSpec(yaml map[string]interface{}) interface{} {
 			return GetPodSpec(childYaml.(map[string]interface{}))
 		}
 	}
-	return yaml
+	if _, ok := yaml["containers"]; ok {
+		return yaml
+	}
+	return nil
 }
 
 func addResourceFromString(contents string, resources *ResourceProvider) error {
@@ -268,7 +271,11 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 		finalDoc["metadata"] = yamlNode["metadata"]
 		finalDoc["apiVersion"] = "v1"
 		finalDoc["kind"] = "Pod"
-		finalDoc["spec"] = GetPodSpec(yamlNode)
+		podSpec := GetPodSpec(yamlNode)
+		if podSpec == nil {
+			return nil
+		}
+		finalDoc["spec"] = podSpec
 		marshaledYaml, err := yaml.Marshal(finalDoc)
 		if err != nil {
 			logrus.Errorf("Could not marshal yaml: %v", err)

@@ -17,6 +17,7 @@ package webhook
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -101,6 +102,9 @@ func (v *Validator) handleInternal(ctx context.Context, req types.Request) (*val
 			return nil, err
 		}
 		podMap := kube.GetPodSpec(decoded)
+		if podMap == nil {
+			return nil, errors.New("Object does not contain pods")
+		}
 		encoded, err := json.Marshal(podMap)
 		if err != nil {
 			return nil, err
