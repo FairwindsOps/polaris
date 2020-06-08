@@ -56,7 +56,7 @@ require (
 	github.com/prometheus/client_golang v1.6.0
 	github.com/prometheus/client_model v0.2.0
 	github.com/prometheus/common v0.10.0
-	github.com/prometheus/procfs v0.0.11
+	github.com/prometheus/procfs v0.1.0
 	github.com/qri-io/jsonschema v0.1.1
 	github.com/rogpeppe/go-internal v1.6.0
 	github.com/sirupsen/logrus v1.6.0
