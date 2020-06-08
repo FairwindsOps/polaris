@@ -62,7 +62,7 @@ require (
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.6.1
 	gitlab.com/golang-commonmark/html v0.0.0-20180917080848-cfaf75183c4a
 	gitlab.com/golang-commonmark/linkify v0.0.0-20180917065525-c22b7bdb1179
 	gitlab.com/golang-commonmark/markdown v0.0.0-20181102083822-772775880e1f
