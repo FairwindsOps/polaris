@@ -23,11 +23,19 @@ import (
 )
 
 func getWarningWidth(counts validator.CountSummary, fullWidth int) uint {
-	return uint(float64(counts.Successes+counts.Warnings) / float64(counts.Successes+counts.Warnings+counts.Dangers) * float64(fullWidth))
+	denom := float64(counts.Successes+counts.Warnings+counts.Dangers) * float64(fullWidth)
+	if denom == 0.0 {
+		return uint(0)
+	}
+	return uint(float64(counts.Successes+counts.Warnings) / denom)
 }
 
 func getSuccessWidth(counts validator.CountSummary, fullWidth int) uint {
-	return uint(float64(counts.Successes) / float64(counts.Successes+counts.Warnings+counts.Dangers) * float64(fullWidth))
+	denom := float64(counts.Successes+counts.Warnings+counts.Dangers) * float64(fullWidth)
+	if denom == 0.0 {
+		return uint(0)
+	}
+	return uint(float64(counts.Successes) / denom)
 }
 
 func getGrade(counts validator.CountSummary) string {
