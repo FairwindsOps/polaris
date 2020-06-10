@@ -16,6 +16,7 @@ package config
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -93,5 +94,13 @@ func Parse(rawBytes []byte) (Configuration, error) {
 		}
 		conf.CustomChecks[key] = check
 	}
-	return conf, nil
+	return conf, conf.Validate()
+}
+
+// Validate checks if a config is valid
+func (c Configuration) Validate() error {
+	if len(c.Checks) == 0 {
+		return errors.New("No checks were enabled")
+	}
+	return nil
 }
