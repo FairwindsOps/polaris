@@ -44,7 +44,7 @@ func TestGetMultipleResourceFromSingleFile(t *testing.T) {
 
 	assert.Equal(t, 0, len(resources.Nodes), "Should not have any nodes")
 
-	assert.Equal(t, 4, len(resources.Controllers), "Should have four controllers")
+	assert.Equal(t, 1, len(resources.Controllers), "Should have one controller")
 	assert.Equal(t, "dashboard", resources.Controllers[0].PodSpec.Containers[0].Name)
 
 	assert.Equal(t, 2, len(resources.Namespaces), "Should have a namespace")
