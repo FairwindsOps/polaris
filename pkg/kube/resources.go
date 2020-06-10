@@ -241,6 +241,7 @@ func addResourcesFromYaml(contents string, resources *ResourceProvider) error {
 	return nil
 }
 
+// GetWorkloadFromBytes parses a GenericWorkload
 func GetWorkloadFromBytes(contentBytes []byte) (*GenericWorkload, error) {
 	yamlNode := make(map[string]interface{})
 	err := yaml.Unmarshal(contentBytes, &yamlNode)
