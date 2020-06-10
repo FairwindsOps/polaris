@@ -60,11 +60,13 @@ func TestChecks(t *testing.T) {
 		assert.NoError(t, err)
 		summary := result.GetSummary()
 		if tc.failure {
-			assert.Equal(t, uint(0), summary.Successes)
-			assert.Equal(t, uint(1), summary.Dangers)
+			message := "Check " + tc.check + " passed unexpectedly"
+			assert.Equal(t, uint(0), summary.Successes, message)
+			assert.Equal(t, uint(1), summary.Dangers, message)
 		} else {
-			assert.Equal(t, uint(1), summary.Successes)
-			assert.Equal(t, uint(0), summary.Dangers)
+			message := "Check " + tc.check + " failed unexpectedly"
+			assert.Equal(t, uint(1), summary.Successes, message)
+			assert.Equal(t, uint(0), summary.Dangers, message)
 		}
 	}
 }
