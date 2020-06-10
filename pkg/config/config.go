@@ -97,6 +97,7 @@ func Parse(rawBytes []byte) (Configuration, error) {
 	return conf, conf.Validate()
 }
 
+// Validate checks if a config is valid
 func (c Configuration) Validate() error {
 	if len(c.Checks) == 0 {
 		return errors.New("No checks were enabled")
