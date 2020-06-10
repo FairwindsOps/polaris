@@ -1,6 +1,7 @@
 checks:
   # reliability
   multipleReplicasForDeployment: warning
+  priorityClassNotSet: warning
   # resources
   cpuRequestsMissing: warning
   cpuLimitsMissing: warning
