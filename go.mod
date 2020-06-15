@@ -40,7 +40,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/imdario/mergo v0.3.9
 	github.com/joho/godotenv v1.3.0
-	github.com/json-iterator/go v1.1.9
+	github.com/json-iterator/go v1.1.10
 	github.com/karrick/godirwalk v1.15.6
 	github.com/konsorten/go-windows-terminal-sequences v1.0.3
 	github.com/markbates/oncer v1.0.0
