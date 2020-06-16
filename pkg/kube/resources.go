@@ -74,7 +74,7 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 			logrus.Errorf("Error reading file: %v", path)
 			return err
 		}
-		specs := regexp.MustCompile("\n-+\n").Split(string(contents), -1)
+		specs := regexp.MustCompile("[\r\n]-+[\r\n]").Split(string(contents), -1)
 		for _, spec := range specs {
 			if strings.TrimSpace(spec) == "" {
 				continue
