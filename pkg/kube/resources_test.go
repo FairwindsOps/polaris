@@ -1,11 +1,14 @@
 package kube
 
 import (
+	"bytes"
+	"io/ioutil"
 	"testing"
 	"time"
 
 	"github.com/fairwindsops/polaris/test"
 	"github.com/stretchr/testify/assert"
+	corev1 "k8s.io/api/core/v1"
 )
 
 func TestGetResourcesFromPath(t *testing.T) {
@@ -55,6 +58,31 @@ func TestGetMultipleResourceFromSingleFile(t *testing.T) {
 func TestGetMultipleResourceFromBadFile(t *testing.T) {
 	_, err := CreateResourceProviderFromPath("./test_files/test_3")
 	assert.NotEqual(t, nil, err, "CreateResource From Path should fail with bad yaml")
+}
+
+func TestAddResourcesFromReader(t *testing.T) {
+	contents, err := ioutil.ReadFile("./test_files/test_2/multi.yaml")
+	assert.NoError(t, err)
+	reader := bytes.NewBuffer(contents)
+	resources := &ResourceProvider{
+		ServerVersion: "unknown",
+		SourceType:    "Path",
+		SourceName:    "-",
+		Nodes:         []corev1.Node{},
+		Namespaces:    []corev1.Namespace{},
+		Controllers:   []GenericWorkload{},
+	}
+	err = addResourcesFromReader(reader, resources)
+	assert.NoError(t, err)
+
+	assert.Equal(t, 0, len(resources.Nodes), "Should not have any nodes")
+
+	assert.Equal(t, 1, len(resources.Controllers), "Should have one controller")
+	assert.Equal(t, "dashboard", resources.Controllers[0].PodSpec.Containers[0].Name)
+
+	assert.Equal(t, 2, len(resources.Namespaces), "Should have a namespace")
+	assert.Equal(t, "polaris", resources.Namespaces[0].ObjectMeta.Name)
+	assert.Equal(t, "polaris-2", resources.Namespaces[1].ObjectMeta.Name)
 }
 
 func TestGetResourceFromAPI(t *testing.T) {
