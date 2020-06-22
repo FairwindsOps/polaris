@@ -68,7 +68,7 @@ require (
 	gitlab.com/golang-commonmark/markdown v0.0.0-20181102083822-772775880e1f
 	gitlab.com/golang-commonmark/mdurl v0.0.0-20180912090424-e5bce34c34f2
 	gitlab.com/golang-commonmark/puny v0.0.0-20180912090636-2cd490539afe
-	go.opencensus.io v0.22.3
+	go.opencensus.io v0.22.4
 	go.uber.org/atomic v1.6.0
 	go.uber.org/multierr v1.5.0
 	go.uber.org/zap v1.15.0
