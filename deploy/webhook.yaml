@@ -5,6 +5,15 @@ kind: Namespace
 metadata:
   name: polaris
 ---
+# Source: polaris/templates/rbac.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: polaris
+  namespace: polaris
+  labels:
+    app: polaris
+---
 # Source: polaris/templates/webhook.secret.yaml
 # The name of this secret is static as it is populated by the webhook pod.
 apiVersion: v1
@@ -19,29 +28,6 @@ stringData:
   cert.pem: ''
 ---
 # Source: polaris/templates/rbac.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: polaris
-  namespace: polaris
-  labels:
-    app: polaris
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: polaris-view
-  labels:
-    app: polaris
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: view
-subjects:
-  - kind: ServiceAccount
-    name: polaris
-    namespace: polaris
----
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
@@ -58,22 +44,6 @@ rules:
     verbs:
       - 'get'
       - 'list'
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: polaris
-  labels:
-    app: polaris
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: polaris
-subjects:
-  - kind: ServiceAccount
-    name: polaris
-    namespace: polaris
-
 ---
 # Source: polaris/templates/webhook.rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -101,6 +71,39 @@ rules:
     verbs:
       - '*'
 ---
+# Source: polaris/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: polaris-view
+  labels:
+    app: polaris
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+  - kind: ServiceAccount
+    name: polaris
+    namespace: polaris
+---
+# Source: polaris/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: polaris
+  labels:
+    app: polaris
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: polaris
+subjects:
+  - kind: ServiceAccount
+    name: polaris
+    namespace: polaris
+---
+# Source: polaris/templates/webhook.rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
@@ -116,6 +119,7 @@ subjects:
     name: polaris
     namespace: polaris
 ---
+# Source: polaris/templates/webhook.rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: Role
 metadata:
@@ -133,6 +137,7 @@ rules:
     verbs:
       - '*'
 ---
+# Source: polaris/templates/webhook.rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
 metadata:
@@ -194,7 +199,7 @@ spec:
           command:
             - polaris
             - webhook
-          image: 'quay.io/fairwinds/polaris:1.0'
+          image: 'quay.io/fairwinds/polaris:1.1'
           imagePullPolicy: 'Always'
           ports:
             - containerPort: 9876
@@ -248,22 +253,3 @@ spec:
             secretName: polaris-webhook
         - name: cr-logs
           emptyDir: {}
----
-# Source: polaris/templates/audit.job.yaml
-
----
-# Source: polaris/templates/audit.rbac.yaml
-
----
-# Source: polaris/templates/configmap.yaml
-
-
----
-# Source: polaris/templates/dashboard.deployment.yaml
-
----
-# Source: polaris/templates/dashboard.service.yaml
-
----
-# Source: polaris/templates/ingress.yaml
-

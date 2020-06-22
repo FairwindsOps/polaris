@@ -14,21 +14,7 @@ metadata:
   labels:
     app: polaris
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: polaris-view
-  labels:
-    app: polaris
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: view
-subjects:
-  - kind: ServiceAccount
-    name: polaris
-    namespace: polaris
----
+# Source: polaris/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
@@ -46,6 +32,23 @@ rules:
       - 'get'
       - 'list'
 ---
+# Source: polaris/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: polaris-view
+  labels:
+    app: polaris
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+  - kind: ServiceAccount
+    name: polaris
+    namespace: polaris
+---
+# Source: polaris/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
@@ -60,7 +63,6 @@ subjects:
   - kind: ServiceAccount
     name: polaris
     namespace: polaris
-
 ---
 # Source: polaris/templates/dashboard.service.yaml
 apiVersion: v1
@@ -107,7 +109,7 @@ spec:
       - command:
         - polaris
         - dashboard
-        image: 'quay.io/fairwinds/polaris:1.0'
+        image: 'quay.io/fairwinds/polaris:1.1'
         imagePullPolicy: 'Always'
         name: dashboard
         ports:
@@ -126,8 +128,8 @@ spec:
           periodSeconds: 20
         resources:
           limits:
-            cpu: 100m
-            memory: 128Mi
+            cpu: 150m
+            memory: 512Mi
           requests:
             cpu: 100m
             memory: 128Mi
@@ -142,28 +144,3 @@ spec:
       serviceAccountName: polaris
       nodeSelector:
       tolerations:
----
-# Source: polaris/templates/audit.job.yaml
-
----
-# Source: polaris/templates/audit.rbac.yaml
-
----
-# Source: polaris/templates/configmap.yaml
-
-
----
-# Source: polaris/templates/ingress.yaml
-
----
-# Source: polaris/templates/webhook.deployment.yaml
-
----
-# Source: polaris/templates/webhook.rbac.yaml
-
----
-# Source: polaris/templates/webhook.secret.yaml
-
----
-# Source: polaris/templates/webhook.service.yaml
-
