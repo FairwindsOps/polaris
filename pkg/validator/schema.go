@@ -43,6 +43,7 @@ var (
 		"privilegeEscalationAllowed",
 		"dangerousCapabilities",
 		"insecureCapabilities",
+		"priorityClassNotSet",
 	}
 )
 
