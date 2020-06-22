@@ -3,6 +3,7 @@ package kube
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -61,8 +62,14 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 		Controllers:   []GenericWorkload{},
 	}
 
-	addYaml := func(contents string) error {
-		return addResourceFromString(contents, &resources)
+	if directory == "-" {
+		fi, err := os.Stdin.Stat()
+		if err == nil && fi.Mode()&os.ModeNamedPipe == os.ModeNamedPipe {
+			if err := addResourcesFromReader(os.Stdin, &resources); err != nil {
+				return nil, err
+			}
+			return &resources, nil
+		}
 	}
 
 	visitFile := func(path string, f os.FileInfo, err error) error {
@@ -74,18 +81,7 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 			logrus.Errorf("Error reading file: %v", path)
 			return err
 		}
-		specs := regexp.MustCompile("[\r\n]-+[\r\n]").Split(string(contents), -1)
-		for _, spec := range specs {
-			if strings.TrimSpace(spec) == "" {
-				continue
-			}
-			err = addYaml(spec)
-			if err != nil {
-				logrus.Errorf("Error parsing YAML: (%v)", err)
-				return err
-			}
-		}
-		return nil
+		return addResourcesFromYaml(string(contents), &resources)
 	}
 
 	err := filepath.Walk(directory, visitFile)
@@ -230,6 +226,33 @@ func GetPodSpec(yaml map[string]interface{}) interface{} {
 	}
 	if _, ok := yaml["containers"]; ok {
 		return yaml
+	}
+	return nil
+}
+
+func addResourcesFromReader(reader io.Reader, resources *ResourceProvider) error {
+	contents, err := ioutil.ReadAll(reader)
+	if err != nil {
+		logrus.Errorf("Error reading from %v: %v", reader, err)
+		return err
+	}
+	if err := addResourcesFromYaml(string(contents), resources); err != nil {
+		return err
+	}
+	return nil
+}
+
+func addResourcesFromYaml(contents string, resources *ResourceProvider) error {
+	specs := regexp.MustCompile("[\r\n]-+[\r\n]").Split(string(contents), -1)
+	for _, spec := range specs {
+		if strings.TrimSpace(spec) == "" {
+			continue
+		}
+		err := addResourceFromString(spec, resources)
+		if err != nil {
+			logrus.Errorf("Error parsing YAML: (%v)", err)
+			return err
+		}
 	}
 	return nil
 }

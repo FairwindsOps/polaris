@@ -149,6 +149,7 @@ Both the dashboard and audits can run against a local directory or YAML file
 rather than a cluster:
 ```bash
 polaris audit --audit-path ./deploy/
+cat pod.yaml | polaris audit --audit-path -
 ```
 
 #### Running with CI/CD
