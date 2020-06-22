@@ -2,7 +2,6 @@ package kube
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/sirupsen/logrus"
@@ -39,13 +38,11 @@ func NewGenericWorkloadFromPod(podResource kubeAPICoreV1.Pod, originalObject int
 }
 
 // NewGenericWorkload builds a new workload for a given Pod
-func NewGenericWorkload(podResource kubeAPICoreV1.Pod, dynamicClientPointer *dynamic.Interface, restMapperPointer *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) (GenericWorkload, error) {
+func NewGenericWorkload(podResource kubeAPICoreV1.Pod, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) (GenericWorkload, error) {
 	workload, err := NewGenericWorkloadFromPod(podResource, nil)
 	if err != nil {
 		return workload, err
 	}
-	dynamicClient := *dynamicClientPointer
-	restMapper := *restMapperPointer
 	// If an owner exists then set the name to the workload.
 	// This allows us to handle CRDs creating Workloads or DeploymentConfigs in OpenShift.
 	owners := workload.ObjectMeta.GetOwnerReferences()
@@ -63,22 +60,15 @@ func NewGenericWorkload(podResource kubeAPICoreV1.Pod, dynamicClientPointer *dyn
 		lastKey = key
 		abstractObject, ok := objectCache[key]
 		if !ok {
-			fqKind := schema.FromAPIVersionAndKind(firstOwner.APIVersion, firstOwner.Kind)
-			mapping, err := restMapper.RESTMapping(fqKind.GroupKind(), fqKind.Version)
+			err = cacheAllObjectsOfKind(firstOwner.APIVersion, firstOwner.Kind, dynamicClient, restMapper, objectCache)
 			if err != nil {
-				logrus.Warnf("Error retrieving mapping %s of API %s and Kind %s because of error: %v ", firstOwner.Name, firstOwner.APIVersion, firstOwner.Kind, err)
-				return workload, err
-			}
-
-			err = cacheAllObjectsOfKind(dynamicClient, mapping.Resource, objectCache)
-			if err != nil {
-				logrus.Warnf("Error getting objects of Kind %s %v", firstOwner.Kind, err)
+				logrus.Warnf("Error caching objects of Kind %s %v", firstOwner.Kind, err)
 				return workload, nil // Note -we don't return an error so we can recover from the case where RBAC is insufficient
 			}
 			abstractObject, ok = objectCache[key]
 			if !ok {
 				logrus.Errorf("Cache missed %s again", key)
-				return workload, errors.New("Could not retrieve parent object")
+				return workload, nil
 			}
 		}
 
@@ -105,4 +95,24 @@ func NewGenericWorkload(podResource kubeAPICoreV1.Pod, dynamicClientPointer *dyn
 		workload.OriginalObjectJSON = bytes
 	}
 	return workload, nil
+}
+
+func cacheAllObjectsOfKind(apiVersion, kind string, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) error {
+	fqKind := schema.FromAPIVersionAndKind(apiVersion, kind)
+	mapping, err := (*restMapper).RESTMapping(fqKind.GroupKind(), fqKind.Version)
+	if err != nil {
+		logrus.Warnf("Error retrieving mapping of API %s and Kind %s because of error: %v ", apiVersion, kind, err)
+		return err
+	}
+
+	objects, err := (*dynamicClient).Resource(mapping.Resource).Namespace("").List(kubeAPIMetaV1.ListOptions{})
+	if err != nil {
+		logrus.Warnf("Error retrieving parent object API %s and Kind %s because of error: %v ", mapping.Resource.Version, mapping.Resource.Resource, err)
+		return err
+	}
+	for idx, object := range objects.Items {
+		key := fmt.Sprintf("%s/%s/%s", object.GetKind(), object.GetNamespace(), object.GetName())
+		objectCache[key] = objects.Items[idx]
+	}
+	return nil
 }
