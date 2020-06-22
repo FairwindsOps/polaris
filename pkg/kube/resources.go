@@ -2,7 +2,6 @@ package kube
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -17,7 +16,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	k8sYaml "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -161,20 +159,6 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 		Controllers:   controllers,
 	}
 	return &api, nil
-}
-
-func cacheAllObjectsOfKind(dynamicClient dynamic.Interface, groupVersionResource schema.GroupVersionResource, objectCache map[string]unstructured.Unstructured) error {
-	objects, err := dynamicClient.Resource(groupVersionResource).Namespace("").List(metav1.ListOptions{})
-	if err != nil {
-		logrus.Warnf("Error retrieving parent object API %s and Kind %s because of error: %v ", groupVersionResource.Version, groupVersionResource.Resource, err)
-		return err
-	}
-	for idx, object := range objects.Items {
-
-		key := fmt.Sprintf("%s/%s/%s", object.GetKind(), object.GetNamespace(), object.GetName())
-		objectCache[key] = objects.Items[idx]
-	}
-	return nil
 }
 
 // LoadControllers loads a list of controllers from the kubeResources Pods
