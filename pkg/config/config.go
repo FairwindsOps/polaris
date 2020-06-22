@@ -93,6 +93,9 @@ func Parse(rawBytes []byte) (Configuration, error) {
 			return conf, err
 		}
 		conf.CustomChecks[key] = check
+		if _, ok := conf.Checks[key]; !ok {
+			return conf, fmt.Errorf("no severity specified for custom check %s. Please add the following to your configuration:\n\nchecks:\n  %s: warning # or danger/ignore\n\nto enable your check", key, key)
+		}
 	}
 	return conf, conf.Validate()
 }
