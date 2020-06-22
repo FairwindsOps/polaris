@@ -80,7 +80,7 @@ require (
 	golang.org/x/text v0.3.2
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
 	golang.org/x/tools v0.0.0-20200606014950-c42cb6316fb6
-	google.golang.org/api v0.26.0
+	google.golang.org/api v0.28.0
 	google.golang.org/appengine v1.6.6
 	google.golang.org/genproto v0.0.0-20200608115520-7c474a2e3482
 	google.golang.org/grpc v1.29.1
