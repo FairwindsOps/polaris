@@ -9,7 +9,6 @@ checks:
   # images
   tagNotSpecified: danger
   pullPolicyNotAlways: ignore
-  imageRegistry: warning
   # healthChecks
   readinessProbeMissing: warning
   livenessProbeMissing: warning
@@ -25,6 +24,9 @@ checks:
   runAsPrivileged: danger
   dangerousCapabilities: danger
   insecureCapabilities: warning
+  # custom
+  resourceLimits: warning
+  imageRegistry: danger
 
 exemptions:
   - controllerNames:
