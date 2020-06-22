@@ -241,6 +241,40 @@ func addResourcesFromYaml(contents string, resources *ResourceProvider) error {
 	return nil
 }
 
+// GetWorkloadFromBytes parses a GenericWorkload
+func GetWorkloadFromBytes(contentBytes []byte) (*GenericWorkload, error) {
+	yamlNode := make(map[string]interface{})
+	err := yaml.Unmarshal(contentBytes, &yamlNode)
+	if err != nil {
+		logrus.Errorf("Invalid YAML: %s", string(contentBytes))
+		return nil, err
+	}
+	finalDoc := make(map[string]interface{})
+	finalDoc["metadata"] = yamlNode["metadata"]
+	finalDoc["apiVersion"] = "v1"
+	finalDoc["kind"] = "Pod"
+	podSpec := GetPodSpec(yamlNode)
+	if podSpec == nil {
+		return nil, nil
+	}
+	finalDoc["spec"] = podSpec
+	marshaledYaml, err := yaml.Marshal(finalDoc)
+	if err != nil {
+		logrus.Errorf("Could not marshal yaml: %v", err)
+		return nil, err
+	}
+	decoder := k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(marshaledYaml), 1000)
+	pod := corev1.Pod{}
+	err = decoder.Decode(&pod)
+	newController, err := NewGenericWorkloadFromPod(pod, yamlNode)
+
+	if err != nil {
+		return nil, err
+	}
+	newController.Kind = yamlNode["kind"].(string)
+	return &newController, nil
+}
+
 func addResourceFromString(contents string, resources *ResourceProvider) error {
 	contentBytes := []byte(contents)
 	decoder := k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(contentBytes), 1000)
@@ -268,36 +302,11 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 		}
 		resources.Controllers = append(resources.Controllers, workload)
 	} else {
-		yamlNode := make(map[string]interface{})
-		err = yaml.Unmarshal(contentBytes, &yamlNode)
-		if err != nil {
-			logrus.Errorf("Invalid YAML: %s", string(contents))
+		newController, err := GetWorkloadFromBytes(contentBytes)
+		if err != nil || newController == nil {
 			return err
 		}
-		finalDoc := make(map[string]interface{})
-		finalDoc["metadata"] = yamlNode["metadata"]
-		finalDoc["apiVersion"] = "v1"
-		finalDoc["kind"] = "Pod"
-		podSpec := GetPodSpec(yamlNode)
-		if podSpec == nil {
-			return nil
-		}
-		finalDoc["spec"] = podSpec
-		marshaledYaml, err := yaml.Marshal(finalDoc)
-		if err != nil {
-			logrus.Errorf("Could not marshal yaml: %v", err)
-			return err
-		}
-		decoder := k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(marshaledYaml), 1000)
-		pod := corev1.Pod{}
-		err = decoder.Decode(&pod)
-		newController, err := NewGenericWorkloadFromPod(pod, yamlNode)
-
-		if err != nil {
-			return err
-		}
-		newController.Kind = resource.Kind
-		resources.Controllers = append(resources.Controllers, newController)
+		resources.Controllers = append(resources.Controllers, *newController)
 	}
 	return err
 }
