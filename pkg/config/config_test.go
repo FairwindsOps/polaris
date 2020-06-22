@@ -74,6 +74,21 @@ customChecks:
       }
 `
 
+var confCustomChecksMissing = `
+customChecks:
+  foo:
+    successMessage: Security context is set
+    failureMessage: Security context should be set
+    category: Security
+    target: Container
+    schema:
+      '$schema': http://json-schema.org/draft-07/schema
+      type: object
+      required:
+      - securityContext
+
+`
+
 func TestParseError(t *testing.T) {
 	_, err := Parse([]byte(confInvalid))
 	expectedErr := "Decoding config failed: error unmarshaling JSON: while decoding JSON: json: cannot unmarshal string into Go value of type config.Configuration"
@@ -152,6 +167,11 @@ func TestConfigWithCustomChecks(t *testing.T) {
 	isValid, err = parsedConf.CustomChecks["foo"].CheckObject(invalid)
 	assert.NoError(t, err)
 	assert.Equal(t, false, isValid)
+}
+
+func TestCustomChecksMissingSeverity(t *testing.T) {
+	_, err := Parse([]byte(confCustomChecksMissing))
+	assert.Error(t, err, "Expected error when check has no severity set")
 }
 
 func testParsedConfig(t *testing.T, config *Configuration) {
