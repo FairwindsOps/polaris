@@ -2,13 +2,13 @@
 
 set -eo pipefail
 
-helm template $CHARTS_DIR/stable/polaris/ \
-  --name polaris --namespace polaris \
+helm template polaris $CHARTS_DIR/stable/polaris/ \
+  --namespace polaris \
   --set templateOnly=true \
   > deploy/dashboard.yaml
 
-helm template $CHARTS_DIR/stable/polaris/ \
-  --name polaris --namespace polaris \
+helm template polaris $CHARTS_DIR/stable/polaris/ \
+  --namespace polaris \
   --set templateOnly=true \
   --set webhook.enable=true \
   --set dashboard.enable=false \

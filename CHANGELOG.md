@@ -1,5 +1,15 @@
 # x.x.x (next release)
 
+# 1.1.0
+* Add namespace filter in UI
+* Add priorityClass check
+* Support reading from STDIN
+* Ensure severity is set for all custom checks
+* Support audit files which use \r or \r\n as newline character
+* Add option to exempt an entire controller from checks via config file
+* Fixed case where parent resources trigger error
+* Fixed UI zero-state
+
 # 1.0.3
 * Fixed case where parent resources trigger error
 * Fixed dashboard link when `--base-path` is set
