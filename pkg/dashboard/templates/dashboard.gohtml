@@ -135,6 +135,22 @@
             <div class="name"><span class="caret-expander"></span>
               <span class="controller-type">{{ .Kind }}:</span>
               <strong>{{ .Name }}</strong></div>
+
+              <div class="result-messages expandable-content">
+                <h4>Controller Spec:</h4>
+                <ul class="message-list">
+                  {{ range $message := .Results.GetSortedResults }}
+                    <li class="{{ getResultClass . }}">
+                      <i class="message-icon {{ getIcon $message }}"></i>
+                      <span class="message">{{ .Message }}</span>
+                      <a class="more-info" href="details/{{ getCategoryLink .Category }}">
+                        <i class="far fa-question-circle"></i>
+                      </a>
+                    </li>
+                  {{ end }}
+                </ul>
+              </div>
+
               <div class="result-messages expandable-content">
                 <h4>Pod Spec:</h4>
                 <ul class="message-list">
@@ -149,6 +165,7 @@
                   {{ end }}
                 </ul>
               </div>
+
               {{ range .PodResult.ContainerResults }}
                 <div class="result-messages expandable-content">
                   <h4>Container: {{ .Name }}</h4>
