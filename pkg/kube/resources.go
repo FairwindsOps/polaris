@@ -52,6 +52,7 @@ func CreateResourceProvider(directory, workload string) (*ResourceProvider, erro
 	return CreateResourceProviderFromCluster()
 }
 
+// CreateResourceProviderFromWorkload creates a new ResourceProvider that just contains one workload
 func CreateResourceProviderFromWorkload(workload string) (*ResourceProvider, error) {
 	kubeConf, configError := config.GetConfig()
 	if configError != nil {

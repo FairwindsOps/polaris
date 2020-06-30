@@ -24,6 +24,7 @@ type GenericWorkload struct {
 	OriginalObjectJSON []byte
 }
 
+// NewGenericWorkloadFromUnstructured creates a workload from an unstructured.Unstructured
 func NewGenericWorkloadFromUnstructured(kind string, unst *unstructured.Unstructured) (GenericWorkload, error) {
 	workload := GenericWorkload{
 		Kind: kind,
