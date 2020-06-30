@@ -184,7 +184,7 @@ func GetRouter(c config.Configuration, auditPath string, port int, basePath stri
 	router.HandleFunc("/results.json", func(w http.ResponseWriter, r *http.Request) {
 		adjustedConf := getConfigForQuery(c, r.URL.Query())
 		if auditData == nil {
-			k, err := kube.CreateResourceProvider(auditPath)
+			k, err := kube.CreateResourceProvider(auditPath, "")
 			if err != nil {
 				logrus.Errorf("Error fetching Kubernetes resources %v", err)
 				http.Error(w, "Error fetching Kubernetes resources", http.StatusInternalServerError)
@@ -217,7 +217,7 @@ func GetRouter(c config.Configuration, auditPath string, port int, basePath stri
 		adjustedConf := getConfigForQuery(c, r.URL.Query())
 
 		if auditData == nil {
-			k, err := kube.CreateResourceProvider(auditPath)
+			k, err := kube.CreateResourceProvider(auditPath, "")
 			if err != nil {
 				logrus.Errorf("Error fetching Kubernetes resources %v", err)
 				http.Error(w, "Error fetching Kubernetes resources", http.StatusInternalServerError)
