@@ -13,6 +13,7 @@ import (
 
 	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -156,7 +157,8 @@ func applyControllerSchemaChecks(conf *config.Configuration, controller kube.Gen
 		}
 		passes, err := check.CheckController(controller.OriginalObjectJSON)
 		if err != nil {
-			return nil, err
+			logrus.Warningf("Error checking %s for %s/%s: %s (pod is possibly orphaned)", checkID, controller.ObjectMeta.GetNamespace(), controller.ObjectMeta.GetName(), err)
+			continue
 		}
 		results[check.ID] = makeResult(conf, check, passes)
 	}
