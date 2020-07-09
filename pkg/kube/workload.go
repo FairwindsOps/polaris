@@ -44,7 +44,7 @@ func NewGenericWorkload(podResource kubeAPICoreV1.Pod, dynamicClient *dynamic.In
 		return workload, err
 	}
 	if len(workload.OriginalObjectJSON) == 0 {
-		return NewGenericWorkloadFromPod(podResource, nil)
+		return NewGenericWorkloadFromPod(podResource, podResource)
 	}
 	return workload, err
 }
