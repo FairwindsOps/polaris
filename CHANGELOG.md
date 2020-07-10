@@ -1,5 +1,9 @@
 # x.x.x (next release)
 
+# 1.1.1
+* Show controller checks on dashboard
+* Fix for orphaned pods w/ controller checks
+
 # 1.1.0
 * Add namespace filter in UI
 * Add priorityClass check
