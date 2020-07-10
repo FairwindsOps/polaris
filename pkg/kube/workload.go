@@ -39,6 +39,17 @@ func NewGenericWorkloadFromPod(podResource kubeAPICoreV1.Pod, originalObject int
 
 // NewGenericWorkload builds a new workload for a given Pod
 func NewGenericWorkload(podResource kubeAPICoreV1.Pod, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) (GenericWorkload, error) {
+	workload, err := newGenericWorkload(podResource, dynamicClient, restMapper, objectCache)
+	if err != nil {
+		return workload, err
+	}
+	if len(workload.OriginalObjectJSON) == 0 {
+		return NewGenericWorkloadFromPod(podResource, podResource)
+	}
+	return workload, err
+}
+
+func newGenericWorkload(podResource kubeAPICoreV1.Pod, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) (GenericWorkload, error) {
 	workload, err := NewGenericWorkloadFromPod(podResource, nil)
 	if err != nil {
 		return workload, err
