@@ -209,10 +209,10 @@ webhook
       If specified, audits one or more YAML files instead of a cluster
 --display-name string
       An optional identifier for the audit
+--format string
+      Output format for results - json, yaml, or score (default "json")
 --output-file string
       Destination file for audit results
---output-format string
-      Output format for results - json, yaml, or score (default "json")
 --output-url string
       Destination URL to send audit results
 --set-exit-code-below-score int
