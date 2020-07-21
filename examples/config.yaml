@@ -9,7 +9,7 @@ checks:
   memoryLimitsMissing: warning
   # images
   tagNotSpecified: danger
-  pullPolicyNotAlways: ignore
+  pullPolicyNotAlways: warning
   # healthChecks
   readinessProbeMissing: warning
   livenessProbeMissing: warning
