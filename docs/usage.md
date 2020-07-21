@@ -115,6 +115,11 @@ brew install reactiveops/tap/polaris
 polaris dashboard --port 8080
 ```
 
+You can also point the dashboard to the local filesystem, instead of a live cluster:
+```bash
+polaris dashboard --port 8080 --audit-path=./deploy/
+```
+
 ## Webhook
 ### kubectl
 ```bash
@@ -145,11 +150,17 @@ polaris audit --format score
 # 92
 ```
 
-Both the dashboard and audits can run against a local directory or YAML file
-rather than a cluster:
+Audits can run against a local directory or YAML file rather than a cluster:
 ```bash
 polaris audit --audit-path ./deploy/
+
+# or to use STDIN
 cat pod.yaml | polaris audit --audit-path -
+```
+
+You can also run the audit on a single resource instead of the entire cluster:
+```bash
+polaris audit --resource "nginx-ingress/Deployment.apps/v1/default-backend"
 ```
 
 #### Running with CI/CD
@@ -207,6 +218,8 @@ webhook
 # audit flags
 --audit-path string
       If specified, audits one or more YAML files instead of a cluster
+--resource string
+      If specified, audit a specific resource, in the format namespace/kind/version/name, e.g. nginx-ingress/Deployment.apps/v1/default-backend
 --display-name string
       An optional identifier for the audit
 --format string
