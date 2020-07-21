@@ -32,7 +32,7 @@ require (
 	github.com/google/btree v1.0.0
 	github.com/google/gofuzz v1.1.0
 	github.com/google/uuid v1.1.1
-	github.com/googleapis/gnostic v0.3.1
+	github.com/googleapis/gnostic v0.5.1
 	github.com/gophercloud/gophercloud v0.0.0-20190516165734-b3a23cc94cc5
 	github.com/gorilla/mux v1.7.4
 	github.com/gregjones/httpcache v0.0.0-20190212212710-3befbb6ad0cc
@@ -86,7 +86,7 @@ require (
 	google.golang.org/grpc v1.30.0
 	gopkg.in/inf.v0 v0.9.1
 	gopkg.in/yaml.v2 v2.3.0
-	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
+	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
 	k8s.io/api v0.0.0-20181213150558-05914d821849
 	k8s.io/apimachinery v0.0.0-20181127025237-2b1284ed4c93
 	k8s.io/client-go v0.0.0-20181213151034-8d9ed539ba31
