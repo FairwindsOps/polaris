@@ -15,6 +15,7 @@
 package validator
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -36,14 +37,14 @@ func TestValidatePod(t *testing.T) {
 	}
 
 	k8s, _ := test.SetupTestAPI()
-	k8s = test.SetupAddControllers(k8s, "test")
+	k8s = test.SetupAddControllers(context.Background(), k8s, "test")
 	p := test.MockPod()
 	deployment, err := kube.NewGenericWorkloadFromPod(p, nil)
 	assert.NoError(t, err)
 	expectedSum := CountSummary{
 		Successes: uint(4),
 		Warnings:  uint(0),
-		Dangers:    uint(0),
+		Dangers:   uint(0),
 	}
 
 	expectedResults := ResultSet{
@@ -52,7 +53,7 @@ func TestValidatePod(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
-	actualPodResult, err := ValidatePod(&c, deployment)
+	actualPodResult, err := ValidatePod(context.Background(), &c, deployment)
 	if err != nil {
 		panic(err)
 	}
@@ -73,7 +74,7 @@ func TestInvalidIPCPod(t *testing.T) {
 	}
 
 	k8s, _ := test.SetupTestAPI()
-	k8s = test.SetupAddControllers(k8s, "test")
+	k8s = test.SetupAddControllers(context.Background(), k8s, "test")
 	p := test.MockPod()
 	p.Spec.HostIPC = true
 	workload, err := kube.NewGenericWorkloadFromPod(p, nil)
@@ -81,7 +82,7 @@ func TestInvalidIPCPod(t *testing.T) {
 	expectedSum := CountSummary{
 		Successes: uint(3),
 		Warnings:  uint(0),
-		Dangers:    uint(1),
+		Dangers:   uint(1),
 	}
 	expectedResults := ResultSet{
 		"hostIPCSet":     {ID: "hostIPCSet", Message: "Host IPC should not be configured", Success: false, Severity: "danger", Category: "Security"},
@@ -89,7 +90,7 @@ func TestInvalidIPCPod(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
-	actualPodResult, err := ValidatePod(&c, workload)
+	actualPodResult, err := ValidatePod(context.Background(), &c, workload)
 	if err != nil {
 		panic(err)
 	}
@@ -110,7 +111,7 @@ func TestInvalidNeworkPod(t *testing.T) {
 	}
 
 	k8s, _ := test.SetupTestAPI()
-	k8s = test.SetupAddControllers(k8s, "test")
+	k8s = test.SetupAddControllers(context.Background(), k8s, "test")
 	p := test.MockPod()
 	p.Spec.HostNetwork = true
 	workload, err := kube.NewGenericWorkloadFromPod(p, nil)
@@ -118,7 +119,7 @@ func TestInvalidNeworkPod(t *testing.T) {
 	expectedSum := CountSummary{
 		Successes: uint(3),
 		Warnings:  uint(1),
-		Dangers:    uint(0),
+		Dangers:   uint(0),
 	}
 
 	expectedResults := ResultSet{
@@ -127,7 +128,7 @@ func TestInvalidNeworkPod(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
-	actualPodResult, err := ValidatePod(&c, workload)
+	actualPodResult, err := ValidatePod(context.Background(), &c, workload)
 	if err != nil {
 		panic(err)
 	}
@@ -148,7 +149,7 @@ func TestInvalidPIDPod(t *testing.T) {
 	}
 
 	k8s, _ := test.SetupTestAPI()
-	k8s = test.SetupAddControllers(k8s, "test")
+	k8s = test.SetupAddControllers(context.Background(), k8s, "test")
 	p := test.MockPod()
 	p.Spec.HostPID = true
 	workload, err := kube.NewGenericWorkloadFromPod(p, nil)
@@ -156,7 +157,7 @@ func TestInvalidPIDPod(t *testing.T) {
 	expectedSum := CountSummary{
 		Successes: uint(3),
 		Warnings:  uint(0),
-		Dangers:    uint(1),
+		Dangers:   uint(1),
 	}
 
 	expectedResults := ResultSet{
@@ -165,7 +166,7 @@ func TestInvalidPIDPod(t *testing.T) {
 		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Success: true, Severity: "warning", Category: "Networking"},
 	}
 
-	actualPodResult, err := ValidatePod(&c, workload)
+	actualPodResult, err := ValidatePod(context.Background(), &c, workload)
 	if err != nil {
 		panic(err)
 	}
@@ -192,7 +193,7 @@ func TestExemption(t *testing.T) {
 	}
 
 	k8s, _ := test.SetupTestAPI()
-	k8s = test.SetupAddControllers(k8s, "test")
+	k8s = test.SetupAddControllers(context.Background(), k8s, "test")
 	p := test.MockPod()
 	p.Spec.HostIPC = true
 	p.ObjectMeta = metav1.ObjectMeta{
@@ -203,14 +204,14 @@ func TestExemption(t *testing.T) {
 	expectedSum := CountSummary{
 		Successes: uint(3),
 		Warnings:  uint(0),
-		Dangers:    uint(0),
+		Dangers:   uint(0),
 	}
 	expectedResults := ResultSet{
 		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Success: true, Severity: "warning", Category: "Networking"},
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
-	actualPodResult, err := ValidatePod(&c, workload)
+	actualPodResult, err := ValidatePod(context.Background(), &c, workload)
 	if err != nil {
 		panic(err)
 	}

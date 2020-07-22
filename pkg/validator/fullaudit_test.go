@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"context"
 	"testing"
 
 	conf "github.com/fairwindsops/polaris/pkg/config"
@@ -11,11 +12,11 @@ import (
 
 func TestGetTemplateData(t *testing.T) {
 	k8s, dynamicClient := test.SetupTestAPI()
-	k8s = test.SetupAddControllers(k8s, "test")
-	k8s = test.SetupAddExtraControllerVersions(k8s, "test-extra")
+	k8s = test.SetupAddControllers(context.Background(), k8s, "test")
+	k8s = test.SetupAddExtraControllerVersions(context.Background(), k8s, "test-extra")
 	// TODO figure out how to mock out dynamic client.
 	// and add in pods for all controllers to fill out tests.
-	resources, err := kube.CreateResourceProviderFromAPI(k8s, "test", &dynamicClient)
+	resources, err := kube.CreateResourceProviderFromAPI(context.Background(), k8s, "test", &dynamicClient)
 	assert.Equal(t, err, nil, "error should be nil")
 
 	c := conf.Configuration{
@@ -28,10 +29,11 @@ func TestGetTemplateData(t *testing.T) {
 	sum := CountSummary{
 		Successes: uint(0),
 		Warnings:  uint(1),
-		Dangers:    uint(1),
+		Dangers:   uint(1),
 	}
 
-	actualAudit, err := RunAudit(c, resources)
+	actualAudit, err := RunAudit(context.Background(), c, resources)
+
 	assert.Equal(t, err, nil, "error should be nil")
 
 	assert.EqualValues(t, sum, actualAudit.GetSummary())

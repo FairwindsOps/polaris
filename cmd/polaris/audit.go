@@ -16,6 +16,7 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -56,7 +57,7 @@ var auditCmd = &cobra.Command{
 			config.DisplayName = displayName
 		}
 
-		auditData := runAndReportAudit(config, auditPath, auditOutputFile, auditOutputURL, auditOutputFormat)
+		auditData := runAndReportAudit(cmd.Context(), config, auditPath, auditOutputFile, auditOutputURL, auditOutputFormat)
 
 		summary := auditData.GetSummary()
 		score := summary.GetScore()
@@ -70,14 +71,14 @@ var auditCmd = &cobra.Command{
 	},
 }
 
-func runAndReportAudit(c conf.Configuration, auditPath string, outputFile string, outputURL string, outputFormat string) validator.AuditData {
+func runAndReportAudit(ctx context.Context, c conf.Configuration, auditPath string, outputFile string, outputURL string, outputFormat string) validator.AuditData {
 	// Create a kubernetes client resource provider
-	k, err := kube.CreateResourceProvider(auditPath)
+	k, err := kube.CreateResourceProvider(ctx, auditPath)
 	if err != nil {
 		logrus.Errorf("Error fetching Kubernetes resources %v", err)
 		os.Exit(1)
 	}
-	auditData, err := validator.RunAudit(c, k)
+	auditData, err := validator.RunAudit(ctx, c, k)
 
 	if err != nil {
 		logrus.Errorf("Error while running audit on resources: %v", err)

@@ -26,21 +26,19 @@ import (
 	validator "github.com/fairwindsops/polaris/pkg/validator"
 
 	"github.com/sirupsen/logrus"
-	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
-	"sigs.k8s.io/controller-runtime/pkg/webhook/admission/builder"
-	"sigs.k8s.io/controller-runtime/pkg/webhook/admission/types"
 )
 
 // Validator validates k8s resources.
 type Validator struct {
 	client  client.Client
-	decoder types.Decoder
+	decoder *admission.Decoder
 	Config  config.Configuration
 }
 
@@ -52,10 +50,8 @@ func (v *Validator) InjectClient(c client.Client) error {
 	return nil
 }
 
-var _ inject.Decoder = &Validator{}
-
 // InjectDecoder injects the decoder.
-func (v *Validator) InjectDecoder(d types.Decoder) error {
+func (v *Validator) InjectDecoder(d *admission.Decoder) error {
 	v.decoder = d
 	return nil
 }
@@ -63,26 +59,13 @@ func (v *Validator) InjectDecoder(d types.Decoder) error {
 var _ admission.Handler = &Validator{}
 
 // NewWebhook creates a validating admission webhook for the apiType.
-func NewWebhook(name string, mgr manager.Manager, validator Validator, apiType runtime.Object) (*admission.Webhook, error) {
-	name = fmt.Sprintf("%s.k8s.io", name)
+func NewWebhook(name string, mgr manager.Manager, validator Validator, apiType runtime.Object) {
 	path := fmt.Sprintf("/validating-%s", name)
 
-	webhook, err := builder.NewWebhookBuilder().
-		Name(name).
-		Validating().
-		Path(path).
-		Operations(admissionregistrationv1beta1.Create, admissionregistrationv1beta1.Update).
-		WithManager(mgr).
-		ForType(apiType).
-		Handlers(&validator).
-		Build()
-	if err != nil {
-		return nil, err
-	}
-	return webhook, nil
+	mgr.GetWebhookServer().Register(path, &webhook.Admission{Handler: &Validator{client: mgr.GetClient()}})
 }
 
-func (v *Validator) handleInternal(ctx context.Context, req types.Request) (*validator.PodResult, error) {
+func (v *Validator) handleInternal(ctx context.Context, req admission.Request) (*validator.PodResult, error) {
 	pod := corev1.Pod{}
 	var originalObject interface{}
 	if req.AdmissionRequest.Kind.Kind == "Pod" {
@@ -120,7 +103,7 @@ func (v *Validator) handleInternal(ctx context.Context, req types.Request) (*val
 		return nil, err
 	}
 	controller.Kind = req.AdmissionRequest.Kind.Kind
-	controllerResult, err := validator.ValidateController(&v.Config, controller)
+	controllerResult, err := validator.ValidateController(ctx, &v.Config, controller)
 	if err != nil {
 		return nil, err
 	}
@@ -128,11 +111,11 @@ func (v *Validator) handleInternal(ctx context.Context, req types.Request) (*val
 }
 
 // Handle for Validator to run validation checks.
-func (v *Validator) Handle(ctx context.Context, req types.Request) types.Response {
+func (v *Validator) Handle(ctx context.Context, req admission.Request) admission.Response {
 	podResult, err := v.handleInternal(ctx, req)
 	if err != nil {
 		logrus.Errorf("Error validating request: %v", err)
-		return admission.ErrorResponse(http.StatusBadRequest, err)
+		return admission.Errored(http.StatusBadRequest, err)
 	}
 	allowed := true
 	reason := ""

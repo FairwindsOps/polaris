@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"context"
 	"testing"
 
 	conf "github.com/fairwindsops/polaris/pkg/config"
@@ -143,14 +144,14 @@ func TestValidateResourcesInit(t *testing.T) {
 	parsedConf, err := conf.Parse([]byte(resourceConfRanges))
 	assert.NoError(t, err, "Expected no error when parsing config")
 
-	results, err := applyContainerSchemaChecks(&parsedConf, controller, emptyContainer, false)
+	results, err := applyContainerSchemaChecks(context.Background(), &parsedConf, controller, emptyContainer, false)
 	if err != nil {
 		panic(err)
 	}
 	assert.Equal(t, uint(1), results.GetSummary().Dangers)
 	assert.Equal(t, uint(1), results.GetSummary().Warnings)
 
-	results, err = applyContainerSchemaChecks(&parsedConf, controller, emptyContainer, true)
+	results, err = applyContainerSchemaChecks(context.Background(), &parsedConf, controller, emptyContainer, true)
 	if err != nil {
 		panic(err)
 	}

@@ -1,6 +1,7 @@
 package test
 
 import (
+	"context"
 	"io/ioutil"
 	"path/filepath"
 	"runtime"
@@ -56,7 +57,7 @@ func TestChecks(t *testing.T) {
 		assert.NoError(t, err)
 		c, err := config.Parse([]byte("checks:\n  " + tc.check + ": danger"))
 		assert.NoError(t, err)
-		result, err := validator.ValidateController(&c, *workload)
+		result, err := validator.ValidateController(context.Background(), &c, *workload)
 		assert.NoError(t, err)
 		summary := result.GetSummary()
 		if tc.failure {

@@ -74,7 +74,10 @@ var webhookCmd = &cobra.Command{
 	Long:  `Runs the webhook webserver.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		logrus.Debug("Setting up controller manager")
-		mgr, err := manager.New(k8sConfig.GetConfigOrDie(), manager.Options{})
+		mgr, err := manager.New(k8sConfig.GetConfigOrDie(), manager.Options{
+			CertDir: "/opt/cert",
+			Port:    webhookPort,
+		})
 		if err != nil {
 			logrus.Errorf("Unable to set up overall controller manager: %v", err)
 			os.Exit(1)
@@ -97,8 +100,6 @@ var webhookCmd = &cobra.Command{
 
 		logrus.Info("Setting up webhook server")
 		as, err := webhook.NewServer(polarisResourceName, mgr, webhook.ServerOptions{
-			Port:                          int32(webhookPort),
-			CertDir:                       "/opt/cert",
 			DisableWebhookConfigInstaller: &disableWebhookConfigInstaller,
 			BootstrapOptions: &webhook.BootstrapOptions{
 				ValidatingWebhookConfigName: polarisResourceName,
@@ -130,22 +131,15 @@ var webhookCmd = &cobra.Command{
 		// Iterate all the configurations supported controllers to scan and register them for webhooks
 		// Should only register controllers that are configured to be scanned
 		logrus.Debug("Registering webhooks to the webhook server")
-		var webhooks []webhook.Webhook
 		for name, supportedAPIType := range supportedVersions {
 			webhookName := strings.ToLower(name)
 			webhookName = strings.ReplaceAll(webhookName, "/", "-")
-			hook, err := fwebhook.NewWebhook(webhookName, mgr, fwebhook.Validator{Config: config}, supportedAPIType)
+			err := fwebhook.NewWebhook(webhookName, mgr, fwebhook.Validator{Config: config}, supportedAPIType)
 			if err != nil {
 				logrus.Warningf("Couldn't build webhook %s: %v", webhookName, err)
 				continue
 			}
-			webhooks = append(webhooks, hook)
 			logrus.Infof("%s webhook started", webhookName)
-		}
-
-		if err = as.Register(webhooks...); err != nil {
-			logrus.Debugf("Unable to register webhooks in the admission server: %v", err)
-			os.Exit(1)
 		}
 
 		logrus.Debug("Starting webhook manager")

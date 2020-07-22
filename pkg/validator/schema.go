@@ -2,6 +2,7 @@ package validator
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"sort"
@@ -113,7 +114,7 @@ func getExemptKey(checkID string) string {
 	return fmt.Sprintf("polaris.fairwinds.com/%s-exempt", checkID)
 }
 
-func applyPodSchemaChecks(conf *config.Configuration, controller kube.GenericWorkload) (ResultSet, error) {
+func applyPodSchemaChecks(ctx context.Context, conf *config.Configuration, controller kube.GenericWorkload) (ResultSet, error) {
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
 	objectAnnotations := controller.ObjectMeta.GetAnnotations()
@@ -129,7 +130,7 @@ func applyPodSchemaChecks(conf *config.Configuration, controller kube.GenericWor
 		} else if check == nil {
 			continue
 		}
-		passes, err := check.CheckPod(&controller.PodSpec)
+		passes, err := check.CheckPod(ctx, &controller.PodSpec)
 		if err != nil {
 			return nil, err
 		}
@@ -138,7 +139,7 @@ func applyPodSchemaChecks(conf *config.Configuration, controller kube.GenericWor
 	return results, nil
 }
 
-func applyControllerSchemaChecks(conf *config.Configuration, controller kube.GenericWorkload) (ResultSet, error) {
+func applyControllerSchemaChecks(ctx context.Context, conf *config.Configuration, controller kube.GenericWorkload) (ResultSet, error) {
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
 	objectAnnotations := controller.ObjectMeta.GetAnnotations()
@@ -154,7 +155,7 @@ func applyControllerSchemaChecks(conf *config.Configuration, controller kube.Gen
 		} else if check == nil {
 			continue
 		}
-		passes, err := check.CheckController(controller.OriginalObjectJSON)
+		passes, err := check.CheckController(ctx, controller.OriginalObjectJSON)
 		if err != nil {
 			return nil, err
 		}
@@ -163,7 +164,7 @@ func applyControllerSchemaChecks(conf *config.Configuration, controller kube.Gen
 	return results, nil
 }
 
-func applyContainerSchemaChecks(conf *config.Configuration, controller kube.GenericWorkload, container *corev1.Container, isInit bool) (ResultSet, error) {
+func applyContainerSchemaChecks(ctx context.Context, conf *config.Configuration, controller kube.GenericWorkload, container *corev1.Container, isInit bool) (ResultSet, error) {
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
 	objectAnnotations := controller.ObjectMeta.GetAnnotations()
@@ -183,9 +184,9 @@ func applyContainerSchemaChecks(conf *config.Configuration, controller kube.Gene
 			podCopy := controller.PodSpec
 			podCopy.InitContainers = []corev1.Container{}
 			podCopy.Containers = []corev1.Container{*container}
-			passes, err = check.CheckPod(&podCopy)
+			passes, err = check.CheckPod(ctx, &podCopy)
 		} else {
-			passes, err = check.CheckContainer(container)
+			passes, err = check.CheckContainer(ctx, container)
 		}
 		if err != nil {
 			return nil, err

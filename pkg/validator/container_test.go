@@ -15,6 +15,7 @@
 package validator
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -68,7 +69,7 @@ func testValidateWithWorkload(t *testing.T, container *corev1.Container, resourc
 	parsedConf, err := conf.Parse([]byte(*resourceConf))
 	assert.NoError(t, err, "Expected no error when parsing config")
 
-	results, err := applyContainerSchemaChecks(&parsedConf, workload, container, false)
+	results, err := applyContainerSchemaChecks(context.Background(), &parsedConf, workload, container, false)
 	if err != nil {
 		panic(err)
 	}
@@ -89,7 +90,7 @@ func TestValidateResourcesEmptyConfig(t *testing.T) {
 		Name: "Empty",
 	}
 
-	results, err := applyContainerSchemaChecks(&conf.Configuration{}, getEmptyWorkload(t, ""), container, false)
+	results, err := applyContainerSchemaChecks(context.Background(), &conf.Configuration{}, getEmptyWorkload(t, ""), container, false)
 	if err != nil {
 		panic(err)
 	}
@@ -186,7 +187,7 @@ func TestValidateHealthChecks(t *testing.T) {
 	for idx, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			controller := getEmptyWorkload(t, "")
-			results, err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.probes}, controller, tt.container, tt.isInit)
+			results, err := applyContainerSchemaChecks(context.Background(), &conf.Configuration{Checks: tt.probes}, controller, tt.container, tt.isInit)
 			if err != nil {
 				panic(err)
 			}
@@ -300,7 +301,7 @@ func TestValidateImage(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			controller := getEmptyWorkload(t, "")
-			results, err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.image}, controller, tt.container, false)
+			results, err := applyContainerSchemaChecks(context.Background(), &conf.Configuration{Checks: tt.image}, controller, tt.container, false)
 			if err != nil {
 				panic(err)
 			}
@@ -417,7 +418,7 @@ func TestValidateNetworking(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			controller := getEmptyWorkload(t, "")
-			results, err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.networkConf}, controller, tt.container, false)
+			results, err := applyContainerSchemaChecks(context.Background(), &conf.Configuration{Checks: tt.networkConf}, controller, tt.container, false)
 			if err != nil {
 				panic(err)
 			}
@@ -922,7 +923,7 @@ func TestValidateSecurity(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			workload, err := kube.NewGenericWorkloadFromPod(corev1.Pod{Spec: *tt.pod}, nil)
 			assert.NoError(t, err)
-			results, err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.securityConf}, workload, tt.container, false)
+			results, err := applyContainerSchemaChecks(context.Background(), &conf.Configuration{Checks: tt.securityConf}, workload, tt.container, false)
 			if err != nil {
 				panic(err)
 			}
@@ -1067,7 +1068,7 @@ func TestValidateRunAsRoot(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			workload, err := kube.NewGenericWorkloadFromPod(corev1.Pod{Spec: *tt.pod}, nil)
 			assert.NoError(t, err)
-			results, err := applyContainerSchemaChecks(&config, workload, tt.container, false)
+			results, err := applyContainerSchemaChecks(context.Background(), &config, workload, tt.container, false)
 			if err != nil {
 				panic(err)
 			}
