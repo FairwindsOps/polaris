@@ -1,5 +1,10 @@
 # x.x.x (next release)
 
+# 1.2.0
+* Add ability to audit a single workload
+* Enable `pullPolicyAlways` by default
+* Fix for finding parent resources
+
 # 1.1.1
 * Show controller checks on dashboard
 * Fix for orphaned pods w/ controller checks
