@@ -2,6 +2,7 @@ package kube
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -11,7 +12,6 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -42,11 +42,75 @@ type k8sResource struct {
 var podSpecFields = []string{"jobTemplate", "spec", "template"}
 
 // CreateResourceProvider returns a new ResourceProvider object to interact with k8s resources
-func CreateResourceProvider(directory string) (*ResourceProvider, error) {
+func CreateResourceProvider(directory, workload string) (*ResourceProvider, error) {
+	if workload != "" {
+		return CreateResourceProviderFromWorkload(workload)
+	}
 	if directory != "" {
 		return CreateResourceProviderFromPath(directory)
 	}
 	return CreateResourceProviderFromCluster()
+}
+
+// CreateResourceProviderFromWorkload creates a new ResourceProvider that just contains one workload
+func CreateResourceProviderFromWorkload(workload string) (*ResourceProvider, error) {
+	kubeConf, configError := config.GetConfig()
+	if configError != nil {
+		logrus.Errorf("Error fetching KubeConfig: %v", configError)
+		return nil, configError
+	}
+	kube, err := kubernetes.NewForConfig(kubeConf)
+	if err != nil {
+		logrus.Errorf("Error creating Kubernetes client: %v", err)
+		return nil, err
+	}
+	serverVersion, err := kube.Discovery().ServerVersion()
+	if err != nil {
+		logrus.Errorf("Error fetching Cluster API version: %v", err)
+		return nil, err
+	}
+	resources := ResourceProvider{
+		ServerVersion: serverVersion.Major + "." + serverVersion.Minor,
+		SourceType:    "Workload",
+		SourceName:    workload,
+		CreationTime:  time.Now(),
+		Nodes:         []corev1.Node{},
+		Namespaces:    []corev1.Namespace{},
+	}
+
+	parts := strings.Split(workload, "/")
+	if len(parts) != 4 {
+		return nil, fmt.Errorf("Invalid workload identifier %s. Should be in format namespace/kind/version/name, e.g. nginx-ingress/Deployment.apps/v1/default-backend", workload)
+	}
+	namespace := parts[0]
+	kind := parts[1]
+	version := parts[2]
+	name := parts[3]
+
+	dynamicInterface, err := dynamic.NewForConfig(kubeConf)
+	if err != nil {
+		logrus.Errorf("Error connecting to dynamic interface: %v", err)
+		return nil, err
+	}
+	groupResources, err := restmapper.GetAPIGroupResources(kube.Discovery())
+	if err != nil {
+		logrus.Errorf("Error getting API Group resources: %v", err)
+		return nil, err
+	}
+	restMapper := restmapper.NewDiscoveryRESTMapper(groupResources)
+	obj, err := getObject(namespace, kind, version, name, &dynamicInterface, &restMapper)
+	if err != nil {
+		logrus.Errorf("Could not find workload %s: %v", workload, err)
+		return nil, err
+	}
+	workloadObj, err := NewGenericWorkloadFromUnstructured(kind, obj)
+	if err != nil {
+		logrus.Errorf("Could not parse workload %s: %v", workload, err)
+		return nil, err
+	}
+
+	resources.Controllers = []GenericWorkload{workloadObj}
+	return &resources, nil
 }
 
 // CreateResourceProviderFromPath returns a new ResourceProvider using the YAML files in a directory
@@ -201,19 +265,6 @@ func deduplicateControllers(inputControllers []GenericWorkload) []GenericWorkloa
 	return results
 }
 
-// GetPodSpec looks inside arbitrary YAML for a PodSpec
-func GetPodSpec(yaml map[string]interface{}) interface{} {
-	for _, child := range podSpecFields {
-		if childYaml, ok := yaml[child]; ok {
-			return GetPodSpec(childYaml.(map[string]interface{}))
-		}
-	}
-	if _, ok := yaml["containers"]; ok {
-		return yaml
-	}
-	return nil
-}
-
 func addResourcesFromReader(reader io.Reader, resources *ResourceProvider) error {
 	contents, err := ioutil.ReadAll(reader)
 	if err != nil {
@@ -239,40 +290,6 @@ func addResourcesFromYaml(contents string, resources *ResourceProvider) error {
 		}
 	}
 	return nil
-}
-
-// GetWorkloadFromBytes parses a GenericWorkload
-func GetWorkloadFromBytes(contentBytes []byte) (*GenericWorkload, error) {
-	yamlNode := make(map[string]interface{})
-	err := yaml.Unmarshal(contentBytes, &yamlNode)
-	if err != nil {
-		logrus.Errorf("Invalid YAML: %s", string(contentBytes))
-		return nil, err
-	}
-	finalDoc := make(map[string]interface{})
-	finalDoc["metadata"] = yamlNode["metadata"]
-	finalDoc["apiVersion"] = "v1"
-	finalDoc["kind"] = "Pod"
-	podSpec := GetPodSpec(yamlNode)
-	if podSpec == nil {
-		return nil, nil
-	}
-	finalDoc["spec"] = podSpec
-	marshaledYaml, err := yaml.Marshal(finalDoc)
-	if err != nil {
-		logrus.Errorf("Could not marshal yaml: %v", err)
-		return nil, err
-	}
-	decoder := k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(marshaledYaml), 1000)
-	pod := corev1.Pod{}
-	err = decoder.Decode(&pod)
-	newController, err := NewGenericWorkloadFromPod(pod, yamlNode)
-
-	if err != nil {
-		return nil, err
-	}
-	newController.Kind = yamlNode["kind"].(string)
-	return &newController, nil
 }
 
 func addResourceFromString(contents string, resources *ResourceProvider) error {

@@ -35,6 +35,7 @@ var minScore int
 var auditOutputURL string
 var auditOutputFile string
 var auditOutputFormat string
+var resourceToAudit string
 
 func init() {
 	rootCmd.AddCommand(auditCmd)
@@ -45,6 +46,7 @@ func init() {
 	auditCmd.PersistentFlags().StringVar(&auditOutputFile, "output-file", "", "Destination file for audit results.")
 	auditCmd.PersistentFlags().StringVarP(&auditOutputFormat, "format", "f", "json", "Output format for results - json, yaml, or score.")
 	auditCmd.PersistentFlags().StringVar(&displayName, "display-name", "", "An optional identifier for the audit.")
+	auditCmd.PersistentFlags().StringVar(&resourceToAudit, "resource", "", "Audit a specific resource, in the format namespace/kind/version/name, e.g. nginx-ingress/Deployment.apps/v1/default-backend.")
 }
 
 var auditCmd = &cobra.Command{
@@ -56,7 +58,7 @@ var auditCmd = &cobra.Command{
 			config.DisplayName = displayName
 		}
 
-		auditData := runAndReportAudit(config, auditPath, auditOutputFile, auditOutputURL, auditOutputFormat)
+		auditData := runAndReportAudit(config, auditPath, resourceToAudit, auditOutputFile, auditOutputURL, auditOutputFormat)
 
 		summary := auditData.GetSummary()
 		score := summary.GetScore()
@@ -70,9 +72,9 @@ var auditCmd = &cobra.Command{
 	},
 }
 
-func runAndReportAudit(c conf.Configuration, auditPath string, outputFile string, outputURL string, outputFormat string) validator.AuditData {
+func runAndReportAudit(c conf.Configuration, auditPath, workload, outputFile, outputURL, outputFormat string) validator.AuditData {
 	// Create a kubernetes client resource provider
-	k, err := kube.CreateResourceProvider(auditPath)
+	k, err := kube.CreateResourceProvider(auditPath, workload)
 	if err != nil {
 		logrus.Errorf("Error fetching Kubernetes resources %v", err)
 		os.Exit(1)
