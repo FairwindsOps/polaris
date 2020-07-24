@@ -194,12 +194,22 @@ spec:
         app: polaris
         component: webhook
     spec:
+      initContainers:
+      - name: webhook-certificate-generator
+        image: quay.io/joelspeed/webhook-certificate-generator:v0.1.1
+        imagePullPolicy: 'Always'
+        args:
+          - --service-name=polaris-webhook
+          - --namespace=polaris
+          - --secret-name=polaris-webhook
+          - --patch-validating=polaris-webhook
+          - --auto-approve-csr
       containers:
         - name: webhook
           command:
             - polaris
             - webhook
-          image: 'quay.io/fairwinds/polaris:1.1'
+          image: 'quay.io/fairwinds/polaris:1.2'
           imagePullPolicy: 'Always'
           ports:
             - containerPort: 9876
@@ -253,3 +263,67 @@ spec:
             secretName: polaris-webhook
         - name: cr-logs
           emptyDir: {}
+---
+# Source: polaris/templates/webhook.configuration.yaml
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: polaris-webhook
+webhooks:
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    caBundle: "" 
+    service:
+      name: polaris-webhook
+      namespace: polaris
+      path: /validating-appsv1-daemonset.k8s.io
+      port: 443
+
+  failurePolicy: Ignore
+  matchPolicy: Exact
+  name: polaris.fairwinds.com
+  namespaceSelector:
+    matchExpressions:
+    - key: control-plane
+      operator: DoesNotExist
+  objectSelector: {}
+  rules:
+  - apiGroups:
+    - apps
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - daemonsets
+    - deployments
+    - statefulsets
+    scope: Namespaced
+  - apiGroups:
+    - batch
+    apiVersions:
+    - v1
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - jobs
+    - cronjobs
+    scope: Namespaced
+  - apiGroups:
+    - ""
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - pods
+    - replicationcontrollers
+    scope: Namespaced
+  sideEffects: None
+  timeoutSeconds: 30
