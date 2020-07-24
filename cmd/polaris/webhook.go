@@ -30,11 +30,9 @@ import (
 	batchv2alpha1 "k8s.io/api/batch/v2alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	apitypes "k8s.io/apimachinery/pkg/types"
 	k8sConfig "sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
 var supportedVersions = map[string]runtime.Object{
@@ -83,7 +81,6 @@ var webhookCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		polarisAppName := "polaris"
 		polarisResourceName := "polaris-webhook"
 		polarisNamespaceBytes, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace")
 
@@ -99,27 +96,6 @@ var webhookCmd = &cobra.Command{
 		}
 
 		logrus.Info("Setting up webhook server")
-		as, err := webhook.NewServer(polarisResourceName, mgr, webhook.ServerOptions{
-			DisableWebhookConfigInstaller: &disableWebhookConfigInstaller,
-			BootstrapOptions: &webhook.BootstrapOptions{
-				ValidatingWebhookConfigName: polarisResourceName,
-				Secret: &apitypes.NamespacedName{
-					Namespace: polarisNamespace,
-					Name:      polarisResourceName,
-				},
-
-				Service: &webhook.Service{
-					Namespace: polarisNamespace,
-					Name:      polarisResourceName,
-
-					// Selectors should select the pods that runs this webhook server.
-					Selectors: map[string]string{
-						"app":       polarisAppName,
-						"component": "webhook",
-					},
-				},
-			},
-		})
 
 		if err != nil {
 			logrus.Errorf("Error setting up webhook server: %v", err)
@@ -134,11 +110,7 @@ var webhookCmd = &cobra.Command{
 		for name, supportedAPIType := range supportedVersions {
 			webhookName := strings.ToLower(name)
 			webhookName = strings.ReplaceAll(webhookName, "/", "-")
-			err := fwebhook.NewWebhook(webhookName, mgr, fwebhook.Validator{Config: config}, supportedAPIType)
-			if err != nil {
-				logrus.Warningf("Couldn't build webhook %s: %v", webhookName, err)
-				continue
-			}
+			fwebhook.NewWebhook(webhookName, mgr, fwebhook.Validator{Config: config}, supportedAPIType)
 			logrus.Infof("%s webhook started", webhookName)
 		}
 
