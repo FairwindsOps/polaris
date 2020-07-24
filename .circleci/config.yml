@@ -27,7 +27,7 @@ references:
         sudo apt-get install -yqq jq git
 
         echo "Installing KIND"
-        curl -sLO https://github.com/kubernetes-sigs/kind/releases/download/0.8.1/kind-linux-amd64
+        curl -sLO https://github.com/kubernetes-sigs/kind/releases/download/v0.8.1/kind-linux-amd64
         chmod 0755 kind-linux-amd64
         sudo mv kind-linux-amd64 /usr/local/bin/kind
         kind version
