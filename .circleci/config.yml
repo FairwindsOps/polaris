@@ -44,7 +44,7 @@ references:
         docker ps -a
 
         echo "Setting up kubecfg"
-        cp $(kind get kubeconfig-path --name=kind) ~/.kube/config
+        kind get kubeconfig --name=kind > ~/.kube/config
         kubectl version
 
   # Test scripts
