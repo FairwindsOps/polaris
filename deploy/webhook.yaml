@@ -204,6 +204,14 @@ spec:
           - --secret-name=polaris-webhook
           - --patch-validating=polaris-webhook
           - --auto-approve-csr
+        securityContext:
+          allowPrivilegeEscalation: false
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          capabilities:
+            drop:
+            - ALL
       containers:
         - name: webhook
           command:
