@@ -37,6 +37,7 @@ require (
 	github.com/golang/lint v0.0.0-20180702182130-06c8688daad7 // indirect
 	github.com/golang/protobuf v1.4.2
 	github.com/google/btree v1.0.0
+	github.com/google/go-cmp v0.5.1 // indirect
 	github.com/google/gofuzz v1.1.0
 	github.com/google/uuid v1.1.1
 	github.com/googleapis/gnostic v0.3.1
@@ -45,7 +46,7 @@ require (
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/grpc-ecosystem/grpc-gateway v1.14.6
 	github.com/hashicorp/golang-lru v0.5.4
-	github.com/imdario/mergo v0.3.9
+	github.com/imdario/mergo v0.3.10
 	github.com/joho/godotenv v1.3.0
 	github.com/json-iterator/go v1.1.10
 	github.com/karrick/godirwalk v1.15.6
@@ -69,7 +70,7 @@ require (
 	github.com/prometheus/common v0.10.0
 	github.com/prometheus/procfs v0.1.3
 	github.com/qri-io/jsonpointer v0.1.1
-	github.com/qri-io/jsonschema v0.2.0
+	github.com/qri-io/jsonschema v0.1.1
 	github.com/rogpeppe/go-internal v1.6.0
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/cobra v1.0.0
@@ -90,7 +91,7 @@ require (
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
-	golang.org/x/sys v0.0.0-20200625212154-ddb9806d33ae
+	golang.org/x/sys v0.0.0-20200722175500-76b94024e4b6
 	golang.org/x/text v0.3.3
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e
 	golang.org/x/tools v0.0.0-20200713011307-fd294ab11aed
@@ -114,7 +115,7 @@ require (
 	k8s.io/klog v1.0.0
 	k8s.io/klog/v2 v2.1.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20200410145947-61e04a5be9a6
-	k8s.io/utils v0.0.0-20200716102541-988ee3149bb2 // indirect
+	k8s.io/utils v0.0.0-20200720150651-0bdb4ca86cbc // indirect
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.7 // indirect
 	sigs.k8s.io/controller-runtime v0.6.1
 	sigs.k8s.io/structured-merge-diff v0.0.0-20190525122527-15d366b2352e // indirect

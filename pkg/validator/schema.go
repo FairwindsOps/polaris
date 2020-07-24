@@ -130,7 +130,7 @@ func applyPodSchemaChecks(ctx context.Context, conf *config.Configuration, contr
 		} else if check == nil {
 			continue
 		}
-		passes, err := check.CheckPod(ctx, &controller.PodSpec)
+		passes, err := check.CheckPod(&controller.PodSpec)
 		if err != nil {
 			return nil, err
 		}
@@ -155,7 +155,7 @@ func applyControllerSchemaChecks(ctx context.Context, conf *config.Configuration
 		} else if check == nil {
 			continue
 		}
-		passes, err := check.CheckController(ctx, controller.OriginalObjectJSON)
+		passes, err := check.CheckController(controller.OriginalObjectJSON)
 		if err != nil {
 			return nil, err
 		}
@@ -184,9 +184,9 @@ func applyContainerSchemaChecks(ctx context.Context, conf *config.Configuration,
 			podCopy := controller.PodSpec
 			podCopy.InitContainers = []corev1.Container{}
 			podCopy.Containers = []corev1.Container{*container}
-			passes, err = check.CheckPod(ctx, &podCopy)
+			passes, err = check.CheckPod(&podCopy)
 		} else {
-			passes, err = check.CheckContainer(ctx, container)
+			passes, err = check.CheckContainer(container)
 		}
 		if err != nil {
 			return nil, err
