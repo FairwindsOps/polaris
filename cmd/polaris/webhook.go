@@ -81,6 +81,10 @@ var webhookCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		server := mgr.GetWebhookServer()
+		server.CertName = "cert.pem"
+		server.KeyName = "key.pem"
+
 		polarisResourceName := "polaris-webhook"
 		polarisNamespaceBytes, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace")
 
