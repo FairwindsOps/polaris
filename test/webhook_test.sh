@@ -15,6 +15,7 @@ function check_webhook_is_ready() {
     # Reset another 2 minutes to wait for webhook
     timeout_epoch=$(date -d "+2 minutes" +%s)
 
+	kubectl certificate approve polaris-webhook.polaris
     # loop until this fails (desired condition is we cannot apply this yaml doc, which means the webhook is working
     echo "Waiting for webhook to be ready"
     while ! kubectl get pods -n polaris | grep -E "webhook.*1/1.*Running"; do
