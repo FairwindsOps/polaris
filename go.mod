@@ -83,7 +83,7 @@ require (
 	google.golang.org/api v0.29.0
 	google.golang.org/appengine v1.6.6
 	google.golang.org/genproto v0.0.0-20200711021454-869866162049
-	google.golang.org/grpc v1.30.0
+	google.golang.org/grpc v1.31.0
 	gopkg.in/inf.v0 v0.9.1
 	gopkg.in/yaml.v2 v2.3.0
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
