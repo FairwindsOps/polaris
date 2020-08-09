@@ -1,5 +1,8 @@
 # x.x.x (next release)
 
+# 1.2.1
+* Update date on dashboard footer
+
 # 1.2.0
 * Add ability to audit a single workload
 * Enable `pullPolicyAlways` by default
