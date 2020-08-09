@@ -20,7 +20,7 @@ import (
 
 const (
 	// Version represents the current release version of Polaris
-	Version = "1.2.0"
+	Version = "1.2.1"
 )
 
 func main() {
