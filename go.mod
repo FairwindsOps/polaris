@@ -41,7 +41,7 @@ require (
 	github.com/imdario/mergo v0.3.11
 	github.com/joho/godotenv v1.3.0
 	github.com/json-iterator/go v1.1.10
-	github.com/karrick/godirwalk v1.15.6
+	github.com/karrick/godirwalk v1.16.1
 	github.com/konsorten/go-windows-terminal-sequences v1.0.3
 	github.com/markbates/oncer v1.0.0
 	github.com/markbates/safe v1.0.1
