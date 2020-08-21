@@ -364,14 +364,15 @@ spec:
     spec:
       containers:
       - name: webhook-certificate-generator
-        image: quay.io/joelspeed/webhook-certificate-generator:v0.1.1
+        image: newrelic/k8s-webhook-cert-manager:1.3.0
         imagePullPolicy: Always
+        command: ./generate_certificate.sh
         args:
           - --service-name=polaris-webhook
           - --namespace=polaris
-          - --secret-name=polaris-webhook
-          - --patch-validating=polaris-webhook
-          - --auto-approve-csr
+          - --secret=polaris-webhook
+          - --webook=polaris-webhook
+          - --webhook-kind=ValidatingWebhookConfiguration
         resources:
           limits:
             cpu: 100m
