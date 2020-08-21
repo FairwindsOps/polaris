@@ -372,6 +372,13 @@ spec:
           - --secret-name=polaris-webhook
           - --patch-validating=polaris-webhook
           - --auto-approve-csr
+        resources:
+          limits:
+            cpu: 100m
+            memory: 512Mi
+          requests:
+            cpu: 50m
+            memory: 100Mi
         securityContext:
           allowPrivilegeEscalation: false
           privileged: false
