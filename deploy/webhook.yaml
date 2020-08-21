@@ -345,3 +345,41 @@ webhooks:
     scope: Namespaced
   sideEffects: None
   timeoutSeconds: 30
+---
+# Source: polaris/templates/webhook.deployment.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: polaris-webhook
+  namespace: polaris
+  labels:
+    app: polaris
+    component: webhook
+spec:
+  template:
+    metadata:
+      labels:
+        app: polaris
+        component: webhook-job
+    spec:
+      containers:
+      - name: webhook-certificate-generator
+        image: quay.io/joelspeed/webhook-certificate-generator:v0.1.1
+        imagePullPolicy: Always
+        args:
+          - --service-name=polaris-webhook
+          - --namespace=polaris
+          - --secret-name=polaris-webhook
+          - --patch-validating=polaris-webhook
+          - --auto-approve-csr
+        securityContext:
+          allowPrivilegeEscalation: false
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+            - ALL
+      serviceAccountName:  polaris
+      restartPolicy: Never
