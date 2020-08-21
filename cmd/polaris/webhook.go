@@ -18,6 +18,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"time"
 
 	fwebhook "github.com/fairwindsops/polaris/pkg/webhook"
 	"github.com/sirupsen/logrus"
@@ -81,6 +82,11 @@ var webhookCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		_, err = os.Stat("/opt/cert/cert.pem")
+		if os.IsNotExist(err) {
+			time.Sleep(time.Second * 10)
+			panic("Cert does not exist")
+		}
 		server := mgr.GetWebhookServer()
 		server.CertName = "cert.pem"
 		server.KeyName = "key.pem"
