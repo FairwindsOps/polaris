@@ -366,7 +366,8 @@ spec:
       - name: webhook-certificate-generator
         image: newrelic/k8s-webhook-cert-manager:1.3.0
         imagePullPolicy: Always
-        command: ./generate_certificate.sh
+        command:
+        - ./generate_certificate.sh
         args:
           - --service-name=polaris-webhook
           - --namespace=polaris
