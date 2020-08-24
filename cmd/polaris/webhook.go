@@ -82,14 +82,14 @@ var webhookCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		stat, err := os.Stat("/opt/cert/cert.pem")
+		stat, err := os.Stat("/opt/cert/tls.crt")
 		if os.IsNotExist(err) || stat.Size() < 10 {
 			time.Sleep(time.Second * 10)
 			panic("Cert does not exist")
 		}
 		server := mgr.GetWebhookServer()
-		server.CertName = "cert.pem"
-		server.KeyName = "key.pem"
+		server.CertName = "tls.crt"
+		server.KeyName = "tls.key"
 
 		polarisResourceName := "polaris-webhook"
 		polarisNamespaceBytes, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace")

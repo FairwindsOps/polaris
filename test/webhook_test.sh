@@ -2,9 +2,7 @@
 set -e
 
 #sed is replacing the polaris version with this commit sha so we are testing exactly this verison.
-sed -ri "s|'(quay.io/fairwinds/polaris:).+'|'\1${CIRCLE_SHA1}'|" ./deploy/webhook.yaml
-# TODO: remove this after 1.0 is released
-sed -i "s/--webhook/webhook/" ./deploy/webhook.yaml
+sed -r "s|'(quay.io/fairwinds/polaris:).+'|'\1${CIRCLE_SHA1}'|" ./deploy/webhook.yaml > ./deploy/webhook-test.yaml
 
 # Testing to ensure that the webhook starts up, allows a correct deployment to pass,
 # and prevents a incorrectly formatted deployment. 
@@ -19,7 +17,6 @@ function check_webhook_is_ready() {
         check_timeout "${timeout_epoch}"
         echo -n "."
 	done
-	kubectl certificate approve polaris-webhook.polaris
 
     # loop until this fails (desired condition is we cannot apply this yaml doc, which means the webhook is working
     echo "Waiting for webhook to be ready"
@@ -67,7 +64,7 @@ kubectl create ns scale-test
 kubectl apply -n scale-test -f ./test/webhook_cases/failing_test.deployment.yaml
 
 # Install the webhook 
-kubectl apply -f ./deploy/webhook.yaml &> /dev/null
+kubectl apply -f ./deploy/webhook-test.yaml &> /dev/null
 
 
 # wait for the webhook to come online
