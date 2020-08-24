@@ -226,10 +226,11 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 5
           readinessProbe:
-            httpGet:
-             path: /healthz
-             port: 9876
-             scheme: HTTPS
+            exec:
+              command:
+                - sh
+                - -c
+                - ps -ef | grep polaris
             initialDelaySeconds: 5
             periodSeconds: 5
           resources:
@@ -278,7 +279,7 @@ webhooks:
     service:
       name: polaris-webhook
       namespace: polaris
-      path: /validating-appsv1-daemonset.k8s.io
+      path: /validate
       port: 443
 
   failurePolicy: Ignore

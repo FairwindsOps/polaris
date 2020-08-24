@@ -27,7 +27,6 @@ import (
 
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
@@ -59,8 +58,8 @@ func (v *Validator) InjectDecoder(d *admission.Decoder) error {
 var _ admission.Handler = &Validator{}
 
 // NewWebhook creates a validating admission webhook for the apiType.
-func NewWebhook(name string, mgr manager.Manager, validator Validator, apiType runtime.Object) {
-	path := fmt.Sprintf("/validating-%s", name)
+func NewWebhook(mgr manager.Manager, validator Validator) {
+	path := "/validate"
 
 	mgr.GetWebhookServer().Register(path, &webhook.Admission{Handler: &Validator{client: mgr.GetClient()}})
 }
