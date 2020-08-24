@@ -111,6 +111,7 @@ func (v *Validator) handleInternal(ctx context.Context, req admission.Request) (
 
 // Handle for Validator to run validation checks.
 func (v *Validator) Handle(ctx context.Context, req admission.Request) admission.Response {
+	logrus.Info("Starting request")
 	podResult, err := v.handleInternal(ctx, req)
 	if err != nil {
 		logrus.Errorf("Error validating request: %v", err)
