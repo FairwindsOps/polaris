@@ -83,7 +83,7 @@ var webhookCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		_, err := os.Stat("/opt/cert/tls.crt")
+		_, err = os.Stat("/opt/cert/tls.crt")
 		if os.IsNotExist(err) {
 			time.Sleep(time.Second * 10)
 			panic("Cert does not exist")
