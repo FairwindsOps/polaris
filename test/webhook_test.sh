@@ -25,6 +25,8 @@ function check_webhook_is_ready() {
         echo -n "."
     done
 
+    check_timeout "${timeout_epoch}"
+
     echo "Webhook started!"
 }
 

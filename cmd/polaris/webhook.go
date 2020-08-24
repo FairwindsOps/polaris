@@ -32,6 +32,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	k8sConfig "sigs.k8s.io/controller-runtime/pkg/client/config"
+	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
 )
@@ -90,6 +91,7 @@ var webhookCmd = &cobra.Command{
 		server := mgr.GetWebhookServer()
 		server.CertName = "tls.crt"
 		server.KeyName = "tls.key"
+		mgr.AddHealthzCheck("healthz", healthz.Ping)
 
 		polarisResourceName := "polaris-webhook"
 		polarisNamespaceBytes, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace")
