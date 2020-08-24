@@ -229,6 +229,7 @@ spec:
             httpGet:
              path: /healthz
              port: 9876
+             scheme: HTTPS
             initialDelaySeconds: 5
             periodSeconds: 5
           resources:
