@@ -83,14 +83,14 @@ var webhookCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		_, err = os.Stat("/opt/cert/tls.crt")
+		_, err = os.Stat("/opt/cert/cert.pem")
 		if os.IsNotExist(err) {
 			time.Sleep(time.Second * 10)
 			panic("Cert does not exist")
 		}
 		server := mgr.GetWebhookServer()
-		server.CertName = "tls.crt"
-		server.KeyName = "tls.key"
+		server.CertName = "cert.pem"
+		server.KeyName = "key.pem"
 		mgr.AddHealthzCheck("healthz", healthz.Ping)
 
 		polarisResourceName := "polaris-webhook"
