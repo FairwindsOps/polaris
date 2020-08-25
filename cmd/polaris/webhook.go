@@ -18,9 +18,12 @@ import (
 	"os"
 	"time"
 
-	fwebhook "github.com/fairwindsops/polaris/pkg/webhook"
+	"github.com/bombsimon/logrusr"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	controllerLog "sigs.k8s.io/controller-runtime/pkg/log"
+
+	fwebhook "github.com/fairwindsops/polaris/pkg/webhook"
 	k8sConfig "sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
@@ -41,6 +44,10 @@ var webhookCmd = &cobra.Command{
 	Long:  `Runs the webhook webserver.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		logrus.Debug("Setting up controller manager")
+
+		logger := logrus.New()
+		log := logrusr.NewLogger(logger)
+		controllerLog.SetLogger(log)
 		mgr, err := manager.New(k8sConfig.GetConfigOrDie(), manager.Options{
 			CertDir: "/opt/cert",
 			Port:    webhookPort,
