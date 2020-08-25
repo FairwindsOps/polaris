@@ -61,7 +61,8 @@ var _ admission.Handler = &Validator{}
 func NewWebhook(mgr manager.Manager, validator Validator) {
 	path := "/validate"
 
-	mgr.GetWebhookServer().Register(path, &webhook.Admission{Handler: &Validator{client: mgr.GetClient()}})
+	validator.client = mgr.GetClient()
+	mgr.GetWebhookServer().Register(path, &webhook.Admission{Handler: &validator})
 }
 
 func (v *Validator) handleInternal(ctx context.Context, req admission.Request) (*validator.PodResult, error) {
