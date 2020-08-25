@@ -76,6 +76,12 @@ rules:
     - 'create'
     - 'delete'
   - apiGroups:
+    - 'certificates.k8s.io'
+    resources:
+    - 'kubernetes.io/legacy-unknown'
+    verbs:
+    - 'approve'
+  - apiGroups:
       - 'admissionregistration.k8s.io'
     resources:
       - 'validatingwebhookconfigurations'
