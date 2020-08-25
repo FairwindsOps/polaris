@@ -29,28 +29,20 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 // Validator validates k8s resources.
 type Validator struct {
-	client  client.Client
+	Client  client.Client
 	decoder *admission.Decoder
 	Config  config.Configuration
 }
 
-var _ inject.Client = &Validator{}
-
-// InjectClient injects the client.
-func (v *Validator) InjectClient(c client.Client) error {
-	v.client = c
-	return nil
-}
-
 // InjectDecoder injects the decoder.
 func (v *Validator) InjectDecoder(d *admission.Decoder) error {
+	logrus.Info("Injecting decoder")
 	v.decoder = d
 	return nil
 }
@@ -61,7 +53,6 @@ var _ admission.Handler = &Validator{}
 func NewWebhook(mgr manager.Manager, validator Validator) {
 	path := "/validate"
 
-	validator.client = mgr.GetClient()
 	mgr.GetWebhookServer().Register(path, &webhook.Admission{Handler: &validator})
 }
 

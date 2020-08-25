@@ -66,7 +66,7 @@ var webhookCmd = &cobra.Command{
 		// Iterate all the configurations supported controllers to scan and register them for webhooks
 		// Should only register controllers that are configured to be scanned
 		logrus.Debug("Registering webhooks to the webhook server")
-		fwebhook.NewWebhook(mgr, fwebhook.Validator{Config: config})
+		fwebhook.NewWebhook(mgr, fwebhook.Validator{Config: config, Client: mgr.GetClient()})
 		logrus.Info("webhook started")
 
 		logrus.Debug("Starting webhook manager")
