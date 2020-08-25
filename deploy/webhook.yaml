@@ -272,7 +272,6 @@ metadata:
   name: polaris-webhook
 webhooks:
 - admissionReviewVersions:
-  - v1
   - v1beta1
   clientConfig:
     caBundle: "" 
