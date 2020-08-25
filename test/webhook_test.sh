@@ -11,7 +11,7 @@ function check_webhook_is_ready() {
     local timeout_epoch
 
     # Reset another 2 minutes to wait for webhook
-    timeout_epoch=$(date -d "+3 minutes" +%s)
+    timeout_epoch=$(date -d "+5 minutes" +%s)
 
 	while ! kubectl get csr | grep -E "polaris-webhook.polaris"; do
         check_timeout "${timeout_epoch}"
