@@ -56,9 +56,35 @@ func NewWebhook(mgr manager.Manager, validator Validator) {
 	mgr.GetWebhookServer().Register(path, &webhook.Admission{Handler: &validator})
 }
 
+func GetObjectFromRawRequest(raw []byte) (corev1.Pod, interface{}, error) {
+	pod := corev1.Pod{}
+	var originalObject interface{}
+
+	decoded := map[string]interface{}{}
+	err := json.Unmarshal(raw, &decoded)
+	if err != nil {
+		return pod, originalObject, err
+	}
+	podMap := kube.GetPodSpec(decoded)
+	if podMap == nil {
+		return pod, originalObject, errors.New("Object does not contain pods")
+	}
+	encoded, err := json.Marshal(podMap)
+	if err != nil {
+		return pod, originalObject, err
+	}
+	err = json.Unmarshal(encoded, &pod.Spec)
+	if err != nil {
+		return pod, originalObject, err
+	}
+	originalObject = decoded
+	return pod, originalObject, err
+}
+
 func (v *Validator) handleInternal(ctx context.Context, req admission.Request) (*validator.PodResult, error) {
 	pod := corev1.Pod{}
 	var originalObject interface{}
+	var err error
 	if req.AdmissionRequest.Kind.Kind == "Pod" {
 		err := v.decoder.Decode(req, &pod)
 		if err != nil {
@@ -70,24 +96,7 @@ func (v *Validator) handleInternal(ctx context.Context, req admission.Request) (
 		}
 		originalObject = pod
 	} else {
-		decoded := map[string]interface{}{}
-		err := json.Unmarshal(req.AdmissionRequest.Object.Raw, &decoded)
-		if err != nil {
-			return nil, err
-		}
-		podMap := kube.GetPodSpec(decoded)
-		if podMap == nil {
-			return nil, errors.New("Object does not contain pods")
-		}
-		encoded, err := json.Marshal(podMap)
-		if err != nil {
-			return nil, err
-		}
-		err = json.Unmarshal(encoded, &pod.Spec)
-		if err != nil {
-			return nil, err
-		}
-		originalObject = decoded
+		pod, originalObject, err = GetObjectFromRawRequest(req.Object.Raw)
 	}
 	controller, err := kube.NewGenericWorkloadFromPod(pod, originalObject)
 	if err != nil {
