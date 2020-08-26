@@ -43,9 +43,9 @@ type k8sResource struct {
 var podSpecFields = []string{"jobTemplate", "spec", "template"}
 
 // CreateResourceProvider returns a new ResourceProvider object to interact with k8s resources
-func CreateResourceProvider(ctx context.Context,directory, workload string) (*ResourceProvider, error) {
+func CreateResourceProvider(ctx context.Context, directory, workload string) (*ResourceProvider, error) {
 	if workload != "" {
-		return CreateResourceProviderFromWorkload(workload)
+		return CreateResourceProviderFromWorkload(ctx, workload)
 	}
 	if directory != "" {
 		return CreateResourceProviderFromPath(directory)
@@ -54,7 +54,7 @@ func CreateResourceProvider(ctx context.Context,directory, workload string) (*Re
 }
 
 // CreateResourceProviderFromWorkload creates a new ResourceProvider that just contains one workload
-func CreateResourceProviderFromWorkload(workload string) (*ResourceProvider, error) {
+func CreateResourceProviderFromWorkload(ctx context.Context, workload string) (*ResourceProvider, error) {
 	kubeConf, configError := config.GetConfig()
 	if configError != nil {
 		logrus.Errorf("Error fetching KubeConfig: %v", configError)
@@ -99,7 +99,7 @@ func CreateResourceProviderFromWorkload(workload string) (*ResourceProvider, err
 		return nil, err
 	}
 	restMapper := restmapper.NewDiscoveryRESTMapper(groupResources)
-	obj, err := getObject(namespace, kind, version, name, &dynamicInterface, &restMapper)
+	obj, err := getObject(ctx, namespace, kind, version, name, &dynamicInterface, &restMapper)
 	if err != nil {
 		logrus.Errorf("Could not find workload %s: %v", workload, err)
 		return nil, err

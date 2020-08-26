@@ -1,8 +1,8 @@
 package kube
 
 import (
-	"context"
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -171,13 +171,13 @@ func cacheAllObjectsOfKind(ctx context.Context, apiVersion, kind string, dynamic
 	return nil
 }
 
-func getObject(namespace, kind, version, name string, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper) (*unstructured.Unstructured, error) {
+func getObject(ctx context.Context, namespace, kind, version, name string, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper) (*unstructured.Unstructured, error) {
 	fqKind := schema.ParseGroupKind(kind)
 	mapping, err := (*restMapper).RESTMapping(fqKind, version)
 	if err != nil {
 		return nil, err
 	}
-	object, err := (*dynamicClient).Resource(mapping.Resource).Namespace(namespace).Get(name, kubeAPIMetaV1.GetOptions{})
+	object, err := (*dynamicClient).Resource(mapping.Resource).Namespace(namespace).Get(ctx, name, kubeAPIMetaV1.GetOptions{})
 	return object, err
 }
 
