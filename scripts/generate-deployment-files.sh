@@ -1,6 +1,6 @@
 # /bin/bash
 
-set -eo pipefail
+set -e
 
 helm template polaris $CHARTS_DIR/stable/polaris/ \
   --namespace polaris \
