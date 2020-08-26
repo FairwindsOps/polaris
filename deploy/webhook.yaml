@@ -14,6 +14,15 @@ metadata:
   labels:
     app: polaris
 ---
+# Source: polaris/templates/webhook.rbac.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: polaris-certificates
+  namespace: polaris
+  labels:
+    app: polaris
+---
 # Source: polaris/templates/webhook.secret.yaml
 # The name of this secret is static as it is populated by the webhook pod.
 apiVersion: v1
@@ -133,7 +142,7 @@ roleRef:
   name: polaris-webhook
 subjects:
   - kind: ServiceAccount
-    name: polaris
+    name: polaris-certificates
     namespace: polaris
 ---
 # Source: polaris/templates/webhook.rbac.yaml
@@ -168,7 +177,7 @@ roleRef:
   name: polaris-webhook
 subjects:
   - kind: ServiceAccount
-    name: polaris
+    name: polaris-certificates
     namespace: polaris
 ---
 # Source: polaris/templates/webhook.service.yaml
@@ -278,18 +287,20 @@ metadata:
   name: polaris-certificate-updater
   namespace: polaris
   labels:
+    
     app: polaris
-    component: webhook
+    component: certificate-updater
 spec:
   template:
     metadata:
       labels:
+        
         app: polaris
-        component: webhook-job
+        component: certificate-updater
     spec:
       containers:
       - name: webhook-certificate-generator
-        image: newrelic/k8s-webhook-cert-manager:1.3.0
+        image: 'newrelic/k8s-webhook-cert-manager:1.3.0'
         imagePullPolicy: Always
         command:
           - ./generate_certificate.sh
@@ -305,11 +316,11 @@ spec:
           - ValidatingWebhookConfiguration
         resources:
           limits:
-            cpu: 100m
+            cpu: 150m
             memory: 512Mi
           requests:
-            cpu: 50m
-            memory: 100Mi
+            cpu: 100m
+            memory: 128Mi
         volumeMounts:
         - name: tmp
           mountPath: /tmp/
@@ -323,7 +334,7 @@ spec:
           capabilities:
             drop:
             - ALL
-      serviceAccountName:  polaris
+      serviceAccountName:  polaris-certificates
       restartPolicy: Never
       volumes:
         - name: tmp
@@ -357,6 +368,8 @@ webhooks:
     - apps
     apiVersions:
     - v1
+    - v1beta1
+    - v1beta2
     operations:
     - CREATE
     - UPDATE
