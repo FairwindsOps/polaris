@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	cloud.google.com/go v0.64.0
-	contrib.go.opencensus.io/exporter/ocagent v0.7.0
+  contrib.go.opencensus.io/exporter/ocagent v0.7.0
 	git.apache.org/thrift.git v0.12.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/Azure/go-autorest v14.2.0+incompatible
@@ -12,10 +12,9 @@ require (
 	github.com/Azure/go-autorest/autorest/adal v0.9.2 // indirect
 	github.com/appscode/jsonpatch v1.0.1
 	github.com/beorn7/perks v1.0.1
-	github.com/bombsimon/logrusr v0.0.0-20200131103305-03a291ce59b4
-	github.com/census-instrumentation/opencensus-proto v0.2.1
 	github.com/coreos/go-oidc v2.1.0+incompatible // indirect
 	github.com/coreos/go-semver v0.3.0 // indirect
+	github.com/census-instrumentation/opencensus-proto v0.3.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/docker/docker v0.7.3-0.20190327010347-be7ac8be2ae0 // indirect
@@ -46,7 +45,7 @@ require (
 	github.com/gophercloud/gophercloud v0.12.0
 	github.com/gorilla/mux v1.8.0
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
-	github.com/grpc-ecosystem/grpc-gateway v1.14.6
+	github.com/grpc-ecosystem/grpc-gateway v1.14.7
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/imdario/mergo v0.3.11
 	github.com/joho/godotenv v1.3.0
@@ -61,7 +60,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.1
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/onsi/gomega v1.10.1 // indirect
-	github.com/pborman/uuid v1.2.0
+	github.com/pborman/uuid v1.2.1
 	github.com/petar/GoLLRB v0.0.0-20190514000832-33fb24c13b99
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pkg/errors v0.9.1
@@ -73,7 +72,7 @@ require (
 	github.com/prometheus/procfs v0.1.3
 	github.com/qri-io/jsonpointer v0.1.1
 	github.com/qri-io/jsonschema v0.1.1
-	github.com/rogpeppe/go-internal v1.6.0
+	github.com/rogpeppe/go-internal v1.6.1
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
