@@ -43,8 +43,6 @@ references:
         kind create cluster --wait=90s --image kindest/node:v1.15.11
         docker ps -a
 
-        echo "Setting up kubecfg"
-        kind get kubeconfig --name=kind > ~/.kube/config
         kubectl version
 
   # Test scripts

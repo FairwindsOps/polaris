@@ -56,6 +56,7 @@ func NewWebhook(mgr manager.Manager, validator Validator) {
 	mgr.GetWebhookServer().Register(path, &webhook.Admission{Handler: &validator})
 }
 
+// GetObjectFromRawRequest returns the pod object and the controller's object from the raw json bytes.
 func GetObjectFromRawRequest(raw []byte) (corev1.Pod, interface{}, error) {
 	pod := corev1.Pod{}
 	var originalObject interface{}

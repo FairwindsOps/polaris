@@ -57,7 +57,7 @@ function clean_up() {
 function grab_logs() {
     kubectl -n polaris get pods -oyaml -l app=polaris
     kubectl -n polaris describe pods -l app=polaris
-	kubectl -n polaris logs -l app=polaris -c webhook-certificate-generator
+    kubectl -n polaris logs -l app=polaris -c webhook-certificate-generator
     kubectl -n polaris logs -l app=polaris
 }
 
