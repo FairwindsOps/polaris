@@ -3,7 +3,7 @@ module github.com/fairwindsops/polaris
 go 1.13
 
 require (
-	cloud.google.com/go v0.63.0
+	cloud.google.com/go v0.65.0
 	contrib.go.opencensus.io/exporter/ocagent v0.7.0
 	git.apache.org/thrift.git v0.12.0 // indirect
 	github.com/Azure/go-autorest v12.4.3+incompatible
@@ -73,16 +73,16 @@ require (
 	go.uber.org/multierr v1.5.0
 	go.uber.org/zap v1.15.0
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
-	golang.org/x/net v0.0.0-20200707034311-ab3426394381
+	golang.org/x/net v0.0.0-20200822124328-c89045814202
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
 	golang.org/x/sys v0.0.0-20200803210538-64077c9b5642
 	golang.org/x/text v0.3.3
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
-	golang.org/x/tools v0.0.0-20200806022845-90696ccdc692
+	golang.org/x/tools v0.0.0-20200825202427-b303f430e36d
 	google.golang.org/api v0.30.0
 	google.golang.org/appengine v1.6.6
-	google.golang.org/genproto v0.0.0-20200806141610-86f49bd18e98
+	google.golang.org/genproto v0.0.0-20200825200019-8632dd797987
 	google.golang.org/grpc v1.31.1
 	gopkg.in/inf.v0 v0.9.1
 	gopkg.in/yaml.v2 v2.3.0
