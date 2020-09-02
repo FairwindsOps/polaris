@@ -61,17 +61,11 @@ var webhookCmd = &cobra.Command{
 		server.CertName = "tls.crt"
 		server.KeyName = "tls.key"
 
-		logrus.Info("Setting up webhook server")
-
-		logrus.Infof("Polaris webhook server listening on port %d", webhookPort)
-
 		// Iterate all the configurations supported controllers to scan and register them for webhooks
 		// Should only register controllers that are configured to be scanned
-		logrus.Debug("Registering webhooks to the webhook server")
 		fwebhook.NewWebhook(mgr, fwebhook.Validator{Config: config, Client: mgr.GetClient()})
-		logrus.Info("webhook started")
 
-		logrus.Debug("Starting webhook manager")
+		logrus.Infof("Polaris webhook server listening on port %d", webhookPort)
 		if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
 			logrus.Errorf("Error starting manager: %v", err)
 			os.Exit(1)
