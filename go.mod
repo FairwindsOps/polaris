@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	cloud.google.com/go v0.64.0
-  contrib.go.opencensus.io/exporter/ocagent v0.7.0
+	contrib.go.opencensus.io/exporter/ocagent v0.7.0
 	git.apache.org/thrift.git v0.12.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/Azure/go-autorest v14.2.0+incompatible
@@ -12,9 +12,9 @@ require (
 	github.com/Azure/go-autorest/autorest/adal v0.9.2 // indirect
 	github.com/appscode/jsonpatch v1.0.1
 	github.com/beorn7/perks v1.0.1
+	github.com/census-instrumentation/opencensus-proto v0.3.0
 	github.com/coreos/go-oidc v2.1.0+incompatible // indirect
 	github.com/coreos/go-semver v0.3.0 // indirect
-	github.com/census-instrumentation/opencensus-proto v0.3.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/docker/docker v0.7.3-0.20190327010347-be7ac8be2ae0 // indirect
