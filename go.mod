@@ -36,7 +36,7 @@ require (
 	github.com/gophercloud/gophercloud v0.0.0-20190516165734-b3a23cc94cc5
 	github.com/gorilla/mux v1.8.0
 	github.com/gregjones/httpcache v0.0.0-20190212212710-3befbb6ad0cc
-	github.com/grpc-ecosystem/grpc-gateway v1.14.7
+	github.com/grpc-ecosystem/grpc-gateway v1.14.8
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/imdario/mergo v0.3.11
 	github.com/joho/godotenv v1.3.0
