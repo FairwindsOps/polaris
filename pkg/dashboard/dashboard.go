@@ -184,14 +184,14 @@ func GetRouter(c config.Configuration, auditPath string, port int, basePath stri
 	router.HandleFunc("/results.json", func(w http.ResponseWriter, r *http.Request) {
 		adjustedConf := getConfigForQuery(c, r.URL.Query())
 		if auditData == nil {
-			k, err := kube.CreateResourceProvider(auditPath, "")
+			k, err := kube.CreateResourceProvider(r.Context(), auditPath, "")
 			if err != nil {
 				logrus.Errorf("Error fetching Kubernetes resources %v", err)
 				http.Error(w, "Error fetching Kubernetes resources", http.StatusInternalServerError)
 				return
 			}
 
-			auditDataObj, err := validator.RunAudit(adjustedConf, k)
+			auditDataObj, err := validator.RunAudit(r.Context(), adjustedConf, k)
 			if err != nil {
 				http.Error(w, "Error Fetching Deployments", http.StatusInternalServerError)
 				return
@@ -217,14 +217,14 @@ func GetRouter(c config.Configuration, auditPath string, port int, basePath stri
 		adjustedConf := getConfigForQuery(c, r.URL.Query())
 
 		if auditData == nil {
-			k, err := kube.CreateResourceProvider(auditPath, "")
+			k, err := kube.CreateResourceProvider(r.Context(), auditPath, "")
 			if err != nil {
 				logrus.Errorf("Error fetching Kubernetes resources %v", err)
 				http.Error(w, "Error fetching Kubernetes resources", http.StatusInternalServerError)
 				return
 			}
 
-			auditData, err := validator.RunAudit(adjustedConf, k)
+			auditData, err := validator.RunAudit(r.Context(), adjustedConf, k)
 			if err != nil {
 				logrus.Errorf("Error getting audit data: %v", err)
 				http.Error(w, "Error running audit", 500)

@@ -2,6 +2,7 @@ package kube
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -42,18 +43,18 @@ type k8sResource struct {
 var podSpecFields = []string{"jobTemplate", "spec", "template"}
 
 // CreateResourceProvider returns a new ResourceProvider object to interact with k8s resources
-func CreateResourceProvider(directory, workload string) (*ResourceProvider, error) {
+func CreateResourceProvider(ctx context.Context, directory, workload string) (*ResourceProvider, error) {
 	if workload != "" {
-		return CreateResourceProviderFromWorkload(workload)
+		return CreateResourceProviderFromWorkload(ctx, workload)
 	}
 	if directory != "" {
 		return CreateResourceProviderFromPath(directory)
 	}
-	return CreateResourceProviderFromCluster()
+	return CreateResourceProviderFromCluster(ctx)
 }
 
 // CreateResourceProviderFromWorkload creates a new ResourceProvider that just contains one workload
-func CreateResourceProviderFromWorkload(workload string) (*ResourceProvider, error) {
+func CreateResourceProviderFromWorkload(ctx context.Context, workload string) (*ResourceProvider, error) {
 	kubeConf, configError := config.GetConfig()
 	if configError != nil {
 		logrus.Errorf("Error fetching KubeConfig: %v", configError)
@@ -98,7 +99,7 @@ func CreateResourceProviderFromWorkload(workload string) (*ResourceProvider, err
 		return nil, err
 	}
 	restMapper := restmapper.NewDiscoveryRESTMapper(groupResources)
-	obj, err := getObject(namespace, kind, version, name, &dynamicInterface, &restMapper)
+	obj, err := getObject(ctx, namespace, kind, version, name, &dynamicInterface, &restMapper)
 	if err != nil {
 		logrus.Errorf("Could not find workload %s: %v", workload, err)
 		return nil, err
@@ -154,7 +155,7 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 }
 
 // CreateResourceProviderFromCluster creates a new ResourceProvider using live data from a cluster
-func CreateResourceProviderFromCluster() (*ResourceProvider, error) {
+func CreateResourceProviderFromCluster(ctx context.Context) (*ResourceProvider, error) {
 	kubeConf, configError := config.GetConfig()
 	if configError != nil {
 		logrus.Errorf("Error fetching KubeConfig: %v", configError)
@@ -170,11 +171,11 @@ func CreateResourceProviderFromCluster() (*ResourceProvider, error) {
 		logrus.Errorf("Error connecting to dynamic interface: %v", err)
 		return nil, err
 	}
-	return CreateResourceProviderFromAPI(api, kubeConf.Host, &dynamicInterface)
+	return CreateResourceProviderFromAPI(ctx, api, kubeConf.Host, &dynamicInterface)
 }
 
 // CreateResourceProviderFromAPI creates a new ResourceProvider from an existing k8s interface
-func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string, dynamic *dynamic.Interface) (*ResourceProvider, error) {
+func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interface, clusterName string, dynamic *dynamic.Interface) (*ResourceProvider, error) {
 	listOpts := metav1.ListOptions{}
 	serverVersion, err := kube.Discovery().ServerVersion()
 	if err != nil {
@@ -182,17 +183,17 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 		return nil, err
 	}
 
-	nodes, err := kube.CoreV1().Nodes().List(listOpts)
+	nodes, err := kube.CoreV1().Nodes().List(ctx, listOpts)
 	if err != nil {
 		logrus.Errorf("Error fetching Nodes: %v", err)
 		return nil, err
 	}
-	namespaces, err := kube.CoreV1().Namespaces().List(listOpts)
+	namespaces, err := kube.CoreV1().Namespaces().List(ctx, listOpts)
 	if err != nil {
 		logrus.Errorf("Error fetching Namespaces: %v", err)
 		return nil, err
 	}
-	pods, err := kube.CoreV1().Pods("").List(listOpts)
+	pods, err := kube.CoreV1().Pods("").List(ctx, listOpts)
 	if err != nil {
 		logrus.Errorf("Error fetching Pods: %v", err)
 		return nil, err
@@ -207,7 +208,7 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 
 	objectCache := map[string]unstructured.Unstructured{}
 
-	controllers, err := LoadControllers(pods.Items, dynamic, &restMapper, objectCache)
+	controllers, err := LoadControllers(ctx, pods.Items, dynamic, &restMapper, objectCache)
 	if err != nil {
 		logrus.Errorf("Error loading controllers from pods: %v", err)
 		return nil, err
@@ -226,7 +227,7 @@ func CreateResourceProviderFromAPI(kube kubernetes.Interface, clusterName string
 }
 
 // LoadControllers loads a list of controllers from the kubeResources Pods
-func LoadControllers(pods []corev1.Pod, dynamicClientPointer *dynamic.Interface, restMapperPointer *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) ([]GenericWorkload, error) {
+func LoadControllers(ctx context.Context, pods []corev1.Pod, dynamicClientPointer *dynamic.Interface, restMapperPointer *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) ([]GenericWorkload, error) {
 	interfaces := []GenericWorkload{}
 	deduped := map[string]corev1.Pod{}
 	for _, pod := range pods {
@@ -238,7 +239,7 @@ func LoadControllers(pods []corev1.Pod, dynamicClientPointer *dynamic.Interface,
 		deduped[pod.ObjectMeta.Namespace+"/"+owners[0].Kind+"/"+owners[0].Name] = pod
 	}
 	for _, pod := range deduped {
-		workload, err := NewGenericWorkload(pod, dynamicClientPointer, restMapperPointer, objectCache)
+		workload, err := NewGenericWorkload(ctx, pod, dynamicClientPointer, restMapperPointer, objectCache)
 		if err != nil {
 			return nil, err
 		}

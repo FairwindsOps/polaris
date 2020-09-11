@@ -15,13 +15,15 @@
 package validator
 
 import (
+	"context"
+
 	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
 )
 
 // ValidatePod validates that each pod conforms to the Polaris config, returns a ResourceResult.
-func ValidatePod(conf *config.Configuration, controller kube.GenericWorkload) (PodResult, error) {
-	podResults, err := applyPodSchemaChecks(conf, controller)
+func ValidatePod(ctx context.Context, conf *config.Configuration, controller kube.GenericWorkload) (PodResult, error) {
+	podResults, err := applyPodSchemaChecks(ctx, conf, controller)
 	if err != nil {
 		return PodResult{}, err
 	}
@@ -30,7 +32,7 @@ func ValidatePod(conf *config.Configuration, controller kube.GenericWorkload) (P
 		ContainerResults: []ContainerResult{},
 	}
 
-	pRes.ContainerResults, err = ValidateAllContainers(conf, controller)
+	pRes.ContainerResults, err = ValidateAllContainers(ctx, conf, controller)
 	if err != nil {
 		return pRes, err
 	}

@@ -2,6 +2,7 @@ package kube
 
 import (
 	"bytes"
+	"context"
 	"io/ioutil"
 	"testing"
 	"time"
@@ -87,10 +88,10 @@ func TestAddResourcesFromReader(t *testing.T) {
 
 func TestGetResourceFromAPI(t *testing.T) {
 	k8s, dynamicInterface := test.SetupTestAPI()
-	k8s = test.SetupAddControllers(k8s, "test")
+	k8s = test.SetupAddControllers(context.Background(), k8s, "test")
 	// TODO find a way to mock out the dynamic client
 	// and create fake pods in order to find all of the controllers.
-	resources, err := CreateResourceProviderFromAPI(k8s, "test", &dynamicInterface)
+	resources, err := CreateResourceProviderFromAPI(context.Background(), k8s, "test", &dynamicInterface)
 	assert.Equal(t, nil, err, "Error should be nil")
 
 	assert.Equal(t, "Cluster", resources.SourceType, "Should have type Path")

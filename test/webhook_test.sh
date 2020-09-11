@@ -2,9 +2,7 @@
 set -e
 
 #sed is replacing the polaris version with this commit sha so we are testing exactly this verison.
-sed -ri "s|'(quay.io/fairwinds/polaris:).+'|'\1${CIRCLE_SHA1}'|" ./deploy/webhook.yaml
-# TODO: remove this after 1.0 is released
-sed -i "s/--webhook/webhook/" ./deploy/webhook.yaml
+sed -r "s|'(quay.io/fairwinds/polaris:).+'|'\1${CIRCLE_SHA1}'|" ./deploy/webhook.yaml > ./deploy/webhook-test.yaml
 
 # Testing to ensure that the webhook starts up, allows a correct deployment to pass,
 # and prevents a incorrectly formatted deployment. 
@@ -12,8 +10,13 @@ function check_webhook_is_ready() {
     # Get the epoch time in one minute from now
     local timeout_epoch
 
-    # Reset another 2 minutes to wait for webhook
-    timeout_epoch=$(date -d "+2 minutes" +%s)
+    # Reset another 4 minutes to wait for webhook
+    timeout_epoch=$(date -d "+4 minutes" +%s)
+
+    while ! kubectl get csr | grep -E "polaris-webhook.polaris"; do
+        check_timeout "${timeout_epoch}"
+        echo -n "."
+    done
 
     # loop until this fails (desired condition is we cannot apply this yaml doc, which means the webhook is working
     echo "Waiting for webhook to be ready"
@@ -21,6 +24,8 @@ function check_webhook_is_ready() {
         check_timeout "${timeout_epoch}"
         echo -n "."
     done
+
+    check_timeout "${timeout_epoch}"
 
     echo "Webhook started!"
 }
@@ -52,6 +57,7 @@ function clean_up() {
 function grab_logs() {
     kubectl -n polaris get pods -oyaml -l app=polaris
     kubectl -n polaris describe pods -l app=polaris
+    kubectl -n polaris logs -l app=polaris -c webhook-certificate-generator
     kubectl -n polaris logs -l app=polaris
 }
 
@@ -60,7 +66,7 @@ kubectl create ns scale-test
 kubectl apply -n scale-test -f ./test/webhook_cases/failing_test.deployment.yaml
 
 # Install the webhook 
-kubectl apply -f ./deploy/webhook.yaml &> /dev/null
+kubectl apply -f ./deploy/webhook-test.yaml &> /dev/null
 
 
 # wait for the webhook to come online

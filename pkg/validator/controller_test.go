@@ -15,6 +15,7 @@
 package validator
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -38,7 +39,7 @@ func TestValidateController(t *testing.T) {
 	expectedSum := CountSummary{
 		Successes: uint(2),
 		Warnings:  uint(0),
-		Dangers:    uint(0),
+		Dangers:   uint(0),
 	}
 
 	expectedResults := ResultSet{
@@ -46,7 +47,7 @@ func TestValidateController(t *testing.T) {
 		"hostPIDSet": {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
-	actualResult, err := ValidateController(&c, deployment)
+	actualResult, err := ValidateController(context.Background(), &c, deployment)
 	if err != nil {
 		panic(err)
 	}
@@ -72,7 +73,7 @@ func TestControllerLevelChecks(t *testing.T) {
 	expectedSum := CountSummary{
 		Successes: uint(0),
 		Warnings:  uint(0),
-		Dangers:    uint(1),
+		Dangers:   uint(1),
 	}
 
 	expectedResults := ResultSet{
@@ -81,7 +82,7 @@ func TestControllerLevelChecks(t *testing.T) {
 
 	for _, controller := range resources.Controllers {
 		if controller.Kind == "Deployment" && controller.ObjectMeta.GetName() == "test-deployment" {
-			actualResult, err := ValidateController(&c, controller)
+			actualResult, err := ValidateController(context.Background(), &c, controller)
 			if err != nil {
 				panic(err)
 			}
@@ -110,13 +111,13 @@ func TestSkipHealthChecks(t *testing.T) {
 	expectedSum := CountSummary{
 		Successes: uint(0),
 		Warnings:  uint(1),
-		Dangers:    uint(1),
+		Dangers:   uint(1),
 	}
 	expectedResults := ResultSet{
 		"readinessProbeMissing": {ID: "readinessProbeMissing", Message: "Readiness probe should be configured", Success: false, Severity: "danger", Category: "Health Checks"},
 		"livenessProbeMissing":  {ID: "livenessProbeMissing", Message: "Liveness probe should be configured", Success: false, Severity: "warning", Category: "Health Checks"},
 	}
-	actualResult, err := ValidateController(&c, deployment)
+	actualResult, err := ValidateController(context.Background(), &c, deployment)
 	if err != nil {
 		panic(err)
 	}
@@ -132,10 +133,10 @@ func TestSkipHealthChecks(t *testing.T) {
 	expectedSum = CountSummary{
 		Successes: uint(0),
 		Warnings:  uint(0),
-		Dangers:    uint(0),
+		Dangers:   uint(0),
 	}
 	expectedResults = ResultSet{}
-	actualResult, err = ValidateController(&c, job)
+	actualResult, err = ValidateController(context.Background(), &c, job)
 	if err != nil {
 		panic(err)
 	}
@@ -150,10 +151,10 @@ func TestSkipHealthChecks(t *testing.T) {
 	expectedSum = CountSummary{
 		Successes: uint(0),
 		Warnings:  uint(0),
-		Dangers:    uint(0),
+		Dangers:   uint(0),
 	}
 	expectedResults = ResultSet{}
-	actualResult, err = ValidateController(&c, cronjob)
+	actualResult, err = ValidateController(context.Background(), &c, cronjob)
 	if err != nil {
 		panic(err)
 	}
@@ -181,9 +182,9 @@ func TestControllerExemptions(t *testing.T) {
 	expectedSum := CountSummary{
 		Successes: uint(0),
 		Warnings:  uint(1),
-		Dangers:    uint(1),
+		Dangers:   uint(1),
 	}
-	actualResults, err := ValidateControllers(&c, resources)
+	actualResults, err := ValidateControllers(context.Background(), &c, resources)
 	if err != nil {
 		panic(err)
 	}
@@ -194,7 +195,7 @@ func TestControllerExemptions(t *testing.T) {
 	resources.Controllers[0].ObjectMeta.SetAnnotations(map[string]string{
 		exemptionAnnotationKey: "true",
 	})
-	actualResults, err = ValidateControllers(&c, resources)
+	actualResults, err = ValidateControllers(context.Background(), &c, resources)
 	if err != nil {
 		panic(err)
 	}

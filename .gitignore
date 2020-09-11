@@ -22,3 +22,5 @@ main
 *-packr.go
 dist
 .vscode
+
+*-test.yaml

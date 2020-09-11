@@ -14,6 +14,15 @@ metadata:
   labels:
     app: polaris
 ---
+# Source: polaris/templates/webhook.rbac.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: polaris-certificates
+  namespace: polaris
+  labels:
+    app: polaris
+---
 # Source: polaris/templates/webhook.secret.yaml
 # The name of this secret is static as it is populated by the webhook pod.
 apiVersion: v1
@@ -23,9 +32,10 @@ metadata:
   namespace: polaris
   labels:
     app: polaris
-type: Opaque
-stringData:
-  cert.pem: ''
+type: kubernetes.io/tls
+data:
+  tls.crt: ''
+  tls.key: ''
 ---
 # Source: polaris/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -53,8 +63,6 @@ metadata:
   labels:
     app: polaris
 rules:
-  # required by controller-runtime code doing a cluster wide lookup
-  # when it seems namespace would suffice
   - apiGroups:
       - ''
     resources:
@@ -64,6 +72,24 @@ rules:
       - 'get'
       - 'list'
       - 'watch'
+  - apiGroups:
+    - 'certificates.k8s.io'
+    resources:
+    - 'certificatesigningrequests'
+    - 'certificatesigningrequests/approval'
+    verbs:
+    - 'get'
+    - 'update'
+    - 'create'
+    - 'delete'
+  - apiGroups:
+    - 'certificates.k8s.io'
+    resources:
+    - 'signers'
+    resourceNames:
+    - 'kubernetes.io/legacy-unknown'
+    verbs:
+    - 'approve'
   - apiGroups:
       - 'admissionregistration.k8s.io'
     resources:
@@ -116,7 +142,7 @@ roleRef:
   name: polaris-webhook
 subjects:
   - kind: ServiceAccount
-    name: polaris
+    name: polaris-certificates
     namespace: polaris
 ---
 # Source: polaris/templates/webhook.rbac.yaml
@@ -151,7 +177,7 @@ roleRef:
   name: polaris-webhook
 subjects:
   - kind: ServiceAccount
-    name: polaris
+    name: polaris-certificates
     namespace: polaris
 ---
 # Source: polaris/templates/webhook.service.yaml
@@ -253,3 +279,127 @@ spec:
             secretName: polaris-webhook
         - name: cr-logs
           emptyDir: {}
+---
+# Source: polaris/templates/webhook.job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: polaris-certificate-updater
+  namespace: polaris
+  labels:
+    
+    app: polaris
+    component: certificate-updater
+spec:
+  template:
+    metadata:
+      labels:
+        
+        app: polaris
+        component: certificate-updater
+    spec:
+      containers:
+      - name: webhook-certificate-generator
+        image: 'newrelic/k8s-webhook-cert-manager:1.3.0'
+        imagePullPolicy: Always
+        command:
+          - ./generate_certificate.sh
+          - --service
+          - polaris-webhook
+          - --namespace
+          - polaris
+          - --secret
+          - polaris-webhook
+          - --webhook
+          - polaris-webhook
+          - --webhook-kind
+          - ValidatingWebhookConfiguration
+        resources:
+          limits:
+            cpu: 150m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp/
+          readOnly: false
+        securityContext:
+          allowPrivilegeEscalation: false
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+            - ALL
+      serviceAccountName:  polaris-certificates
+      restartPolicy: Never
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+# Source: polaris/templates/webhook.configuration.yaml
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: polaris-webhook
+webhooks:
+- admissionReviewVersions:
+  - v1beta1
+  clientConfig:
+    caBundle: "" 
+    service:
+      name: polaris-webhook
+      namespace: polaris
+      path: /validate
+      port: 443
+  failurePolicy: Ignore
+  matchPolicy: Exact
+  name: polaris.fairwinds.com
+  namespaceSelector:
+    matchExpressions:
+    - key: control-plane
+      operator: DoesNotExist
+  objectSelector: {}
+  rules:
+  - apiGroups:
+    - apps
+    apiVersions:
+    - v1
+    - v1beta1
+    - v1beta2
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - daemonsets
+    - deployments
+    - statefulsets
+    scope: Namespaced
+  - apiGroups:
+    - batch
+    apiVersions:
+    - v1
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - jobs
+    - cronjobs
+    scope: Namespaced
+  - apiGroups:
+    - ""
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - pods
+    - replicationcontrollers
+    scope: Namespaced
+  sideEffects: None
+  timeoutSeconds: 30

@@ -2,6 +2,7 @@ package kube
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -80,8 +81,8 @@ func NewGenericWorkloadFromPod(podResource kubeAPICoreV1.Pod, originalObject int
 }
 
 // NewGenericWorkload builds a new workload for a given Pod
-func NewGenericWorkload(podResource kubeAPICoreV1.Pod, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) (GenericWorkload, error) {
-	workload, err := newGenericWorkload(podResource, dynamicClient, restMapper, objectCache)
+func NewGenericWorkload(ctx context.Context, podResource kubeAPICoreV1.Pod, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) (GenericWorkload, error) {
+	workload, err := newGenericWorkload(ctx, podResource, dynamicClient, restMapper, objectCache)
 	if err != nil {
 		return workload, err
 	}
@@ -91,7 +92,7 @@ func NewGenericWorkload(podResource kubeAPICoreV1.Pod, dynamicClient *dynamic.In
 	return workload, err
 }
 
-func newGenericWorkload(podResource kubeAPICoreV1.Pod, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) (GenericWorkload, error) {
+func newGenericWorkload(ctx context.Context, podResource kubeAPICoreV1.Pod, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) (GenericWorkload, error) {
 	workload, err := NewGenericWorkloadFromPod(podResource, nil)
 	if err != nil {
 		return workload, err
@@ -113,7 +114,7 @@ func newGenericWorkload(podResource kubeAPICoreV1.Pod, dynamicClient *dynamic.In
 		lastKey = key
 		abstractObject, ok := objectCache[key]
 		if !ok {
-			err = cacheAllObjectsOfKind(firstOwner.APIVersion, firstOwner.Kind, dynamicClient, restMapper, objectCache)
+			err = cacheAllObjectsOfKind(ctx, firstOwner.APIVersion, firstOwner.Kind, dynamicClient, restMapper, objectCache)
 			if err != nil {
 				logrus.Warnf("Error caching objects of Kind %s %v", firstOwner.Kind, err)
 				break
@@ -150,7 +151,7 @@ func newGenericWorkload(podResource kubeAPICoreV1.Pod, dynamicClient *dynamic.In
 	return workload, nil
 }
 
-func cacheAllObjectsOfKind(apiVersion, kind string, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) error {
+func cacheAllObjectsOfKind(ctx context.Context, apiVersion, kind string, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) error {
 	fqKind := schema.FromAPIVersionAndKind(apiVersion, kind)
 	mapping, err := (*restMapper).RESTMapping(fqKind.GroupKind(), fqKind.Version)
 	if err != nil {
@@ -158,7 +159,7 @@ func cacheAllObjectsOfKind(apiVersion, kind string, dynamicClient *dynamic.Inter
 		return err
 	}
 
-	objects, err := (*dynamicClient).Resource(mapping.Resource).Namespace("").List(kubeAPIMetaV1.ListOptions{})
+	objects, err := (*dynamicClient).Resource(mapping.Resource).Namespace("").List(ctx, kubeAPIMetaV1.ListOptions{})
 	if err != nil {
 		logrus.Warnf("Error retrieving parent object API %s and Kind %s because of error: %v ", mapping.Resource.Version, mapping.Resource.Resource, err)
 		return err
@@ -170,13 +171,13 @@ func cacheAllObjectsOfKind(apiVersion, kind string, dynamicClient *dynamic.Inter
 	return nil
 }
 
-func getObject(namespace, kind, version, name string, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper) (*unstructured.Unstructured, error) {
+func getObject(ctx context.Context, namespace, kind, version, name string, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper) (*unstructured.Unstructured, error) {
 	fqKind := schema.ParseGroupKind(kind)
 	mapping, err := (*restMapper).RESTMapping(fqKind, version)
 	if err != nil {
 		return nil, err
 	}
-	object, err := (*dynamicClient).Resource(mapping.Resource).Namespace(namespace).Get(name, kubeAPIMetaV1.GetOptions{})
+	object, err := (*dynamicClient).Resource(mapping.Resource).Namespace(namespace).Get(ctx, name, kubeAPIMetaV1.GetOptions{})
 	return object, err
 }
 

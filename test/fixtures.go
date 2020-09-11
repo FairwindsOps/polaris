@@ -1,12 +1,15 @@
 package test
 
 import (
+	"context"
+
 	appsv1 "k8s.io/api/apps/v1"
 	appsv1beta1 "k8s.io/api/apps/v1beta1"
 	appsv1beta2 "k8s.io/api/apps/v1beta2"
 	batchv1 "k8s.io/api/batch/v1"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/dynamic"
 	dynamicFake "k8s.io/client-go/dynamic/fake"
@@ -116,39 +119,39 @@ func SetupTestAPI() (kubernetes.Interface, dynamic.Interface) {
 }
 
 // SetupAddControllers creates mock controllers and adds them to the test clientset.
-func SetupAddControllers(k kubernetes.Interface, namespace string) kubernetes.Interface {
+func SetupAddControllers(ctx context.Context, k kubernetes.Interface, namespace string) kubernetes.Interface {
 	d1 := MockDeploy()
-	if _, err := k.AppsV1().Deployments(namespace).Create(&d1); err != nil {
+	if _, err := k.AppsV1().Deployments(namespace).Create(ctx, &d1, metav1.CreateOptions{}); err != nil {
 		panic(err)
 	}
 
 	s1 := MockStatefulSet()
-	if _, err := k.AppsV1().StatefulSets(namespace).Create(&s1); err != nil {
+	if _, err := k.AppsV1().StatefulSets(namespace).Create(ctx, &s1, metav1.CreateOptions{}); err != nil {
 		panic(err)
 	}
 
 	ds1 := MockDaemonSet()
-	if _, err := k.AppsV1().DaemonSets(namespace).Create(&ds1); err != nil {
+	if _, err := k.AppsV1().DaemonSets(namespace).Create(ctx, &ds1, metav1.CreateOptions{}); err != nil {
 		panic(err)
 	}
 
 	j1 := MockJob()
-	if _, err := k.BatchV1().Jobs(namespace).Create(&j1); err != nil {
+	if _, err := k.BatchV1().Jobs(namespace).Create(ctx, &j1, metav1.CreateOptions{}); err != nil {
 		panic(err)
 	}
 
 	cj1 := MockCronJob()
-	if _, err := k.BatchV1beta1().CronJobs(namespace).Create(&cj1); err != nil {
+	if _, err := k.BatchV1beta1().CronJobs(namespace).Create(ctx, &cj1, metav1.CreateOptions{}); err != nil {
 		panic(err)
 	}
 
 	rc1 := MockReplicationController()
-	if _, err := k.CoreV1().ReplicationControllers(namespace).Create(&rc1); err != nil {
+	if _, err := k.CoreV1().ReplicationControllers(namespace).Create(ctx, &rc1, metav1.CreateOptions{}); err != nil {
 		panic(err)
 	}
 
 	p1 := MockNakedPod()
-	if _, err := k.CoreV1().Pods(namespace).Create(&p1); err != nil {
+	if _, err := k.CoreV1().Pods(namespace).Create(ctx, &p1, metav1.CreateOptions{}); err != nil {
 		panic(err)
 	}
 
@@ -156,7 +159,7 @@ func SetupAddControllers(k kubernetes.Interface, namespace string) kubernetes.In
 }
 
 // SetupAddExtraControllerVersions creates mock controllers and adds them to the test clientset.
-func SetupAddExtraControllerVersions(k kubernetes.Interface, namespace string) kubernetes.Interface {
+func SetupAddExtraControllerVersions(ctx context.Context, k kubernetes.Interface, namespace string) kubernetes.Interface {
 	p := MockPod()
 
 	dv1b1 := appsv1beta1.Deployment{
@@ -164,7 +167,7 @@ func SetupAddExtraControllerVersions(k kubernetes.Interface, namespace string) k
 			Template: corev1.PodTemplateSpec{Spec: p.Spec},
 		},
 	}
-	if _, err := k.AppsV1beta1().Deployments(namespace).Create(&dv1b1); err != nil {
+	if _, err := k.AppsV1beta1().Deployments(namespace).Create(ctx, &dv1b1, metav1.CreateOptions{}); err != nil {
 		panic(err)
 	}
 
@@ -173,7 +176,7 @@ func SetupAddExtraControllerVersions(k kubernetes.Interface, namespace string) k
 			Template: corev1.PodTemplateSpec{Spec: p.Spec},
 		},
 	}
-	if _, err := k.AppsV1beta2().Deployments(namespace).Create(&dv1b2); err != nil {
+	if _, err := k.AppsV1beta2().Deployments(namespace).Create(ctx, &dv1b2, metav1.CreateOptions{}); err != nil {
 		panic(err)
 	}
 
@@ -182,7 +185,7 @@ func SetupAddExtraControllerVersions(k kubernetes.Interface, namespace string) k
 			Template: corev1.PodTemplateSpec{Spec: p.Spec},
 		},
 	}
-	if _, err := k.AppsV1beta1().StatefulSets(namespace).Create(&ssv1b1); err != nil {
+	if _, err := k.AppsV1beta1().StatefulSets(namespace).Create(ctx, &ssv1b1, metav1.CreateOptions{}); err != nil {
 		panic(err)
 	}
 
@@ -191,7 +194,7 @@ func SetupAddExtraControllerVersions(k kubernetes.Interface, namespace string) k
 			Template: corev1.PodTemplateSpec{Spec: p.Spec},
 		},
 	}
-	if _, err := k.AppsV1beta2().StatefulSets(namespace).Create(&ssv1b2); err != nil {
+	if _, err := k.AppsV1beta2().StatefulSets(namespace).Create(ctx, &ssv1b2, metav1.CreateOptions{}); err != nil {
 		panic(err)
 	}
 
@@ -200,7 +203,7 @@ func SetupAddExtraControllerVersions(k kubernetes.Interface, namespace string) k
 			Template: corev1.PodTemplateSpec{Spec: p.Spec},
 		},
 	}
-	if _, err := k.AppsV1beta2().DaemonSets(namespace).Create(&dsv1b2); err != nil {
+	if _, err := k.AppsV1beta2().DaemonSets(namespace).Create(ctx, &dsv1b2, metav1.CreateOptions{}); err != nil {
 		panic(err)
 	}
 	return k
