@@ -120,6 +120,12 @@ You can also point the dashboard to the local filesystem, instead of a live clus
 polaris dashboard --port 8080 --audit-path=./deploy/
 ```
 
+### Local Docker
+
+```
+docker run -d -p8080:8080 -v ~/.kube/config:/tmp/config quay.io/fairwinds/polaris:1.2 polaris dashboard --kubeconfig /tmp/config
+```
+
 ## Webhook
 ### kubectl
 ```bash
