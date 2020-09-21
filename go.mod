@@ -6,7 +6,6 @@ require (
 	cloud.google.com/go v0.65.0 // indirect
 	github.com/Azure/go-autorest/autorest v0.11.4 // indirect
 	github.com/Azure/go-autorest/autorest/adal v0.9.2 // indirect
-	github.com/evanphx/json-patch v4.9.0+incompatible // indirect
 	github.com/gobuffalo/packr/v2 v2.8.0
 	github.com/google/go-cmp v0.5.2 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
@@ -36,6 +35,6 @@ require (
 	k8s.io/client-go v0.18.6
 	k8s.io/klog/v2 v2.1.0 // indirect
 	k8s.io/utils v0.0.0-20200821003339-5e75c0163111 // indirect
-	sigs.k8s.io/controller-runtime v0.6.2
+	sigs.k8s.io/controller-runtime v0.6.3
 	sigs.k8s.io/yaml v1.2.0
 )
