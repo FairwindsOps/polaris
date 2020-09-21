@@ -12,8 +12,8 @@ require (
 	github.com/gophercloud/gophercloud v0.12.0 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/imdario/mergo v0.3.11 // indirect
+	github.com/jessevdk/go-flags v1.4.0 // indirect
 	github.com/karrick/godirwalk v1.16.1 // indirect
-	github.com/kr/pretty v0.2.0 // indirect
 	github.com/prometheus/common v0.13.0 // indirect
 	github.com/qri-io/jsonpointer v0.1.1 // indirect
 	github.com/qri-io/jsonschema v0.1.1
@@ -30,10 +30,9 @@ require (
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
 	gomodules.xyz/jsonpatch/v2 v2.1.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
-	k8s.io/api v0.18.8
-	k8s.io/apimachinery v0.18.8
+	k8s.io/api v0.19.2
+	k8s.io/apimachinery v0.19.2
 	k8s.io/client-go v0.18.6
-	k8s.io/klog/v2 v2.1.0 // indirect
 	k8s.io/utils v0.0.0-20200821003339-5e75c0163111 // indirect
 	sigs.k8s.io/controller-runtime v0.6.3
 	sigs.k8s.io/yaml v1.2.0
