@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -16,7 +15,6 @@ func (conf Configuration) IsActionable(ruleID, namespace, controllerName string)
 
 	for _, example := range conf.Exemptions {
 		if example.Namespace != "" && example.Namespace != namespace {
-			fmt.Println("not matches: " + example.Namespace + " -> " + namespace)
 			continue
 		}
 
