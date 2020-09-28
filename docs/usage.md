@@ -71,9 +71,16 @@ To exempt a controller from all checks via annotations, use the annotation `pola
 kubectl annotate deployment my-deployment polaris.fairwinds.com/exempt=true
 ```
 
-To exempt a controller via the config, you have to specify a list of controller names and a list of rules, e.g.
+To exempt a controller via the config, you have to specify a namespace (optional), a list of controller names and a list of rules, e.g.
 ```yaml
 exemptions:
+  # exception valid for kube-system namespace
+  - namespace: kube-system
+    controllerNames:
+      - dns-controller
+    rules:
+      - hostNetworkSet
+  # exception valid in all namespaces
   - controllerNames:
       - dns-controller
     rules:
