@@ -40,6 +40,7 @@ type Configuration struct {
 type Exemption struct {
 	Rules           []string `json:"rules"`
 	ControllerNames []string `json:"controllerNames"`
+	Namespace       string `json:"namespace"`
 }
 
 var configBox = (*packr.Box)(nil)

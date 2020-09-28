@@ -86,10 +86,10 @@ func resolveCheck(conf *config.Configuration, checkID string, controller kube.Ge
 	if !ok {
 		return nil, fmt.Errorf("Check %s not found", checkID)
 	}
-	if !conf.IsActionable(check.ID, controller.ObjectMeta.GetName()) {
+	if !conf.IsActionable(check.ID, controller.ObjectMeta.GetNamespace(), controller.ObjectMeta.GetName()) {
 		return nil, nil
 	}
-	if !check.IsActionable(target, controller.Kind, isInitContainer) {
+	if !check.IsActionable(target, controller.ObjectMeta.GetNamespace(), controller.Kind, isInitContainer) {
 		return nil, nil
 	}
 	return &check, nil

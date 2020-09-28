@@ -1,11 +1,12 @@
 package config
 
 import (
+	"fmt"
 	"strings"
 )
 
 // IsActionable determines whether a check is actionable given the current configuration
-func (conf Configuration) IsActionable(ruleID, controllerName string) bool {
+func (conf Configuration) IsActionable(ruleID, namespace, controllerName string) bool {
 	if severity, ok := conf.Checks[ruleID]; !ok || !severity.IsActionable() {
 		return false
 	}
@@ -14,10 +15,16 @@ func (conf Configuration) IsActionable(ruleID, controllerName string) bool {
 	}
 
 	for _, example := range conf.Exemptions {
+		if example.Namespace != "" && example.Namespace != namespace {
+			fmt.Println("not matches: " + example.Namespace + " -> " + namespace)
+			continue
+		}
+
 		for _, rule := range example.Rules {
 			if rule != ruleID {
 				continue
 			}
+
 			for _, controller := range example.ControllerNames {
 				if strings.HasPrefix(controllerName, controller) {
 					return false
