@@ -39,10 +39,19 @@ exemptions:
       - test
 `
 
+var confNamespaceTest = `
+checks:
+  ANY: warning
+exemptions:
+  - namespace: kube-system
+    controllerNames:
+      - test
+`
+
 func TestInclusiveExemption(t *testing.T) {
 	parsedConf, _ := Parse([]byte(confExemptTest))
-	applicable := parsedConf.IsActionable("ANY", "test")
-	applicableOtherController := parsedConf.IsActionable("ANY", "other")
+	applicable := parsedConf.IsActionable("ANY", "test", "test")
+	applicableOtherController := parsedConf.IsActionable("ANY","test",  "other")
 
 	assert.False(t, applicable, "Expected all checks to be exempted when their controller is specified.")
 	assert.True(t, applicableOtherController, "Expected checks to only be exempted when their controller is specified.")
@@ -50,13 +59,22 @@ func TestInclusiveExemption(t *testing.T) {
 
 func TestIndividualRuleException(t *testing.T) {
 	parsedConf, _ := Parse([]byte(confExemptRuleTest))
-	applicable := parsedConf.IsActionable("ANY", "test")
-	applicableOtherRule := parsedConf.IsActionable("OTHER", "test")
-	applicableOtherRuleOtherController := parsedConf.IsActionable("OTHER", "other")
-	applicableRuleOtherController := parsedConf.IsActionable("ANY", "other")
+	applicable := parsedConf.IsActionable("ANY", "test", "test")
+	applicableOtherRule := parsedConf.IsActionable("OTHER","test",  "test")
+	applicableOtherRuleOtherController := parsedConf.IsActionable("OTHER","test",  "other")
+	applicableRuleOtherController := parsedConf.IsActionable("ANY","test",  "other")
 
 	assert.False(t, applicable, "Expected all checks to be exempted when their controller and rule are specified.")
 	assert.True(t, applicableOtherRule, "Expected checks to only be exempted when their controller and rule are specified.")
 	assert.True(t, applicableOtherRuleOtherController, "Expected checks to only be exempted when their controller and rule are specified.")
 	assert.True(t, applicableRuleOtherController, "Expected checks to only be exempted when their controller and rule are specified.")
+}
+
+func TestNamespaceExemption(t *testing.T) {
+	parsedConf, _ := Parse([]byte(confNamespaceTest))
+	applicable := parsedConf.IsActionable("ANY", "kube-system", "test")
+	applicableOtherController := parsedConf.IsActionable("ANY","default",  "test")
+
+	assert.False(t, applicable, "Expected all checks to be exempted when their namespace and controller is specified.")
+	assert.True(t, applicableOtherController, "Expected checks to only be exempted when their namespace and controller is specified.")
 }

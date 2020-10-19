@@ -35,6 +35,12 @@ exemptions:
     rules:
     - hostNetworkSet
     - hostPortSet
+  - namespace: kube-system
+    controllerNames:
+      - my-network-controller
+    rules:
+      - hostNetworkSet
+      - hostPortSet
 
 customChecks:
   resourceLimits:

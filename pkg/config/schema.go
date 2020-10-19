@@ -152,7 +152,7 @@ func (check SchemaCheck) CheckObject(obj interface{}) (bool, error) {
 }
 
 // IsActionable decides if this check applies to a particular target
-func (check SchemaCheck) IsActionable(target TargetKind, controllerType string, isInit bool) bool {
+func (check SchemaCheck) IsActionable(target TargetKind, namespace, controllerType string, isInit bool) bool {
 	if check.Target != target {
 		return false
 	}
