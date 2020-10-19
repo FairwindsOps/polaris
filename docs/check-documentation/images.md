@@ -5,7 +5,7 @@ Polaris supports a number of checks related to the image specified by pods.
 key | default | description
 ----|---------|------------
 `images.tagNotSpecified` | `danger` | Fails when an image tag is either not specified or `latest`.
-`images.pullPolicyNotAlways` | `ignore` | Fails when an image pull policy is not `always`.
+`images.pullPolicyNotAlways` | `warning` | Fails when an image pull policy is not `always`.
 
 ## Background
 
