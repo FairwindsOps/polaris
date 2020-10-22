@@ -19,7 +19,7 @@ require (
 	github.com/qri-io/jsonschema v0.1.1
 	github.com/rogpeppe/go-internal v1.6.2 // indirect
 	github.com/sirupsen/logrus v1.7.0
-	github.com/spf13/cobra v1.0.0
+	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.6.1
 	gitlab.com/golang-commonmark/linkify v0.0.0-20200225224916-64bca66f6ad3 // indirect
