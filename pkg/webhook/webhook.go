@@ -25,6 +25,7 @@ import (
 	"github.com/fairwindsops/polaris/pkg/kube"
 	validator "github.com/fairwindsops/polaris/pkg/validator"
 
+	"github.com/fairwindsops/controller-utils/pkg/podspec"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -66,7 +67,7 @@ func GetObjectFromRawRequest(raw []byte) (corev1.Pod, interface{}, error) {
 	if err != nil {
 		return pod, originalObject, err
 	}
-	podMap := kube.GetPodSpec(decoded)
+	podMap := podspec.GetPodSpec(decoded)
 	if podMap == nil {
 		return pod, originalObject, errors.New("Object does not contain pods")
 	}

@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/fairwindsops/controller-utils/pkg/controller"
+	"github.com/fairwindsops/controller-utils/pkg/podspec"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 	kubeAPICoreV1 "k8s.io/api/core/v1"
@@ -48,17 +50,17 @@ func NewGenericWorkloadFromUnstructured(kind string, unst *unstructured.Unstruct
 	if err != nil {
 		return workload, err
 	}
-	podSpecMap := GetPodSpec(m)
+	podSpecMap := podspec.GetPodSpec(m)
 	b, err = json.Marshal(podSpecMap)
 	if err != nil {
 		return workload, err
 	}
-	podSpec := kubeAPICoreV1.PodSpec{}
-	err = json.Unmarshal(b, &podSpec)
+	podSpecObject := kubeAPICoreV1.PodSpec{}
+	err = json.Unmarshal(b, &podSpecObject)
 	if err != nil {
 		return workload, err
 	}
-	workload.PodSpec = podSpec
+	workload.PodSpec = podSpecObject
 
 	return workload, nil
 }
@@ -97,57 +99,20 @@ func newGenericWorkload(ctx context.Context, podResource kubeAPICoreV1.Pod, dyna
 	if err != nil {
 		return workload, err
 	}
-	// If an owner exists then set the name to the workload.
-	// This allows us to handle CRDs creating Workloads or DeploymentConfigs in OpenShift.
-	owners := workload.ObjectMeta.GetOwnerReferences()
-	lastKey := ""
-	for len(owners) > 0 {
-		if len(owners) > 1 {
-			logrus.Warn("More than 1 owner found")
-		}
-		firstOwner := owners[0]
-		if firstOwner.Kind == "Node" {
-			break
-		}
-		workload.Kind = firstOwner.Kind
-		key := fmt.Sprintf("%s/%s/%s", firstOwner.Kind, workload.ObjectMeta.GetNamespace(), firstOwner.Name)
-		lastKey = key
-		abstractObject, ok := objectCache[key]
-		if !ok {
-			err = cacheAllObjectsOfKind(ctx, firstOwner.APIVersion, firstOwner.Kind, dynamicClient, restMapper, objectCache)
-			if err != nil {
-				logrus.Warnf("Error caching objects of Kind %s %v", firstOwner.Kind, err)
-				break
-			}
-			abstractObject, ok = objectCache[key]
-			if !ok {
-				logrus.Errorf("Cache missed %s again", key)
-				break
-			}
-		}
-
-		objMeta, err := meta.Accessor(&abstractObject)
-		if err != nil {
-			logrus.Warnf("Error retrieving parent metadata %s of API %s and Kind %s because of error: %v ", firstOwner.Name, firstOwner.APIVersion, firstOwner.Kind, err)
-			return workload, err
-		}
-		workload.ObjectMeta = objMeta
-		owners = abstractObject.GetOwnerReferences()
+	objMeta, err := meta.Accessor(&podResource)
+	if err != nil {
+		return workload, err
+	}
+	controllerObject, err := controller.GetTopController(ctx, *dynamicClient, *restMapper, objMeta)
+	if err != nil {
+		return workload, err
 	}
 
-	if lastKey != "" {
-		bytes, err := json.Marshal(objectCache[lastKey])
-		if err != nil {
-			return workload, err
-		}
-		workload.OriginalObjectJSON = bytes
-	} else {
-		bytes, err := json.Marshal(podResource)
-		if err != nil {
-			return workload, err
-		}
-		workload.OriginalObjectJSON = bytes
+	bytes, err := json.Marshal(controllerObject)
+	if err != nil {
+		return workload, err
 	}
+	workload.OriginalObjectJSON = bytes
 	return workload, nil
 }
 
@@ -181,19 +146,6 @@ func getObject(ctx context.Context, namespace, kind, version, name string, dynam
 	return object, err
 }
 
-// GetPodSpec looks inside arbitrary YAML for a PodSpec
-func GetPodSpec(yaml map[string]interface{}) interface{} {
-	for _, child := range podSpecFields {
-		if childYaml, ok := yaml[child]; ok {
-			return GetPodSpec(childYaml.(map[string]interface{}))
-		}
-	}
-	if _, ok := yaml["containers"]; ok {
-		return yaml
-	}
-	return nil
-}
-
 // GetWorkloadFromBytes parses a GenericWorkload
 func GetWorkloadFromBytes(contentBytes []byte) (*GenericWorkload, error) {
 	yamlNode := make(map[string]interface{})
@@ -206,11 +158,11 @@ func GetWorkloadFromBytes(contentBytes []byte) (*GenericWorkload, error) {
 	finalDoc["metadata"] = yamlNode["metadata"]
 	finalDoc["apiVersion"] = "v1"
 	finalDoc["kind"] = "Pod"
-	podSpec := GetPodSpec(yamlNode)
-	if podSpec == nil {
+	podSpecObject := podspec.GetPodSpec(yamlNode)
+	if podSpecObject == nil {
 		return nil, nil
 	}
-	finalDoc["spec"] = podSpec
+	finalDoc["spec"] = podSpecObject
 	marshaledYaml, err := yaml.Marshal(finalDoc)
 	if err != nil {
 		logrus.Errorf("Could not marshal yaml: %v", err)
