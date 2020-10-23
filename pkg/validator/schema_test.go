@@ -42,7 +42,7 @@ customChecks:
       - initContainer
     successMessage: Memory limits are within the required range
     failureMessage: Memory limits should be within the required range
-    category: Resources
+    category: Efficiency
     target: Container
     schema:
       '$schema': http://json-schema.org/draft-07/schema
@@ -67,7 +67,7 @@ customChecks:
   memoryRequestsRange:
     successMessage: Memory requests are within the required range
     failureMessage: Memory requests should be within the required range
-    category: Resources
+    category: Efficiency
     target: Container
     containers:
       exclude:
@@ -118,7 +118,7 @@ func TestValidateResourcesPartiallyValid(t *testing.T) {
 			Success:  false,
 			Severity: "warning",
 			Message:  "Memory limits should be within the required range",
-			Category: "Resources",
+			Category: "Efficiency",
 		},
 	}
 
@@ -128,7 +128,7 @@ func TestValidateResourcesPartiallyValid(t *testing.T) {
 			Success:  false,
 			Severity: "danger",
 			Message:  "Memory requests should be within the required range",
-			Category: "Resources",
+			Category: "Efficiency",
 		},
 	}
 
@@ -192,14 +192,14 @@ func TestValidateResourcesFullyValid(t *testing.T) {
 			Success:  true,
 			Severity: "danger",
 			Message:  "Memory requests are within the required range",
-			Category: "Resources",
+			Category: "Efficiency",
 		},
 		{
 			ID:       "memoryLimitsRange",
 			Success:  true,
 			Severity: "warning",
 			Message:  "Memory limits are within the required range",
-			Category: "Resources",
+			Category: "Efficiency",
 		},
 	}
 
@@ -211,28 +211,28 @@ func TestValidateResourcesFullyValid(t *testing.T) {
 			Success:  true,
 			Severity: "warning",
 			Message:  "CPU requests are set",
-			Category: "Resources",
+			Category: "Efficiency",
 		},
 		{
 			ID:       "memoryRequestsMissing",
 			Success:  true,
 			Severity: "warning",
 			Message:  "Memory requests are set",
-			Category: "Resources",
+			Category: "Efficiency",
 		},
 		{
 			ID:       "cpuLimitsMissing",
 			Success:  true,
 			Severity: "danger",
 			Message:  "CPU limits are set",
-			Category: "Resources",
+			Category: "Efficiency",
 		},
 		{
 			ID:       "memoryLimitsMissing",
 			Success:  true,
 			Severity: "danger",
 			Message:  "Memory limits are set",
-			Category: "Resources",
+			Category: "Efficiency",
 		},
 	}
 
