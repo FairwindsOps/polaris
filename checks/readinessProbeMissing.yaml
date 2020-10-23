@@ -1,6 +1,6 @@
 successMessage: Readiness probe is configured
 failureMessage: Readiness probe should be configured
-category: Health Checks
+category: Reliability
 controllers:
   exclude:
   - Job

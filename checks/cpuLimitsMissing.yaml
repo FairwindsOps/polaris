@@ -1,6 +1,6 @@
 successMessage: CPU limits are set
 failureMessage: CPU limits should be set
-category: Resources
+category: Efficiency
 target: Container
 containers:
   exclude:

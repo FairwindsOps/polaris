@@ -1,6 +1,6 @@
 successMessage: Host port is not configured
 failureMessage: Host port should not be configured
-category: Networking
+category: Security
 target: Container
 schema:
   '$schema': http://json-schema.org/draft-07/schema

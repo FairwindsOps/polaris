@@ -1,6 +1,6 @@
 successMessage: Image pull policy is "Always"
 failureMessage: Image pull policy should be "Always"
-category: Images
+category: Reliability
 target: Container
 schema:
   '$schema': http://json-schema.org/draft-07/schema

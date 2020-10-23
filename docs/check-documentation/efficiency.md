@@ -1,4 +1,4 @@
-# Resources
+# Efficiency
 
 Polaris supports a number of checks related to CPU and Memory requests and limits.
 
@@ -8,10 +8,10 @@ To simplify ensure that these values have been set, the following attributes are
 
 key | default | description
 ----|---------|------------
-`resources.cpuRequestsMissing` | `danger` | Fails when `resources.requests.cpu` attribute is not configured.
-`resources.memoryRequestsMissing` | `danger` | Fails when `resources.requests.memory` attribute is not configured.
-`resources.cpuLimitsMissing` | `danger` | Fails when `resources.limits.cpu` attribute is not configured.
-`resources.memoryLimitsMissing` | `danger` | Fails when `resources.limits.memory` attribute is not configured.
+`resources.cpuRequestsMissing` | `warning` | Fails when `resources.requests.cpu` attribute is not configured.
+`resources.memoryRequestsMissing` | `warning` | Fails when `resources.requests.memory` attribute is not configured.
+`resources.cpuLimitsMissing` | `warning` | Fails when `resources.limits.cpu` attribute is not configured.
+`resources.memoryLimitsMissing` | `warning` | Fails when `resources.limits.memory` attribute is not configured.
 
 ## Background
 

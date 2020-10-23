@@ -1,6 +1,6 @@
 successMessage: Image tag is specified
 failureMessage: Image tag should be specified
-category: Images
+category: Reliability
 target: Container
 schema:
   '$schema': http://json-schema.org/draft-07/schema

@@ -14,11 +14,9 @@ Each check can be assigned a `severity`. Only checks with a severity of `danger`
 
 Polaris validation checks fall into several different categories:
 
-- [Health Checks](check-documentation/health-checks.md)
-- [Images](check-documentation/images.md)
-- [Networking](check-documentation/networking.md)
-- [Resources](check-documentation/resources.md)
 - [Security](check-documentation/security.md)
+- [Reliability](check-documentation/reliability.md)
+- [Efficiency](check-documentation/efficiency.md)
 
 #### Custom Checks
 If you'd like to create your own checks, you can use [JSON Schema](https://json-schema.org/). For example,
