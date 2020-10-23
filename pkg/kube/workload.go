@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	"github.com/fairwindsops/controller-utils/pkg/controller"
-	"github.com/fairwindsops/controller-utils/pkg/podspec"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 	kubeAPICoreV1 "k8s.io/api/core/v1"
@@ -50,7 +49,7 @@ func NewGenericWorkloadFromUnstructured(kind string, unst *unstructured.Unstruct
 	if err != nil {
 		return workload, err
 	}
-	podSpecMap := podspec.GetPodSpec(m)
+	podSpecMap := controller.GetPodSpec(m)
 	b, err = json.Marshal(podSpecMap)
 	if err != nil {
 		return workload, err
