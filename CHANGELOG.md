@@ -1,4 +1,5 @@
 # x.x.x (next release)
+* Standardize categories of checks into Security, Reliability, and Efficiency
 
 # 1.2.1
 * Update date on dashboard footer

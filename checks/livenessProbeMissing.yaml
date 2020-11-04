@@ -1,6 +1,6 @@
 successMessage: Liveness probe is configured
 failureMessage: Liveness probe should be configured
-category: Health Checks
+category: Reliability
 controllers:
   exclude:
   - Job

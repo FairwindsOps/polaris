@@ -7,24 +7,19 @@
   "ClusterInfo": {
     "Version": "unknown",
     "Nodes": 0,
-    "Pods": 0,
-    "Namespaces": 2,
-    "Deployments": 2,
-    "StatefulSets": 0,
-    "DaemonSets": 0,
-    "Jobs": 0,
-    "CronJobs": 0,
-    "ReplicationControllers": 0
+    "Pods": 5,
+    "Namespaces": 3,
+    "Controllers": 5
   },
   "Results": [
     {
       "Name": "polaris-dashboard",
       "Namespace": "polaris",
       "Kind": "Deployment",
-      "Messages": {},
+      "Results": {},
       "PodResult": {
         "Name": "",
-        "Messages": {
+        "Results": {
           "hostIPCSet": {
             "ID": "hostIPCSet",
             "Message": "Host IPC is not configured",
@@ -50,7 +45,7 @@
         "ContainerResults": [
           {
             "Name": "dashboard",
-            "Messages": {
+            "Results": {
               "cpuLimitsMissing": {
                 "ID": "cpuLimitsMissing",
                 "Message": "CPU limits are set",
@@ -145,16 +140,17 @@
             }
           }
         ]
-      }
+      },
+      "CreatedTime": "0001-01-01T00:00:00Z"
     },
     {
       "Name": "polaris-webhook",
       "Namespace": "polaris",
       "Kind": "Deployment",
-      "Messages": {},
+      "Results": {},
       "PodResult": {
         "Name": "",
-        "Messages": {
+        "Results": {
           "hostIPCSet": {
             "ID": "hostIPCSet",
             "Message": "Host IPC is not configured",
@@ -180,7 +176,7 @@
         "ContainerResults": [
           {
             "Name": "webhook",
-            "Messages": {
+            "Results": {
               "cpuLimitsMissing": {
                 "ID": "cpuLimitsMissing",
                 "Message": "CPU limits are set",
@@ -275,7 +271,373 @@
             }
           }
         ]
-      }
+      },
+      "CreatedTime": "0001-01-01T00:00:00Z"
+    },
+    {
+      "Name": "polaris-certificate-updater",
+      "Namespace": "polaris",
+      "Kind": "Job",
+      "Results": {},
+      "PodResult": {
+        "Name": "",
+        "Results": {
+          "hostIPCSet": {
+            "ID": "hostIPCSet",
+            "Message": "Host IPC is not configured",
+            "Success": true,
+            "Severity": "danger",
+            "Category": "Security"
+          },
+          "hostNetworkSet": {
+            "ID": "hostNetworkSet",
+            "Message": "Host network is not configured",
+            "Success": true,
+            "Severity": "warning",
+            "Category": "Networking"
+          },
+          "hostPIDSet": {
+            "ID": "hostPIDSet",
+            "Message": "Host PID is not configured",
+            "Success": true,
+            "Severity": "danger",
+            "Category": "Security"
+          }
+        },
+        "ContainerResults": [
+          {
+            "Name": "webhook-certificate-generator",
+            "Results": {
+              "cpuLimitsMissing": {
+                "ID": "cpuLimitsMissing",
+                "Message": "CPU limits are set",
+                "Success": true,
+                "Severity": "warning",
+                "Category": "Resources"
+              },
+              "cpuRequestsMissing": {
+                "ID": "cpuRequestsMissing",
+                "Message": "CPU requests are set",
+                "Success": true,
+                "Severity": "warning",
+                "Category": "Resources"
+              },
+              "dangerousCapabilities": {
+                "ID": "dangerousCapabilities",
+                "Message": "Container does not have any dangerous capabilities",
+                "Success": true,
+                "Severity": "danger",
+                "Category": "Security"
+              },
+              "hostPortSet": {
+                "ID": "hostPortSet",
+                "Message": "Host port is not configured",
+                "Success": true,
+                "Severity": "warning",
+                "Category": "Networking"
+              },
+              "insecureCapabilities": {
+                "ID": "insecureCapabilities",
+                "Message": "Container does not have any insecure capabilities",
+                "Success": true,
+                "Severity": "warning",
+                "Category": "Security"
+              },
+              "memoryLimitsMissing": {
+                "ID": "memoryLimitsMissing",
+                "Message": "Memory limits are set",
+                "Success": true,
+                "Severity": "warning",
+                "Category": "Resources"
+              },
+              "memoryRequestsMissing": {
+                "ID": "memoryRequestsMissing",
+                "Message": "Memory requests are set",
+                "Success": true,
+                "Severity": "warning",
+                "Category": "Resources"
+              },
+              "privilegeEscalationAllowed": {
+                "ID": "privilegeEscalationAllowed",
+                "Message": "Privilege escalation not allowed",
+                "Success": true,
+                "Severity": "danger",
+                "Category": "Security"
+              },
+              "runAsPrivileged": {
+                "ID": "runAsPrivileged",
+                "Message": "Not running as privileged",
+                "Success": true,
+                "Severity": "danger",
+                "Category": "Security"
+              },
+              "runAsRootAllowed": {
+                "ID": "runAsRootAllowed",
+                "Message": "Is not allowed to run as root",
+                "Success": true,
+                "Severity": "warning",
+                "Category": "Security"
+              },
+              "tagNotSpecified": {
+                "ID": "tagNotSpecified",
+                "Message": "Image tag is specified",
+                "Success": true,
+                "Severity": "danger",
+                "Category": "Images"
+              }
+            }
+          }
+        ]
+      },
+      "CreatedTime": "0001-01-01T00:00:00Z"
+    },
+    {
+      "Name": "polaris-webhook",
+      "Namespace": "polaris",
+      "Kind": "Deployment",
+      "Results": {},
+      "PodResult": {
+        "Name": "",
+        "Results": {
+          "hostIPCSet": {
+            "ID": "hostIPCSet",
+            "Message": "Host IPC is not configured",
+            "Success": true,
+            "Severity": "danger",
+            "Category": "Security"
+          },
+          "hostNetworkSet": {
+            "ID": "hostNetworkSet",
+            "Message": "Host network is not configured",
+            "Success": true,
+            "Severity": "warning",
+            "Category": "Networking"
+          },
+          "hostPIDSet": {
+            "ID": "hostPIDSet",
+            "Message": "Host PID is not configured",
+            "Success": true,
+            "Severity": "danger",
+            "Category": "Security"
+          }
+        },
+        "ContainerResults": [
+          {
+            "Name": "webhook",
+            "Results": {
+              "cpuLimitsMissing": {
+                "ID": "cpuLimitsMissing",
+                "Message": "CPU limits are set",
+                "Success": true,
+                "Severity": "warning",
+                "Category": "Resources"
+              },
+              "cpuRequestsMissing": {
+                "ID": "cpuRequestsMissing",
+                "Message": "CPU requests are set",
+                "Success": true,
+                "Severity": "warning",
+                "Category": "Resources"
+              },
+              "dangerousCapabilities": {
+                "ID": "dangerousCapabilities",
+                "Message": "Container does not have any dangerous capabilities",
+                "Success": true,
+                "Severity": "danger",
+                "Category": "Security"
+              },
+              "hostPortSet": {
+                "ID": "hostPortSet",
+                "Message": "Host port is not configured",
+                "Success": true,
+                "Severity": "warning",
+                "Category": "Networking"
+              },
+              "insecureCapabilities": {
+                "ID": "insecureCapabilities",
+                "Message": "Container does not have any insecure capabilities",
+                "Success": true,
+                "Severity": "warning",
+                "Category": "Security"
+              },
+              "livenessProbeMissing": {
+                "ID": "livenessProbeMissing",
+                "Message": "Liveness probe is configured",
+                "Success": true,
+                "Severity": "warning",
+                "Category": "Health Checks"
+              },
+              "memoryLimitsMissing": {
+                "ID": "memoryLimitsMissing",
+                "Message": "Memory limits are set",
+                "Success": true,
+                "Severity": "warning",
+                "Category": "Resources"
+              },
+              "memoryRequestsMissing": {
+                "ID": "memoryRequestsMissing",
+                "Message": "Memory requests are set",
+                "Success": true,
+                "Severity": "warning",
+                "Category": "Resources"
+              },
+              "privilegeEscalationAllowed": {
+                "ID": "privilegeEscalationAllowed",
+                "Message": "Privilege escalation not allowed",
+                "Success": true,
+                "Severity": "danger",
+                "Category": "Security"
+              },
+              "readinessProbeMissing": {
+                "ID": "readinessProbeMissing",
+                "Message": "Readiness probe is configured",
+                "Success": true,
+                "Severity": "warning",
+                "Category": "Health Checks"
+              },
+              "runAsPrivileged": {
+                "ID": "runAsPrivileged",
+                "Message": "Not running as privileged",
+                "Success": true,
+                "Severity": "danger",
+                "Category": "Security"
+              },
+              "runAsRootAllowed": {
+                "ID": "runAsRootAllowed",
+                "Message": "Is not allowed to run as root",
+                "Success": true,
+                "Severity": "warning",
+                "Category": "Security"
+              },
+              "tagNotSpecified": {
+                "ID": "tagNotSpecified",
+                "Message": "Image tag is specified",
+                "Success": true,
+                "Severity": "danger",
+                "Category": "Images"
+              }
+            }
+          }
+        ]
+      },
+      "CreatedTime": "0001-01-01T00:00:00Z"
+    },
+    {
+      "Name": "polaris-certificate-updater",
+      "Namespace": "polaris",
+      "Kind": "Job",
+      "Results": {},
+      "PodResult": {
+        "Name": "",
+        "Results": {
+          "hostIPCSet": {
+            "ID": "hostIPCSet",
+            "Message": "Host IPC is not configured",
+            "Success": true,
+            "Severity": "danger",
+            "Category": "Security"
+          },
+          "hostNetworkSet": {
+            "ID": "hostNetworkSet",
+            "Message": "Host network is not configured",
+            "Success": true,
+            "Severity": "warning",
+            "Category": "Networking"
+          },
+          "hostPIDSet": {
+            "ID": "hostPIDSet",
+            "Message": "Host PID is not configured",
+            "Success": true,
+            "Severity": "danger",
+            "Category": "Security"
+          }
+        },
+        "ContainerResults": [
+          {
+            "Name": "webhook-certificate-generator",
+            "Results": {
+              "cpuLimitsMissing": {
+                "ID": "cpuLimitsMissing",
+                "Message": "CPU limits are set",
+                "Success": true,
+                "Severity": "warning",
+                "Category": "Resources"
+              },
+              "cpuRequestsMissing": {
+                "ID": "cpuRequestsMissing",
+                "Message": "CPU requests are set",
+                "Success": true,
+                "Severity": "warning",
+                "Category": "Resources"
+              },
+              "dangerousCapabilities": {
+                "ID": "dangerousCapabilities",
+                "Message": "Container does not have any dangerous capabilities",
+                "Success": true,
+                "Severity": "danger",
+                "Category": "Security"
+              },
+              "hostPortSet": {
+                "ID": "hostPortSet",
+                "Message": "Host port is not configured",
+                "Success": true,
+                "Severity": "warning",
+                "Category": "Networking"
+              },
+              "insecureCapabilities": {
+                "ID": "insecureCapabilities",
+                "Message": "Container does not have any insecure capabilities",
+                "Success": true,
+                "Severity": "warning",
+                "Category": "Security"
+              },
+              "memoryLimitsMissing": {
+                "ID": "memoryLimitsMissing",
+                "Message": "Memory limits are set",
+                "Success": true,
+                "Severity": "warning",
+                "Category": "Resources"
+              },
+              "memoryRequestsMissing": {
+                "ID": "memoryRequestsMissing",
+                "Message": "Memory requests are set",
+                "Success": true,
+                "Severity": "warning",
+                "Category": "Resources"
+              },
+              "privilegeEscalationAllowed": {
+                "ID": "privilegeEscalationAllowed",
+                "Message": "Privilege escalation not allowed",
+                "Success": true,
+                "Severity": "danger",
+                "Category": "Security"
+              },
+              "runAsPrivileged": {
+                "ID": "runAsPrivileged",
+                "Message": "Not running as privileged",
+                "Success": true,
+                "Severity": "danger",
+                "Category": "Security"
+              },
+              "runAsRootAllowed": {
+                "ID": "runAsRootAllowed",
+                "Message": "Is not allowed to run as root",
+                "Success": true,
+                "Severity": "warning",
+                "Category": "Security"
+              },
+              "tagNotSpecified": {
+                "ID": "tagNotSpecified",
+                "Message": "Image tag is specified",
+                "Success": true,
+                "Severity": "danger",
+                "Category": "Images"
+              }
+            }
+          }
+        ]
+      },
+      "CreatedTime": "0001-01-01T00:00:00Z"
     }
   ]
 }

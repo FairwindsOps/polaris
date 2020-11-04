@@ -127,29 +127,13 @@ func getCategoryLink(category string) string {
 
 func getCategoryInfo(category string) string {
 	switch category {
-	case "Health Checks":
+	case "Reliability":
 		return fmt.Sprintf(`
-			Properly configured health checks can ensure the long term availability
-			and reliability of your application running in Kubernetes. Polaris
-			validates that health checks are configured for each pod running in
-			your cluster.
+			Kubernetes is built to reliabily run highly available applications.
+			Polaris includes a number of checks to ensure that you are maximizing
+			the reliability potential of Kubernetes.
 		`)
-	case "Images":
-		return fmt.Sprintf(`
-			Images are the backbone of any Kubernetes cluster, containing the applications
-			that run in each container. Polaris validates that images are configured with
-			specific tags instead of just pulling the latest image on each run. This is
-			important for the stability and security of your workloads.
-		`)
-	case "Networking":
-		return fmt.Sprintf(`
-			Networking configuration in Kubernetes can be quite powerful. Polaris
-			validates that pods are not configured to have access to sensitive host
-			networking configuration. There are certain use cases such as a container
-			overlay network like Calico, where this level of access is required, but
-			the majority of workloads running on Kubernetes should not need this.
-		`)
-	case "Resources":
+	case "Efficiency":
 		return fmt.Sprintf(`
 			Configuring resource requests and limits for workloads running in Kubernetes
 			helps ensure that every container will have access to all the resources it

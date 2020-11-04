@@ -1,6 +1,6 @@
 successMessage: CPU requests are set
 failureMessage: CPU requests should be set
-category: Resources
+category: Efficiency
 target: Container
 containers:
   exclude:

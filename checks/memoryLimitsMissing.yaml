@@ -1,6 +1,6 @@
 successMessage: Memory limits are set
 failureMessage: Memory limits should be set
-category: Resources
+category: Efficiency
 target: Container
 containers:
   exclude:

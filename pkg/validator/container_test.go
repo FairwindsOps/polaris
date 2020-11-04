@@ -108,14 +108,14 @@ func TestValidateResourcesEmptyContainer(t *testing.T) {
 			Success:  false,
 			Severity: "warning",
 			Message:  "CPU requests should be set",
-			Category: "Resources",
+			Category: "Efficiency",
 		},
 		{
 			ID:       "memoryRequestsMissing",
 			Success:  false,
 			Severity: "warning",
 			Message:  "Memory requests should be set",
-			Category: "Resources",
+			Category: "Efficiency",
 		},
 	}
 
@@ -125,14 +125,14 @@ func TestValidateResourcesEmptyContainer(t *testing.T) {
 			Success:  false,
 			Severity: "danger",
 			Message:  "CPU limits should be set",
-			Category: "Resources",
+			Category: "Efficiency",
 		},
 		{
 			ID:       "memoryLimitsMissing",
 			Success:  false,
 			Severity: "danger",
 			Message:  "Memory limits should be set",
-			Category: "Resources",
+			Category: "Efficiency",
 		},
 	}
 
@@ -162,8 +162,8 @@ func TestValidateHealthChecks(t *testing.T) {
 		ReadinessProbe: &probe,
 	}
 
-	l := ResultMessage{ID: "livenessProbeMissing", Success: false, Severity: "warning", Message: "Liveness probe should be configured", Category: "Health Checks"}
-	r := ResultMessage{ID: "readinessProbeMissing", Success: false, Severity: "danger", Message: "Readiness probe should be configured", Category: "Health Checks"}
+	l := ResultMessage{ID: "livenessProbeMissing", Success: false, Severity: "warning", Message: "Liveness probe should be configured", Category: "Reliability"}
+	r := ResultMessage{ID: "readinessProbeMissing", Success: false, Severity: "danger", Message: "Readiness probe should be configured", Category: "Reliability"}
 	f1 := []ResultMessage{}
 	f2 := []ResultMessage{r}
 	w1 := []ResultMessage{l}
@@ -245,7 +245,7 @@ func TestValidateImage(t *testing.T) {
 				Message:  "Image tag should be specified",
 				Success:  false,
 				Severity: "danger",
-				Category: "Images",
+				Category: "Reliability",
 			}},
 		},
 		{
@@ -257,7 +257,7 @@ func TestValidateImage(t *testing.T) {
 				Message:  "Image tag should be specified",
 				Success:  false,
 				Severity: "danger",
-				Category: "Images",
+				Category: "Reliability",
 			}},
 		},
 		{
@@ -269,7 +269,7 @@ func TestValidateImage(t *testing.T) {
 				Message:  "Image tag should be specified",
 				Success:  false,
 				Severity: "danger",
-				Category: "Images",
+				Category: "Reliability",
 			}},
 		},
 		{
@@ -281,13 +281,13 @@ func TestValidateImage(t *testing.T) {
 				Message:  "Image pull policy should be \"Always\"",
 				Success:  false,
 				Severity: "danger",
-				Category: "Images",
+				Category: "Reliability",
 			}, {
 				ID:       "tagNotSpecified",
 				Message:  "Image tag should be specified",
 				Success:  false,
 				Severity: "danger",
-				Category: "Images",
+				Category: "Reliability",
 			}},
 		},
 		{
@@ -356,7 +356,7 @@ func TestValidateNetworking(t *testing.T) {
 				Message:  "Host port is not configured",
 				Success:  true,
 				Severity: "warning",
-				Category: "Networking",
+				Category: "Security",
 			}},
 		},
 		{
@@ -368,7 +368,7 @@ func TestValidateNetworking(t *testing.T) {
 				Message:  "Host port is not configured",
 				Success:  true,
 				Severity: "warning",
-				Category: "Networking",
+				Category: "Security",
 			}},
 		},
 		{
@@ -386,7 +386,7 @@ func TestValidateNetworking(t *testing.T) {
 				Message:  "Host port should not be configured",
 				Success:  false,
 				Severity: "warning",
-				Category: "Networking",
+				Category: "Security",
 			}},
 		},
 		{
@@ -398,7 +398,7 @@ func TestValidateNetworking(t *testing.T) {
 				Message:  "Host port is not configured",
 				Success:  true,
 				Severity: "warning",
-				Category: "Networking",
+				Category: "Security",
 			}},
 		},
 		{
@@ -410,7 +410,7 @@ func TestValidateNetworking(t *testing.T) {
 				Message:  "Host port should not be configured",
 				Success:  false,
 				Severity: "danger",
-				Category: "Networking",
+				Category: "Security",
 			}},
 		},
 	}
@@ -1101,14 +1101,14 @@ func TestValidateResourcesExemption(t *testing.T) {
 			Success:  false,
 			Severity: "warning",
 			Message:  "CPU requests should be set",
-			Category: "Resources",
+			Category: "Efficiency",
 		},
 		{
 			ID:       "memoryRequestsMissing",
 			Success:  false,
 			Severity: "warning",
 			Message:  "Memory requests should be set",
-			Category: "Resources",
+			Category: "Efficiency",
 		},
 	}
 
@@ -1118,14 +1118,14 @@ func TestValidateResourcesExemption(t *testing.T) {
 			Success:  false,
 			Severity: "danger",
 			Message:  "CPU limits should be set",
-			Category: "Resources",
+			Category: "Efficiency",
 		},
 		{
 			ID:       "memoryLimitsMissing",
 			Success:  false,
 			Severity: "danger",
 			Message:  "Memory limits should be set",
-			Category: "Resources",
+			Category: "Efficiency",
 		},
 	}
 
@@ -1145,7 +1145,7 @@ func TestValidateResourcesEmptyContainerCPURequestsExempt(t *testing.T) {
 			Success:  false,
 			Severity: "warning",
 			Message:  "Memory requests should be set",
-			Category: "Resources",
+			Category: "Efficiency",
 		},
 	}
 
@@ -1155,14 +1155,14 @@ func TestValidateResourcesEmptyContainerCPURequestsExempt(t *testing.T) {
 			Success:  false,
 			Severity: "danger",
 			Message:  "CPU limits should be set",
-			Category: "Resources",
+			Category: "Efficiency",
 		},
 		{
 			ID:       "memoryLimitsMissing",
 			Success:  false,
 			Severity: "danger",
 			Message:  "Memory limits should be set",
-			Category: "Resources",
+			Category: "Efficiency",
 		},
 	}
 

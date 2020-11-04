@@ -114,8 +114,8 @@ func TestSkipHealthChecks(t *testing.T) {
 		Dangers:   uint(1),
 	}
 	expectedResults := ResultSet{
-		"readinessProbeMissing": {ID: "readinessProbeMissing", Message: "Readiness probe should be configured", Success: false, Severity: "danger", Category: "Health Checks"},
-		"livenessProbeMissing":  {ID: "livenessProbeMissing", Message: "Liveness probe should be configured", Success: false, Severity: "warning", Category: "Health Checks"},
+		"readinessProbeMissing": {ID: "readinessProbeMissing", Message: "Readiness probe should be configured", Success: false, Severity: "danger", Category: "Reliability"},
+		"livenessProbeMissing":  {ID: "livenessProbeMissing", Message: "Liveness probe should be configured", Success: false, Severity: "warning", Category: "Reliability"},
 	}
 	actualResult, err := ValidateController(context.Background(), &c, deployment)
 	if err != nil {
