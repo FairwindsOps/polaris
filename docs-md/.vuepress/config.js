@@ -4,6 +4,11 @@ const npath = require('path');
 const CONFIG_FILE = npath.join(__dirname, 'config-extras.js');
 const BASE_DIR = npath.join(__dirname, '..');
 
+const extras = require(CONFIG_FILE);
+if (!extras.title || !extras.description || !extras.themeConfig.docsRepo) {
+  throw new Error("Please specify 'title', 'description', and 'themeConfig.docsRepo' in config-extras.js");
+}
+
 const docFiles = fs.readdirSync(BASE_DIR)
   .filter(f => f !== "README.md")
   .filter(f => f !== ".vuepress")
@@ -29,6 +34,7 @@ const baseConfig = {
   description: "",
   head: [
     ['link', { rel: 'icon', href: '/favicon.png' }],
+    ['script', { src: '/scripts/modify.js' }],
   ],
   themeConfig: {
     docsRepo: "",
@@ -38,6 +44,9 @@ const baseConfig = {
     logo: '/img/fairwinds-logo.svg',
     heroText: "",
     sidebar,
+    nav: [
+      {text: 'View on GitHub', link: 'https://github.com/' + extras.themeConfig.docsRepo},
+    ],
   },
   plugins: {
     'vuepress-plugin-clean-urls': {
@@ -52,14 +61,10 @@ let config = JSON.parse(JSON.stringify(baseConfig))
 if (!fs.existsSync(CONFIG_FILE)) {
   throw new Error("Please add config-extras.js to specify your project details");
 }
-const extras = require(CONFIG_FILE);
 for (let key in extras) {
   if (!config[key]) config[key] = extras[key];
   else if (key === 'head') config[key] = config[key].concat(extras[key]);
   else Object.assign(config[key], extras[key]);
-}
-if (!config.title || !config.description || !config.themeConfig.docsRepo) {
-  throw new Error("Please specify 'title', 'description', and 'themeConfig.docsRepo' in config-extras.js");
 }
 console.log(JSON.stringify(config, null, 2));
 module.exports = config;
