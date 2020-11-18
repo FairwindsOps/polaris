@@ -31,6 +31,7 @@ const baseConfig = {
     ['link', { rel: 'icon', href: '/favicon.png' }],
   ],
   themeConfig: {
+    docsRepo: "",
     editLinks: true,
     editLinkText: "Help us improve ths page",
     logo: '/img/fairwinds-logo.svg',
@@ -56,8 +57,8 @@ for (let key in extras) {
   else if (key === 'head') config[key] = config[key].concat(extras[key]);
   else Object.assign(config[key], extras[key]);
 }
-if (!config.title || !config.description) {
-  throw new Error("Please specify 'title' and 'description' in config-extras.js");
+if (!config.title || !config.description || !config.themeConfig.docsRepo) {
+  throw new Error("Please specify 'title', 'description', and 'themeConfig.docsRepo' in config-extras.js");
 }
 console.log(JSON.stringify(config, null, 2));
 module.exports = config;
