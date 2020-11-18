@@ -32,8 +32,9 @@ const baseConfig = {
   ],
   themeConfig: {
     docsRepo: "",
+    docsDir: 'docs-md',
     editLinks: true,
-    editLinkText: "Help us improve ths page",
+    editLinkText: "Help us improve this page",
     logo: '/img/fairwinds-logo.svg',
     heroText: "",
     sidebar,

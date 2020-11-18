@@ -41,6 +41,3 @@ A history of changes to this project can be viewed in the [Changelog](CHANGELOG.
 
 If you'd like to learn more about Polaris, or if you'd like to speak with
 a Kubernetes expert, you can contact `info@fairwinds.com` or [visit our website](https://fairwinds.com)
-
-## License
-Apache License 2.0
