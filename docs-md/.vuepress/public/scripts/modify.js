@@ -4,7 +4,6 @@ document.addEventListener("DOMContentLoaded", function(){
     linkClone = link.cloneNode(true);
     linkClone.href = "https://fairwinds.com";
     link.setAttribute('target', '_blank');
-    console.log('set attr');
     link.parentNode.replaceChild(linkClone, link);
   }, 1000);
 });

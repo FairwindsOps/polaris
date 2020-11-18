@@ -41,7 +41,17 @@ module.exports = {
           "/configuration/custom-checks",
           "/configuration/exemptions",
         ]
-      }
+      },
+      {
+        title: "Checks",
+        collapsable: false,
+        sidebarDepth: 0,
+        children: [
+          "/checks/security",
+          "/checks/efficiency",
+          "/checks/reliability",
+        ],
+      },
     ]
   }
 }
