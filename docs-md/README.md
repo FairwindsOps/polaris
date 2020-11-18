@@ -1,9 +1,8 @@
 <div align="center">
-  <img src="/img/polaris-logo.png" alt="Polaris Logo" />
-  <br>
-
-  [![Version][version-image]][version-link] [![CircleCI][circleci-image]][circleci-link] [![Go Report Card][goreport-image]][goreport-link]
+  <img src="/img/polaris-logo.png" alt="Polaris Logo" class="no-border" />
 </div>
+
+[![Version][version-image]][version-link] [![CircleCI][circleci-image]][circleci-link] [![Go Report Card][goreport-image]][goreport-link]
 
 [version-image]: https://img.shields.io/static/v1.svg?label=Version&message=1.2.0&color=239922
 [version-link]: https://github.com/FairwindsOps/polaris
@@ -19,9 +18,9 @@ Kubernetes pods and controllers are configured using best practices, helping you
 problems in the future. Polaris can be run in a few different modes:
 
 Polaris can be run in three different modes:
-* As a [dashboard](https://polaris.docs.fairwinds.com/dashboard), so you can audit what's running inside your cluster.
-* As an [admission controller](https://polaris.docs.fairwinds.com/admission-controller), so you can automatically reject workloads that don't adhere to your organization's policies.
-* As a [command-line tool](https://polaris.docs.fairwinds.com/infrastructure-as-code), so you can test local YAML files, e.g. as part of a CI/CD process.
+* As a [dashboard](/dashboard), so you can audit what's running inside your cluster.
+* As an [admission controller](/admission-controller), so you can automatically reject workloads that don't adhere to your organization's policies.
+* As a [command-line utility](/infrastructure-as-code), so you can test local YAML files, e.g. as part of a CI/CD process.
 
 **Want to learn more?** Reach out on [the Slack channel](https://fairwindscommunity.slack.com/messages/polaris) ([request invite](https://join.slack.com/t/fairwindscommunity/shared_invite/zt-e3c6vj4l-3lIH6dvKqzWII5fSSFDi1g)), send an email to `opensource@fairwinds.com`, or join us for [office hours on Zoom](https://fairwindscommunity.slack.com/messages/office-hours)
 
@@ -34,13 +33,25 @@ Kubernetes auditing tools such as
 
 ---
 
-## Documentation
-Check out the [docs at docs.fairwinds.com](PROJECT-NAME.docs.fairwinds.com), or view the [markdown](./docs-md)
+# Dashboard Quickstart
 
-## Dashboard
-Here's a quick preview of what the dashboard looks like.
+```bash
+kubectl apply -f https://github.com/FairwindsOps/polaris/releases/latest/download/dashboard.yaml
+kubectl port-forward --namespace polaris svc/polaris-dashboard 8080:80
+```
+With the port forwarding in place, you can open http://localhost:8080 in your browser to view the dashboard.
 
-<p align="center">
-  <img src="/docs-md/.vuepress/public/img/dashboard-screenshot.png" alt="Polaris Dashboard" width="550"/>
-</p>
+* * *
 
+## Contributing
+PRs welcome! Check out the [Contributing Guidelines](CONTRIBUTING.md),
+[Code of Conduct](CODE_OF_CONDUCT.md), and [Roadmap](ROADMAP.md) for more information.
+
+## Further Information
+A history of changes to this project can be viewed in the [Changelog](CHANGELOG.md)
+
+If you'd like to learn more about Polaris, or if you'd like to speak with
+a Kubernetes expert, you can contact `info@fairwinds.com` or [visit our website](https://fairwinds.com)
+
+## License
+Apache License 2.0

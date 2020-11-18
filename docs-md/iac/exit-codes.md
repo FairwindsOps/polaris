@@ -1,4 +1,5 @@
-# Polaris Exit Codes for Audit Runs
+# Exit Codes
+
 <dl>
   <dt>Exit 0</dt>
   <dd>Successful exit code</dd>

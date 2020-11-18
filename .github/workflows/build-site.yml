@@ -1,0 +1,41 @@
+name: Build Website
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: cd docs-md
+    - run: npm ci
+    - run: npm install
+    - run: npm run check-links
+    - run: |
+        git config user.email "insights@fairwinds.com"
+        git config user.name "Circle CI"
+        npm run build
+        HAS_CHANGE=$(git diff .)
+        if [ -n "${HAS_CHANGE}" ]; then
+          if [ "$(git log -1 --pretty=format:'%an')" = "Circle CI" ]; then
+            echo "Build created a diff, but the last commit was a build."
+            exit 1
+          fi
+          git add docs/
+          git commit -m "[CI] rebuild website"
+          git push
+        fi
+    env:
+        CI: true
