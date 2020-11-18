@@ -4,15 +4,29 @@ module.exports = {
   themeConfig: {
     docsRepo: "FairwindsOps/polaris",
     sidebar: [
-      ["/", "Home"],
+      ["/", "Polaris"],
       {
-        title: "Usage",
+        title: "Changelog",
+        sidebarDepth: 0,
+        path: "/changelog",
+      },
+      {
+        title: "Components",
         collapsable: false,
         children: [
-          "/dashboard/dashboard",
-          "/admission-controller/admission-controller",
-          "/iac/iac",
+          "/dashboard",
+          "/admission-controller",
+          "/infrastructure-as-code",
         ],
+      },
+      {
+        title: "Configuration",
+        collapsable: false,
+        children: [
+          "/configuration/check-configuration",
+          "/configuration/custom-checks",
+          "/configuration/exemptions",
+        ]
       }
     ]
   }
