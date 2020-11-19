@@ -1,3 +1,6 @@
+// This file is generated from FairwindsOps/documentation-template
+// DO NOT EDIT MANUALLY
+
 const fs = require('fs');
 const npath = require('path');
 
