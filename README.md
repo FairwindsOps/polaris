@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="/img/polaris-logo.png" alt="Polaris Logo" />
+  <img src="/docs-md/.vuepress/public/img/polaris-logo.png" alt="Polaris Logo" />
   <br>
 
   [![Version][version-image]][version-link] [![CircleCI][circleci-image]][circleci-link] [![Go Report Card][goreport-image]][goreport-link]
