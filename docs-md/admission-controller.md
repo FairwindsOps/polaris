@@ -22,8 +22,10 @@ helm upgrade --install polaris fairwindsops-stable/polaris --namespace polaris \
 ```
 
 ## Workload Types
-The webhook only supports a fixed set of controller types. You can see the
-[list of supported controllers here](https://github.com/FairwindsOps/polaris/blob/master/cmd/polaris/webhook.go#L40)
+The webhook comes with built-in support for a handful of known controller types,
+such as Deployments, Jobs, and DaemonSets. To add new controller types,
+you can set `webhook.rules` in the
+[Helm chart](https://github.com/FairwindsOps/charts/tree/master/stable/polaris)
 
 ## Warnings
 Unfortunately we have not found a way to display warnings as part of `kubectl`
