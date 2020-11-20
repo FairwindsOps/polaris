@@ -69,5 +69,4 @@ for (let key in extras) {
   else if (key === 'head') config[key] = config[key].concat(extras[key]);
   else Object.assign(config[key], extras[key]);
 }
-console.log(JSON.stringify(config, null, 2));
 module.exports = config;
