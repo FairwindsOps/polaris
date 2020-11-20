@@ -1,6 +1,8 @@
 # Security
 
-Polaris supports a number of checks related to security.
+These checks are related to security concerns. Workloads that fail these
+checks may make your cluster more vulnerable, often by introducing a path
+for privilege escalation.
 
 key | default | description
 ----|---------|------------

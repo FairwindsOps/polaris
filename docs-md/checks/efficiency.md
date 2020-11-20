@@ -1,6 +1,7 @@
 # Efficiency
 
-Polaris supports a number of checks related to CPU and Memory requests and limits.
+These checks ensure that CPU and memory settings are configured, so that
+Kubernetes can schedule your workload effectively.
 
 ## Presence Checks
 

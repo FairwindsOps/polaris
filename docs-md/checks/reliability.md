@@ -1,6 +1,7 @@
 # Reliability
 
-Polaris supports a number of checks related to keeping workloads running in a reliabile and consistent manner.
+These checks help to make sure your workloads are always available,
+and are running the correct image.
 
 key | default | description
 ----|---------|------------
