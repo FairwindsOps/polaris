@@ -35,7 +35,7 @@ Kubernetes auditing tools such as
 ---
 
 ## Documentation
-Check out the [docs at docs.fairwinds.com](PROJECT-NAME.docs.fairwinds.com), or view the [markdown](./docs-md)
+Check out the [docs at docs.fairwinds.com](https://polaris.docs.fairwinds.com), or view the [markdown](./docs-md)
 
 ## Dashboard
 Here's a quick preview of what the dashboard looks like.
