@@ -37,8 +37,16 @@ Kubernetes auditing tools such as
 ## Documentation
 Check out the [docs at docs.fairwinds.com](https://polaris.docs.fairwinds.com), or view the [markdown](./docs-md)
 
-## Dashboard
-Here's a quick preview of what the dashboard looks like.
+## Contributing
+PRs welcome! Check out the [Contributing Guidelines](docs-md/contributing.md) and [Code of Conduct](docs-md/code-of-conduct.md) for more information.
+
+## Further Information
+A history of changes to this project can be viewed in the [Changelog](docs-md/changelog.md)
+
+If you'd like to learn more about Polaris, or if you'd like to speak with
+a Kubernetes expert, you can contact `info@fairwinds.com` or [visit our website](https://fairwinds.com)
+
+---
 
 <p align="center">
   <img src="/docs-md/.vuepress/public/img/dashboard-screenshot.png" alt="Polaris Dashboard" width="550"/>
