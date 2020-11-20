@@ -1,4 +1,4 @@
-# Customizing the Configuration
+# Custom Configuration
 
 The default Polaris configuration can be [seen here](https://github.com/FairwindsOps/polaris/blob/master/examples/config.yaml).
 

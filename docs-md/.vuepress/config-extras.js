@@ -34,13 +34,13 @@ module.exports = {
         ],
       },
       {
-        title: "Configuration",
+        title: "Customization",
         collapsable: false,
         children: [
-          "/configuration/customization",
-          "/configuration/checks",
-          "/configuration/custom-checks",
-          "/configuration/exemptions",
+          "/customization/configuration",
+          "/customization/checks",
+          "/customization/custom-checks",
+          "/customization/exemptions",
         ]
       },
       {
