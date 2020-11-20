@@ -7,4 +7,11 @@ Polaris validation checks fall into several different categories:
 - [Reliability](/checks/reliability.md)
 - [Efficiency](/checks/efficiency.md)
 
+To change the default severity levels, or to turn checks on or off, you can create your own `config.yaml`:
+```yaml
+checks:
+  tagNotSpecified: ignore
+  runAsRootAllowed: danger
+  pullPolicyNotAlways: warning
+```
 

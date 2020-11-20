@@ -37,7 +37,8 @@ module.exports = {
         title: "Configuration",
         collapsable: false,
         children: [
-          "/configuration/check-configuration",
+          "/configuration/customization",
+          "/configuration/checks",
           "/configuration/custom-checks",
           "/configuration/exemptions",
         ]
