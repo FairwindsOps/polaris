@@ -23,14 +23,18 @@ Polaris can be run in three different modes:
 
 **Want to learn more?** Reach out on [the Slack channel](https://fairwindscommunity.slack.com/messages/polaris) ([request invite](https://join.slack.com/t/fairwindscommunity/shared_invite/zt-e3c6vj4l-3lIH6dvKqzWII5fSSFDi1g)), send an email to `opensource@fairwinds.com`, or join us for [office hours on Zoom](https://fairwindscommunity.slack.com/messages/office-hours)
 
----
+## Integration with Fairwinds Insights
+[Fairwinds Insights](https://www.fairwinds.com/insights?utm_campaign=Hosted%20Polaris%20&utm_source=polaris&utm_term=polaris&utm_content=polaris)
+is a platform for auditing Kubernetes clusters and enforcing policy. If you'd like to:
+* manage Polaris across a fleet of clusters
+* track findings over time
+* send results to services like Slack and Datadog
+* add additional checks from tools like
+[Trivy](https://github.com/aquasecurity/trivy),
+[Goldilocks](https://github.com/FairwindsOps/goldilocks/), and
+[OPA](https://www.openpolicyagent.org),
 
-**Get more from Polaris** with [Fairwinds Insights](https://www.fairwinds.com/insights?utm_campaign=Hosted%20Polaris%20&utm_source=polaris&utm_term=polaris&utm_content=polaris) -
-Insights can help you track Polaris findings over time, send new findings to Slack and Datadog, and integrate other
-Kubernetes auditing tools such as
-[Trivy](https://github.com/aquasecurity/trivy) and [Goldilocks](https://github.com/FairwindsOps/goldilocks/)
-
----
+then sign up for a [free account](https://insights.fairwinds.com)!
 
 ## Contributing
 PRs welcome! Check out the [Contributing Guidelines](contributing.md) and [Code of Conduct](code-of-conduct.md) for more information.
