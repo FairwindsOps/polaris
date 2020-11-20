@@ -33,7 +33,7 @@ customChecks:
 ```
 
 We extend JSON Schema with `resourceMinimum` and `resourceMaximum` fields to help compare memory and CPU resource
-strings like `1000m` and `1G`. You can see an example in [the extended config](/examples/config-full.yaml)
+strings like `1000m` and `1G`. You can see an example in [the extended config](https://github.com/FairwindsOps/polaris/tree/master/examples/config-full.yaml)
 
-There are additional examples in the [checks folder](/checks).
+There are additional examples in the [checks folder](https://github.com/FairwindsOps/polaris/tree/master/checks).
 

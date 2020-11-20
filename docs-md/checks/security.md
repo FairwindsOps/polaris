@@ -10,8 +10,8 @@ key | default | description
 `security.privilegeEscalationAllowed` | `danger` | Fails when `securityContext.allowPrivilegeEscalation` is true.
 `security.runAsRootAllowed` | `warning` | Fails when `securityContext.runAsNonRoot` is not true.
 `security.runAsPrivileged` | `danger` | Fails when `securityContext.privileged` is true.
-`security.insecureCapabilities` | `warning` | Fails when `securityContext.capabilities` includes one of the capabilities [listed here](/checks/insecureCapabilities.yaml)
-`security.dangerousCapabilities` | `danger` | Fails when `securityContext.capabilities` includes one of the capabilities [listed here](/checks/dangerousCapabilities.yaml)
+`security.insecureCapabilities` | `warning` | Fails when `securityContext.capabilities` includes one of the capabilities [listed here](https://github.com/FairwindsOps/polaris/tree/master/checks/insecureCapabilities.yaml)
+`security.dangerousCapabilities` | `danger` | Fails when `securityContext.capabilities` includes one of the capabilities [listed here](https://github.com/FairwindsOps/polaris/tree/master/checks/dangerousCapabilities.yaml)
 `security.hostNetworkSet` | `warning` | Fails when `hostNetwork` attribute is configured.
 `security.hostPortSet` | `warning` | Fails when `hostPort` attribute is configured.
 

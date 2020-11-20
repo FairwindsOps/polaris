@@ -3,8 +3,8 @@ Each check can be assigned a `severity`. Only checks with a severity of `danger`
 
 Polaris validation checks fall into several different categories:
 
-- [Security](check-documentation/security.md)
-- [Reliability](check-documentation/reliability.md)
-- [Efficiency](check-documentation/efficiency.md)
+- [Security](/checks/security.md)
+- [Reliability](/checks/reliability.md)
+- [Efficiency](/checks/efficiency.md)
 
 
