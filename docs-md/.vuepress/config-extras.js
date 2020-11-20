@@ -25,7 +25,7 @@ module.exports = {
         ],
       },
       {
-        title: "Components",
+        title: "Ways to Run Polaris",
         collapsable: false,
         children: [
           "/dashboard",
