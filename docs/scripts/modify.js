@@ -1,3 +1,8 @@
+/*
+ * This file is generated from FairwindsOps/documentation-template
+ * DO NOT EDIT MANUALLY
+ */
+
 document.addEventListener("DOMContentLoaded", function(){
   setTimeout(function() {
     var link = document.getElementsByClassName('home-link')[0];
