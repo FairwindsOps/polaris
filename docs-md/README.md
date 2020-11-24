@@ -1,6 +1,7 @@
 <div align="center" class="no-border">
   <img src="/img/polaris-logo.png" alt="Polaris Logo">
   <br>
+  <h3>Best Practices for Kubernetes Workload Configuration</h3>
   <a href="https://github.com/FairwindsOps/polaris">
     <img src="https://img.shields.io/static/v1.svg?label=Version&message=1.2.0&color=239922">
   </a>

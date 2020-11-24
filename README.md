@@ -1,6 +1,7 @@
 <div align="center">
   <img src="/docs-md/.vuepress/public/img/polaris-logo.png" alt="Polaris Logo" />
   <br>
+  <h3>Best Practices for Kubernetes Workload Configuration</h3>
 
   [![Version][version-image]][version-link] [![CircleCI][circleci-image]][circleci-link] [![Go Report Card][goreport-image]][goreport-link]
 </div>
