@@ -187,6 +187,7 @@ apiVersion: cert-manager.io/v1alpha2
 kind: Issuer
 metadata:
   name: polaris-selfsigned
+  namespace: polaris
 spec:
   selfSigned: {}
 ---
