@@ -9,7 +9,7 @@
   "scripts": {
     "check-links": "vuepress check-md",
     "build": "npm run build:readme && npm run build:docs && npm run reset-cname",
-    "build:readme": "cat README.md | grep -v 'ocumentation' > docs-md/README.md",
+    "build:readme": "cat ../README.md | grep -v 'ocumentation' > README.md",
     "build:docs": "vuepress build -d ../docs/ && touch ../docs/CNAME && git checkout -- ../docs/CNAME",
     "reset-cname": "touch ../docs/CNAME && git checkout -- ../docs/CNAME",
     "serve": "vuepress dev --port 3003",
