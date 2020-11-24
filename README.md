@@ -1,5 +1,5 @@
 <div align="center" class="no-border">
-  <img src="/img/polaris-logo.png" alt="Polaris Logo">
+  <img src="https://polaris.docs.fairwinds.com/img/polaris-logo.png" alt="Polaris Logo">
   <br>
   <h3>Best Practices for Kubernetes Workload Configuration</h3>
   <a href="https://github.com/FairwindsOps/polaris">
