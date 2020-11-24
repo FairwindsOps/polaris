@@ -38,6 +38,7 @@ const baseConfig = {
   head: [
     ['link', { rel: 'icon', href: '/favicon.png' }],
     ['script', { src: '/scripts/modify.js' }],
+    ['script', { src: '/scripts/leadlander.js' }],
   ],
   themeConfig: {
     docsRepo: "",
