@@ -1,19 +1,17 @@
-<div align="center">
-  <img src="/docs-md/.vuepress/public/img/polaris-logo.png" alt="Polaris Logo" />
+<div align="center" class="no-border">
+  <img src="/img/polaris-logo.png" alt="Polaris Logo">
   <br>
   <h3>Best Practices for Kubernetes Workload Configuration</h3>
-
-  [![Version][version-image]][version-link] [![CircleCI][circleci-image]][circleci-link] [![Go Report Card][goreport-image]][goreport-link]
+  <a href="https://github.com/FairwindsOps/polaris">
+    <img src="https://img.shields.io/static/v1.svg?label=Version&message=1.2.0&color=239922">
+  </a>
+  <a href="https://goreportcard.com/report/github.com/FairwindsOps/polaris">
+    <img src="https://goreportcard.com/badge/github.com/FairwindsOps/polaris">
+  </a>
+  <a href="https://circleci.com/gh/FairwindsOps/polaris.svg">
+    <img src="https://circleci.com/gh/FairwindsOps/polaris.svg?style=svg">
+  </a>
 </div>
-
-[version-image]: https://img.shields.io/static/v1.svg?label=Version&message=1.2.0&color=239922
-[version-link]: https://github.com/FairwindsOps/polaris
-
-[goreport-image]: https://goreportcard.com/badge/github.com/FairwindsOps/polaris
-[goreport-link]: https://goreportcard.com/report/github.com/FairwindsOps/polaris
-
-[circleci-image]: https://circleci.com/gh/FairwindsOps/polaris.svg?style=svg
-[circleci-link]: https://circleci.com/gh/FairwindsOps/polaris.svg
 
 Fairwinds' Polaris keeps your clusters sailing smoothly. It runs a variety of checks to ensure that
 Kubernetes pods and controllers are configured using best practices, helping you avoid
@@ -44,10 +42,10 @@ is a platform for auditing Kubernetes clusters and enforcing policy. If you'd li
 you can sign up for a [free account here](https://insights.fairwinds.com?source=polaris).
 
 ## Contributing
-PRs welcome! Check out the [Contributing Guidelines](docs-md/contributing.md) and [Code of Conduct](docs-md/code-of-conduct.md) for more information.
+PRs welcome! Check out the [Contributing Guidelines](https://polaris.docs.fairwinds.com/contributing/) and [Code of Conduct](https://polaris.docs.fairwinds.com/code-of-conduct) for more information.
 
 ## Further Information
-A history of changes to this project can be viewed in the [Changelog](docs-md/changelog.md)
+A history of changes to this project can be viewed in the [Changelog](https://polaris.docs.fairwinds.com/changelog/)
 
 If you'd like to learn more about Polaris, or if you'd like to speak with
 a Kubernetes expert, you can contact `info@fairwinds.com` or [visit our website](https://fairwinds.com)
