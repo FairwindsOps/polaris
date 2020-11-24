@@ -27,7 +27,7 @@ Polaris can be run in three different modes:
 
 
 ## Documentation
-Check out the [docs at docs.fairwinds.com](https://polaris.docs.fairwinds.com), or view the [markdown](./docs-md)
+Check out the [documentation at docs.fairwinds.com](https://polaris.docs.fairwinds.com), or view the [markdown](./docs-md)
 
 ## Integration with Fairwinds Insights
 [Fairwinds Insights](https://www.fairwinds.com/insights?utm_campaign=Hosted%20Polaris%20&utm_source=polaris&utm_term=polaris&utm_content=polaris)
@@ -38,9 +38,9 @@ is a platform for auditing Kubernetes clusters and enforcing policy. If you'd li
 * add additional checks from tools like
 [Trivy](https://github.com/aquasecurity/trivy),
 [Goldilocks](https://github.com/FairwindsOps/goldilocks/), and
-[OPA](https://www.openpolicyagent.org),
+[OPA](https://www.openpolicyagent.org)
 
-then sign up for a [free account](https://insights.fairwinds.com)!
+you can sign up for a [free account here](https://insights.fairwinds.com?source=polaris).
 
 ## Contributing
 PRs welcome! Check out the [Contributing Guidelines](docs-md/contributing.md) and [Code of Conduct](docs-md/code-of-conduct.md) for more information.
