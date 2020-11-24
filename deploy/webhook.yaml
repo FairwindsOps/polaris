@@ -173,10 +173,12 @@ metadata:
   labels:
     app: polaris
 spec:
-  commonName: polaris.polaris.svc
+  commonName: polaris-webhook.polaris.svc
   dnsNames:
-  - polaris.polaris.svc
-  - polaris.polaris.svc.
+  - polaris-webhook.polaris.svc
+  - polaris-webhook.polaris
+  - polaris-webhook
+  - polaris-webhook.polaris.svc.
   issuerRef:
     kind: Issuer
     name: polaris-selfsigned
