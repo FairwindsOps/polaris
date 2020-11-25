@@ -51,6 +51,6 @@ a Kubernetes expert, you can contact `info@fairwinds.com` or [visit our website]
 ---
 
 <p align="center">
-  <img src="/docs-md/.vuepress/public/img/dashboard-screenshot.png" alt="Polaris Dashboard" width="550"/>
+  <img src="/img/dashboard-screenshot.png" alt="Polaris Dashboard" width="550"/>
 </p>
 

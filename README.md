@@ -26,7 +26,7 @@ Polaris can be run in three different modes:
 
 
 ## Documentation
-Check out the [documentation at docs.fairwinds.com](https://polaris.docs.fairwinds.com), or view the [markdown](./docs-md)
+Check out the [documentation at docs.fairwinds.com](https://polaris.docs.fairwinds.com)
 
 ## Integration with Fairwinds Insights
 [Fairwinds Insights](https://www.fairwinds.com/insights?utm_campaign=Hosted%20Polaris%20&utm_source=polaris&utm_term=polaris&utm_content=polaris)
@@ -53,6 +53,6 @@ a Kubernetes expert, you can contact `info@fairwinds.com` or [visit our website]
 ---
 
 <p align="center">
-  <img src="/docs-md/.vuepress/public/img/dashboard-screenshot.png" alt="Polaris Dashboard" width="550"/>
+  <img src="https://polaris.docs.fairwinds.com/img/dashboard-screenshot.png" alt="Polaris Dashboard" width="550"/>
 </p>
 
