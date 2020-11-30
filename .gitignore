@@ -24,3 +24,5 @@ dist
 .vscode
 
 *-test.yaml
+
+node_modules

@@ -1,0 +1,44 @@
+# This file is generated from FairwindsOps/documentation-template
+# DO NOT EDIT MANUALLY
+
+name: Build Website
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [14.x]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: cd docs-md
+    - run: npm ci
+    - run: npm run check-links
+    - run: |
+        username="GitHub Actions"
+        git config user.email "opensource@fairwinds.com"
+        git config user.name $username
+        npm run build
+        HAS_CHANGE=$(git diff .)
+        if [ -n "${HAS_CHANGE}" ]; then
+          if [ "$(git log -1 --pretty=format:'%an')" == $username ]; then
+            echo "Build created a diff, but the last commit was a build."
+            exit 1
+          fi
+          git add docs/
+          git commit -m "[CI] rebuild website"
+          git push
+        fi
+    env:
+        CI: true
