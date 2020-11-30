@@ -1,0 +1,36 @@
+{
+  "name": "fairwinds-docs-template",
+  "version": "0.0.1",
+  "description": "A repository with a Vuepress template for Fairwinds projects",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "check-links": "vuepress check-md",
+    "build": "npm run build:readme && npm run build:docs && npm run reset-cname",
+    "build:readme": "cat ../README.md | grep -v 'ocumentation' | sed \"s/https:\\/\\/\\w\\+.docs.fairwinds.com//g\" > README.md",
+    "build:docs": "vuepress build -d ../docs/ && touch ../docs/CNAME && git checkout -- ../docs/CNAME",
+    "reset-cname": "touch ../docs/CNAME && git checkout -- ../docs/CNAME",
+    "serve": "vuepress dev --port 3003",
+    "vuepress": "vuepress"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FairwindsOps/insights-docs.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/FairwindsOps/insights-docs/issues"
+  },
+  "homepage": "https://github.com/FairwindsOps/insights-docs#readme",
+  "devDependencies": {
+    "vuepress": "^1.4.0",
+    "vuepress-plugin-clean-urls": "^1.1.1",
+    "vuepress-plugin-redirect": "^1.2.3"
+  },
+  "dependencies": {
+    "vuepress-plugin-check-md": "0.0.2"
+  }
+}
