@@ -47,6 +47,16 @@
         </ul>
       </div>
     </div>
+    {{ if and (not .Config.DisallowExemptions) (gt (len .Config.Exemptions) 0) }}
+    <div class="exemption-alert">
+      <i class="fas fa-exclamation"></i>
+      <span>
+        Some checks were skipped based on configured exemptions.
+        <a href="?disallowExemptions=true">Click here</a>
+        to view the report with these checks included.
+      </span>
+    </div>
+    {{ end }}
     <div class="cluster-overview-footer">
       <div class="kubernetes-stats">
           <div class="kubernetes-stat">
@@ -71,6 +81,12 @@
           </div>
       </div>
     </div>
+  </div>
+
+  <div clas="card insights">
+    image
+    <span>Fairwinds, the company behind Polaris, now offers Fairwinds Insights, a multi-cluster, multi-user Kubernetes configuration validation and policy enforcement platform. Fairwinds Insights can help you avoid errors that lead to wasted time, compute costs, and increased risk.</span>
+    button
   </div>
 
   <div class="card category">
