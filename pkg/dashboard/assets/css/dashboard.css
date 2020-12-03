@@ -4,6 +4,15 @@
   position: relative;
 }
 
+.card.insights {
+    text-align: center;
+    font-size: 13px;
+    color: #20162D;
+    background-color: #CACBD2;
+    padding-left: 40px;
+    padding-right: 40px;
+}
+
 .filters .title,
 .card h3 {
   margin: 0;
