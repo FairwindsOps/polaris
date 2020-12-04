@@ -45,6 +45,19 @@ references:
 
         kubectl version
 
+        echo "Installing Helm"
+        curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+        chmod 700 get_helm.sh
+        ./get_helm.sh
+
+        echo "Installing cert-manager"
+        kubectl create namespace cert-manager
+        helm repo add jetstack https://charts.jetstack.io
+        helm repo update
+        echo "Helm install"
+        helm install cert-manager jetstack/cert-manager --namespace cert-manager --version 0.16.1 --set "installCRDs=true" --wait
+        echo "Install cert-manager successful"
+
   # Test scripts
   update_coverage: &update_coverage
     run:
