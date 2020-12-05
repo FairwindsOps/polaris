@@ -2,10 +2,21 @@
   text-align: center;
   padding-top: 10px;
   padding-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+}
+
+.footer .row {
+  display: flex;
+}
+
+.footer > .row {
+  flex-direction: column;
+  align-items: center;
 }
 
 .footer a {
-  color: #999;
+  color: #200C36;
   text-decoration: none;
 }
 
