@@ -1,7 +1,7 @@
 {{define "footer"}}
   <div class="footer">
-    <div class="row">
-      <div class="row">
+    <div class="col-3 align-self-center">
+      <div class="row mb-4">
         <a href="https://fairwinds.com?source=polaris" target="_blank">Polaris Docs</a>
         <a href="https://fairwinds.com?source=polaris" target="_blank">Feedback</a>
       </div>
@@ -12,9 +12,10 @@
         <img class="logo email" src="static/images/purple_icon_email.svg" alt="Email" />
       </div>
     </div>
-    <div class="row">
-      <img class="fw-logo" src="static/images/purple_logo_fairwinds.svg" alt="Fairwinds" />
-      <a href="https://fairwinds.com?source=polaris"  target="_blank">&copy;2020 FairwindsOps Inc.</a>
+    <hr class="col-11">
+    <div class="col-3 align-self-center d-flex flex-column justify-content-center">
+      <img class="row mb-4 fw-logo" src="static/images/purple_logo_fairwinds.svg" alt="Fairwinds" />
+      <a class="row justify-content-center" href="https://fairwinds.com?source=polaris"  target="_blank">&copy; 2020 Fairwinds Ops Inc.</a>
     </div>
   </div>
 {{end}}

@@ -1,5 +1,6 @@
 .footer {
   text-align: center;
+  font-size: 14px;
   padding-top: 10px;
   padding-bottom: 30px;
   display: flex;
@@ -7,12 +8,8 @@
 }
 
 .footer .row {
-  display: flex;
-}
-
-.footer > .row {
-  flex-direction: column;
-  align-items: center;
+  margin: 0;
+  justify-content: space-between;
 }
 
 .footer a {
