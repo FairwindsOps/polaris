@@ -1,5 +1,5 @@
 {{define "dashboard"}}
-  <div class="card cluster">
+  <div id="overview" class="card cluster">
     <h3>
       <span>{{ .AuditData.SourceType }} Overview</span>
 {{- if .AuditData.DisplayName -}}
@@ -83,13 +83,13 @@
     </div>
   </div>
 
-  <div class="card insights py-2">
+  <div id="insights" class="card insights py-2">
     <img class="col-3 align-self-center" src="static/images/FW_Insights_Polaris.svg" />
     <span>Fairwinds, the company behind Polaris, now offers Fairwinds Insights, a multi-cluster, multi-user Kubernetes configuration validation and policy enforcement platform. Fairwinds Insights can help you avoid errors that lead to wasted time, compute costs, and increased risk.</span>
     <a class="col-auto py-1 px-3 mt-2 align-self-center" href="https://fairwinds.com/insights?source=polaris" target="_blank">Try Insights</a>
   </div>
 
-  <div class="card category">
+  <div id="categories" class="card category">
     <h3>Results by Category</h3>
     <div class="expandable-table">
       {{ range $category, $summary := .FilteredAuditData.GetSummaryByCategory }}
@@ -133,7 +133,7 @@
   </div>
 
   {{ range $namespace, $ctrlResults := .FilteredAuditData.GetResultsByNamespace }}
-    <div class="card namespace">
+    <div id="{{ $namespace }}" class="card namespace">
       <h3>Namespace: <strong>{{ $namespace }}</strong></h3>
       <div class="expandable-table">
         {{ range $ctrlResults }}
