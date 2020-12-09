@@ -1,14 +1,50 @@
 {{define "navbar"}}
   <div class="navbar">
-    <div class="navbar-content">
-      <a href="{{ .BasePath }}">
-        <img class="logo" src="static/images/polaris-logo.png" alt="Polaris" />
-      </a>
-      <div class="navbar-right">
+    <div class="fw-nav">
+      <div class="container p-2">
         <a href="https://fairwinds.com?source=polaris" target="_blank">
-          <img class="fw-logo" src="static/images/oss-logo.png" alt="Fairwinds" />
+          <img class="fw-logo" src="static/images/white_logo_fairwinds.svg" alt="Fairwinds" />
         </a>
+        <div class="right-section col-5 p-0 d-flex justify-content-between">
+          <a href="https://github.com/FairwindsOps" target="_blank">
+            <img class="gh-logo" src="static/images/white_icon_github.svg" alt="Github" />
+          </a>
+          <a href="https://twitter.com/fairwindsops" target="_blank">
+            <img class="tw-logo" src="static/images/white_icon_twitter.svg" alt="Twitter" />
+          </a>
+          <a class="mr-5" href="mailto:sales@fairwinds.com" target="_blank">
+            <img class="em-logo" src="static/images/white_icon_email.svg" alt="Email" />
+          </a>
+          <a href="https://join.slack.com/t/fairwindscommunity/shared_invite/zt-e3c6vj4l-3lIH6dvKqzWII5fSSFDi1g" target="_blank">
+            <img class="sl-logo mr-3" src="static/images/white_icon_slack.svg" alt="Slack" />
+            <span>Join our community slack</span>
+          </a>
+        </div>
       </div>
     </div>
+    <div class="polaris-nav container p-2">
+      <div class="left-section">
+        <a href="{{ .BasePath }}">
+          <img class="logo" src="static/images/polaris_logo.svg" alt="Polaris" />
+        </a>
+        <a href="https://polaris.docs.fairwinds.com/">Docs</a>
+      </div>
+      <div class="right-section">
+        <span>Overview</span>
+        <span>Insights</span>
+        <span>Category</span>
+        <span>Namespaces</span>
+      </div>
+    </div>
+    <!-- <div class="navbar-content"> -->
+      <!-- <a href="{{ .BasePath }}"> -->
+        <!-- <img class="logo" src="static/images/polaris-logo.png" alt="Polaris" /> -->
+      <!-- </a> -->
+      <!-- <div class="navbar-right"> -->
+        <!-- <a href="https://fairwinds.com?source=polaris" target="_blank"> -->
+          <!-- <img class="fw-logo" src="static/images/oss-logo.png" alt="Fairwinds" /> -->
+        <!-- </a> -->
+      <!-- </div> -->
+    <!-- </div> -->
   </div>
 {{end}}

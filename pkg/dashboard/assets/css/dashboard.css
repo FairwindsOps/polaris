@@ -11,6 +11,13 @@
     background-color: #CACBD2;
     padding-left: 40px;
     padding-right: 40px;
+    box-shadow: none;
+}
+.card.insights a {
+  background-color: #20162D;
+  color: #fff;
+  font-weight: bold;
+  border-radius: 2rem;
 }
 
 .filters .title,

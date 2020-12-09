@@ -5,32 +5,9 @@ body {
   line-height: 1.3em;
 }
 
-.navbar {
-  padding-top: 20px;
-}
-.navbar, .main-content {
+.main-content {
   width: 960px;
   margin: auto;
-}
-
-.navbar .navbar-content {
-  padding: 0px 20px;
-}
-
-.navbar .navbar-right {
-  float: right;
-}
-
-.navbar .logo {
-  height: 80px;
-}
-
-.navbar .fw-logo {
-  height: 64px;
-}
-
-.navbar a {
-  text-decoration: none;
 }
 
 .card {
