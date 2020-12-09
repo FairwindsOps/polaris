@@ -105,7 +105,7 @@
           </div>
           <div class="name"><span class="caret-expander"></span>{{ $category }}<span class="category-score">Score: <strong>{{ $summary.GetScore }}%</strong></span></div>
           <div class="result-messages expandable-content">
-            <p class="category-info">{{ getCategoryInfo $category }} Refer to the <a href="details/{{ getCategoryLink $category }}">Polaris documentation about {{ $category }}</a> for more information.</p>
+            <p class="category-info">{{ getCategoryInfo $category }} Refer to the <a href="{{ getCategoryLink $category }}" target="_blank">Polaris documentation about {{ $category }}</a> for more information.</p>
           </div>
         </div>
       {{ end }} {{/* end range categories */}}
@@ -159,7 +159,7 @@
                     <li class="{{ getResultClass . }}">
                       <i class="message-icon {{ getIcon $message }}"></i>
                       <span class="message">{{ .Message }}</span>
-                      <a class="more-info" href="details/{{ getCategoryLink .Category }}">
+                      <a class="more-info" href="{{ getCategoryLink .Category }}" target="_blank">
                         <i class="far fa-question-circle"></i>
                       </a>
                     </li>
@@ -174,7 +174,7 @@
                     <li class="{{ getResultClass . }}">
                       <i class="message-icon {{ getIcon $message }}"></i>
                       <span class="message">{{ .Message }}</span>
-                      <a class="more-info" href="details/{{ getCategoryLink .Category }}">
+                      <a class="more-info" href="{{ getCategoryLink .Category }}" target="_blank">
                         <i class="far fa-question-circle"></i>
                       </a>
                     </li>
@@ -190,7 +190,7 @@
                       <li class="{{ getResultClass . }}">
                         <i class="message-icon {{ getIcon $message }}"></i>
                         <span class="message">{{ .Message }}</span>
-                        <a class="more-info" href="details/{{ getCategoryLink .Category }}">
+                        <a class="more-info" href="{{ getCategoryLink .Category }}" target="_blank">
                           <i class="far fa-question-circle"></i>
                         </a>
                       </li>
