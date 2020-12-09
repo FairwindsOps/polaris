@@ -43,3 +43,8 @@
 .navbar .polaris-nav .dropdown-toggle:focus {
   box-shadow: none;
 }
+
+.navbar .polaris-nav .dropdown-menu {
+  max-height: 9rem;
+  overflow-y: scroll;
+}
