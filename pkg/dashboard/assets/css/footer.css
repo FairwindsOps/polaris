@@ -21,4 +21,6 @@
   text-decoration: underline;
 }
 
-
+.footer > div {
+  width: 200px;
+}
