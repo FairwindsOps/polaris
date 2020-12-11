@@ -1,0 +1,26 @@
+.footer {
+  text-align: center;
+  font-size: 14px;
+  padding-top: 10px;
+  padding-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+}
+
+.footer .row {
+  margin: 0;
+  justify-content: space-between;
+}
+
+.footer a {
+  color: #200C36;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
+
+.footer > div {
+  width: 200px;
+}

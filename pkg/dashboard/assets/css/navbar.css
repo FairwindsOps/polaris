@@ -1,0 +1,54 @@
+.navbar {
+  padding: 0;
+}
+
+.navbar .logo {
+  height: 40px;
+}
+
+.navbar .fw-logo {
+  height: 32px;
+}
+
+.navbar a {
+  text-decoration: none;
+}
+
+.navbar .fw-nav,
+.navbar .polaris-nav {
+  width: 100%;
+}
+
+.navbar .fw-nav {
+  background-color: #180929;
+}
+
+.navbar .fw-nav a {
+  color: #fff;
+}
+
+.navbar .fw-nav .right-section img {
+  height: 20px;
+}
+
+.navbar .polaris-nav {
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.navbar .polaris-nav a {
+  color: #180929;
+}
+
+.navbar .polaris-nav .dropdown-toggle:focus {
+  box-shadow: none;
+}
+
+.navbar .polaris-nav .dropdown-menu {
+  max-height: 9rem;
+  overflow-y: scroll;
+}
+
+.navbar .right-section > a {
+  margin: 0 10px;
+}

@@ -5,32 +5,9 @@ body {
   line-height: 1.3em;
 }
 
-.navbar {
-  padding-top: 20px;
-}
-.navbar, .main-content {
+.main-content {
   width: 960px;
   margin: auto;
-}
-
-.navbar .navbar-content {
-  padding: 0px 20px;
-}
-
-.navbar .navbar-right {
-  float: right;
-}
-
-.navbar .logo {
-  height: 80px;
-}
-
-.navbar .fw-logo {
-  height: 64px;
-}
-
-.navbar a {
-  text-decoration: none;
 }
 
 .card {
@@ -42,26 +19,8 @@ body {
   border-radius: 5px;
 }
 
-.footer {
-  text-align: center;
-  padding-top: 10px;
-  padding-bottom: 30px;
-}
-
-.footer a {
-  color: #999;
-  text-decoration: none;
-}
-
-.footer a:hover {
-  text-decoration: underline;
-}
-
 .exemption-alert {
-  margin-top: 15px;
-  padding: 15px;
-  border: 1px solid #f26c21;
-  border-radius: 2px;
+  padding: 30px 0 15px;
 }
 .exemption-alert .fa-exclamation {
   margin-right: 10px;

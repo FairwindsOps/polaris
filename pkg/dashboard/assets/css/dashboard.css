@@ -4,6 +4,25 @@
   position: relative;
 }
 
+.card.insights {
+    text-align: center;
+    font-size: 13px;
+    color: #20162D;
+    background-color: #CACBD2;
+    padding-left: 40px;
+    padding-right: 40px;
+    box-shadow: none;
+}
+.card.insights img {
+  max-width: 400px;
+}
+.card.insights a {
+  background-color: #20162D;
+  color: #fff;
+  font-weight: bold;
+  border-radius: 2rem;
+}
+
 .filters .title,
 .card h3 {
   margin: 0;

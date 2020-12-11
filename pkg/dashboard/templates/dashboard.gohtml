@@ -1,5 +1,5 @@
 {{define "dashboard"}}
-  <div class="card cluster">
+  <div id="overview" class="card cluster">
     <h3>
       <span>{{ .AuditData.SourceType }} Overview</span>
 {{- if .AuditData.DisplayName -}}
@@ -47,6 +47,16 @@
         </ul>
       </div>
     </div>
+    {{ if and (not .Config.DisallowExemptions) (gt (len .Config.Exemptions) 0) }}
+    <div class="exemption-alert">
+      <i class="fas fa-exclamation"></i>
+      <span>
+        Some checks were skipped based on configured exemptions.
+        <a href="?disallowExemptions=true">Click here</a>
+        to view the report with these checks included.
+      </span>
+    </div>
+    {{ end }}
     <div class="cluster-overview-footer">
       <div class="kubernetes-stats">
           <div class="kubernetes-stat">
@@ -73,7 +83,13 @@
     </div>
   </div>
 
-  <div class="card category">
+  <div id="insights" class="card insights py-2">
+    <img class="align-self-center" src="static/images/FW_Insights_Polaris.svg" />
+    <span>Fairwinds, the company behind Polaris, now offers Fairwinds Insights, a multi-cluster, multi-user Kubernetes configuration validation and policy enforcement platform. Fairwinds Insights can help you avoid errors that lead to wasted time, compute costs, and increased risk.</span>
+    <a class="col-auto py-1 px-3 mt-2 align-self-center" href="https://fairwinds.com/insights?source=polaris" target="_blank">Try Insights</a>
+  </div>
+
+  <div id="categories" class="card category">
     <h3>Results by Category</h3>
     <div class="expandable-table">
       {{ range $category, $summary := .FilteredAuditData.GetSummaryByCategory }}
@@ -89,7 +105,7 @@
           </div>
           <div class="name"><span class="caret-expander"></span>{{ $category }}<span class="category-score">Score: <strong>{{ $summary.GetScore }}%</strong></span></div>
           <div class="result-messages expandable-content">
-            <p class="category-info">{{ getCategoryInfo $category }} Refer to the <a href="details/{{ getCategoryLink $category }}">Polaris documentation about {{ $category }}</a> for more information.</p>
+            <p class="category-info">{{ getCategoryInfo $category }} Refer to the <a href="{{ getCategoryLink $category }}" target="_blank">Polaris documentation about {{ $category }}</a> for more information.</p>
           </div>
         </div>
       {{ end }} {{/* end range categories */}}
@@ -117,7 +133,7 @@
   </div>
 
   {{ range $namespace, $ctrlResults := .FilteredAuditData.GetResultsByNamespace }}
-    <div class="card namespace">
+    <div id="{{ $namespace }}" class="card namespace">
       <h3>Namespace: <strong>{{ $namespace }}</strong></h3>
       <div class="expandable-table">
         {{ range $ctrlResults }}
@@ -143,7 +159,7 @@
                     <li class="{{ getResultClass . }}">
                       <i class="message-icon {{ getIcon $message }}"></i>
                       <span class="message">{{ .Message }}</span>
-                      <a class="more-info" href="details/{{ getCategoryLink .Category }}">
+                      <a class="more-info" href="{{ getCategoryLink .Category }}" target="_blank">
                         <i class="far fa-question-circle"></i>
                       </a>
                     </li>
@@ -158,7 +174,7 @@
                     <li class="{{ getResultClass . }}">
                       <i class="message-icon {{ getIcon $message }}"></i>
                       <span class="message">{{ .Message }}</span>
-                      <a class="more-info" href="details/{{ getCategoryLink .Category }}">
+                      <a class="more-info" href="{{ getCategoryLink .Category }}" target="_blank">
                         <i class="far fa-question-circle"></i>
                       </a>
                     </li>
@@ -174,7 +190,7 @@
                       <li class="{{ getResultClass . }}">
                         <i class="message-icon {{ getIcon $message }}"></i>
                         <span class="message">{{ .Message }}</span>
-                        <a class="more-info" href="details/{{ getCategoryLink .Category }}">
+                        <a class="more-info" href="{{ getCategoryLink .Category }}" target="_blank">
                           <i class="far fa-question-circle"></i>
                         </a>
                       </li>

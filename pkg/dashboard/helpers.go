@@ -122,7 +122,7 @@ func getIcon(rm validator.ResultMessage) string {
 }
 
 func getCategoryLink(category string) string {
-	return strings.Replace(strings.ToLower(category), " ", "-", -1)
+	return "https://polaris.docs.fairwinds.com/checks/" + strings.ToLower(category)
 }
 
 func getCategoryInfo(category string) string {
