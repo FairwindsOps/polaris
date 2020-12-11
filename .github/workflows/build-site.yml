@@ -9,16 +9,15 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
         node-version: [14.x]
-
     defaults:
       run:
         working-directory: ./docs-md
+    env:
+        CI: true
 
     steps:
     - uses: actions/checkout@v2
@@ -27,12 +26,15 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
     - run: npm ci
-    - run: npm run check-links
-    - run: |
+    - name: Build site
+      run: npm run build
+    - name: Check links
+      run: npm run check-links
+    - name: Push changes
+      run: |
         username="GitHub Actions"
         git config user.email "opensource@fairwinds.com"
         git config user.name $username
-        npm run build
         HAS_CHANGE=$(git diff .)
         if [ -n "${HAS_CHANGE}" ]; then
           if [ "$(git log -1 --pretty=format:'%an')" == $username ]; then
@@ -43,5 +45,3 @@ jobs:
           git commit -m "[CI] rebuild website"
           git push
         fi
-    env:
-        CI: true

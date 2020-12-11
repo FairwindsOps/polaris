@@ -40,10 +40,10 @@ is a platform for auditing Kubernetes clusters and enforcing policy. If you'd li
 you can sign up for a [free account here](https://insights.fairwinds.com?source=polaris).
 
 ## Contributing
-PRs welcome! Check out the [Contributing Guidelines](/contributing/) and [Code of Conduct](/code-of-conduct) for more information.
+PRs welcome! Check out the [Contributing Guidelines](/contributing) and [Code of Conduct](/code-of-conduct) for more information.
 
 ## Further Information
-A history of changes to this project can be viewed in the [Changelog](/changelog/)
+A history of changes to this project can be viewed in the [Changelog](/changelog)
 
 If you'd like to learn more about Polaris, or if you'd like to speak with
 a Kubernetes expert, you can contact `info@fairwinds.com` or [visit our website](https://fairwinds.com)
