@@ -17,7 +17,8 @@ jobs:
         node-version: [14.x]
 
     defaults:
-      working-directory: ./docs-md
+      run:
+        working-directory: ./docs-md
 
     steps:
     - uses: actions/checkout@v2
