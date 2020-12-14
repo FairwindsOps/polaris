@@ -1,8 +1,10 @@
 ---
 sidebarDepth: 0
 ---
-## Upcoming
+## 2.0.0
 * Standardize categories of checks into Security, Reliability, and Efficiency
+* Changes to the dashboard UI
+* Update controller-runtime
 
 ## 1.2.1
 * Update date on dashboard footer
