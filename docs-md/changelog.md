@@ -1,8 +1,9 @@
 ---
 sidebarDepth: 0
 ---
-## Upcoming
+## 1.3.0
 * Standardize categories of checks into Security, Reliability, and Efficiency
+* Changes to the dashboard UI
 
 ## 1.2.1
 * Update date on dashboard footer
