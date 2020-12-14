@@ -43,5 +43,5 @@ jobs:
           fi
           git add ../docs/
           git commit -m "[CI] rebuild website"
-          git push origin +website
+          git push -u origin +website
         fi
