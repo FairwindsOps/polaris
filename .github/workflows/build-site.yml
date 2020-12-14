@@ -41,7 +41,7 @@ jobs:
             echo "Build created a diff, but the last commit was a build."
             exit 1
           fi
-          git add docs/
+          git add ../docs/
           git commit -m "[CI] rebuild website"
           git push
         fi
