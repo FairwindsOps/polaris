@@ -9,7 +9,7 @@ configuration through dashboard visibility, but to actually enforce it with this
 Note that Polaris will not alter your workloads, only block workloads that don't conform to the configured policies.
 
 ## Installation
-A valid TLS certificate is required for the Polaris Validating Webhook. If you have cert-manager installed in your cluster then the helm install below will work.
+A valid TLS certificate is required for the Polaris Validating Webhook. If you have cert-manager installed in your cluster then the install methods below will work.
 
 If you don't use cert-manager, you'll need to:
 
