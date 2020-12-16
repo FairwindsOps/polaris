@@ -24,7 +24,7 @@ kubectl apply -f https://github.com/fairwindsops/polaris/releases/latest/downloa
 
 ### Helm
 ```bash
-helm repo add fairwinds-stable https://charts.fairwindsops.com/stable
+helm repo add fairwinds-stable https://charts.fairwinds.com/stable
 helm upgrade --install polaris fairwinds-stable/polaris --namespace polaris \
   --set webhook.enable=true --set dashboard.enable=false
 ```
