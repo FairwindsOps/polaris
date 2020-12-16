@@ -13,9 +13,9 @@ A valid TLS certificate is required for the Polaris Validating Webhook. If you h
 
 If you don't use cert-manager, you'll need to:
 
-Supply a CA Bundle with the webhook.caBundle
-Create a TLS secret in your cluster with a valid certificate that uses that CA
-Pass the name of that secret with the webhook.secretName parameter.
+* Supply a CA Bundle with the webhook.caBundle
+* Create a TLS secret in your cluster with a valid certificate that uses that CA
+* Pass the name of that secret with the webhook.secretName parameter.
 
 ### kubectl
 ```bash
