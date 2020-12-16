@@ -40,7 +40,7 @@ type Configuration struct {
 type Exemption struct {
 	Rules           []string `json:"rules"`
 	ControllerNames []string `json:"controllerNames"`
-	Namespace       string `json:"namespace"`
+	Namespace       string   `json:"namespace"`
 }
 
 var configBox = (*packr.Box)(nil)
@@ -102,8 +102,8 @@ func Parse(rawBytes []byte) (Configuration, error) {
 }
 
 // Validate checks if a config is valid
-func (c Configuration) Validate() error {
-	if len(c.Checks) == 0 {
+func (conf Configuration) Validate() error {
+	if len(conf.Checks) == 0 {
 		return errors.New("No checks were enabled")
 	}
 	return nil
