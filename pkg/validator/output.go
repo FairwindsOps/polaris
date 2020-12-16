@@ -33,7 +33,7 @@ type AuditData struct {
 	SourceName           string
 	DisplayName          string
 	ClusterInfo          ClusterInfo
-	Results              []ControllerResult
+	Results              []Result
 }
 
 // ClusterInfo contains Polaris results as well as some high-level stats
@@ -57,8 +57,8 @@ type ResultMessage struct {
 // ResultSet contiains the results for a set of checks
 type ResultSet map[string]ResultMessage
 
-// ControllerResult provides results for a controller
-type ControllerResult struct {
+// Result provides results for a Kubernetes object
+type Result struct {
 	Name        string
 	Namespace   string
 	Kind        string

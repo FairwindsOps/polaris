@@ -103,15 +103,15 @@ func (p PodResult) GetSummaryByCategory() CountSummaryByCategory {
 	return summaries
 }
 
-// GetSummary summarizes a ControllerResult
-func (c ControllerResult) GetSummary() CountSummary {
+// GetSummary summarizes a Result
+func (c Result) GetSummary() CountSummary {
 	summary := c.Results.GetSummary()
 	summary.AddSummary(c.PodResult.GetSummary())
 	return summary
 }
 
-// GetSummaryByCategory summarizes a ControllerResult
-func (c ControllerResult) GetSummaryByCategory() CountSummaryByCategory {
+// GetSummaryByCategory summarizes a Result
+func (c Result) GetSummaryByCategory() CountSummaryByCategory {
 	summary := c.Results.GetSummaryByCategory()
 	summary.AddSummary(c.PodResult.GetSummaryByCategory())
 	return summary
@@ -136,12 +136,12 @@ func (a AuditData) GetSummaryByCategory() CountSummaryByCategory {
 }
 
 // GetResultsByNamespace organizes results by namespace
-func (a AuditData) GetResultsByNamespace() map[string][]*ControllerResult {
-	allResults := map[string][]*ControllerResult{}
+func (a AuditData) GetResultsByNamespace() map[string][]*Result {
+	allResults := map[string][]*Result{}
 	for idx, ctrlResult := range a.Results {
 		nsResults, ok := allResults[ctrlResult.Namespace]
 		if !ok {
-			nsResults = []*ControllerResult{}
+			nsResults = []*Result{}
 		}
 		nsResults = append(nsResults, &a.Results[idx])
 		allResults[ctrlResult.Namespace] = nsResults
