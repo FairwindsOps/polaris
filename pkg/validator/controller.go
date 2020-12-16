@@ -54,14 +54,14 @@ func ValidateController(ctx context.Context, conf *conf.Configuration, controlle
 func ValidateControllers(ctx context.Context, config *conf.Configuration, kubeResources *kube.ResourceProvider) ([]ControllerResult, error) {
 	controllersToAudit := kubeResources.Controllers
 
-	results := []ControllerResult{}
+	var results []ControllerResult
 	for _, controller := range controllersToAudit {
 		if !config.DisallowExemptions && hasExemptionAnnotation(controller) {
 			continue
 		}
 		result, err := ValidateController(ctx, config, controller)
 		if err != nil {
-			logrus.Warn("An error occured validating controller:", err)
+			logrus.Warn("An error occurred validating controller:", err)
 			return nil, err
 		}
 		results = append(results, result)

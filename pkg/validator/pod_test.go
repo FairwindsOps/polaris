@@ -100,7 +100,7 @@ func TestInvalidIPCPod(t *testing.T) {
 	assert.EqualValues(t, expectedResults, actualPodResult.Results)
 }
 
-func TestInvalidNeworkPod(t *testing.T) {
+func TestInvalidNetworkPod(t *testing.T) {
 	c := conf.Configuration{
 		Checks: map[string]conf.Severity{
 			"hostNetworkSet": conf.SeverityWarning,
@@ -185,7 +185,7 @@ func TestExemption(t *testing.T) {
 			"hostPortSet":    conf.SeverityDanger,
 		},
 		Exemptions: []conf.Exemption{
-			conf.Exemption{
+			{
 				Rules:           []string{"hostIPCSet"},
 				ControllerNames: []string{"foo"},
 			},
