@@ -63,7 +63,7 @@ type ControllerResult struct {
 	Namespace   string
 	Kind        string
 	Results     ResultSet
-	PodResult   PodResult
+	PodResult   *PodResult
 	CreatedTime time.Time
 }
 

@@ -28,6 +28,11 @@ func RunAudit(ctx context.Context, config conf.Configuration, kubeResources *kub
 		return AuditData{}, err
 	}
 
+	// results, err := ValidateIngresses(ctx, &config, kubeResources)
+	// if err != nil {
+	// return AuditData{}, err
+	// }
+
 	auditData := AuditData{
 		PolarisOutputVersion: PolarisOutputVersion,
 		AuditTime:            kubeResources.CreationTime.Format(time.RFC3339),

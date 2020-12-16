@@ -43,7 +43,7 @@ func ValidateController(ctx context.Context, conf *conf.Configuration, controlle
 		Name:      controller.ObjectMeta.GetName(),
 		Namespace: controller.ObjectMeta.GetNamespace(),
 		Results:   controllerResult,
-		PodResult: podResult,
+		PodResult: &podResult,
 	}
 
 	return result, nil

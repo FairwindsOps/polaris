@@ -108,7 +108,7 @@ func (v *Validator) handleInternal(ctx context.Context, req admission.Request) (
 	if err != nil {
 		return nil, err
 	}
-	return &controllerResult.PodResult, nil
+	return controllerResult.PodResult, nil
 }
 
 // Handle for Validator to run validation checks.
