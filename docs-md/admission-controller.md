@@ -9,6 +9,14 @@ configuration through dashboard visibility, but to actually enforce it with this
 Note that Polaris will not alter your workloads, only block workloads that don't conform to the configured policies.
 
 ## Installation
+A valid TLS certificate is required for the Polaris Validating Webhook. If you have cert-manager installed in your cluster then the helm install below will work.
+
+If you don't use cert-manager, you'll need to:
+
+Supply a CA Bundle with the webhook.caBundle
+Create a TLS secret in your cluster with a valid certificate that uses that CA
+Pass the name of that secret with the webhook.secretName parameter.
+
 ### kubectl
 ```bash
 kubectl apply -f https://github.com/fairwindsops/polaris/releases/latest/download/webhook.yaml
@@ -16,8 +24,8 @@ kubectl apply -f https://github.com/fairwindsops/polaris/releases/latest/downloa
 
 ### Helm
 ```bash
-helm repo add fairwindsops-stable https://charts.fairwindsops.com/stable
-helm upgrade --install polaris fairwindsops-stable/polaris --namespace polaris \
+helm repo add fairwinds-stable https://charts.fairwindsops.com/stable
+helm upgrade --install polaris fairwinds-stable/polaris --namespace polaris \
   --set webhook.enable=true --set dashboard.enable=false
 ```
 
