@@ -18,7 +18,7 @@ kubectl annotate deployment my-deployment polaris.fairwinds.com/cpuRequestsMissi
 
 ## Config
 
-To exempt a controller via the config, you have to specify a namespace (optional), a list of controller names and a list of rules, e.g.
+To exempt a controller via the config, you have to specify a namespace (optional), a list of controller names, and a list of rules, e.g.
 ```yaml
 exemptions:
   # exemption valid for kube-system namespace
