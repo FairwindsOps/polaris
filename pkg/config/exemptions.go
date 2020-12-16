@@ -18,18 +18,16 @@ func (conf Configuration) IsActionable(ruleID, namespace, controllerName string)
 			continue
 		}
 
+		checkIfActionable := false
 		for _, rule := range example.Rules {
 			if rule != ruleID {
 				continue
 			}
-
-			for _, controller := range example.ControllerNames {
-				if strings.HasPrefix(controllerName, controller) {
-					return false
-				}
-			}
+			checkIfActionable = true
+			break
 		}
-		if len(example.Rules) == 0 {
+
+		if len(example.Rules) == 0 || checkIfActionable {
 			for _, controller := range example.ControllerNames {
 				if strings.HasPrefix(controllerName, controller) {
 					return false
