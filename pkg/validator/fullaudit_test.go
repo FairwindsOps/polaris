@@ -12,12 +12,10 @@ import (
 )
 
 func TestGetTemplateData(t *testing.T) {
-	k8s, dynamicClient := test.SetupTestAPI()
-	k8s = test.SetupAddControllers(context.Background(), k8s, "test")
-	k8s = test.SetupAddExtraControllerVersions(context.Background(), k8s, "test-extra")
+	k8s, dynamicClient := test.SetupTestAPI(test.GetMockControllers("test")...)
+	//k8s = test.SetupAddExtraControllerVersions(context.Background(), k8s, "test-extra")
 	resources, err := kube.CreateResourceProviderFromAPI(context.Background(), k8s, "test", &dynamicClient)
 	assert.Equal(t, err, nil, "error should be nil")
-	fmt.Println(resources.Controllers[0])
 	assert.Equal(t, 5, len(resources.Controllers))
 
 	c := conf.Configuration{
@@ -29,29 +27,39 @@ func TestGetTemplateData(t *testing.T) {
 
 	sum := CountSummary{
 		Successes: uint(0),
-		Warnings:  uint(1),
-		Dangers:   uint(1),
+		Warnings:  uint(3),
+		Dangers:   uint(3),
 	}
 
 	actualAudit, err := RunAudit(context.Background(), c, resources)
-
 	assert.Equal(t, err, nil, "error should be nil")
-
 	assert.EqualValues(t, sum, actualAudit.GetSummary())
 	assert.Equal(t, actualAudit.SourceType, "Cluster", "should be from a cluster")
 	assert.Equal(t, actualAudit.SourceName, "test", "should be from a cluster")
 
-	expected := []struct {
+	expectedResults := []struct {
 		kind    string
 		results int
 	}{
-		{kind: "Pod", results: 2},
+		{kind: "StatefulSet", results: 2},
+		{kind: "DaemonSet", results: 2},
+		{kind: "Deployment", results: 2},
+		{kind: "Job", results: 0},
+		{kind: "CronJob", results: 0},
 	}
+	fmt.Println("res", actualAudit.Results)
 
-	assert.Equal(t, len(expected), len(actualAudit.Results))
-	for idx, result := range actualAudit.Results {
-		assert.Equal(t, expected[idx].kind, result.Kind)
-		assert.Equal(t, 1, len(result.PodResult.ContainerResults))
-		assert.Equal(t, expected[idx].results, len(result.PodResult.ContainerResults[0].Results))
+	assert.Equal(t, len(expectedResults), len(actualAudit.Results))
+	for _, result := range actualAudit.Results {
+		found := false
+		for _, expected := range expectedResults {
+			if expected.kind != result.Kind {
+				continue
+			}
+			found = true
+			assert.Equal(t, 1, len(result.PodResult.ContainerResults))
+			assert.Equal(t, expected.results, len(result.PodResult.ContainerResults[0].Results))
+		}
+		assert.Equal(t, found, true)
 	}
 }

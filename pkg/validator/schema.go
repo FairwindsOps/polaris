@@ -199,6 +199,7 @@ func applyContainerSchemaChecks(ctx context.Context, conf *config.Configuration,
 			passes, err = check.CheckPod(&podCopy)
 		} else {
 			passes, err = check.CheckContainer(container)
+			fmt.Println("check container", check.ID, passes, err, container)
 		}
 		if err != nil {
 			return nil, err

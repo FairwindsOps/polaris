@@ -87,10 +87,7 @@ func TestAddResourcesFromReader(t *testing.T) {
 }
 
 func TestGetResourceFromAPI(t *testing.T) {
-	k8s, dynamicInterface := test.SetupTestAPI()
-	k8s = test.SetupAddControllers(context.Background(), k8s, "test")
-	// TODO find a way to mock out the dynamic client
-	// and create fake pods in order to find all of the controllers.
+	k8s, dynamicInterface := test.SetupTestAPI(test.GetMockControllers("test")...)
 	resources, err := CreateResourceProviderFromAPI(context.Background(), k8s, "test", &dynamicInterface)
 	assert.Equal(t, nil, err, "Error should be nil")
 
@@ -99,8 +96,19 @@ func TestGetResourceFromAPI(t *testing.T) {
 	assert.IsType(t, time.Now(), resources.CreationTime, "Creation time should be set")
 
 	assert.Equal(t, 0, len(resources.Nodes), "Should not have any nodes")
-	assert.Equal(t, 2, len(resources.Controllers), "Should have 1 controller")
+	assert.Equal(t, 5, len(resources.Controllers), "Should have 5 controllers")
 
-	assert.Equal(t, "", resources.Controllers[0].ObjectMeta.GetName())
-	assert.Equal(t, "foo", resources.Controllers[1].ObjectMeta.GetName())
+	expectedNames := map[string]bool{
+		"deploy":      false,
+		"job":         false,
+		"cronjob":     false,
+		"statefulset": false,
+		"daemonset":   false,
+	}
+	for _, ctrl := range resources.Controllers {
+		expectedNames[ctrl.ObjectMeta.GetName()] = true
+	}
+	for name, val := range expectedNames {
+		assert.Equal(t, true, val, name)
+	}
 }
