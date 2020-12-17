@@ -2,6 +2,7 @@ package validator
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	conf "github.com/fairwindsops/polaris/pkg/config"
@@ -14,10 +15,10 @@ func TestGetTemplateData(t *testing.T) {
 	k8s, dynamicClient := test.SetupTestAPI()
 	k8s = test.SetupAddControllers(context.Background(), k8s, "test")
 	k8s = test.SetupAddExtraControllerVersions(context.Background(), k8s, "test-extra")
-	// TODO figure out how to mock out dynamic client.
-	// and add in pods for all controllers to fill out tests.
 	resources, err := kube.CreateResourceProviderFromAPI(context.Background(), k8s, "test", &dynamicClient)
 	assert.Equal(t, err, nil, "error should be nil")
+	fmt.Println(resources.Controllers[0])
+	assert.Equal(t, 5, len(resources.Controllers))
 
 	c := conf.Configuration{
 		Checks: map[string]conf.Severity{

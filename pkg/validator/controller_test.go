@@ -20,6 +20,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	conf "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
@@ -59,41 +60,66 @@ func TestValidateController(t *testing.T) {
 }
 
 func TestControllerLevelChecks(t *testing.T) {
-	c := conf.Configuration{
-		Checks: map[string]conf.Severity{
-			"multipleReplicasForDeployment": conf.SeverityDanger,
-		},
-	}
-	resources, err := kube.CreateResourceProviderFromPath("../kube/test_files/test_1")
+	testResources := func(res *kube.ResourceProvider) {
+		c := conf.Configuration{
+			Checks: map[string]conf.Severity{
+				"multipleReplicasForDeployment": conf.SeverityDanger,
+			},
+		}
+		expectedResult := ResultMessage{
+			ID:       "multipleReplicasForDeployment",
+			Severity: "danger",
+			Category: "Reliability",
+		}
+		for _, controller := range res.Controllers {
+			if controller.Kind == "Deployment" {
+				actualResult, err := ValidateController(context.Background(), &c, controller)
+				if err != nil {
+					panic(err)
+				}
+				if controller.ObjectMeta.GetName() == "test-deployment-2" {
+					expectedResult.Success = true
+					expectedResult.Message = "Multiple replicas are scheduled"
+				} else if controller.ObjectMeta.GetName() == "test-deployment" {
+					expectedResult.Success = false
+					expectedResult.Message = "Only one replica is scheduled"
+				}
+				expectedResults := ResultSet{
+					"multipleReplicasForDeployment": expectedResult,
+				}
 
-	assert.Equal(t, nil, err, "Error should be nil")
-
-	assert.Equal(t, 8, len(resources.Controllers), "Should have eight controllers")
-
-	expectedSum := CountSummary{
-		Successes: uint(0),
-		Warnings:  uint(0),
-		Dangers:   uint(1),
-	}
-
-	expectedResults := ResultSet{
-		"multipleReplicasForDeployment": {ID: "multipleReplicasForDeployment", Message: "Only one replica is scheduled", Success: false, Severity: "danger", Category: "Reliability"},
-	}
-
-	for _, controller := range resources.Controllers {
-		if controller.Kind == "Deployment" && controller.ObjectMeta.GetName() == "test-deployment" {
-			actualResult, err := ValidateController(context.Background(), &c, controller)
-			if err != nil {
-				panic(err)
+				assert.Equal(t, "Deployment", actualResult.Kind)
+				assert.Equal(t, 1, len(actualResult.Results), "should be equal")
+				assert.EqualValues(t, expectedResults, actualResult.Results, controller.ObjectMeta.GetName())
 			}
-
-			assert.Equal(t, "Deployment", actualResult.Kind)
-			assert.Equal(t, 1, len(actualResult.Results), "should be equal")
-			assert.EqualValues(t, expectedSum, actualResult.GetSummary())
-			assert.EqualValues(t, expectedResults, actualResult.Results)
 		}
 	}
 
+	res, err := kube.CreateResourceProviderFromPath("../kube/test_files/test_1")
+	assert.Equal(t, nil, err, "Error should be nil")
+	assert.Equal(t, 9, len(res.Controllers), "Should have eight controllers")
+	testResources(res)
+
+	k8s, dynamicClient := test.SetupTestAPI()
+	k8s = test.SetupAddControllers(context.Background(), k8s, "test")
+	dWithoutReplicas, _ := test.MockDeploy("test", "test")
+	dWithoutReplicas.ObjectMeta.SetName("test-deployment")
+	one := int32(1)
+	two := int32(2)
+	dWithoutReplicas.Spec.Replicas = &one
+	if _, err := k8s.AppsV1().Deployments("test-dep").Create(context.Background(), &dWithoutReplicas, metav1.CreateOptions{}); err != nil {
+		panic(err)
+	}
+	dWithReplicas, _ := test.MockDeploy("test", "test")
+	dWithReplicas.ObjectMeta.SetName("test-deployment-2")
+	dWithReplicas.Spec.Replicas = &two
+	if _, err := k8s.AppsV1().Deployments("test-dep").Create(context.Background(), &dWithReplicas, metav1.CreateOptions{}); err != nil {
+		panic(err)
+	}
+	res, err = kube.CreateResourceProviderFromAPI(context.Background(), k8s, "test", &dynamicClient)
+	assert.Equal(t, err, nil, "error should be nil")
+	assert.Equal(t, 2, len(res.Controllers), "Should have two controllers")
+	testResources(res)
 }
 
 func TestSkipHealthChecks(t *testing.T) {

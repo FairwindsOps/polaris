@@ -11,6 +11,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	dynamicFake "k8s.io/client-go/dynamic/fake"
 	"k8s.io/client-go/kubernetes"
@@ -46,14 +47,35 @@ func MockNakedPod() corev1.Pod {
 }
 
 // MockDeploy creates a Deployment object.
-func MockDeploy() appsv1.Deployment {
+func MockDeploy(name, namespace string) (appsv1.Deployment, corev1.Pod) {
 	p := MockPod()
 	d := appsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "apps/v1",
+			Kind:       "Deployment",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			UID:       "1111",
+		},
 		Spec: appsv1.DeploymentSpec{
 			Template: corev1.PodTemplateSpec{Spec: p.Spec},
 		},
 	}
-	return d
+	pod := corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name + "-12345",
+			Namespace: namespace,
+			OwnerReferences: []metav1.OwnerReference{{
+				APIVersion: "apps/v1",
+				Kind:       "Deployment",
+				Name:       d.ObjectMeta.Name,
+				UID:        d.ObjectMeta.UID,
+			}},
+		},
+	}
+	return d, pod
 }
 
 // MockStatefulSet creates a StatefulSet object.
@@ -113,15 +135,23 @@ func MockReplicationController() corev1.ReplicationController {
 
 // SetupTestAPI creates a test kube API struct.
 func SetupTestAPI() (kubernetes.Interface, dynamic.Interface) {
-	scheme := runtime.NewScheme()
-
-	return fake.NewSimpleClientset(), dynamicFake.NewSimpleDynamicClient(scheme)
+	gvk := schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"}
+	sch := runtime.NewScheme()
+	d, p := MockDeploy("beeb", "beeb")
+	sch.AddKnownTypeWithName(gvk, &d)
+	dynamicClient := dynamicFake.NewSimpleDynamicClient(sch)
+	dynamicClient.Resource(schema.GroupVersionResource{
+		Group:    "apps",
+		Version:  "v1",
+		Resource: "Deployment",
+	})
+	return fake.NewSimpleClientset(&d, &p), dynamicClient
 }
 
 // SetupAddControllers creates mock controllers and adds them to the test clientset.
 func SetupAddControllers(ctx context.Context, k kubernetes.Interface, namespace string) kubernetes.Interface {
-	d1 := MockDeploy()
-	if _, err := k.AppsV1().Deployments(namespace).Create(ctx, &d1, metav1.CreateOptions{}); err != nil {
+	d, _ := MockDeploy("foo", namespace)
+	if _, err := k.AppsV1().Deployments(namespace).Create(ctx, &d, metav1.CreateOptions{}); err != nil {
 		panic(err)
 	}
 
