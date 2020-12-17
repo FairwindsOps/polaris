@@ -80,7 +80,7 @@ func runAndReportAudit(ctx context.Context, c conf.Configuration, auditPath, wor
 		logrus.Errorf("Error fetching Kubernetes resources %v", err)
 		os.Exit(1)
 	}
-	auditData, err := validator.RunAudit(ctx, c, k)
+	auditData, err := validator.RunAudit(c, k)
 
 	if err != nil {
 		logrus.Errorf("Error while running audit on resources: %v", err)

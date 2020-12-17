@@ -2,7 +2,6 @@ package validator
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"io"
 	"sort"
@@ -114,7 +113,7 @@ func getExemptKey(checkID string) string {
 	return fmt.Sprintf("polaris.fairwinds.com/%s-exempt", checkID)
 }
 
-func applyPodSchemaChecks(ctx context.Context, conf *config.Configuration, controller kube.GenericWorkload) (ResultSet, error) {
+func applyPodSchemaChecks(conf *config.Configuration, controller kube.GenericWorkload) (ResultSet, error) {
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
 	objectAnnotations := controller.ObjectMeta.GetAnnotations()
@@ -139,7 +138,7 @@ func applyPodSchemaChecks(ctx context.Context, conf *config.Configuration, contr
 	return results, nil
 }
 
-func applyControllerSchemaChecks(ctx context.Context, conf *config.Configuration, controller kube.GenericWorkload) (ResultSet, error) {
+func applyControllerSchemaChecks(conf *config.Configuration, controller kube.GenericWorkload) (ResultSet, error) {
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
 	objectAnnotations := controller.ObjectMeta.GetAnnotations()
@@ -164,7 +163,7 @@ func applyControllerSchemaChecks(ctx context.Context, conf *config.Configuration
 	return results, nil
 }
 
-func applyContainerSchemaChecks(ctx context.Context, conf *config.Configuration, controller kube.GenericWorkload, container *corev1.Container, isInit bool) (ResultSet, error) {
+func applyContainerSchemaChecks(conf *config.Configuration, controller kube.GenericWorkload, container *corev1.Container, isInit bool) (ResultSet, error) {
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
 	objectAnnotations := controller.ObjectMeta.GetAnnotations()

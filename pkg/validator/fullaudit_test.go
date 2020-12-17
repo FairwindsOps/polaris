@@ -32,7 +32,7 @@ func TestGetTemplateData(t *testing.T) {
 		Dangers:   uint(1),
 	}
 
-	actualAudit, err := RunAudit(context.Background(), c, resources)
+	actualAudit, err := RunAudit(c, resources)
 
 	assert.Equal(t, err, nil, "error should be nil")
 

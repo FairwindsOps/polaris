@@ -104,7 +104,7 @@ func (v *Validator) handleInternal(ctx context.Context, req admission.Request) (
 		return nil, err
 	}
 	controller.Kind = req.AdmissionRequest.Kind.Kind
-	controllerResult, err := validator.ValidateController(ctx, &v.Config, controller)
+	controllerResult, err := validator.ValidateController(&v.Config, controller)
 	if err != nil {
 		return nil, err
 	}

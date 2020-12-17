@@ -53,7 +53,7 @@ func TestValidatePod(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
-	actualPodResult, err := ValidatePod(context.Background(), &c, deployment)
+	actualPodResult, err := ValidatePod(&c, deployment)
 	if err != nil {
 		panic(err)
 	}
@@ -90,7 +90,7 @@ func TestInvalidIPCPod(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
-	actualPodResult, err := ValidatePod(context.Background(), &c, workload)
+	actualPodResult, err := ValidatePod(&c, workload)
 	if err != nil {
 		panic(err)
 	}
@@ -128,7 +128,7 @@ func TestInvalidNetworkPod(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
-	actualPodResult, err := ValidatePod(context.Background(), &c, workload)
+	actualPodResult, err := ValidatePod(&c, workload)
 	if err != nil {
 		panic(err)
 	}
@@ -166,7 +166,7 @@ func TestInvalidPIDPod(t *testing.T) {
 		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Success: true, Severity: "warning", Category: "Security"},
 	}
 
-	actualPodResult, err := ValidatePod(context.Background(), &c, workload)
+	actualPodResult, err := ValidatePod(&c, workload)
 	if err != nil {
 		panic(err)
 	}
@@ -211,7 +211,7 @@ func TestExemption(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
-	actualPodResult, err := ValidatePod(context.Background(), &c, workload)
+	actualPodResult, err := ValidatePod(&c, workload)
 	if err != nil {
 		panic(err)
 	}
