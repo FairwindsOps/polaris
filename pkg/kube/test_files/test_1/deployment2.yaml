@@ -1,0 +1,20 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: test-deployment-2
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: test-deployment
+  template:
+    metadata:
+      labels:
+        app: test-deployment
+    spec:
+      containers:
+      - name: ubuntu
+        image: ubuntu
+        ports:
+        - containerPort: 3000
+
