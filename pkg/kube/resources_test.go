@@ -27,13 +27,13 @@ func TestGetResourcesFromPath(t *testing.T) {
 	assert.Equal(t, 1, len(resources.Namespaces), "Should have a namespace")
 	assert.Equal(t, "two", resources.Namespaces[0].ObjectMeta.Name)
 
-	assert.Equal(t, 8, len(resources.Controllers), "Should have eight controllers")
+	assert.Equal(t, 9, len(resources.Controllers), "Should have eight controllers")
 	namespaceCount := map[string]int{}
 	for _, controller := range resources.Controllers {
 		namespaceCount[controller.ObjectMeta.GetNamespace()]++
 	}
-	assert.Equal(t, 7, namespaceCount[""], "Should have seven controller in default namespace")
-	assert.Equal(t, 1, namespaceCount["two"], "Should have one controller in namespace 'two'")
+	assert.Equal(t, 8, namespaceCount[""])
+	assert.Equal(t, 1, namespaceCount["two"])
 }
 
 func TestGetMultipleResourceFromSingleFile(t *testing.T) {
@@ -87,10 +87,7 @@ func TestAddResourcesFromReader(t *testing.T) {
 }
 
 func TestGetResourceFromAPI(t *testing.T) {
-	k8s, dynamicInterface := test.SetupTestAPI()
-	k8s = test.SetupAddControllers(context.Background(), k8s, "test")
-	// TODO find a way to mock out the dynamic client
-	// and create fake pods in order to find all of the controllers.
+	k8s, dynamicInterface := test.SetupTestAPI(test.GetMockControllers("test")...)
 	resources, err := CreateResourceProviderFromAPI(context.Background(), k8s, "test", &dynamicInterface)
 	assert.Equal(t, nil, err, "Error should be nil")
 
@@ -99,7 +96,19 @@ func TestGetResourceFromAPI(t *testing.T) {
 	assert.IsType(t, time.Now(), resources.CreationTime, "Creation time should be set")
 
 	assert.Equal(t, 0, len(resources.Nodes), "Should not have any nodes")
-	assert.Equal(t, 1, len(resources.Controllers), "Should have 1 controller")
+	assert.Equal(t, 5, len(resources.Controllers), "Should have 5 controllers")
 
-	assert.Equal(t, "", resources.Controllers[0].ObjectMeta.GetName())
+	expectedNames := map[string]bool{
+		"deploy":      false,
+		"job":         false,
+		"cronjob":     false,
+		"statefulset": false,
+		"daemonset":   false,
+	}
+	for _, ctrl := range resources.Controllers {
+		expectedNames[ctrl.ObjectMeta.GetName()] = true
+	}
+	for name, val := range expectedNames {
+		assert.Equal(t, true, val, name)
+	}
 }
