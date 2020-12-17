@@ -13,8 +13,6 @@ spec:
     metadata:
       labels:
         app: nginx
-        sre: foo
-        maintainer_team: bar
     spec:
       containers:
       - name: nginx
