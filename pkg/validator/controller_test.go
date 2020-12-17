@@ -16,11 +16,11 @@ package validator
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
-	//metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	conf "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
@@ -100,27 +100,19 @@ func TestControllerLevelChecks(t *testing.T) {
 	assert.Equal(t, 9, len(res.Controllers), "Should have eight controllers")
 	testResources(res)
 
-	/*
-		k8s, dynamicClient := test.SetupTestAPI(test.GetMockControllers()...)
-		dWithoutReplicas, _ := test.MockDeploy("test", "test")
-		dWithoutReplicas.ObjectMeta.SetName("test-deployment")
-		one := int32(1)
-		two := int32(2)
-		dWithoutReplicas.Spec.Replicas = &one
-		if _, err := k8s.AppsV1().Deployments("test-dep").Create(context.Background(), &dWithoutReplicas, metav1.CreateOptions{}); err != nil {
-			panic(err)
-		}
-		dWithReplicas, _ := test.MockDeploy("test", "test")
-		dWithReplicas.ObjectMeta.SetName("test-deployment-2")
-		dWithReplicas.Spec.Replicas = &two
-		if _, err := k8s.AppsV1().Deployments("test-dep").Create(context.Background(), &dWithReplicas, metav1.CreateOptions{}); err != nil {
-			panic(err)
-		}
-		res, err = kube.CreateResourceProviderFromAPI(context.Background(), k8s, "test", &dynamicClient)
-		assert.Equal(t, err, nil, "error should be nil")
-		assert.Equal(t, 2, len(res.Controllers), "Should have two controllers")
-		testResources(res)
-	*/
+	replicaSpec := map[string]interface{}{"replicas": 2}
+	b, err := json.Marshal(replicaSpec)
+	assert.NoError(t, err)
+	err = json.Unmarshal(b, &replicaSpec)
+
+	d1, p1 := test.MockDeploy("test", "test-deployment")
+	d2, p2 := test.MockDeploy("test", "test-deployment-2")
+	d2.Object["spec"] = replicaSpec
+	k8s, dynamicClient := test.SetupTestAPI(&d1, &p1, &d2, &p2)
+	res, err = kube.CreateResourceProviderFromAPI(context.Background(), k8s, "test", &dynamicClient)
+	assert.Equal(t, err, nil, "error should be nil")
+	assert.Equal(t, 2, len(res.Controllers), "Should have two controllers")
+	testResources(res)
 }
 
 func TestSkipHealthChecks(t *testing.T) {

@@ -157,15 +157,12 @@ func applyControllerSchemaChecks(ctx context.Context, conf *config.Configuration
 			continue
 		}
 		if controller.ObjectMeta.GetNamespace() == "check-test" {
-			fmt.Println("check conroller\n", string(controller.OriginalObjectJSON))
 			parsed := map[string]interface{}{}
 			err := json.Unmarshal(controller.OriginalObjectJSON, &parsed)
 			if err != nil {
 				panic(err)
 			}
 			parsed = parsed["Object"].(map[string]interface{})
-			fmt.Println(parsed["spec"].(map[string]interface{})["template"])
-			fmt.Println(parsed["spec"].(map[string]interface{})["template"].(map[string]interface{})["metadata"])
 		}
 		passes, err := check.CheckController(controller.OriginalObjectJSON)
 		if err != nil {
@@ -199,7 +196,6 @@ func applyContainerSchemaChecks(ctx context.Context, conf *config.Configuration,
 			passes, err = check.CheckPod(&podCopy)
 		} else {
 			passes, err = check.CheckContainer(container)
-			fmt.Println("check container", check.ID, passes, err, container)
 		}
 		if err != nil {
 			return nil, err

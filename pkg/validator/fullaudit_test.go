@@ -2,7 +2,6 @@ package validator
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	conf "github.com/fairwindsops/polaris/pkg/config"
@@ -47,7 +46,6 @@ func TestGetTemplateData(t *testing.T) {
 		{kind: "Job", results: 0},
 		{kind: "CronJob", results: 0},
 	}
-	fmt.Println("res", actualAudit.Results)
 
 	assert.Equal(t, len(expectedResults), len(actualAudit.Results))
 	for _, result := range actualAudit.Results {
