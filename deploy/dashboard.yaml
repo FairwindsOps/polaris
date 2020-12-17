@@ -109,7 +109,7 @@ spec:
       - command:
         - polaris
         - dashboard
-        image: 'quay.io/fairwinds/polaris:2.0'
+        image: 'quay.io/fairwinds/polaris:3.0'
         imagePullPolicy: 'Always'
         name: dashboard
         ports:
