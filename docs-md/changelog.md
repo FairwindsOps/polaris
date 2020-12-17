@@ -1,6 +1,12 @@
 ---
 sidebarDepth: 0
 ---
+## Upcoming
+* **Breaking** - fixed inconsistency in how controller-level checks are handled
+
+## 2.0.1
+* Fixed Polaris deployment process
+
 ## 2.0.0
 * Standardize categories of checks into Security, Reliability, and Efficiency
 * Changes to the dashboard UI
