@@ -25,6 +25,19 @@ type GenericWorkload struct {
 	OriginalObjectJSON []byte
 }
 
+func getJSONFromUnstructured(unst *unstructured.Unstructured) ([]byte, error) {
+	b, err := json.Marshal(unst)
+	if err != nil {
+		return nil, err
+	}
+	parsed := map[string]interface{}{}
+	err = json.Unmarshal(b, &parsed)
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(parsed["Object"])
+}
+
 // NewGenericWorkloadFromUnstructured creates a workload from an unstructured.Unstructured
 func NewGenericWorkloadFromUnstructured(kind string, unst *unstructured.Unstructured) (GenericWorkload, error) {
 	workload := GenericWorkload{
@@ -37,7 +50,7 @@ func NewGenericWorkloadFromUnstructured(kind string, unst *unstructured.Unstruct
 	}
 	workload.ObjectMeta = objMeta
 
-	b, err := json.Marshal(unst)
+	b, err := getJSONFromUnstructured(unst)
 	if err != nil {
 		return workload, err
 	}
@@ -136,7 +149,8 @@ func newGenericWorkload(ctx context.Context, podResource kubeAPICoreV1.Pod, dyna
 	}
 
 	if lastKey != "" {
-		bytes, err := json.Marshal(objectCache[lastKey])
+		unst := objectCache[lastKey]
+		bytes, err := getJSONFromUnstructured(&unst)
 		if err != nil {
 			return workload, err
 		}
