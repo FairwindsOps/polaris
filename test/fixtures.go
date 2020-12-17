@@ -1,7 +1,6 @@
 package test
 
 import (
-	"context"
 	"encoding/json"
 
 	appsv1 "k8s.io/api/apps/v1"
