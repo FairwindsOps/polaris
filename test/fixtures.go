@@ -99,23 +99,7 @@ func MockControllerWithNormalSpec(apiVersion, kind, namespace, name string) (uns
 	return MockController(apiVersion, kind, namespace, name, spec, p.Spec)
 }
 
-func MockDeployWithSpec(namespace, name string, spec map[string]interface{}) (unstructured.Unstructured, corev1.Pod) {
-	p := MockPod()
-	b, err := json.Marshal(p.Spec)
-	if err != nil {
-		panic(err)
-	}
-	pSpec := map[string]interface{}{}
-	err = json.Unmarshal(b, &pSpec)
-	if err != nil {
-		panic(err)
-	}
-	spec["template"] = map[string]interface{}{
-		"spec": pSpec,
-	}
-	return MockController("apps/v1", "Deploymnet", namespace, name, spec, p.Spec)
-}
-
+// MockDeploy creates a Deployment object.
 func MockDeploy(namespace, name string) (unstructured.Unstructured, corev1.Pod) {
 	return MockControllerWithNormalSpec("apps/v1", "Deployment", namespace, name)
 }
@@ -218,6 +202,7 @@ func SetupTestAPI(objects ...runtime.Object) (kubernetes.Interface, dynamic.Inte
 	return k, dynamicClient
 }
 
+// GetMockControllers returns mocked controllers for 5 major controller types
 func GetMockControllers(namespace string) []runtime.Object {
 	deploy, deployPod := MockDeploy(namespace, "deploy")
 	statefulset, statefulsetPod := MockStatefulSet(namespace, "statefulset")

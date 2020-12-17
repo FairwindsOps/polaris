@@ -3,7 +3,6 @@ package validator
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"sort"
