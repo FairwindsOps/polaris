@@ -32,8 +32,8 @@ func TestGetResourcesFromPath(t *testing.T) {
 	for _, controller := range resources.Controllers {
 		namespaceCount[controller.ObjectMeta.GetNamespace()]++
 	}
-	assert.Equal(t, 8, namespaceCount[""], "Should have seven controller in default namespace")
-	assert.Equal(t, 1, namespaceCount["two"], "Should have one controller in namespace 'two'")
+	assert.Equal(t, 8, namespaceCount[""])
+	assert.Equal(t, 1, namespaceCount["two"])
 }
 
 func TestGetMultipleResourceFromSingleFile(t *testing.T) {
