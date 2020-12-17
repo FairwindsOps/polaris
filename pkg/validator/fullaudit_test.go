@@ -12,7 +12,6 @@ import (
 
 func TestGetTemplateData(t *testing.T) {
 	k8s, dynamicClient := test.SetupTestAPI(test.GetMockControllers("test")...)
-	//k8s = test.SetupAddExtraControllerVersions(context.Background(), k8s, "test-extra")
 	resources, err := kube.CreateResourceProviderFromAPI(context.Background(), k8s, "test", &dynamicClient)
 	assert.Equal(t, err, nil, "error should be nil")
 	assert.Equal(t, 5, len(resources.Controllers))
