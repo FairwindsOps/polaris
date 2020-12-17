@@ -83,10 +83,7 @@ The steps are:
     1. Clone the helm charts repo
         1. `git clone https://github.com/FairwindsOps/charts`
         2. `git checkout -b yourname/update-polaris`
-    1. Bump the version number in:
-        1. stable/polaris/README.md
-        2. stable/polaris/Chart.yaml
-        3. stable/polaris/values.yaml
+    1. Bump the version number in `stable/polaris/Chart.yaml`
     2. Make any necessary changes to the chart to support the new version of Polaris (e.g. new RBAC permissions)
     3. **Don't merge yet!**
 2. Create a PR for this repo
