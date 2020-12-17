@@ -156,14 +156,6 @@ func applyControllerSchemaChecks(ctx context.Context, conf *config.Configuration
 		} else if check == nil {
 			continue
 		}
-		if controller.ObjectMeta.GetNamespace() == "check-test" {
-			parsed := map[string]interface{}{}
-			err := json.Unmarshal(controller.OriginalObjectJSON, &parsed)
-			if err != nil {
-				panic(err)
-			}
-			parsed = parsed["Object"].(map[string]interface{})
-		}
 		passes, err := check.CheckController(controller.OriginalObjectJSON)
 		if err != nil {
 			return nil, err
