@@ -35,13 +35,6 @@ jobs:
         username="GitHub Actions"
         git config user.email "opensource@fairwinds.com"
         git config user.name $username
-        HAS_CHANGE=$(git diff .)
-        if [ -n "${HAS_CHANGE}" ]; then
-          if [ "$(git log -1 --pretty=format:'%an')" == $username ]; then
-            echo "Build created a diff, but the last commit was a build."
-            exit 1
-          fi
-          git add ../docs/
-          git commit -m "[CI] rebuild website"
-          git push -u origin +master:website
-        fi
+        git add ../docs/
+        git commit -m "[CI] rebuild website"
+        git push -u origin +master:website
