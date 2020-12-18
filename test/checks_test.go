@@ -14,7 +14,7 @@ import (
 	"github.com/fairwindsops/polaris/pkg/validator"
 )
 
-var testCases = []testCase{}
+var testCases []testCase
 
 type testCase struct {
 	check   string
@@ -56,7 +56,8 @@ func TestChecks(t *testing.T) {
 		assert.NoError(t, err)
 		c, err := config.Parse([]byte("checks:\n  " + tc.check + ": danger"))
 		assert.NoError(t, err)
-		result, err := validator.ValidateController(&c, *workload)
+		var result validator.ControllerResult
+		result, err = validator.ValidateController(&c, *workload)
 		assert.NoError(t, err)
 		summary := result.GetSummary()
 		if tc.failure {

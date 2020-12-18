@@ -3,7 +3,10 @@ Sometimes a workload really does need to do things that Polaris considers insecu
 many of the `kube-system` workloads need to run as root, or need access to the host network. In these
 cases, we can add **exemptions** to allow the workload to pass Polaris checks.
 
-Exemptions can be added two ways: by annotating a controller, or editing the Polaris config.
+Exemptions can be added in a few different ways: 
+ - Namespace: By annotating a controller, or editing the Polaris config.
+ - Controller: By editing the Polaris config.
+ - Container: By editing the Polaris config.
 
 ## Annotations
 To exempt a controller from all checks via annotations, use the annotation `polaris.fairwinds.com/exempt=true`, e.g.
@@ -18,18 +21,24 @@ kubectl annotate deployment my-deployment polaris.fairwinds.com/cpuRequestsMissi
 
 ## Config
 
-To exempt a controller via the config, you have to specify a namespace (optional), a list of controller names, and a list of rules, e.g.
+You can add exemptions by using a combination of namespace, controller names, and container names via the config. You have to specify a list of rules and at least one of the following: a namespace, a list of controller names, or a list of container names, e.g.
 ```yaml
 exemptions:
-  # exemption valid for kube-system namespace
+  # exemption valid in kube-system namespace, dns-controller controller for all containers
   - namespace: kube-system
     controllerNames:
       - dns-controller
     rules:
       - hostNetworkSet
-  # exemption valid in all namespaces
+  # exemption valid in all namespaces for dns-controller controller for all containers
   - controllerNames:
       - dns-controller
+    rules:
+      - hostNetworkSet
+  # exemption valid in kube-system namespace and all controllers for coredns container
+  - namespace: kube-system
+  - containerNames:
+      - coredns
     rules:
       - hostNetworkSet
 ```

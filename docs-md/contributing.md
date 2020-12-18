@@ -50,7 +50,7 @@ Each new pull request should:
 - Reference any related issues
 - Add tests that show the issues have been solved
 - Pass existing tests and linting
-- Contain a clear indication of if they're ready for review or a work in progress
+- Contain a clear indication of if they're ready for review, or a work in progress
 - Be up to date and/or rebased on the master branch
 
 ## Creating a new release
@@ -104,4 +104,3 @@ The steps are:
     3. Make sure CircleCI runs successfully for the new tag - this will push images to quay.io and create a release in GitHub
         1. If CircleCI fails, check with Codeowners ASAP
 4. Create and merge a PR for your changes to the Helm chart
-

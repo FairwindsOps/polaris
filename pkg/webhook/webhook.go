@@ -82,7 +82,7 @@ func GetObjectFromRawRequest(raw []byte) (corev1.Pod, interface{}, error) {
 	return pod, originalObject, err
 }
 
-func (v *Validator) handleInternal(ctx context.Context, req admission.Request) (*validator.PodResult, error) {
+func (v *Validator) handleInternal(req admission.Request) (*validator.PodResult, error) {
 	pod := corev1.Pod{}
 	var originalObject interface{}
 	var err error
@@ -104,7 +104,8 @@ func (v *Validator) handleInternal(ctx context.Context, req admission.Request) (
 		return nil, err
 	}
 	controller.Kind = req.AdmissionRequest.Kind.Kind
-	controllerResult, err := validator.ValidateController(&v.Config, controller)
+	var controllerResult validator.ControllerResult
+	controllerResult, err = validator.ValidateController(&v.Config, controller)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +115,7 @@ func (v *Validator) handleInternal(ctx context.Context, req admission.Request) (
 // Handle for Validator to run validation checks.
 func (v *Validator) Handle(ctx context.Context, req admission.Request) admission.Response {
 	logrus.Info("Starting request")
-	podResult, err := v.handleInternal(ctx, req)
+	podResult, err := v.handleInternal(req)
 	if err != nil {
 		logrus.Errorf("Error validating request: %v", err)
 		return admission.Errored(http.StatusBadRequest, err)

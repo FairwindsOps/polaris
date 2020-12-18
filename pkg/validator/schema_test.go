@@ -143,7 +143,8 @@ func TestValidateResourcesInit(t *testing.T) {
 	parsedConf, err := conf.Parse([]byte(resourceConfRanges))
 	assert.NoError(t, err, "Expected no error when parsing config")
 
-	results, err := applyContainerSchemaChecks(&parsedConf, controller, emptyContainer, false)
+	var results ResultSet
+	results, err = applyContainerSchemaChecks(&parsedConf, controller, emptyContainer, false)
 	if err != nil {
 		panic(err)
 	}

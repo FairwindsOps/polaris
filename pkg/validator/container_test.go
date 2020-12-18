@@ -68,7 +68,8 @@ func testValidateWithWorkload(t *testing.T, container *corev1.Container, resourc
 	parsedConf, err := conf.Parse([]byte(*resourceConf))
 	assert.NoError(t, err, "Expected no error when parsing config")
 
-	results, err := applyContainerSchemaChecks(&parsedConf, workload, container, false)
+	var results ResultSet
+	results, err = applyContainerSchemaChecks(&parsedConf, workload, container, false)
 	if err != nil {
 		panic(err)
 	}

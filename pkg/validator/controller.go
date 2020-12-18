@@ -32,7 +32,8 @@ func ValidateController(conf *conf.Configuration, controller kube.GenericWorkloa
 		return ControllerResult{}, err
 	}
 
-	controllerResult, err := applyControllerSchemaChecks(conf, controller)
+	var controllerResult ResultSet
+	controllerResult, err = applyControllerSchemaChecks(conf, controller)
 	if err != nil {
 		return ControllerResult{}, err
 	}
