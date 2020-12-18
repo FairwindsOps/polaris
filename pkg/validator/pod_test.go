@@ -36,8 +36,6 @@ func TestValidatePod(t *testing.T) {
 		},
 	}
 
-	k8s, _ := test.SetupTestAPI()
-	k8s = test.SetupAddControllers(context.Background(), k8s, "test")
 	p := test.MockPod()
 	deployment, err := kube.NewGenericWorkloadFromPod(p, nil)
 	assert.NoError(t, err)
@@ -74,8 +72,6 @@ func TestInvalidIPCPod(t *testing.T) {
 		},
 	}
 
-	k8s, _ := test.SetupTestAPI()
-	k8s = test.SetupAddControllers(context.Background(), k8s, "test")
 	p := test.MockPod()
 	p.Spec.HostIPC = true
 	workload, err := kube.NewGenericWorkloadFromPod(p, nil)
@@ -112,8 +108,6 @@ func TestInvalidNetworkPod(t *testing.T) {
 		},
 	}
 
-	k8s, _ := test.SetupTestAPI()
-	k8s = test.SetupAddControllers(context.Background(), k8s, "test")
 	p := test.MockPod()
 	p.Spec.HostNetwork = true
 	workload, err := kube.NewGenericWorkloadFromPod(p, nil)
@@ -151,8 +145,6 @@ func TestInvalidPIDPod(t *testing.T) {
 		},
 	}
 
-	k8s, _ := test.SetupTestAPI()
-	k8s = test.SetupAddControllers(context.Background(), k8s, "test")
 	p := test.MockPod()
 	p.Spec.HostPID = true
 	workload, err := kube.NewGenericWorkloadFromPod(p, nil)
@@ -196,8 +188,6 @@ func TestExemption(t *testing.T) {
 		},
 	}
 
-	k8s, _ := test.SetupTestAPI()
-	k8s = test.SetupAddControllers(context.Background(), k8s, "test")
 	p := test.MockPod()
 	p.Spec.HostIPC = true
 	p.ObjectMeta = metav1.ObjectMeta{
