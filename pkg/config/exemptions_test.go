@@ -65,9 +65,10 @@ exemptions:
     rules:
       - multipleReplicasForDeployment
       - priorityClassNotSet
+  - namespace: polaris
 `
 
-func TestNamespaceExemption(t *testing.T) {
+func TestNamespaceExemptionForSpecifiedRules(t *testing.T) {
 	parsedConf, err := Parse([]byte(confContainerTest))
 	assert.NoError(t, err)
 
@@ -83,8 +84,31 @@ func TestNamespaceExemption(t *testing.T) {
 	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "prometheus", "controller1", "")
 	assert.False(t, actionable)
 
+	actionable = parsedConf.IsActionable("pullPolicyNotAlways", "prometheus", "controller1", "")
+	assert.True(t, actionable)
+
 	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "kube-system", "", "")
 	assert.True(t, actionable)
+}
+
+func TestNamespaceExemptionForAllRules(t *testing.T) {
+	parsedConf, err := Parse([]byte(confContainerTest))
+	assert.NoError(t, err)
+
+	actionable := parsedConf.IsActionable("multipleReplicasForDeployment", "polaris", "", "")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "polaris", "controller1", "container11")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "polaris", "", "container11")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "polaris", "controller1", "")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("pullPolicyNotAlways", "polaris", "controller1", "")
+	assert.False(t, actionable)
 }
 
 func TestControllerExemption(t *testing.T) {

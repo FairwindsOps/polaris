@@ -21,21 +21,32 @@ kubectl annotate deployment my-deployment polaris.fairwinds.com/cpuRequestsMissi
 
 ## Config
 
-You can add exemptions by using a combination of namespace, controller names, and container names via the config. You have to specify a list of rules and at least one of the following: a namespace, a list of controller names, or a list of container names, e.g.
+To add exemptions via the config, you have to specify at least one or more of the following: 
+- A namespace
+- A list of controller names
+- A list of container names
+
+You can also specify a list of particular rules. If no rules are specified then every rule is exempted. 
+
+Controller names and container names are matched as a prefix, so an empty string will match every controller or container respectively.
+
+For example:
 ```yaml
 exemptions:
-  # exemption valid in kube-system namespace and dns-controller controller for all containers
+  # exemption valid for all rules on all containers in all controllers in default namespace
+  - namespace: default
+  # exemption valid for hostNetworkSet rule on all containers in dns-controller controller in kube-system namespace
   - namespace: kube-system
     controllerNames:
       - dns-controller
     rules:
       - hostNetworkSet
-  # exemption valid in all namespaces and dns-controller controller for all containers
+  # exemption valid for hostNetworkSet rule on all containers in dns-controller controller in all namespaces
   - controllerNames:
       - dns-controller
     rules:
       - hostNetworkSet
-  # exemption valid in kube-system namespace and all controllers for coredns container
+  # exemption valid for hostNetworkSet rule on coredns container in all controllers in kube-system namespace
   - namespace: kube-system
   - containerNames:
       - coredns
