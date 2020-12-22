@@ -38,7 +38,7 @@ func ValidateContainer(conf *config.Configuration, controller kube.GenericWorklo
 
 // ValidateAllContainers validates both init and regular containers
 func ValidateAllContainers(conf *config.Configuration, controller kube.GenericWorkload) ([]ContainerResult, error) {
-	var results []ContainerResult
+	results := []ContainerResult{}
 	pod := controller.PodSpec
 	for _, container := range pod.InitContainers {
 		result, err := ValidateContainer(conf, controller, &container, true)

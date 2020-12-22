@@ -54,7 +54,7 @@ func ValidateController(conf *conf.Configuration, controller kube.GenericWorkloa
 func ValidateControllers(config *conf.Configuration, kubeResources *kube.ResourceProvider) ([]ControllerResult, error) {
 	controllersToAudit := kubeResources.Controllers
 
-	var results []ControllerResult
+	results := []ControllerResult{}
 	for _, controller := range controllersToAudit {
 		if !config.DisallowExemptions && hasExemptionAnnotation(controller) {
 			continue

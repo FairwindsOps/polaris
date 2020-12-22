@@ -927,7 +927,7 @@ func TestValidateSecurity(t *testing.T) {
 			if err != nil {
 				panic(err)
 			}
-			var messages []ResultMessage
+			messages := []ResultMessage{}
 			for _, msg := range results {
 				messages = append(messages, msg)
 			}

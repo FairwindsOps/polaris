@@ -14,7 +14,7 @@ import (
 	"github.com/fairwindsops/polaris/pkg/validator"
 )
 
-var testCases []testCase
+var testCases = []testCase{}
 
 type testCase struct {
 	check   string
