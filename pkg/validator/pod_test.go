@@ -15,7 +15,6 @@
 package validator
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
