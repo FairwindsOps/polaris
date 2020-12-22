@@ -48,7 +48,8 @@ func TestValidateController(t *testing.T) {
 		"hostPIDSet": {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
-	actualResult, err := ValidateController(context.Background(), &c, deployment)
+	var actualResult ControllerResult
+	actualResult, err = ValidateController(&c, deployment)
 	if err != nil {
 		panic(err)
 	}
@@ -73,7 +74,7 @@ func TestControllerLevelChecks(t *testing.T) {
 		}
 		for _, controller := range res.Controllers {
 			if controller.Kind == "Deployment" {
-				actualResult, err := ValidateController(context.Background(), &c, controller)
+				actualResult, err := ValidateController(&c, controller)
 				if err != nil {
 					panic(err)
 				}
@@ -136,7 +137,8 @@ func TestSkipHealthChecks(t *testing.T) {
 		"readinessProbeMissing": {ID: "readinessProbeMissing", Message: "Readiness probe should be configured", Success: false, Severity: "danger", Category: "Reliability"},
 		"livenessProbeMissing":  {ID: "livenessProbeMissing", Message: "Liveness probe should be configured", Success: false, Severity: "warning", Category: "Reliability"},
 	}
-	actualResult, err := ValidateController(context.Background(), &c, deployment)
+	var actualResult ControllerResult
+	actualResult, err = ValidateController(&c, deployment)
 	if err != nil {
 		panic(err)
 	}
@@ -155,7 +157,7 @@ func TestSkipHealthChecks(t *testing.T) {
 		Dangers:   uint(0),
 	}
 	expectedResults = ResultSet{}
-	actualResult, err = ValidateController(context.Background(), &c, job)
+	actualResult, err = ValidateController(&c, job)
 	if err != nil {
 		panic(err)
 	}
@@ -173,7 +175,7 @@ func TestSkipHealthChecks(t *testing.T) {
 		Dangers:   uint(0),
 	}
 	expectedResults = ResultSet{}
-	actualResult, err = ValidateController(context.Background(), &c, cronjob)
+	actualResult, err = ValidateController(&c, cronjob)
 	if err != nil {
 		panic(err)
 	}
@@ -203,7 +205,8 @@ func TestControllerExemptions(t *testing.T) {
 		Warnings:  uint(1),
 		Dangers:   uint(1),
 	}
-	actualResults, err := ValidateControllers(context.Background(), &c, resources)
+	var actualResults []ControllerResult
+	actualResults, err = ValidateControllers(&c, resources)
 	if err != nil {
 		panic(err)
 	}
@@ -214,7 +217,7 @@ func TestControllerExemptions(t *testing.T) {
 	resources.Controllers[0].ObjectMeta.SetAnnotations(map[string]string{
 		exemptionAnnotationKey: "true",
 	})
-	actualResults, err = ValidateControllers(context.Background(), &c, resources)
+	actualResults, err = ValidateControllers(&c, resources)
 	if err != nil {
 		panic(err)
 	}

@@ -15,8 +15,6 @@
 package validator
 
 import (
-	"context"
-
 	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
 
@@ -24,8 +22,8 @@ import (
 )
 
 // ValidateContainer validates a single container from a given controller
-func ValidateContainer(ctx context.Context, conf *config.Configuration, controller kube.GenericWorkload, container *corev1.Container, isInit bool) (ContainerResult, error) {
-	results, err := applyContainerSchemaChecks(ctx, conf, controller, container, isInit)
+func ValidateContainer(conf *config.Configuration, controller kube.GenericWorkload, container *corev1.Container, isInit bool) (ContainerResult, error) {
+	results, err := applyContainerSchemaChecks(conf, controller, container, isInit)
 	if err != nil {
 		return ContainerResult{}, err
 	}
@@ -39,18 +37,18 @@ func ValidateContainer(ctx context.Context, conf *config.Configuration, controll
 }
 
 // ValidateAllContainers validates both init and regular containers
-func ValidateAllContainers(ctx context.Context, conf *config.Configuration, controller kube.GenericWorkload) ([]ContainerResult, error) {
+func ValidateAllContainers(conf *config.Configuration, controller kube.GenericWorkload) ([]ContainerResult, error) {
 	results := []ContainerResult{}
 	pod := controller.PodSpec
 	for _, container := range pod.InitContainers {
-		result, err := ValidateContainer(ctx, conf, controller, &container, true)
+		result, err := ValidateContainer(conf, controller, &container, true)
 		if err != nil {
 			return nil, err
 		}
 		results = append(results, result)
 	}
 	for _, container := range pod.Containers {
-		result, err := ValidateContainer(ctx, conf, controller, &container, false)
+		result, err := ValidateContainer(conf, controller, &container, false)
 		if err != nil {
 			return nil, err
 		}

@@ -20,61 +20,232 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var confExemptRuleTest = `
+var confContainerTest = `
 checks:
-  ANY: warning
-  OTHER: warning
+  multipleReplicasForDeployment: warning
+  priorityClassNotSet: warning
+  pullPolicyNotAlways: warning
 exemptions:
-  - controllerNames:
-    - test
+  - namespace: prometheus
     rules:
-    - ANY
-`
-
-var confExemptTest = `
-checks:
-  ANY: warning
-exemptions:
-  - controllerNames:
-      - test
-`
-
-var confNamespaceTest = `
-checks:
-  ANY: warning
-exemptions:
+      - multipleReplicasForDeployment
+  - controllerNames: 
+      - controller2
+    rules:
+      - multipleReplicasForDeployment
   - namespace: kube-system
     controllerNames:
-      - test
+      - controller3
+    rules:
+      - multipleReplicasForDeployment
+  - containerNames:
+      - container41
+      - container42
+    rules:
+      - multipleReplicasForDeployment
+  - namespace: kube-system
+    containerNames:
+      - container51
+      - container52
+    rules:
+      - multipleReplicasForDeployment
+  - controllerNames:
+      - controller6
+    containerNames:
+      - container61
+      - container62
+    rules:
+      - multipleReplicasForDeployment
+  - namespace: kube-system
+    controllerNames:
+      - controller7
+    containerNames:
+      - container71
+      - container72
+    rules:
+      - multipleReplicasForDeployment
+      - priorityClassNotSet
+  - namespace: polaris
 `
 
-func TestInclusiveExemption(t *testing.T) {
-	parsedConf, _ := Parse([]byte(confExemptTest))
-	applicable := parsedConf.IsActionable("ANY", "test", "test")
-	applicableOtherController := parsedConf.IsActionable("ANY","test",  "other")
+func TestNamespaceExemptionForSpecifiedRules(t *testing.T) {
+	parsedConf, err := Parse([]byte(confContainerTest))
+	assert.NoError(t, err)
 
-	assert.False(t, applicable, "Expected all checks to be exempted when their controller is specified.")
-	assert.True(t, applicableOtherController, "Expected checks to only be exempted when their controller is specified.")
+	actionable := parsedConf.IsActionable("multipleReplicasForDeployment", "prometheus", "", "")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "prometheus", "controller1", "container11")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "prometheus", "", "container11")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "prometheus", "controller1", "")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("pullPolicyNotAlways", "prometheus", "controller1", "")
+	assert.True(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "kube-system", "", "")
+	assert.True(t, actionable)
 }
 
-func TestIndividualRuleException(t *testing.T) {
-	parsedConf, _ := Parse([]byte(confExemptRuleTest))
-	applicable := parsedConf.IsActionable("ANY", "test", "test")
-	applicableOtherRule := parsedConf.IsActionable("OTHER","test",  "test")
-	applicableOtherRuleOtherController := parsedConf.IsActionable("OTHER","test",  "other")
-	applicableRuleOtherController := parsedConf.IsActionable("ANY","test",  "other")
+func TestNamespaceExemptionForAllRules(t *testing.T) {
+	parsedConf, err := Parse([]byte(confContainerTest))
+	assert.NoError(t, err)
 
-	assert.False(t, applicable, "Expected all checks to be exempted when their controller and rule are specified.")
-	assert.True(t, applicableOtherRule, "Expected checks to only be exempted when their controller and rule are specified.")
-	assert.True(t, applicableOtherRuleOtherController, "Expected checks to only be exempted when their controller and rule are specified.")
-	assert.True(t, applicableRuleOtherController, "Expected checks to only be exempted when their controller and rule are specified.")
+	actionable := parsedConf.IsActionable("multipleReplicasForDeployment", "polaris", "", "")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "polaris", "controller1", "container11")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "polaris", "", "container11")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "polaris", "controller1", "")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("pullPolicyNotAlways", "polaris", "controller1", "")
+	assert.False(t, actionable)
 }
 
-func TestNamespaceExemption(t *testing.T) {
-	parsedConf, _ := Parse([]byte(confNamespaceTest))
-	applicable := parsedConf.IsActionable("ANY", "kube-system", "test")
-	applicableOtherController := parsedConf.IsActionable("ANY","default",  "test")
+func TestControllerExemption(t *testing.T) {
+	parsedConf, err := Parse([]byte(confContainerTest))
+	assert.NoError(t, err)
 
-	assert.False(t, applicable, "Expected all checks to be exempted when their namespace and controller is specified.")
-	assert.True(t, applicableOtherController, "Expected checks to only be exempted when their namespace and controller is specified.")
+	actionable := parsedConf.IsActionable("multipleReplicasForDeployment", "", "controller2", "")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "", "controller2", "container21")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "prometheus", "controller2", "container21")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "prometheus", "controller2", "")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "", "controller3", "")
+	assert.True(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "kube-system", "controller3", "")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "kube-system", "controller3", "container31")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "kube-system", "controller4", "")
+	assert.True(t, actionable)
+}
+
+func TestOnlyContainerExemption(t *testing.T) {
+	parsedConf, err := Parse([]byte(confContainerTest))
+	assert.NoError(t, err)
+
+	actionable := parsedConf.IsActionable("multipleReplicasForDeployment", "", "", "container41")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "", "", "container42")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "", "controller4", "container41")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "kube-system", "", "container41")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "kube-system", "controller4", "container41")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "", "", "container51")
+	assert.True(t, actionable)
+}
+
+func TestNamespaceAndContainerExemption(t *testing.T) {
+	parsedConf, err := Parse([]byte(confContainerTest))
+	assert.NoError(t, err)
+
+	actionable := parsedConf.IsActionable("multipleReplicasForDeployment", "kube-system", "", "container51")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("priorityClassNotSet", "kube-system", "", "container51")
+	assert.True(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "kube-system", "controller5", "container51")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "kube-system", "controller5", "")
+	assert.True(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "insights-agent", "", "container51")
+	assert.True(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "", "", "container51")
+	assert.True(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "", "controller5", "container51")
+	assert.True(t, actionable)
+}
+
+func TestControllerAndContainerExemption(t *testing.T) {
+	parsedConf, err := Parse([]byte(confContainerTest))
+	assert.NoError(t, err)
+
+	actionable := parsedConf.IsActionable("multipleReplicasForDeployment", "", "controller6", "container61")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("priorityClassNotSet", "", "controller6", "container61")
+	assert.True(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "kube-system", "controller6", "container61")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "kube-system", "controller6", "")
+	assert.True(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "", "controller7", "container61")
+	assert.True(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "", "", "container61")
+	assert.True(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "kube-system", "", "container61")
+	assert.True(t, actionable)
+}
+
+func TestContainerExemption(t *testing.T) {
+	parsedConf, err := Parse([]byte(confContainerTest))
+	assert.NoError(t, err)
+
+	actionable := parsedConf.IsActionable("multipleReplicasForDeployment", "", "", "container71")
+	assert.True(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "kube-system", "", "container71")
+	assert.True(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "", "controller7", "container71")
+	assert.True(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "kube-system", "controller7", "")
+	assert.True(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "kube-system", "controller7", "container71")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "insights-agent", "controller7", "container71")
+	assert.True(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "kube-system", "controller6", "container71")
+	assert.True(t, actionable)
+
+	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", "kube-system", "controller7", "container61")
+	assert.True(t, actionable)
+
+	actionable = parsedConf.IsActionable("priorityClassNotSet", "kube-system", "controller7", "container71")
+	assert.False(t, actionable)
+
+	actionable = parsedConf.IsActionable("pullPolicyNotAlways", "kube-system", "controller8", "container71")
+	assert.True(t, actionable)
 }

@@ -29,7 +29,8 @@ func TestGetTemplateData(t *testing.T) {
 		Dangers:   uint(3),
 	}
 
-	actualAudit, err := RunAudit(context.Background(), c, resources)
+	var actualAudit AuditData
+	actualAudit, err = RunAudit(c, resources)
 	assert.Equal(t, err, nil, "error should be nil")
 	assert.EqualValues(t, sum, actualAudit.GetSummary())
 	assert.Equal(t, actualAudit.SourceType, "Cluster", "should be from a cluster")
