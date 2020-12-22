@@ -1,9 +1,6 @@
 ---
 sidebarDepth: 0
 ---
-## 3.1.0
-* Add ability for exemptions for namespaces and containers
-
 ## 3.0.0
 * **Breaking** - fixed inconsistency in how controller-level checks are handled
 Custom checks with `target: Controller` should remove `Object` from the top-level of the
