@@ -4,8 +4,8 @@ many of the `kube-system` workloads need to run as root, or need access to the h
 cases, we can add **exemptions** to allow the workload to pass Polaris checks.
 
 Exemptions can be added in a few different ways: 
- - Namespace: By annotating a controller, or editing the Polaris config.
- - Controller: By editing the Polaris config.
+ - Namespace: By editing the Polaris config.
+ - Controller: By annotating a controller, or editing the Polaris config.
  - Container: By editing the Polaris config.
 
 ## Annotations
