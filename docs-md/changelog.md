@@ -1,8 +1,18 @@
 ---
 sidebarDepth: 0
 ---
-## Upcoming
+## 3.0.0
+* **Breaking** - fixed inconsistency in how controller-level checks are handled
+Custom checks with `target: Controller` should remove `Object` from the top-level of the
+JSON schema (see changes to `./checks/multipleReplicasForDeployment.yaml`)
+
+## 2.0.1
+* Fixed Polaris deployment process
+
+## 2.0.0
 * Standardize categories of checks into Security, Reliability, and Efficiency
+* Changes to the dashboard UI
+* Update controller-runtime
 
 ## 1.2.1
 * Update date on dashboard footer

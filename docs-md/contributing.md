@@ -50,7 +50,7 @@ Each new pull request should:
 - Reference any related issues
 - Add tests that show the issues have been solved
 - Pass existing tests and linting
-- Contain a clear indication of if they're ready for review or a work in progress
+- Contain a clear indication of if they're ready for review, or a work in progress
 - Be up to date and/or rebased on the master branch
 
 ## Creating a new release
@@ -83,10 +83,7 @@ The steps are:
     1. Clone the helm charts repo
         1. `git clone https://github.com/FairwindsOps/charts`
         2. `git checkout -b yourname/update-polaris`
-    1. Bump the version number in:
-        1. stable/polaris/README.md
-        2. stable/polaris/Chart.yaml
-        3. stable/polaris/values.yaml
+    1. Bump the version number in `stable/polaris/Chart.yaml`
     2. Make any necessary changes to the chart to support the new version of Polaris (e.g. new RBAC permissions)
     3. **Don't merge yet!**
 2. Create a PR for this repo
@@ -104,4 +101,3 @@ The steps are:
     3. Make sure CircleCI runs successfully for the new tag - this will push images to quay.io and create a release in GitHub
         1. If CircleCI fails, check with Codeowners ASAP
 4. Create and merge a PR for your changes to the Helm chart
-

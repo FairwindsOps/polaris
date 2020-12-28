@@ -23,7 +23,7 @@ import (
 	"net/http"
 	"strings"
 
-	packr "github.com/gobuffalo/packr/v2"
+	"github.com/gobuffalo/packr/v2"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
@@ -40,7 +40,8 @@ type Configuration struct {
 type Exemption struct {
 	Rules           []string `json:"rules"`
 	ControllerNames []string `json:"controllerNames"`
-	Namespace       string `json:"namespace"`
+	ContainerNames  []string `json:"containerNames"`
+	Namespace       string   `json:"namespace"`
 }
 
 var configBox = (*packr.Box)(nil)
@@ -59,14 +60,14 @@ func ParseFile(path string) (Configuration, error) {
 	if path == "" {
 		rawBytes, err = getConfigBox().Find("config.yaml")
 	} else if strings.HasPrefix(path, "https://") || strings.HasPrefix(path, "http://") {
-		//path is a url
+		// path is a url
 		response, err2 := http.Get(path)
 		if err2 != nil {
 			return Configuration{}, err2
 		}
 		rawBytes, err = ioutil.ReadAll(response.Body)
 	} else {
-		//path is local
+		// path is local
 		rawBytes, err = ioutil.ReadFile(path)
 	}
 	if err != nil {
@@ -102,8 +103,8 @@ func Parse(rawBytes []byte) (Configuration, error) {
 }
 
 // Validate checks if a config is valid
-func (c Configuration) Validate() error {
-	if len(c.Checks) == 0 {
+func (conf Configuration) Validate() error {
+	if len(conf.Checks) == 0 {
 		return errors.New("No checks were enabled")
 	}
 	return nil

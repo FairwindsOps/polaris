@@ -8,19 +8,14 @@ controllers:
 schema:
   '$schema': http://json-schema.org/draft-07/schema
   type: object
-  required: 
-  - Object
+  required:
+  - spec
   properties:
-    Object:
+    spec:
       type: object
       required:
-      - spec
+      - replicas
       properties:
-        spec:
-          type: object
-          required:
-          - replicas
-          properties:
-            replicas:
-              type: integer
-              minimum: 2
+        replicas:
+          type: integer
+          minimum: 2

@@ -15,7 +15,6 @@
 package validator
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -36,8 +35,6 @@ func TestValidatePod(t *testing.T) {
 		},
 	}
 
-	k8s, _ := test.SetupTestAPI()
-	k8s = test.SetupAddControllers(context.Background(), k8s, "test")
 	p := test.MockPod()
 	deployment, err := kube.NewGenericWorkloadFromPod(p, nil)
 	assert.NoError(t, err)
@@ -53,7 +50,8 @@ func TestValidatePod(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
-	actualPodResult, err := ValidatePod(context.Background(), &c, deployment)
+	var actualPodResult PodResult
+	actualPodResult, err = ValidatePod(&c, deployment)
 	if err != nil {
 		panic(err)
 	}
@@ -73,8 +71,6 @@ func TestInvalidIPCPod(t *testing.T) {
 		},
 	}
 
-	k8s, _ := test.SetupTestAPI()
-	k8s = test.SetupAddControllers(context.Background(), k8s, "test")
 	p := test.MockPod()
 	p.Spec.HostIPC = true
 	workload, err := kube.NewGenericWorkloadFromPod(p, nil)
@@ -90,7 +86,8 @@ func TestInvalidIPCPod(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
-	actualPodResult, err := ValidatePod(context.Background(), &c, workload)
+	var actualPodResult PodResult
+	actualPodResult, err = ValidatePod(&c, workload)
 	if err != nil {
 		panic(err)
 	}
@@ -100,7 +97,7 @@ func TestInvalidIPCPod(t *testing.T) {
 	assert.EqualValues(t, expectedResults, actualPodResult.Results)
 }
 
-func TestInvalidNeworkPod(t *testing.T) {
+func TestInvalidNetworkPod(t *testing.T) {
 	c := conf.Configuration{
 		Checks: map[string]conf.Severity{
 			"hostNetworkSet": conf.SeverityWarning,
@@ -110,8 +107,6 @@ func TestInvalidNeworkPod(t *testing.T) {
 		},
 	}
 
-	k8s, _ := test.SetupTestAPI()
-	k8s = test.SetupAddControllers(context.Background(), k8s, "test")
 	p := test.MockPod()
 	p.Spec.HostNetwork = true
 	workload, err := kube.NewGenericWorkloadFromPod(p, nil)
@@ -128,7 +123,8 @@ func TestInvalidNeworkPod(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
-	actualPodResult, err := ValidatePod(context.Background(), &c, workload)
+	var actualPodResult PodResult
+	actualPodResult, err = ValidatePod(&c, workload)
 	if err != nil {
 		panic(err)
 	}
@@ -148,8 +144,6 @@ func TestInvalidPIDPod(t *testing.T) {
 		},
 	}
 
-	k8s, _ := test.SetupTestAPI()
-	k8s = test.SetupAddControllers(context.Background(), k8s, "test")
 	p := test.MockPod()
 	p.Spec.HostPID = true
 	workload, err := kube.NewGenericWorkloadFromPod(p, nil)
@@ -166,7 +160,8 @@ func TestInvalidPIDPod(t *testing.T) {
 		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Success: true, Severity: "warning", Category: "Security"},
 	}
 
-	actualPodResult, err := ValidatePod(context.Background(), &c, workload)
+	var actualPodResult PodResult
+	actualPodResult, err = ValidatePod(&c, workload)
 	if err != nil {
 		panic(err)
 	}
@@ -185,15 +180,13 @@ func TestExemption(t *testing.T) {
 			"hostPortSet":    conf.SeverityDanger,
 		},
 		Exemptions: []conf.Exemption{
-			conf.Exemption{
+			{
 				Rules:           []string{"hostIPCSet"},
 				ControllerNames: []string{"foo"},
 			},
 		},
 	}
 
-	k8s, _ := test.SetupTestAPI()
-	k8s = test.SetupAddControllers(context.Background(), k8s, "test")
 	p := test.MockPod()
 	p.Spec.HostIPC = true
 	p.ObjectMeta = metav1.ObjectMeta{
@@ -211,7 +204,8 @@ func TestExemption(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
-	actualPodResult, err := ValidatePod(context.Background(), &c, workload)
+	var actualPodResult PodResult
+	actualPodResult, err = ValidatePod(&c, workload)
 	if err != nil {
 		panic(err)
 	}

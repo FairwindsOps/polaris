@@ -136,7 +136,8 @@ func newGenericWorkload(ctx context.Context, podResource kubeAPICoreV1.Pod, dyna
 	}
 
 	if lastKey != "" {
-		bytes, err := json.Marshal(objectCache[lastKey])
+		unst := objectCache[lastKey]
+		bytes, err := json.Marshal(&unst)
 		if err != nil {
 			return workload, err
 		}
