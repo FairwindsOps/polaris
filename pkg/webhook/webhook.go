@@ -24,7 +24,6 @@ import (
 	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
 	validator "github.com/fairwindsops/polaris/pkg/validator"
-
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -104,6 +103,8 @@ func (v *Validator) handleInternal(req admission.Request) (*validator.PodResult,
 		return nil, err
 	}
 	controller.Kind = req.AdmissionRequest.Kind.Kind
+	controller.ObjectMeta.SetNamespace(req.AdmissionRequest.Namespace)
+	controller.ObjectMeta.SetName(req.AdmissionRequest.Name)
 	var controllerResult validator.ControllerResult
 	controllerResult, err = validator.ValidateController(&v.Config, controller)
 	if err != nil {
