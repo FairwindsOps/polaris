@@ -104,7 +104,7 @@ func (v *Validator) handleInternal(req admission.Request) (*validator.PodResult,
 		return nil, err
 	}
 	controller.Kind = req.AdmissionRequest.Kind.Kind
-	var controllerResult validator.ControllerResult
+	var controllerResult validator.Result
 	controllerResult, err = validator.ValidateController(&v.Config, controller)
 	if err != nil {
 		return nil, err

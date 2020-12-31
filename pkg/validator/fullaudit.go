@@ -26,11 +26,13 @@ func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider) (
 	if err != nil {
 		return AuditData{}, err
 	}
+	controllerCount := len(results)
 
-	// results, err := ValidateIngresses(ctx, &config, kubeResources)
-	// if err != nil {
-	// return AuditData{}, err
-	// }
+	ingressResults, err := ValidateIngresses(&config, kubeResources)
+	if err != nil {
+		return AuditData{}, err
+	}
+	results = append(results, ingressResults...)
 
 	auditData := AuditData{
 		PolarisOutputVersion: PolarisOutputVersion,
@@ -43,7 +45,7 @@ func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider) (
 			Nodes:       len(kubeResources.Nodes),
 			Pods:        len(kubeResources.Controllers), // TODO validate that this is still valuable
 			Namespaces:  len(kubeResources.Namespaces),
-			Controllers: len(results),
+			Controllers: controllerCount,
 		},
 		Results: results,
 	}
