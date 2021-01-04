@@ -61,8 +61,8 @@ func MockNakedPod() corev1.Pod {
 }
 
 // MockController creates a mock controller and pod
-func MockController(apiVersion, kind, namespace, name string, spec interface{}, podSpec corev1.PodSpec) (unstructured.Unstructured, corev1.Pod) {
-	d := newUnstructured(apiVersion, kind, namespace, name, spec)
+func MockController(apiVersion, kind, namespace, name string, spec interface{}, podSpec corev1.PodSpec, dest interface{}) corev1.Pod {
+	unst := newUnstructured(apiVersion, kind, namespace, name, spec)
 	pod := corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name + "-12345",
@@ -75,11 +75,16 @@ func MockController(apiVersion, kind, namespace, name string, spec interface{}, 
 		},
 		Spec: podSpec,
 	}
-	return d, pod
+	b, err := unst.MarshalJSON()
+	if err != nil {
+		panic(err)
+	}
+	json.Unmarshal(b, &dest)
+	return pod
 }
 
 // MockControllerWithNormalSpec mocks a controller with podspec at spec.template.spec
-func MockControllerWithNormalSpec(apiVersion, kind, namespace, name string) (unstructured.Unstructured, corev1.Pod) {
+func MockControllerWithNormalSpec(apiVersion, kind, namespace, name string, dest interface{}) corev1.Pod {
 	p := MockPod()
 	b, err := json.Marshal(p.Spec)
 	if err != nil {
@@ -95,31 +100,40 @@ func MockControllerWithNormalSpec(apiVersion, kind, namespace, name string) (uns
 			"spec": pSpec,
 		},
 	}
-	return MockController(apiVersion, kind, namespace, name, spec, p.Spec)
+	return MockController(apiVersion, kind, namespace, name, spec, p.Spec, dest)
 }
 
 // MockDeploy creates a Deployment object.
-func MockDeploy(namespace, name string) (unstructured.Unstructured, corev1.Pod) {
-	return MockControllerWithNormalSpec("apps/v1", "Deployment", namespace, name)
+func MockDeploy(namespace, name string) (appsv1.Deployment, corev1.Pod) {
+	d := appsv1.Deployment{}
+	pod := MockControllerWithNormalSpec("apps/v1", "Deployment", namespace, name, &d)
+	return d, pod
 }
 
 // MockStatefulSet creates a StatefulSet object.
-func MockStatefulSet(namespace, name string) (unstructured.Unstructured, corev1.Pod) {
-	return MockControllerWithNormalSpec("apps/v1", "StatefulSet", namespace, name)
+func MockStatefulSet(namespace, name string) (appsv1.StatefulSet, corev1.Pod) {
+	s := appsv1.StatefulSet{}
+	pod := MockControllerWithNormalSpec("apps/v1", "StatefulSet", namespace, name, &s)
+	return s, pod
 }
 
 // MockDaemonSet creates a DaemonSet object.
-func MockDaemonSet(namespace, name string) (unstructured.Unstructured, corev1.Pod) {
-	return MockControllerWithNormalSpec("apps/v1", "DaemonSet", namespace, name)
+func MockDaemonSet(namespace, name string) (appsv1.DaemonSet, corev1.Pod) {
+	d := appsv1.DaemonSet{}
+	pod := MockControllerWithNormalSpec("apps/v1", "DaemonSet", namespace, name, &d)
+	return d, pod
 }
 
 // MockJob creates a Job object.
-func MockJob(namespace, name string) (unstructured.Unstructured, corev1.Pod) {
-	return MockControllerWithNormalSpec("batch/v1", "Job", namespace, name)
+func MockJob(namespace, name string) (batchv1.Job, corev1.Pod) {
+	j := batchv1.Job{}
+	pod := MockControllerWithNormalSpec("batch/v1", "Job", namespace, name, &j)
+	return j, pod
 }
 
 // MockCronJob creates a CronJob object.
-func MockCronJob(namespace, name string) (unstructured.Unstructured, corev1.Pod) {
+func MockCronJob(namespace, name string) (batchv1beta1.CronJob, corev1.Pod) {
+	cj := batchv1beta1.CronJob{}
 	p := MockPod()
 	b, err := json.Marshal(p.Spec)
 	if err != nil {
@@ -139,12 +153,15 @@ func MockCronJob(namespace, name string) (unstructured.Unstructured, corev1.Pod)
 			},
 		},
 	}
-	return MockController("batch/v1beta1", "CronJob", namespace, name, spec, p.Spec)
+	pod := MockController("batch/v1beta1", "CronJob", namespace, name, spec, p.Spec, &cj)
+	return cj, pod
 }
 
 // MockReplicationController creates a ReplicationController object.
-func MockReplicationController(namespace, name string) (unstructured.Unstructured, corev1.Pod) {
-	return MockControllerWithNormalSpec("core/v1", "ReplicationController", namespace, name)
+func MockReplicationController(namespace, name string) (corev1.ReplicationController, corev1.Pod) {
+	rc := corev1.ReplicationController{}
+	pod := MockControllerWithNormalSpec("core/v1", "ReplicationController", namespace, name, &rc)
+	return rc, pod
 }
 
 // SetupTestAPI creates a test kube API struct.

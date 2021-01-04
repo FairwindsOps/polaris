@@ -108,7 +108,8 @@ func TestControllerLevelChecks(t *testing.T) {
 
 	d1, p1 := test.MockDeploy("test", "test-deployment")
 	d2, p2 := test.MockDeploy("test", "test-deployment-2")
-	d2.Object["spec"] = replicaSpec
+	two := int32(2)
+	d2.Spec.Replicas = &two
 	k8s, dynamicClient := test.SetupTestAPI(&d1, &p1, &d2, &p2)
 	res, err = kube.CreateResourceProviderFromAPI(context.Background(), k8s, "test", &dynamicClient)
 	assert.Equal(t, err, nil, "error should be nil")

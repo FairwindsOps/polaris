@@ -156,13 +156,13 @@ func cacheAllObjectsOfKind(ctx context.Context, apiVersion, kind string, dynamic
 	fqKind := schema.FromAPIVersionAndKind(apiVersion, kind)
 	mapping, err := (*restMapper).RESTMapping(fqKind.GroupKind(), fqKind.Version)
 	if err != nil {
-		logrus.Warnf("Error retrieving mapping of API %s and Kind %s because of error: %v ", apiVersion, kind, err)
+		logrus.Warnf("Error retrieving mapping of API %s and Kind %s because of error: %v", apiVersion, kind, err)
 		return err
 	}
 
 	objects, err := (*dynamicClient).Resource(mapping.Resource).Namespace("").List(ctx, kubeAPIMetaV1.ListOptions{})
 	if err != nil {
-		logrus.Warnf("Error retrieving parent object API %s and Kind %s because of error: %v ", mapping.Resource.Version, mapping.Resource.Resource, err)
+		logrus.Warnf("Error retrieving parent object API %s and Kind %s because of error: %v", mapping.Resource.Version, mapping.Resource.Resource, err)
 		return err
 	}
 	for idx, object := range objects.Items {
