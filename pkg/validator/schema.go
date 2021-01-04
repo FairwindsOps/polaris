@@ -45,6 +45,8 @@ var (
 		"dangerousCapabilities",
 		"insecureCapabilities",
 		"priorityClassNotSet",
+		// Ingress checks
+		"tlsSettingsMissing",
 	}
 )
 
