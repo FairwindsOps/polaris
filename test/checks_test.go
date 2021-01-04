@@ -56,7 +56,7 @@ func TestChecks(t *testing.T) {
 		assert.NoError(t, err)
 		c, err := config.Parse([]byte("checks:\n  " + tc.check + ": danger"))
 		assert.NoError(t, err)
-		var result validator.ControllerResult
+		var result validator.Result
 		result, err = validator.ValidateController(&c, *workload)
 		assert.NoError(t, err)
 		summary := result.GetSummary()
