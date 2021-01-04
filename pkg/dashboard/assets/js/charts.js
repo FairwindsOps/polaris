@@ -4,7 +4,7 @@ $(function () {
     polarisSummary.Warnings,
     polarisSummary.Dangers,
   ];
-  var sum = data.reduce(function(v, t) { return v + t }, 0.0)
+  var sum = data.reduce(function(total, cur) { return total + cur }, 0.0)
   if (sum === 0.0) {
     data = [1, 0, 0];
   }
