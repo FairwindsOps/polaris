@@ -76,7 +76,15 @@ func NewGenericWorkloadFromPod(podResource kubeAPICoreV1.Pod, originalObject int
 			return workload, err
 		}
 		workload.OriginalObjectJSON = bytes
-		json.Unmarshal(bytes, workload.ObjectMeta)
+
+		var unst unstructured.Unstructured
+		json.Unmarshal(bytes, &unst)
+
+		objMeta, err := meta.Accessor(unst)
+		if err != nil {
+			return workload, err
+		}
+		workload.ObjectMeta = objMeta
 	}
 	return workload, nil
 }
