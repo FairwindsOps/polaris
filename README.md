@@ -37,7 +37,7 @@ Check out the [documentation at docs.fairwinds.com](https://polaris.docs.fairwin
   <img src="https://polaris.docs.fairwinds.com/img/FW_Insights_Polaris.svg" alt="Fairwinds Insights" width="550"/>
 </p>
 
-[Fairwinds Insights](https://www.fairwinds.com/insights?utm_campaign=Hosted%20Polaris%20&utm_source=polaris&utm_term=polaris&utm_content=polaris)
+[Fairwinds Insights](https://www.fairwinds.com/fairwinds-polaris-upgrade)
 is a platform for auditing Kubernetes clusters and enforcing policy. If you'd like to:
 * manage Polaris across a fleet of clusters
 * track findings over time
