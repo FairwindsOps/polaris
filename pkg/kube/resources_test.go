@@ -96,6 +96,7 @@ func TestGetResourceFromAPI(t *testing.T) {
 	assert.IsType(t, time.Now(), resources.CreationTime, "Creation time should be set")
 
 	assert.Equal(t, 0, len(resources.Nodes), "Should not have any nodes")
+	assert.Equal(t, 0, len(resources.Ingresses), "Should not have any ingresses")
 	assert.Equal(t, 5, len(resources.Controllers), "Should have 5 controllers")
 
 	expectedNames := map[string]bool{
