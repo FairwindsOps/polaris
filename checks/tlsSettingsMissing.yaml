@@ -14,6 +14,6 @@ schema:
       - tls
       properties:
         tls:
-          type: object
+          type: array
           not:
             const: null

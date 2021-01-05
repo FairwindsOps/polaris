@@ -16,41 +16,49 @@ package validator
 
 import (
 	"testing"
-	// "github.com/stretchr/testify/assert"
-	// conf "github.com/fairwindsops/polaris/pkg/config"
-	// "github.com/fairwindsops/polaris/pkg/kube"
-	// "github.com/fairwindsops/polaris/test"
+
+	conf "github.com/fairwindsops/polaris/pkg/config"
+	"github.com/fairwindsops/polaris/test"
+	"github.com/stretchr/testify/assert"
+
+	extv1beta1 "k8s.io/api/extensions/v1beta1"
 )
 
 func TestValidateIngress(t *testing.T) {
-	// c := conf.Configuration{
-	// Checks: map[string]conf.Severity{
-	// "hostIPCSet": conf.SeverityDanger,
-	// "hostPIDSet": conf.SeverityDanger,
-	// },
-	// }
-	// deployment, err := kube.NewGenericWorkloadFromPod(test.MockPod(), nil)
-	// assert.NoError(t, err)
-	// deployment.Kind = "Deployment"
-	// expectedSum := CountSummary{
-	// Successes: uint(2),
-	// Warnings:  uint(0),
-	// Dangers:   uint(0),
-	// }
+	c := conf.Configuration{
+		Checks: map[string]conf.Severity{
+			"tlsSettingsMissing": conf.SeverityWarning,
+		},
+	}
+	ingress := test.MockIngress()
 
-	// expectedResults := ResultSet{
-	// "hostIPCSet": {ID: "hostIPCSet", Message: "Host IPC is not configured", Success: true, Severity: "danger", Category: "Security"},
-	// "hostPIDSet": {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
-	// }
+	var actualResult Result
+	actualResult, err := ValidateIngress(&c, ingress)
+	if err != nil {
+		panic(err)
+	}
+	results := actualResult.Results["tlsSettingsMissing"]
 
-	// var actualResult Result
-	// actualResult, err = ValidateController(&c, deployment)
-	// if err != nil {
-	// panic(err)
-	// }
+	assert.False(t, results.Success)
+	assert.Equal(t, conf.Severity("warning"), results.Severity)
+	assert.Equal(t, "Security", results.Category)
+	assert.EqualValues(t, "Ingress does not have TLS configured", results.Message)
 
-	// assert.Equal(t, "Deployment", actualResult.Kind)
-	// assert.Equal(t, 1, len(actualResult.PodResult.ContainerResults), "should be equal")
-	// assert.EqualValues(t, expectedSum, actualResult.GetSummary())
-	// assert.EqualValues(t, expectedResults, actualResult.PodResult.Results)
+	tls := extv1beta1.IngressTLS{
+		Hosts:      []string{"test"},
+		SecretName: "secret",
+	}
+
+	ingress.Spec.TLS = []extv1beta1.IngressTLS{tls}
+	actualResult, err = ValidateIngress(&c, ingress)
+	if err != nil {
+		panic(err)
+	}
+	results = actualResult.Results["tlsSettingsMissing"]
+
+	assert.True(t, results.Success)
+	assert.Equal(t, conf.Severity("warning"), results.Severity)
+	assert.Equal(t, "Security", results.Category)
+	assert.EqualValues(t, "Ingress has TLS configured", results.Message)
+
 }
