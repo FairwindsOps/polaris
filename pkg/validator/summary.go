@@ -121,7 +121,9 @@ func (c Result) GetSummaryByCategory() CountSummaryByCategory {
 func (a AuditData) GetSummary() CountSummary {
 	summary := CountSummary{}
 	for _, ctrlResult := range a.Results {
-		summary.AddSummary(ctrlResult.GetSummary())
+		if ctrlResult.PodResult != nil {
+			summary.AddSummary(ctrlResult.GetSummary())
+		}
 	}
 	return summary
 }
@@ -130,7 +132,9 @@ func (a AuditData) GetSummary() CountSummary {
 func (a AuditData) GetSummaryByCategory() CountSummaryByCategory {
 	summaries := CountSummaryByCategory{}
 	for _, ctrlResult := range a.Results {
-		summaries.AddSummary(ctrlResult.GetSummaryByCategory())
+		if ctrlResult.PodResult != nil {
+			summaries.AddSummary(ctrlResult.GetSummaryByCategory())
+		}
 	}
 	return summaries
 }

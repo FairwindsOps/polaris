@@ -141,9 +141,11 @@
             <div class="status-bar">
               <div class="status">
                 <div class="failing">
-                  <div class="warning" style="width: {{ getWarningWidth .PodResult.GetSummary 200 }}px;">
-                    <div class="passing" style="width: {{ getSuccessWidth .PodResult.GetSummary 200 }}px;"></div>
-                  </div>
+                  {{ if .PodResult }}
+                    <div class="warning" style="width: {{ getWarningWidth .PodResult.GetSummary 200 }}px;">
+                      <div class="passing" style="width: {{ getSuccessWidth .PodResult.GetSummary 200 }}px;"></div>
+                    </div>
+                  {{ end }}
                 </div>
               </div>
             </div>
@@ -192,26 +194,28 @@
                 </div>
               {{ end }}
 
-              {{ range .PodResult.ContainerResults }}
-                <div class="result-messages expandable-content">
-                  <h4>Container {{ .Name }}:
-                    {{ if eq 0 (len .Results.GetSortedResults) }}
-                      <i>no checks applied</i>
-                    {{ end }}
-                  </h4>
-                  <ul class="message-list">
-                    {{ range $message := .Results.GetSortedResults }}
-                      <li class="{{ getResultClass . }}">
-                        <i class="message-icon {{ getIcon $message }}"></i>
-                        <span class="message">{{ .Message }}</span>
-                        <a class="more-info" href="{{ getCategoryLink .Category }}" target="_blank">
-                          <i class="far fa-question-circle"></i>
-                        </a>
-                      </li>
-                    {{ end }}
-                  </ul>
-                </div>
-              {{ end }} {{/* end range .PodResult.ContainerResults */}}
+              {{ if .PodResult }}
+                {{ range .PodResult.ContainerResults }}
+                  <div class="result-messages expandable-content">
+                    <h4>Container {{ .Name }}:
+                      {{ if eq 0 (len .Results.GetSortedResults) }}
+                        <i>no checks applied</i>
+                      {{ end }}
+                    </h4>
+                    <ul class="message-list">
+                      {{ range $message := .Results.GetSortedResults }}
+                        <li class="{{ getResultClass . }}">
+                          <i class="message-icon {{ getIcon $message }}"></i>
+                          <span class="message">{{ .Message }}</span>
+                          <a class="more-info" href="{{ getCategoryLink .Category }}" target="_blank">
+                            <i class="far fa-question-circle"></i>
+                          </a>
+                        </li>
+                      {{ end }}
+                    </ul>
+                  </div>
+                {{ end }} {{/* end range .PodResult.ContainerResults */}}
+              {{ end }} {{/* end if .PodResult */}}
             </div>
         {{ end }} {{/* end range .Results.GetSortedResults */}}
       </div>
