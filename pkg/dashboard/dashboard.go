@@ -29,7 +29,6 @@ import (
 	packr "github.com/gobuffalo/packr/v2"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
-	"gitlab.com/golang-commonmark/markdown"
 )
 
 const (
@@ -45,8 +44,6 @@ const (
 	DashboardTemplateName = "dashboard.gohtml"
 	// FooterTemplateName contains the footer
 	FooterTemplateName = "footer.gohtml"
-	// CheckDetailsTemplateName is a page for rendering details about a given check
-	CheckDetailsTemplateName = "check-details.gohtml"
 )
 
 var (
@@ -69,14 +66,6 @@ func GetTemplateBox() *packr.Box {
 		templateBox = packr.New("Templates", "templates")
 	}
 	return templateBox
-}
-
-// GetMarkdownBox returns a binary-friendly set of markdown files with error details
-func GetMarkdownBox() *packr.Box {
-	if markdownBox == (*packr.Box)(nil) {
-		markdownBox = packr.New("Markdown", "../../docs-md/checks")
-	}
-	return markdownBox
 }
 
 // templateData is passed to the dashboard HTML template
@@ -207,7 +196,6 @@ func GetRouter(c config.Configuration, auditPath string, port int, basePath stri
 		vars := mux.Vars(r)
 		category := vars["category"]
 		category = strings.Replace(category, ".md", "", -1)
-		DetailsHandler(w, r, category, basePath)
 	})
 
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -277,35 +265,4 @@ func JSONHandler(w http.ResponseWriter, r *http.Request, auditData *validator.Au
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(auditData)
-}
-
-// DetailsHandler returns details for a given error type
-func DetailsHandler(w http.ResponseWriter, r *http.Request, category string, basePath string) {
-	box := GetMarkdownBox()
-	contents, err := box.Find(category + ".md")
-	if err != nil {
-		http.Error(w, "Error details not found for category "+category, http.StatusNotFound)
-		return
-	}
-	md := markdown.New(markdown.XHTMLOutput(true))
-	detailsHTML := "{{ define \"details\" }}" + md.RenderToString(contents) + "{{ end }}"
-
-	templateFileNames := []string{
-		HeadTemplateName,
-		NavbarTemplateName,
-		CheckDetailsTemplateName,
-		FooterTemplateName,
-	}
-	tmpl := template.New("check-details")
-	tmpl, err = parseTemplateFiles(tmpl, templateFileNames)
-	if err != nil {
-		logrus.Printf("Error getting template data %v", err)
-		http.Error(w, "Error getting template data", 500)
-		return
-	}
-	tmpl.Parse(detailsHTML)
-	data := templateData{
-		BasePath: basePath,
-	}
-	writeTemplate(tmpl, &data, w)
 }
