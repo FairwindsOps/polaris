@@ -64,7 +64,7 @@ fi
 echo "using image $IMAGE_TAG"
 sed -r "s|'(quay.io/fairwinds/polaris:).+'|'\1${IMAGE_TAG}'|" ./deploy/webhook.yaml > ./deploy/webhook-test.yaml
 
-clean_up
+clean_up || true
 
 # set up
 kubectl create ns scale-test
@@ -81,7 +81,7 @@ kubectl apply -n polaris -f ./deploy/webhook-test.yaml
 check_webhook_is_ready
 sleep 5
 
-kubectl logs -n polaris $(kubectl get po -oname -n polaris | grep webhook) &
+kubectl logs -n polaris $(kubectl get po -oname -n polaris | grep webhook) --follow &
 
 # Webhook started, setting all tests as passed initially.
 ALL_TESTS_PASSED=1
@@ -118,7 +118,9 @@ if [ $pod_count != 2 ]; then
   echo "Existing deployment was unable to scale after webhook installed: found $pod_count pods"
 fi
 
-clean_up
+if [ -z $SKIP_FINAL_CLEANUP ]; then
+  clean_up
+fi
 
 #Verify that all the tests passed.
 if [ $ALL_TESTS_PASSED -eq 1 ]; then
