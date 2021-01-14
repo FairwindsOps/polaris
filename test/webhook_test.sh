@@ -36,14 +36,18 @@ function check_timeout() {
 
 # Clean up all your stuff
 function clean_up() {
+    echo -e "\n\nCleaning up..."
+    kubectl delete ns scale-test || true
+    kubectl delete ns polaris || true
+    kubectl delete ns tests || true
     # Clean up files you've installed (helps with local testing)
     for filename in test/webhook_cases/*.yaml; do
         # || true to avoid issues when we cannot delete
-        kubectl delete -f $filename &>/dev/null ||true
+        kubectl delete -f $filename ||true
     done
     # Uninstall webhook and webhook config
-    kubectl delete validatingwebhookconfigurations polaris-webhook --wait=false &>/dev/null
-    kubectl -n polaris delete deploy -l app=polaris --wait=false &>/dev/null
+    kubectl delete validatingwebhookconfigurations polaris-webhook --wait=false
+    kubectl -n polaris delete deploy -l app=polaris --wait=false
 }
 
 function grab_logs() {
@@ -60,11 +64,7 @@ fi
 echo "using image $IMAGE_TAG"
 sed -r "s|'(quay.io/fairwinds/polaris:).+'|'\1${IMAGE_TAG}'|" ./deploy/webhook.yaml > ./deploy/webhook-test.yaml
 
-# clean up existing runs
-kubectl delete ns scale-test || true
-kubectl delete ns polaris || true
-kubectl delete ns tests || true
-kubectl delete validatingwebhookconfigurations.admissionregistration.k8s.io polaris-webhook || true
+clean_up
 
 # set up
 kubectl create ns scale-test
@@ -73,37 +73,40 @@ kubectl create ns tests
 
 # Install a bad deployment
 kubectl apply -n scale-test -f ./test/webhook_cases/failing_test.deployment.yaml
-echo "installed scale test"
 
 # Install the webhook
 kubectl apply -n polaris -f ./deploy/webhook-test.yaml
-echo "installed webhook"
 
 # wait for the webhook to come online
 check_webhook_is_ready
-sleep 30
+sleep 5
+
+kubectl logs -n polaris $(kubectl get po -oname -n polaris | grep webhook) &
 
 # Webhook started, setting all tests as passed initially.
 ALL_TESTS_PASSED=1
 
 # Run tests against correctly configured objects
 for filename in test/webhook_cases/passing_test.*.yaml; do
+    echo -e "\n\n"
     echo $filename
-    if ! kubectl apply -n tests -f $filename &> /dev/null; then
+    if ! kubectl apply -n tests -f $filename; then
         ALL_TESTS_PASSED=0
-        echo "Test Failed: Polaris prevented a deployment with no configuration issues." 
-        kubectl logs -n polaris $(kubectl get po -oname -n polaris | grep webhook)
+        echo -e "****Test Failed: Polaris prevented a deployment with no configuration issues****"
     fi
+    kubectl delete -n tests -f $filename || true
 done
 
 # Run tests against incorrectly configured objects
 for filename in test/webhook_cases/failing_test.*.yaml; do
+    echo -e "\n\n"
     echo $filename
-    if kubectl apply -n tests -f $filename &> /dev/null; then
+    if kubectl apply -n tests -f $filename; then
         ALL_TESTS_PASSED=0
-        echo "Test Failed: Polaris should have prevented this deployment due to configuration issues."
+        echo -e "****Test Failed: Polaris should have prevented this deployment due to configuration issues.****"
         kubectl logs -n polaris $(kubectl get po -oname -n polaris | grep webhook)
     fi
+    kubectl delete -n tests -f $filename || true
 done
 
 kubectl -n scale-test scale deployment nginx-deployment --replicas=2
