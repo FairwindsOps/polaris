@@ -41,7 +41,7 @@ func ValidateIngress(config *conf.Configuration, ingress v1beta1.Ingress) (Resul
 	}
 
 	result := Result{
-		Kind:      ingress.Kind,
+		Kind:      "Ingress",
 		Name:      ingress.ObjectMeta.GetName(),
 		Namespace: ingress.ObjectMeta.GetNamespace(),
 		Results:   results,
