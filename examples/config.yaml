@@ -22,6 +22,7 @@ checks:
   insecureCapabilities: warning
   hostNetworkSet: warning
   hostPortSet: warning
+  tlsSettingsMissing: warning
 
 exemptions:
   - namespace: kube-system

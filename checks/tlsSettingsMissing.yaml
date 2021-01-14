@@ -1,0 +1,19 @@
+successMessage: Ingress has TLS configured
+failureMessage: Ingress does not have TLS configured
+category: Security
+target: Ingress
+schema:
+  '$schema': http://json-schema.org/draft-07/schema
+  type: object
+  required:
+  - spec
+  properties:
+    spec:
+      type: object
+      required:
+      - tls
+      properties:
+        tls:
+          type: array
+          not:
+            const: null

@@ -48,7 +48,7 @@ func TestValidateController(t *testing.T) {
 		"hostPIDSet": {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
-	var actualResult ControllerResult
+	var actualResult Result
 	actualResult, err = ValidateController(&c, deployment)
 	if err != nil {
 		panic(err)
@@ -138,7 +138,7 @@ func TestSkipHealthChecks(t *testing.T) {
 		"readinessProbeMissing": {ID: "readinessProbeMissing", Message: "Readiness probe should be configured", Success: false, Severity: "danger", Category: "Reliability"},
 		"livenessProbeMissing":  {ID: "livenessProbeMissing", Message: "Liveness probe should be configured", Success: false, Severity: "warning", Category: "Reliability"},
 	}
-	var actualResult ControllerResult
+	var actualResult Result
 	actualResult, err = ValidateController(&c, deployment)
 	if err != nil {
 		panic(err)
@@ -206,7 +206,7 @@ func TestControllerExemptions(t *testing.T) {
 		Warnings:  uint(1),
 		Dangers:   uint(1),
 	}
-	var actualResults []ControllerResult
+	var actualResults []Result
 	actualResults, err = ValidateControllers(&c, resources)
 	if err != nil {
 		panic(err)

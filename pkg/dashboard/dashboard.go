@@ -152,7 +152,7 @@ func getConfigForQuery(base config.Configuration, query url.Values) config.Confi
 }
 
 func stripUnselectedNamespaces(data *validator.AuditData, selectedNamespaces []string) {
-	newResults := []validator.ControllerResult{}
+	newResults := []validator.Result{}
 	for _, res := range data.Results {
 		if stringInSlice(res.Namespace, selectedNamespaces) {
 			newResults = append(newResults, res)

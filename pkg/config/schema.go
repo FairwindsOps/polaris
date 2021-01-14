@@ -19,6 +19,8 @@ const (
 	TargetPod TargetKind = "Pod"
 	// TargetController points to the controller's spec
 	TargetController TargetKind = "Controller"
+	// TargetIngress points to the ingress spec
+	TargetIngress TargetKind = "Ingress"
 )
 
 // SchemaCheck is a Polaris check that runs using JSON Schema
