@@ -1,9 +1,6 @@
 #!/bin/bash
 set -e
 
-#sed is replacing the polaris version with this commit sha so we are testing exactly this verison.
-sed -r "s|'(quay.io/fairwinds/polaris:).+'|'\1${CIRCLE_SHA1}'|" ./deploy/webhook.yaml > ./deploy/webhook-test.yaml
-
 # Testing to ensure that the webhook starts up, allows a correct deployment to pass,
 # and prevents a incorrectly formatted deployment. 
 function check_webhook_is_ready() {
@@ -56,13 +53,31 @@ function grab_logs() {
     kubectl -n polaris logs -l app=polaris
 }
 
-# Install a bad deployment
+#sed is replacing the polaris version with this commit sha so we are testing exactly this verison.
+if [ -z "${IMAGE_TAG}" ]; then
+  IMAGE_TAG=$CIRCLE_SHA1
+fi
+echo "using image $IMAGE_TAG"
+sed -r "s|'(quay.io/fairwinds/polaris:).+'|'\1${IMAGE_TAG}'|" ./deploy/webhook.yaml > ./deploy/webhook-test.yaml
+
+# clean up existing runs
+kubectl delete ns scale-test || true
+kubectl delete ns polaris || true
+kubectl delete ns tests || true
+kubectl delete validatingwebhookconfigurations.admissionregistration.k8s.io polaris-webhook || true
+
+# set up
 kubectl create ns scale-test
+kubectl create ns polaris
+kubectl create ns tests
+
+# Install a bad deployment
 kubectl apply -n scale-test -f ./test/webhook_cases/failing_test.deployment.yaml
+echo "installed scale test"
 
-# Install the webhook 
-kubectl apply -f ./deploy/webhook-test.yaml &> /dev/null
-
+# Install the webhook
+kubectl apply -n polaris -f ./deploy/webhook-test.yaml
+echo "installed webhook"
 
 # wait for the webhook to come online
 check_webhook_is_ready
@@ -74,7 +89,7 @@ ALL_TESTS_PASSED=1
 # Run tests against correctly configured objects
 for filename in test/webhook_cases/passing_test.*.yaml; do
     echo $filename
-    if ! kubectl apply -f $filename &> /dev/null; then
+    if ! kubectl apply -n tests -f $filename &> /dev/null; then
         ALL_TESTS_PASSED=0
         echo "Test Failed: Polaris prevented a deployment with no configuration issues." 
         kubectl logs -n polaris $(kubectl get po -oname -n polaris | grep webhook)
@@ -84,7 +99,7 @@ done
 # Run tests against incorrectly configured objects
 for filename in test/webhook_cases/failing_test.*.yaml; do
     echo $filename
-    if kubectl apply -f $filename &> /dev/null; then
+    if kubectl apply -n tests -f $filename &> /dev/null; then
         ALL_TESTS_PASSED=0
         echo "Test Failed: Polaris should have prevented this deployment due to configuration issues."
         kubectl logs -n polaris $(kubectl get po -oname -n polaris | grep webhook)
