@@ -103,15 +103,15 @@ func (p PodResult) GetSummaryByCategory() CountSummaryByCategory {
 	return summaries
 }
 
-// GetSummary summarizes a ControllerResult
-func (c ControllerResult) GetSummary() CountSummary {
+// GetSummary summarizes a Result
+func (c Result) GetSummary() CountSummary {
 	summary := c.Results.GetSummary()
 	summary.AddSummary(c.PodResult.GetSummary())
 	return summary
 }
 
-// GetSummaryByCategory summarizes a ControllerResult
-func (c ControllerResult) GetSummaryByCategory() CountSummaryByCategory {
+// GetSummaryByCategory summarizes a Result
+func (c Result) GetSummaryByCategory() CountSummaryByCategory {
 	summary := c.Results.GetSummaryByCategory()
 	summary.AddSummary(c.PodResult.GetSummaryByCategory())
 	return summary
@@ -121,7 +121,9 @@ func (c ControllerResult) GetSummaryByCategory() CountSummaryByCategory {
 func (a AuditData) GetSummary() CountSummary {
 	summary := CountSummary{}
 	for _, ctrlResult := range a.Results {
-		summary.AddSummary(ctrlResult.GetSummary())
+		if ctrlResult.PodResult != nil {
+			summary.AddSummary(ctrlResult.GetSummary())
+		}
 	}
 	return summary
 }
@@ -130,18 +132,20 @@ func (a AuditData) GetSummary() CountSummary {
 func (a AuditData) GetSummaryByCategory() CountSummaryByCategory {
 	summaries := CountSummaryByCategory{}
 	for _, ctrlResult := range a.Results {
-		summaries.AddSummary(ctrlResult.GetSummaryByCategory())
+		if ctrlResult.PodResult != nil {
+			summaries.AddSummary(ctrlResult.GetSummaryByCategory())
+		}
 	}
 	return summaries
 }
 
 // GetResultsByNamespace organizes results by namespace
-func (a AuditData) GetResultsByNamespace() map[string][]*ControllerResult {
-	allResults := map[string][]*ControllerResult{}
+func (a AuditData) GetResultsByNamespace() map[string][]*Result {
+	allResults := map[string][]*Result{}
 	for idx, ctrlResult := range a.Results {
 		nsResults, ok := allResults[ctrlResult.Namespace]
 		if !ok {
-			nsResults = []*ControllerResult{}
+			nsResults = []*Result{}
 		}
 		nsResults = append(nsResults, &a.Results[idx])
 		allResults[ctrlResult.Namespace] = nsResults

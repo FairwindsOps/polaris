@@ -9,6 +9,8 @@ import (
 
 	"github.com/gobuffalo/packr/v2"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/api/extensions/v1beta1"
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/fairwindsops/polaris/pkg/config"
@@ -44,6 +46,8 @@ var (
 		"dangerousCapabilities",
 		"insecureCapabilities",
 		"priorityClassNotSet",
+		// Ingress checks
+		"tlsSettingsMissing",
 	}
 )
 
@@ -77,7 +81,7 @@ func parseCheck(rawBytes []byte) (config.SchemaCheck, error) {
 	}
 }
 
-func resolveCheck(conf *config.Configuration, checkID string, controller kube.GenericWorkload, container *corev1.Container, target config.TargetKind, isInitContainer bool) (*config.SchemaCheck, error) {
+func resolveCheck(conf *config.Configuration, checkID, kind string, target config.TargetKind, meta metaV1.Object, containerName string, isInitContainer bool) (*config.SchemaCheck, error) {
 	check, ok := conf.CustomChecks[checkID]
 	if !ok {
 		check, ok = builtInChecks[checkID]
@@ -86,14 +90,12 @@ func resolveCheck(conf *config.Configuration, checkID string, controller kube.Ge
 		return nil, fmt.Errorf("Check %s not found", checkID)
 	}
 
-	containerName := ""
-	if container != nil {
-		containerName = container.Name
-	}
-	if !conf.IsActionable(check.ID, controller.ObjectMeta.GetNamespace(), controller.ObjectMeta.GetName(), containerName) {
+	namespace := meta.GetNamespace()
+	name := meta.GetName()
+	if !conf.IsActionable(check.ID, namespace, name, containerName) {
 		return nil, nil
 	}
-	if !check.IsActionable(target, controller.Kind, isInitContainer) {
+	if !check.IsActionable(target, kind, isInitContainer) {
 		return nil, nil
 	}
 	return &check, nil
@@ -127,7 +129,7 @@ func applyPodSchemaChecks(conf *config.Configuration, controller kube.GenericWor
 		if strings.ToLower(exemptValue) == "true" {
 			continue
 		}
-		check, err := resolveCheck(conf, checkID, controller, nil, config.TargetPod, false)
+		check, err := resolveCheck(conf, checkID, controller.Kind, config.TargetPod, controller.ObjectMeta, "", false)
 
 		if err != nil {
 			return nil, err
@@ -152,7 +154,7 @@ func applyControllerSchemaChecks(conf *config.Configuration, controller kube.Gen
 		if strings.ToLower(exemptValue) == "true" {
 			continue
 		}
-		check, err := resolveCheck(conf, checkID, controller, nil, config.TargetController, false)
+		check, err := resolveCheck(conf, checkID, controller.Kind, config.TargetController, controller.ObjectMeta, "", false)
 
 		if err != nil {
 			return nil, err
@@ -177,7 +179,7 @@ func applyContainerSchemaChecks(conf *config.Configuration, controller kube.Gene
 		if strings.ToLower(exemptValue) == "true" {
 			continue
 		}
-		check, err := resolveCheck(conf, checkID, controller, container, config.TargetContainer, isInit)
+		check, err := resolveCheck(conf, checkID, controller.Kind, config.TargetContainer, controller.ObjectMeta, container.Name, isInit)
 		if err != nil {
 			return nil, err
 		} else if check == nil {
@@ -192,6 +194,26 @@ func applyContainerSchemaChecks(conf *config.Configuration, controller kube.Gene
 		} else {
 			passes, err = check.CheckContainer(container)
 		}
+		if err != nil {
+			return nil, err
+		}
+		results[check.ID] = makeResult(conf, check, passes)
+	}
+	return results, nil
+}
+
+func applyIngressSchemaChecks(conf *config.Configuration, ingress v1beta1.Ingress) (ResultSet, error) {
+	results := ResultSet{}
+	checkIDs := getSortedKeys(conf.Checks)
+	for _, checkID := range checkIDs {
+		check, err := resolveCheck(conf, checkID, ingress.Kind, config.TargetIngress, ingress.ObjectMeta.GetObjectMeta(), "", false)
+
+		if err != nil {
+			return nil, err
+		} else if check == nil {
+			continue
+		}
+		passes, err := check.CheckObject(ingress)
 		if err != nil {
 			return nil, err
 		}

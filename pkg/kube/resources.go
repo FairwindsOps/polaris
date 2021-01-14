@@ -14,6 +14,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
+	v1beta1 "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -34,6 +35,7 @@ type ResourceProvider struct {
 	Nodes         []corev1.Node
 	Namespaces    []corev1.Namespace
 	Controllers   []GenericWorkload
+	Ingresses     []v1beta1.Ingress
 }
 
 type k8sResource struct {
@@ -198,6 +200,11 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		logrus.Errorf("Error fetching Pods: %v", err)
 		return nil, err
 	}
+	ingressList, err := kube.ExtensionsV1beta1().Ingresses("").List(ctx, listOpts)
+	if err != nil {
+		logrus.Errorf("Error fetching Ingresses: %v", err)
+		return nil, err
+	}
 
 	resources, err := restmapper.GetAPIGroupResources(kube.Discovery())
 	if err != nil {
@@ -222,6 +229,7 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		Nodes:         nodes.Items,
 		Namespaces:    namespaces.Items,
 		Controllers:   controllers,
+		Ingresses:     ingressList.Items,
 	}
 	return &api, nil
 }
@@ -319,6 +327,10 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 			return err
 		}
 		resources.Controllers = append(resources.Controllers, workload)
+	} else if resource.Kind == "Ingress" {
+		ingress := v1beta1.Ingress{}
+		err = decoder.Decode(&ingress)
+		resources.Ingresses = append(resources.Ingresses, ingress)
 	} else {
 		newController, err := GetWorkloadFromBytes(contentBytes)
 		if err != nil || newController == nil {

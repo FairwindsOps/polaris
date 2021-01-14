@@ -25,25 +25,25 @@ import (
 
 const exemptionAnnotationKey = "polaris.fairwinds.com/exempt"
 
-// ValidateController validates a single controller, returns a ControllerResult.
-func ValidateController(conf *conf.Configuration, controller kube.GenericWorkload) (ControllerResult, error) {
+// ValidateController validates a single controller, returns a Result.
+func ValidateController(conf *conf.Configuration, controller kube.GenericWorkload) (Result, error) {
 	podResult, err := ValidatePod(conf, controller)
 	if err != nil {
-		return ControllerResult{}, err
+		return Result{}, err
 	}
 
 	var controllerResult ResultSet
 	controllerResult, err = applyControllerSchemaChecks(conf, controller)
 	if err != nil {
-		return ControllerResult{}, err
+		return Result{}, err
 	}
 
-	result := ControllerResult{
+	result := Result{
 		Kind:      controller.Kind,
 		Name:      controller.ObjectMeta.GetName(),
 		Namespace: controller.ObjectMeta.GetNamespace(),
 		Results:   controllerResult,
-		PodResult: podResult,
+		PodResult: &podResult,
 	}
 
 	return result, nil
@@ -51,10 +51,10 @@ func ValidateController(conf *conf.Configuration, controller kube.GenericWorkloa
 
 // ValidateControllers validates that each deployment conforms to the Polaris config,
 // builds a list of ResourceResults organized by namespace.
-func ValidateControllers(config *conf.Configuration, kubeResources *kube.ResourceProvider) ([]ControllerResult, error) {
+func ValidateControllers(config *conf.Configuration, kubeResources *kube.ResourceProvider) ([]Result, error) {
 	controllersToAudit := kubeResources.Controllers
 
-	results := []ControllerResult{}
+	results := []Result{}
 	for _, controller := range controllersToAudit {
 		if !config.DisallowExemptions && hasExemptionAnnotation(controller) {
 			continue
