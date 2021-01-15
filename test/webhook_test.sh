@@ -2,13 +2,22 @@
 set -e
 
 # Testing to ensure that the webhook starts up, allows a correct deployment to pass,
-# and prevents a incorrectly formatted deployment. 
+# and prevents a incorrectly formatted deployment.
+
+function get_timeout() {
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    date -v+4M +”%s”
+  else
+    date -d "+4 minutes" +%s
+  fi
+}
+
 function check_webhook_is_ready() {
     # Get the epoch time in one minute from now
     local timeout_epoch
 
     # Reset another 4 minutes to wait for webhook
-    timeout_epoch=$(date -d "+4 minutes" +%s)
+    timeout_epoch=$(get_timeout)
 
     # loop until this fails (desired condition is we cannot apply this yaml doc, which means the webhook is working
     echo "Waiting for webhook to be ready"
@@ -31,7 +40,6 @@ function check_timeout() {
         clean_up
         exit 1
     fi
-
 }
 
 # Clean up all your stuff
