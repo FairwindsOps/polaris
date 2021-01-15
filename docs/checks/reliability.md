@@ -5,12 +5,12 @@ and are running the correct image.
 
 key | default | description
 ----|---------|------------
-`reliability.readinessProbeMissing` | `warning` | Fails when a readiness probe is not configured for a pod.
-`reliability.livenessProbeMissing` | `warning` | Fails when a liveness probe is not configured for a pod.
-`reliability.tagNotSpecified` | `danger` | Fails when an image tag is either not specified or `latest`.
-`reliability.pullPolicyNotAlways` | `warning` | Fails when an image pull policy is not `always`.
-`reliability.priorityClassNotSet` | `ignore` | Fails when a priorityClassName is not set for a pod.
-`reliability.multipleReplicasForDeployment` | `ignore` | Fails when there is only one replica for a deployment.
+`readinessProbeMissing` | `warning` | Fails when a readiness probe is not configured for a pod.
+`livenessProbeMissing` | `warning` | Fails when a liveness probe is not configured for a pod.
+`tagNotSpecified` | `danger` | Fails when an image tag is either not specified or `latest`.
+`pullPolicyNotAlways` | `warning` | Fails when an image pull policy is not `always`.
+`priorityClassNotSet` | `ignore` | Fails when a priorityClassName is not set for a pod.
+`multipleReplicasForDeployment` | `ignore` | Fails when there is only one replica for a deployment.
 
 ## Background
 

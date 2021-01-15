@@ -9,10 +9,10 @@ To simplify ensure that these values have been set, the following attributes are
 
 key | default | description
 ----|---------|------------
-`resources.cpuRequestsMissing` | `warning` | Fails when `resources.requests.cpu` attribute is not configured.
-`resources.memoryRequestsMissing` | `warning` | Fails when `resources.requests.memory` attribute is not configured.
-`resources.cpuLimitsMissing` | `warning` | Fails when `resources.limits.cpu` attribute is not configured.
-`resources.memoryLimitsMissing` | `warning` | Fails when `resources.limits.memory` attribute is not configured.
+`cpuRequestsMissing` | `warning` | Fails when `resources.requests.cpu` attribute is not configured.
+`memoryRequestsMissing` | `warning` | Fails when `resources.requests.memory` attribute is not configured.
+`cpuLimitsMissing` | `warning` | Fails when `resources.limits.cpu` attribute is not configured.
+`memoryLimitsMissing` | `warning` | Fails when `resources.limits.memory` attribute is not configured.
 
 ## Background
 
