@@ -6,16 +6,17 @@ for privilege escalation.
 
 key | default | description
 ----|---------|------------
-`security.hostIPCSet` | `danger` | Fails when `hostIPC` attribute is configured.
-`security.hostPIDSet` | `danger` | Fails when `hostPID` attribute is configured.
-`security.notReadOnlyRootFilesystem` | `warning` | Fails when `securityContext.readOnlyRootFilesystem` is not true.
-`security.privilegeEscalationAllowed` | `danger` | Fails when `securityContext.allowPrivilegeEscalation` is true.
-`security.runAsRootAllowed` | `warning` | Fails when `securityContext.runAsNonRoot` is not true.
-`security.runAsPrivileged` | `danger` | Fails when `securityContext.privileged` is true.
-`security.insecureCapabilities` | `warning` | Fails when `securityContext.capabilities` includes one of the capabilities [listed here](https://github.com/FairwindsOps/polaris/tree/master/checks/insecureCapabilities.yaml)
-`security.dangerousCapabilities` | `danger` | Fails when `securityContext.capabilities` includes one of the capabilities [listed here](https://github.com/FairwindsOps/polaris/tree/master/checks/dangerousCapabilities.yaml)
-`security.hostNetworkSet` | `warning` | Fails when `hostNetwork` attribute is configured.
-`security.hostPortSet` | `warning` | Fails when `hostPort` attribute is configured.
+`hostIPCSet` | `danger` | Fails when `hostIPC` attribute is configured.
+`hostPIDSet` | `danger` | Fails when `hostPID` attribute is configured.
+`notReadOnlyRootFilesystem` | `warning` | Fails when `securityContext.readOnlyRootFilesystem` is not true.
+`privilegeEscalationAllowed` | `danger` | Fails when `securityContext.allowPrivilegeEscalation` is true.
+`runAsRootAllowed` | `warning` | Fails when `securityContext.runAsNonRoot` is not true.
+`runAsPrivileged` | `danger` | Fails when `securityContext.privileged` is true.
+`insecureCapabilities` | `warning` | Fails when `securityContext.capabilities` includes one of the capabilities [listed here](https://github.com/FairwindsOps/polaris/tree/master/checks/insecureCapabilities.yaml)
+`dangerousCapabilities` | `danger` | Fails when `securityContext.capabilities` includes one of the capabilities [listed here](https://github.com/FairwindsOps/polaris/tree/master/checks/dangerousCapabilities.yaml)
+`hostNetworkSet` | `warning` | Fails when `hostNetwork` attribute is configured.
+`hostPortSet` | `warning` | Fails when `hostPort` attribute is configured.
+`tlsSettingsMissing` | `warning` | Fails when an Ingress lacks TLS settings.
 
 ## Background
 
