@@ -1,0 +1,35 @@
+{
+  "author": "",
+  "bugs": {
+    "url": "https://github.com/FairwindsOps/insights-docs/issues"
+  },
+  "dependencies": {
+    "vuepress-plugin-check-md": "0.0.2"
+  },
+  "description": "A repository with a Vuepress template for Fairwinds projects",
+  "devDependencies": {
+    "vuepress": "^1.4.0",
+    "vuepress-plugin-clean-urls": "^1.1.1",
+    "vuepress-plugin-redirect": "^1.2.3"
+  },
+  "directories": {
+    "doc": "docs"
+  },
+  "homepage": "https://github.com/FairwindsOps/insights-docs#readme",
+  "license": "MIT",
+  "main": "index.js",
+  "name": "fairwinds-docs-template",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FairwindsOps/insights-docs.git"
+  },
+  "scripts": {
+    "build": "npm run build:readme && npm run build:docs",
+    "build:docs": "vuepress build -d ../dist/",
+    "build:readme": "cat ../README.md | grep -v 'ocumentation' | sed \"s/https:\\/\\/\\w\\+.docs.fairwinds.com//g\" > README.md",
+    "check-links": "vuepress check-md",
+    "serve": "npm run build:readme && vuepress dev --port 3003",
+    "vuepress": "vuepress"
+  },
+  "version": "0.0.1"
+}

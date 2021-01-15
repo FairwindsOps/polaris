@@ -194,6 +194,31 @@ jobs:
       - *set_environment_variables
       - *docker_build_and_push
 
+  publish_docs:
+    docker:
+      - image: cimg/node:15.5.1
+    steps:
+      - checkout
+      - run:
+          name: Build Docs Site
+          command: |
+            set -e
+            cd ./docs
+            npm install
+            npm run check-links
+            npm run build
+      - run:
+          name: Install AWS CLI
+          command: |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+      - run:
+          name: Publish Docs Site to S3
+          command: |
+            cd ./dist
+            aws s3 sync ./ s3://polaris.docs.fairwinds.com --delete
+
 workflows:
   version: 2
 
@@ -224,7 +249,6 @@ workflows:
           filters:
             branches:
               ignore: /.*/
-            # Testing tags are reserved for testing circle test + build steps
             tags:
               ignore: /^testing-.*/
       - release_images:
@@ -234,6 +258,11 @@ workflows:
           filters:
             branches:
               ignore: /.*/
-            # Testing tags are reserved for testing circle test + build steps
+            tags:
+              ignore: /^testing-.*/
+      - publish_docs:
+          filters:
+            branches:
+              ignore: /.*/
             tags:
               ignore: /^testing-.*/
