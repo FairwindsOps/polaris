@@ -6,7 +6,7 @@ set -e
 
 function get_timeout() {
   if [[ "$OSTYPE" == "darwin"* ]]; then
-    date -v+4M +”%s”
+    date -v+4M +%s
   else
     date -d "+4 minutes" +%s
   fi
