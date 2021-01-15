@@ -1,5 +1,8 @@
 # Dashboard
 
+> Want to see Polaris results for all your clusters in a single dashboard? Check out
+> [Fairwinds Insights](https://www.fairwinds.com/fairwinds-polaris-upgrade)
+
 The Polaris dashboard can be installed on a cluster using kubectl or Helm. It
 can also be run locally, connecting to your cluster using the credentials stored in your `KUBECONFIG`.
 

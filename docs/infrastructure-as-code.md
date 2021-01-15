@@ -1,4 +1,7 @@
 # Infrastructure as Code
+> Want to see results for all your IaC repos in one place? Check out
+> [Fairwinds Insights](https://www.fairwinds.com/fairwinds-polaris-upgrade)
+
 Polaris can be used on the command line to audit local Kubernetes manifests stored in YAML files.
 This is particularly helpful for running Polaris against your infrastructure-as-code as part of a
 CI/CD pipeline. Use the available [command line flags](#running-in-a-ci-pipeline)

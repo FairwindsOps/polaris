@@ -1,4 +1,7 @@
 # Admission Controller
+> Want to manage the Admission Controller across multiple clusters? Check out
+> [Fairwinds Insights](https://www.fairwinds.com/fairwinds-polaris-upgrade)
+
 Polaris can be run as an admission controller that acts as a validating webhook.
 This accepts the same configuration as the dashboard, and can run the same validations.
 
