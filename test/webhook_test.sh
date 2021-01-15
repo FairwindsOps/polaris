@@ -44,7 +44,7 @@ function check_timeout() {
 
 # Clean up all your stuff
 function clean_up() {
-    echo -e "\n\nCleaning up..."
+    echo -e "\n\nCleaning up (you may see some errors)...\n\n"
     kubectl delete ns scale-test || true
     kubectl delete ns polaris || true
     kubectl delete ns tests || true
@@ -56,6 +56,7 @@ function clean_up() {
     # Uninstall webhook and webhook config
     kubectl delete validatingwebhookconfigurations polaris-webhook --wait=false
     kubectl -n polaris delete deploy -l app=polaris --wait=false
+    echo -e "\n\nDone cleaning up\n\n"
 }
 
 function grab_logs() {
@@ -66,15 +67,15 @@ function grab_logs() {
 }
 
 #sed is replacing the polaris version with this commit sha so we are testing exactly this verison.
-if [ -z "${IMAGE_TAG}" ]; then
-  IMAGE_TAG=$CIRCLE_SHA1
+if [ -z "${POLARIS_IMAGE}" ]; then
+  POLARIS_IMAGE="quay.io/fairwinds/polaris:$CIRCLE_SHA1"
 fi
-echo "using image $IMAGE_TAG"
-sed -E "s|'(quay.io/fairwinds/polaris:).+'|'\1${IMAGE_TAG}'|" ./deploy/webhook.yaml > ./deploy/webhook-test.yaml
+echo "using image $POLARIS_IMAGE"
+sed -E "s|'(quay.io/fairwinds/polaris:).+'|'${POLARIS_IMAGE}'|" ./deploy/webhook.yaml > ./deploy/webhook-test.yaml
 
 clean_up || true
 
-# set up
+echo -e "Setting up..."
 kubectl create ns scale-test
 kubectl create ns polaris
 kubectl create ns tests
