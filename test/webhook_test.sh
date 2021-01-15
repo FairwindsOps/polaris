@@ -70,7 +70,7 @@ if [ -z "${IMAGE_TAG}" ]; then
   IMAGE_TAG=$CIRCLE_SHA1
 fi
 echo "using image $IMAGE_TAG"
-sed -r "s|'(quay.io/fairwinds/polaris:).+'|'\1${IMAGE_TAG}'|" ./deploy/webhook.yaml > ./deploy/webhook-test.yaml
+sed -E "s|'(quay.io/fairwinds/polaris:).+'|'\1${IMAGE_TAG}'|" ./deploy/webhook.yaml > ./deploy/webhook-test.yaml
 
 clean_up || true
 
