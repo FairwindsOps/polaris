@@ -21,7 +21,7 @@ require (
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 	gitlab.com/golang-commonmark/linkify v0.0.0-20200225224916-64bca66f6ad3 // indirect
 	gitlab.com/golang-commonmark/markdown v0.0.0-20191127184510-91b5b3c99c19
 	go.uber.org/zap v1.16.0 // indirect
