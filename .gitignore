@@ -26,3 +26,4 @@ dist
 *-test.yaml
 
 node_modules
+/dist
