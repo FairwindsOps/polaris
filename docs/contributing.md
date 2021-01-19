@@ -42,8 +42,9 @@ go test ./pkg/... -v -coverprofile cover.out
 ```bash
 kind create cluster --wait=90s --image kindest/node:v1.15.11 --name polaris-test
 docker build -t quay.io/fairwinds/polaris:debug . # or use your own registry
-docker push quay.io/fairwinds/polaris:debug .
+docker push quay.io/fairwinds/polaris:debug
 helm repo add jetstack https://charts.jetstack.io
+kubectl create ns cert-manager
 helm install cert-manager jetstack/cert-manager --namespace cert-manager --version 0.16.1 --set "installCRDs=true" --wait
 POLARIS_IMAGE=quay.io/fairwinds/polaris:debug ./test/webhook_test.sh
 ```
