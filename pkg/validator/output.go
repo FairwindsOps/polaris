@@ -34,6 +34,14 @@ type AuditData struct {
 	DisplayName          string
 	ClusterInfo          ClusterInfo
 	Results              []Result
+	Score                uint
+}
+
+// RemoveSuccessfulResults remove all test that have passed.
+func (res *AuditData) RemoveSuccessfulResults() {
+	for _, auditDataResult := range res.Results {
+		auditDataResult.removeSuccessfulResults()
+	}
 }
 
 // ClusterInfo contains Polaris results as well as some high-level stats
@@ -67,6 +75,15 @@ type Result struct {
 	CreatedTime time.Time
 }
 
+func (res *Result) removeSuccessfulResults() {
+	for k, resultMessage := range res.Results {
+		if resultMessage.Success {
+			delete(res.Results, k)
+		}
+	}
+	res.PodResult.removeSuccessfulResults()
+}
+
 // PodResult provides a list of validation messages for each pod.
 type PodResult struct {
 	Name             string
@@ -74,8 +91,27 @@ type PodResult struct {
 	ContainerResults []ContainerResult
 }
 
+func (res *PodResult) removeSuccessfulResults() {
+	for k, resultMessage := range res.Results {
+		if resultMessage.Success {
+			delete(res.Results, k)
+		}
+	}
+	for _, containerResult := range res.ContainerResults {
+		containerResult.removeSuccessfulResults()
+	}
+}
+
 // ContainerResult provides a list of validation messages for each container.
 type ContainerResult struct {
 	Name    string
 	Results ResultSet
+}
+
+func (res *ContainerResult) removeSuccessfulResults() {
+	for k, resultMessage := range res.Results {
+		if resultMessage.Success {
+			delete(res.Results, k)
+		}
+	}
 }
