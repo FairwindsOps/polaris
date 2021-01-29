@@ -10,11 +10,10 @@ require (
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.1.3 // indirect
 	github.com/googleapis/gnostic v0.5.3 // indirect
-	github.com/gophercloud/gophercloud v0.15.0 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/imdario/mergo v0.3.11 // indirect
-	github.com/jessevdk/go-flags v1.4.0 // indirect
 	github.com/karrick/godirwalk v1.16.1 // indirect
+	github.com/kr/pretty v0.2.1 // indirect
 	github.com/prometheus/client_golang v1.9.0 // indirect
 	github.com/qri-io/jsonschema v0.1.1
 	github.com/rogpeppe/go-internal v1.6.2 // indirect
@@ -22,8 +21,6 @@ require (
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
-	gitlab.com/golang-commonmark/linkify v0.0.0-20200225224916-64bca66f6ad3 // indirect
-	gitlab.com/golang-commonmark/markdown v0.0.0-20191127184510-91b5b3c99c19
 	go.uber.org/zap v1.16.0 // indirect
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad // indirect
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b // indirect
