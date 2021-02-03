@@ -176,6 +176,11 @@ jobs:
       - checkout
       - setup_remote_docker
       - run:
+          name: Adjust configs for latest image
+          command: |
+            sed -r "s|'(quay.io/fairwinds/polaris:).+'|'\1${CIRCLE_SHA1}'|" ./deploy/webhook.yaml > ./deploy/dashboard.yaml
+            sed -r "s|'(quay.io/fairwinds/polaris:).+'|'\1${CIRCLE_SHA1}'|" ./deploy/dashboard.yaml > ./deploy/webhook.yaml
+      - run:
           name: Insights CI
           command: curl -L https://insights.fairwinds.com/v0/insights-ci.sh | bash
 
