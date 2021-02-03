@@ -1,6 +1,14 @@
 ---
 sidebarDepth: 0
 ---
+
+## 3.1.1
+* Updated to alpine:3.13
+
+## 3.1.0
+* Added support for Ingress objects
+* Fixes for exemptions, including support for exempting entire namespaces
+
 ## 3.0.0
 * **Breaking** - fixed inconsistency in how controller-level checks are handled
 Custom checks with `target: Controller` should remove `Object` from the top-level of the
