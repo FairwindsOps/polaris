@@ -1,0 +1,14 @@
+options:
+  organization: fairwinds-opensource
+  baseBranch: master
+
+# These images will be scanned for vulnerabilities.
+images:
+  docker:
+  - quay.io/fairwinds/polaris:$CI_SHA1
+
+# These manifests will be scanned for configuration issues.
+manifests:
+  yaml:
+  - ./deploy/dashboard.yaml
+  - ./deploy/webhook.yaml
