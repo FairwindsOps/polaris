@@ -169,6 +169,21 @@ jobs:
       - *update_coverage
       - *test_binary_dashboard
 
+  insights:
+    docker:
+      - image: quay.io/reactiveops/ci-images:v11.0-stretch
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Adjust configs for latest image
+          command: |
+            sed -r "s|'(quay.io/fairwinds/polaris:).+'|'\1${CIRCLE_SHA1}'|" ./deploy/webhook.yaml > ./deploy/dashboard.yaml
+            sed -r "s|'(quay.io/fairwinds/polaris:).+'|'\1${CIRCLE_SHA1}'|" ./deploy/dashboard.yaml > ./deploy/webhook.yaml
+      - run:
+          name: Insights CI
+          command: curl -L https://insights.fairwinds.com/v0/insights-ci.sh | bash
+
   release_binary:
     working_directory: /go/src/github.com/fairwindsops/polaris/
     docker:
@@ -232,6 +247,12 @@ workflows:
           context: org-global
           requires:
             - build
+          filters:
+            branches:
+              ignore: /pull\/[0-9]+/
+      - insights:
+          requires:
+            - push
           filters:
             branches:
               ignore: /pull\/[0-9]+/
