@@ -45,7 +45,7 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: Setup polaris
-        uses: FairwindsOps/polaris
+        uses: FairwindsOps/polaris@master
         with:
           version: 3.0.3
 

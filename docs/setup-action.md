@@ -17,7 +17,7 @@ The version number of the release tag.
 ## Example usage
 
 ```yaml
-uses: FairwindsOps/polaris
+uses: FairwindsOps/polaris@master
 with:
   version: "3.0.3"
 ```
@@ -28,7 +28,7 @@ And inside the job:
 steps:
   - uses: actions/checkout@v2
   - name: Setup polaris
-    uses: FairwindsOps/polaris
+    uses: FairwindsOps/polaris@master
     with:
       version: 3.0.3
 
