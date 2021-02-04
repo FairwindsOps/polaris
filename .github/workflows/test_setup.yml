@@ -13,6 +13,8 @@ jobs:
           version: 3.0.3
       - name: Use command
         run: polaris version
+      - name: Use command
+        run: polaris audit pavel 22
   build-ext:
     runs-on: ubuntu-latest
     steps:
