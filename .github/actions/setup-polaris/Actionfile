@@ -8,6 +8,6 @@ RUN	apk add --no-cache \
   tar \
   jq
 
-COPY get_polaris.sh /get_polaris.sh
+COPY get_polaris.sh get_polaris.sh
 
-ENTRYPOINT ["/get_polaris.sh"]
+ENTRYPOINT ["get_polaris.sh"]
