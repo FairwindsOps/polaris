@@ -9,7 +9,7 @@ inputs:
 
 runs:
   using: 'docker'
-  image: 'Dockerfile_action'
+  image: 'DockerfileAction'
   args:
     - ${{ inputs.version }}
 
