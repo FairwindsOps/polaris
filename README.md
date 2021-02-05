@@ -11,9 +11,6 @@
   <a href="https://circleci.com/gh/FairwindsOps/polaris.svg">
     <img src="https://circleci.com/gh/FairwindsOps/polaris.svg?style=svg">
   </a>
-  <a href="https://circleci.com/gh/FairwindsOps/polaris.svg">
-    <img src="https://circleci.com/gh/FairwindsOps/polaris.svg?style=svg">
-  </a>
   <a href="https://insights.fairwinds.com/gh/FairwindsOps/polaris">
     <img src="https://insights.fairwinds.com/v0/gh/FairwindsOps/polaris/badge.svg">
   </a>
