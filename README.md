@@ -49,7 +49,6 @@ is a platform for auditing Kubernetes clusters and enforcing policy. If you'd li
 
 you can sign up for a [free account here](https://insights.fairwinds.com?source=polaris).
 
-
 ## Contributing
 PRs welcome! Check out the [Contributing Guidelines](https://polaris.docs.fairwinds.com/contributing) and [Code of Conduct](https://polaris.docs.fairwinds.com/code-of-conduct) for more information.
 
