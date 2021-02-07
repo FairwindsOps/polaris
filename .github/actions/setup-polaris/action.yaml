@@ -3,7 +3,7 @@ description: 'Download a specific polaris version'
 
 inputs:
   version:
-    description: 'version of the polaris version'
+    description: 'version of polaris'
     required: true
     default: 'latest'
 
@@ -15,7 +15,7 @@ runs:
 
 outputs:
   version:
-    description: 'The version of polaris installed'
+    description: 'Version of polaris installed'
 
 branding:
   icon: 'download-cloud'
