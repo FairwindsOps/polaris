@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Setup polaris
-        uses: fairwindsops/polaris@master
+        uses: fairwindsops/polaris/.github/actions/setup-polaris@master
         with:
           version: 3.0.3
       - name: Use command
