@@ -7,10 +7,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-#       - name: Setup polaris
-#         uses: ./.github/actions/setup-polaris
-#         with:
-#           version: 3.0.3
+      - name: Setup polaris
+        uses: ./.github/actions/setup-polaris
+        with:
+          version: 3.0.3
       - name: Use command
         run: polaris version
 # @rbren this will only work once merged to your repo
