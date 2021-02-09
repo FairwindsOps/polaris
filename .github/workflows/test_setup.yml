@@ -2,6 +2,7 @@ name: Test setup-polaris
 on:
   pull_request:
     branches: [ master ]
+
 jobs:
   build-int:
     runs-on: ubuntu-latest
@@ -13,14 +14,14 @@ jobs:
           version: 3.0.3
       - name: Use command
         run: polaris version
-# @rbren this will only work once merged to your repo
-#  build-ext:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v2
-#      - name: Setup polaris
-#        uses: fairwindsops/polaris@master
-#        with:
-#          version: 3.0.3
-#      - name: Use command
-#        run: polaris version
+
+  build-ext:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup polaris
+        uses: fairwindsops/polaris/.github/actions/setup-polaris@master
+        with:
+          version: 3.0.3
+      - name: Use command
+        run: polaris version
