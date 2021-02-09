@@ -65,6 +65,14 @@ type ResultMessage struct {
 // ResultSet contiains the results for a set of checks
 type ResultSet map[string]ResultMessage
 
+func (res ResultSet) removeSuccessfulResults() {
+	for k, resultMessage := range res {
+		if resultMessage.Success {
+			delete(res, k)
+		}
+	}
+}
+
 // Result provides results for a Kubernetes object
 type Result struct {
 	Name        string
@@ -76,11 +84,7 @@ type Result struct {
 }
 
 func (res *Result) removeSuccessfulResults() {
-	for k, resultMessage := range res.Results {
-		if resultMessage.Success {
-			delete(res.Results, k)
-		}
-	}
+	res.Results.removeSuccessfulResults()
 	res.PodResult.removeSuccessfulResults()
 }
 
@@ -92,11 +96,7 @@ type PodResult struct {
 }
 
 func (res *PodResult) removeSuccessfulResults() {
-	for k, resultMessage := range res.Results {
-		if resultMessage.Success {
-			delete(res.Results, k)
-		}
-	}
+	res.Results.removeSuccessfulResults()
 	for _, containerResult := range res.ContainerResults {
 		containerResult.removeSuccessfulResults()
 	}
@@ -109,9 +109,5 @@ type ContainerResult struct {
 }
 
 func (res *ContainerResult) removeSuccessfulResults() {
-	for k, resultMessage := range res.Results {
-		if resultMessage.Success {
-			delete(res.Results, k)
-		}
-	}
+	res.Results.removeSuccessfulResults()
 }
