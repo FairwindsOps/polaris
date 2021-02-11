@@ -2,6 +2,12 @@
 sidebarDepth: 0
 ---
 
+## 3.1.3
+* Fixes for `privilegeEscalationAllowed` and `insecureCapabilities` checks to take Kubernetes defaults into account
+
+## 3.1.2
+* Start checking deployment configuration using Fairwinds Insights
+
 ## 3.1.1
 * Updated to alpine:3.13
 
