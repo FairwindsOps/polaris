@@ -555,8 +555,8 @@ func TestValidateSecurity(t *testing.T) {
 				Category: "Security",
 			}, {
 				ID:       "privilegeEscalationAllowed",
-				Message:  "Privilege escalation not allowed",
-				Success:  true,
+				Message:  "Privilege escalation should not be allowed",
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}, {
