@@ -561,8 +561,8 @@ func TestValidateSecurity(t *testing.T) {
 				Category: "Security",
 			}, {
 				ID:       "insecureCapabilities",
-				Message:  "Container does not have any insecure capabilities",
-				Success:  true,
+				Message:  "Container should not have insecure capabilities",
+				Success:  false,
 				Severity: "warning",
 				Category: "Security",
 			}, {
@@ -739,8 +739,8 @@ func TestValidateSecurity(t *testing.T) {
 				Category: "Security",
 			}, {
 				ID:       "insecureCapabilities",
-				Message:  "Container does not have any insecure capabilities",
-				Success:  true,
+				Message:  "Container should not have insecure capabilities",
+				Success:  false,
 				Severity: "warning",
 				Category: "Security",
 			}},
@@ -758,8 +758,8 @@ func TestValidateSecurity(t *testing.T) {
 				Category: "Security",
 			}, {
 				ID:       "insecureCapabilities",
-				Message:  "Container does not have any insecure capabilities",
-				Success:  true,
+				Message:  "Container should not have insecure capabilities",
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}, {
