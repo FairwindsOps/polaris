@@ -18,7 +18,7 @@
 
 Fairwinds' Polaris keeps your clusters sailing smoothly. It runs a variety of checks to ensure that
 Kubernetes pods and controllers are configured using best practices, helping you avoid
-problems in the future. Polaris can be run in a few different modes:
+problems in the future.
 
 Polaris can be run in three different modes:
 * As a [dashboard](https://polaris.docs.fairwinds.com/dashboard), so you can audit what's running inside your cluster.
