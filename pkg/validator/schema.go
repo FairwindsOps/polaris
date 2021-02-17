@@ -10,7 +10,9 @@ import (
 	"github.com/gobuffalo/packr/v2"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/fairwindsops/polaris/pkg/config"
@@ -222,6 +224,30 @@ func applyIngressSchemaChecks(conf *config.Configuration, ingress v1beta1.Ingres
 			continue
 		}
 		passes, err := check.CheckObject(ingress)
+		if err != nil {
+			return nil, err
+		}
+		results[check.ID] = makeResult(conf, check, passes)
+	}
+	return results, nil
+}
+
+func applyArbitrarySchemaChecks(conf *config.Configuration, unst *unstructured.Unstructured) (ResultSet, error) {
+	results := ResultSet{}
+	objMeta, err := meta.Accessor(unst)
+	if err != nil {
+		return results, err
+	}
+	checkIDs := getSortedKeys(conf.Checks)
+	for _, checkID := range checkIDs {
+		check, err := resolveCheck(conf, checkID, unst.GetKind(), config.TargetArbitrary, objMeta, "", false)
+
+		if err != nil {
+			return nil, err
+		} else if check == nil {
+			continue
+		}
+		passes, err := check.CheckObject(unst)
 		if err != nil {
 			return nil, err
 		}
