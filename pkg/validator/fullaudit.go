@@ -34,6 +34,8 @@ func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider, o
 	}
 	results = append(results, ingressResults...)
 
+	// Call Arbitrary Kind Validation here
+
 	auditData := AuditData{
 		PolarisOutputVersion: PolarisOutputVersion,
 		AuditTime:            kubeResources.CreationTime.Format(time.RFC3339),

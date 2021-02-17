@@ -21,6 +21,8 @@ const (
 	TargetController TargetKind = "Controller"
 	// TargetIngress points to the ingress spec
 	TargetIngress TargetKind = "Ingress"
+	// TargetArbitrary points to the generic spec
+	TargetArbitrary TargetKind = "Arbitrary"
 )
 
 // SchemaCheck is a Polaris check that runs using JSON Schema

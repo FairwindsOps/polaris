@@ -28,14 +28,15 @@ import (
 
 // ResourceProvider contains k8s resources to be audited
 type ResourceProvider struct {
-	ServerVersion string
-	CreationTime  time.Time
-	SourceName    string
-	SourceType    string
-	Nodes         []corev1.Node
-	Namespaces    []corev1.Namespace
-	Controllers   []GenericWorkload
-	Ingresses     []v1beta1.Ingress
+	ServerVersion  string
+	CreationTime   time.Time
+	SourceName     string
+	SourceType     string
+	Nodes          []corev1.Node
+	Namespaces     []corev1.Namespace
+	Controllers    []GenericWorkload
+	Ingresses      []v1beta1.Ingress
+	ArbitraryKinds []*unstructured.Unstructured
 }
 
 type k8sResource struct {
@@ -205,6 +206,7 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		logrus.Errorf("Error fetching Ingresses: %v", err)
 		return nil, err
 	}
+	// Get arbitrary kinds here
 
 	resources, err := restmapper.GetAPIGroupResources(kube.Discovery())
 	if err != nil {
@@ -222,14 +224,15 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 	}
 
 	api := ResourceProvider{
-		ServerVersion: serverVersion.Major + "." + serverVersion.Minor,
-		SourceType:    "Cluster",
-		SourceName:    clusterName,
-		CreationTime:  time.Now(),
-		Nodes:         nodes.Items,
-		Namespaces:    namespaces.Items,
-		Controllers:   controllers,
-		Ingresses:     ingressList.Items,
+		ServerVersion:  serverVersion.Major + "." + serverVersion.Minor,
+		SourceType:     "Cluster",
+		SourceName:     clusterName,
+		CreationTime:   time.Now(),
+		Nodes:          nodes.Items,
+		Namespaces:     namespaces.Items,
+		Controllers:    controllers,
+		Ingresses:      ingressList.Items,
+		ArbitraryKinds: []*unstructured.Unstructured{},
 	}
 	return &api, nil
 }
@@ -333,10 +336,14 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 		resources.Ingresses = append(resources.Ingresses, ingress)
 	} else {
 		newController, err := GetWorkloadFromBytes(contentBytes)
-		if err != nil || newController == nil {
+		if err != nil {
 			return err
 		}
-		resources.Controllers = append(resources.Controllers, *newController)
+		if newController == nil {
+			// Handle Arbitrary Kinds Here
+		} else {
+			resources.Controllers = append(resources.Controllers, *newController)
+		}
 	}
 	return err
 }
