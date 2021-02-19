@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	conf "github.com/fairwindsops/polaris/pkg/config"
+
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	v1beta1 "k8s.io/api/extensions/v1beta1"
@@ -46,14 +48,14 @@ type k8sResource struct {
 var podSpecFields = []string{"jobTemplate", "spec", "template"}
 
 // CreateResourceProvider returns a new ResourceProvider object to interact with k8s resources
-func CreateResourceProvider(ctx context.Context, directory, workload string) (*ResourceProvider, error) {
+func CreateResourceProvider(ctx context.Context, directory, workload string, c conf.Configuration) (*ResourceProvider, error) {
 	if workload != "" {
 		return CreateResourceProviderFromWorkload(ctx, workload)
 	}
 	if directory != "" {
 		return CreateResourceProviderFromPath(directory)
 	}
-	return CreateResourceProviderFromCluster(ctx)
+	return CreateResourceProviderFromCluster(ctx, c)
 }
 
 // CreateResourceProviderFromWorkload creates a new ResourceProvider that just contains one workload
@@ -158,7 +160,7 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 }
 
 // CreateResourceProviderFromCluster creates a new ResourceProvider using live data from a cluster
-func CreateResourceProviderFromCluster(ctx context.Context) (*ResourceProvider, error) {
+func CreateResourceProviderFromCluster(ctx context.Context, c conf.Configuration) (*ResourceProvider, error) {
 	kubeConf, configError := config.GetConfig()
 	if configError != nil {
 		logrus.Errorf("Error fetching KubeConfig: %v", configError)
@@ -174,11 +176,11 @@ func CreateResourceProviderFromCluster(ctx context.Context) (*ResourceProvider, 
 		logrus.Errorf("Error connecting to dynamic interface: %v", err)
 		return nil, err
 	}
-	return CreateResourceProviderFromAPI(ctx, api, kubeConf.Host, &dynamicInterface)
+	return CreateResourceProviderFromAPI(ctx, api, kubeConf.Host, &dynamicInterface, c)
 }
 
 // CreateResourceProviderFromAPI creates a new ResourceProvider from an existing k8s interface
-func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interface, clusterName string, dynamic *dynamic.Interface) (*ResourceProvider, error) {
+func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interface, clusterName string, dynamic *dynamic.Interface, c conf.Configuration) (*ResourceProvider, error) {
 	listOpts := metav1.ListOptions{}
 	serverVersion, err := kube.Discovery().ServerVersion()
 	if err != nil {
