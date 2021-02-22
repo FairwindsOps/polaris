@@ -15,11 +15,13 @@ import (
 	conf "github.com/fairwindsops/polaris/pkg/config"
 
 	"github.com/sirupsen/logrus"
+	"github.com/thoas/go-funk"
 	corev1 "k8s.io/api/core/v1"
 	v1beta1 "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	k8sYaml "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -208,7 +210,6 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		logrus.Errorf("Error fetching Ingresses: %v", err)
 		return nil, err
 	}
-	// Get arbitrary kinds here
 
 	resources, err := restmapper.GetAPIGroupResources(kube.Discovery())
 	if err != nil {
@@ -216,6 +217,40 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		return nil, err
 	}
 	restMapper := restmapper.NewDiscoveryRESTMapper(resources)
+
+	handledKinds := []conf.TargetKind{
+		conf.TargetContainer,
+		conf.TargetPod,
+		conf.TargetController,
+		conf.TargetIngress,
+	}
+	var additionalKinds []conf.TargetKind
+	for _, check := range c.CustomChecks {
+		if !funk.Contains(handledKinds, check.Target) {
+			additionalKinds = append(additionalKinds, check.Target)
+			handledKinds = append(handledKinds, check.Target)
+		}
+	}
+
+	var arbitraryObjects []*unstructured.Unstructured
+	for _, kind := range additionalKinds {
+		apiVersion := "Not sure where to get this"
+		fqKind := schema.FromAPIVersionAndKind(apiVersion, string(kind))
+		mapping, err := (restMapper).RESTMapping(fqKind.GroupKind(), fqKind.Version)
+		if err != nil {
+			logrus.Warnf("Error retrieving mapping of API %s and Kind %s because of error: %v", apiVersion, kind, err)
+			return nil, err
+		}
+
+		objects, err := (*dynamic).Resource(mapping.Resource).Namespace("").List(ctx, metav1.ListOptions{})
+		if err != nil {
+			logrus.Warnf("Error retrieving parent object API %s and Kind %s because of error: %v", mapping.Resource.Version, mapping.Resource.Resource, err)
+			return nil, err
+		}
+		for _, obj := range objects.Items {
+			arbitraryObjects = append(arbitraryObjects, &obj)
+		}
+	}
 
 	objectCache := map[string]unstructured.Unstructured{}
 
@@ -234,7 +269,7 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		Namespaces:     namespaces.Items,
 		Controllers:    controllers,
 		Ingresses:      ingressList.Items,
-		ArbitraryKinds: []*unstructured.Unstructured{},
+		ArbitraryKinds: arbitraryObjects,
 	}
 	return &api, nil
 }

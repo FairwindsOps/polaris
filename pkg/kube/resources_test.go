@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	conf "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/test"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -88,7 +89,7 @@ func TestAddResourcesFromReader(t *testing.T) {
 
 func TestGetResourceFromAPI(t *testing.T) {
 	k8s, dynamicInterface := test.SetupTestAPI(test.GetMockControllers("test")...)
-	resources, err := CreateResourceProviderFromAPI(context.Background(), k8s, "test", &dynamicInterface)
+	resources, err := CreateResourceProviderFromAPI(context.Background(), k8s, "test", &dynamicInterface, conf.Configuration{})
 	assert.Equal(t, nil, err, "Error should be nil")
 
 	assert.Equal(t, "Cluster", resources.SourceType, "Should have type Path")
