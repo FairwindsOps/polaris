@@ -379,15 +379,17 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 		if err != nil {
 			return err
 		}
-		if newController == nil {
+		if newController != nil {
+			resources.Controllers = append(resources.Controllers, *newController)
+		} else if resource.Kind != "" {
 			unst := unstructured.Unstructured{}
 			err = decoder.Decode(&unst)
 			if err != nil {
+				fmt.Println("Here she breaks")
+				fmt.Println(resource.Kind)
 				return err
 			}
 			resources.ArbitraryKinds = append(resources.ArbitraryKinds, &unst)
-		} else {
-			resources.Controllers = append(resources.Controllers, *newController)
 		}
 	}
 	return err
