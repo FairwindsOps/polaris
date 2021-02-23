@@ -79,7 +79,7 @@ var auditCmd = &cobra.Command{
 
 func runAndReportAudit(ctx context.Context, c conf.Configuration, auditPath, workload, outputFile, outputURL, outputFormat string, useColor bool) validator.AuditData {
 	// Create a kubernetes client resource provider
-	k, err := kube.CreateResourceProvider(ctx, auditPath, workload)
+	k, err := kube.CreateResourceProvider(ctx, auditPath, workload, c)
 	if err != nil {
 		logrus.Errorf("Error fetching Kubernetes resources %v", err)
 		os.Exit(1)
