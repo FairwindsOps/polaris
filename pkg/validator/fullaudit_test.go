@@ -11,17 +11,17 @@ import (
 )
 
 func TestGetTemplateData(t *testing.T) {
-	k8s, dynamicClient := test.SetupTestAPI(test.GetMockControllers("test")...)
-	resources, err := kube.CreateResourceProviderFromAPI(context.Background(), k8s, "test", &dynamicClient)
-	assert.Equal(t, err, nil, "error should be nil")
-	assert.Equal(t, 5, len(resources.Controllers))
-
 	c := conf.Configuration{
 		Checks: map[string]conf.Severity{
 			"readinessProbeMissing": conf.SeverityDanger,
 			"livenessProbeMissing":  conf.SeverityWarning,
 		},
 	}
+
+	k8s, dynamicClient := test.SetupTestAPI(test.GetMockControllers("test")...)
+	resources, err := kube.CreateResourceProviderFromAPI(context.Background(), k8s, "test", &dynamicClient, c)
+	assert.Equal(t, err, nil, "error should be nil")
+	assert.Equal(t, 5, len(resources.Controllers))
 
 	sum := CountSummary{
 		Successes: uint(0),

@@ -370,6 +370,9 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 	} else if resource.Kind == "Ingress" {
 		ingress := v1beta1.Ingress{}
 		err = decoder.Decode(&ingress)
+		if err != nil {
+			return err
+		}
 		resources.Ingresses = append(resources.Ingresses, ingress)
 	} else {
 		newController, err := GetWorkloadFromBytes(contentBytes)
@@ -377,7 +380,12 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 			return err
 		}
 		if newController == nil {
-			// Handle Arbitrary Kinds Here
+			unst := unstructured.Unstructured{}
+			err = decoder.Decode(&unst)
+			if err != nil {
+				return err
+			}
+			resources.ArbitraryKinds = append(resources.ArbitraryKinds, &unst)
 		} else {
 			resources.Controllers = append(resources.Controllers, *newController)
 		}

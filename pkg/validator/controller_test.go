@@ -111,7 +111,7 @@ func TestControllerLevelChecks(t *testing.T) {
 	two := int32(2)
 	d2.Spec.Replicas = &two
 	k8s, dynamicClient := test.SetupTestAPI(&d1, &p1, &d2, &p2)
-	res, err = kube.CreateResourceProviderFromAPI(context.Background(), k8s, "test", &dynamicClient)
+	res, err = kube.CreateResourceProviderFromAPI(context.Background(), k8s, "test", &dynamicClient, conf.Configuration{})
 	assert.Equal(t, err, nil, "error should be nil")
 	assert.Equal(t, 2, len(res.Controllers), "Should have two controllers")
 	testResources(res)
