@@ -388,7 +388,13 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 				fmt.Println(resource.Kind)
 				return err
 			}
-			resources.ArbitraryKinds[resource.Kind] = &unst
+			if resources.ArbitraryKinds == nil {
+				resources.ArbitraryKinds = map[string]*unstructured.Unstructured{
+					resource.Kind: &unst,
+				}
+			} else {
+				resources.ArbitraryKinds[resource.Kind] = &unst
+			}
 		}
 	}
 	return err
