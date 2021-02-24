@@ -31,7 +31,6 @@ polaris audit --audit-path ./deploy/ \
   --set-exit-code-below-score 90
 ```
 
-<<<<<<< HEAD
 ### Output only showing failed tests
 The CLI to gives you ability to display results containing only failed tests. 
 For example:
@@ -40,7 +39,6 @@ polaris audit --audit-path ./deploy/ \
   --only-show-failed-tests true
 ```
 
-=======
 ### As Github Action
 #### Setup polaris action
 
@@ -79,4 +77,3 @@ steps:
   - name: Use command
     run: polaris version
 ```
->>>>>>> master
