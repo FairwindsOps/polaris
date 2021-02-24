@@ -384,7 +384,6 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 			unst := unstructured.Unstructured{}
 			err = decoder.Decode(&unst)
 			if err != nil {
-				fmt.Println("Here she breaks")
 				fmt.Println(resource.Kind)
 				return err
 			}

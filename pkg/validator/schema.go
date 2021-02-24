@@ -50,6 +50,8 @@ var (
 		"priorityClassNotSet",
 		// Ingress checks
 		"tlsSettingsMissing",
+		// PodDisruptionBudget checks
+		"pdbDisruptionsAllowedGreaterThanZero",
 	}
 )
 

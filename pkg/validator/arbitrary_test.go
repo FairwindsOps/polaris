@@ -14,51 +14,50 @@
 
 package validator
 
-// import (
-// "testing"
+import (
+	"testing"
 
-// conf "github.com/fairwindsops/polaris/pkg/config"
-// "github.com/fairwindsops/polaris/test"
-// "github.com/stretchr/testify/assert"
+	conf "github.com/fairwindsops/polaris/pkg/config"
+	"github.com/stretchr/testify/assert"
 
-// extv1beta1 "k8s.io/api/extensions/v1beta1"
-// )
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+)
 
-// func TestValidateIngress(t *testing.T) {
-// c := conf.Configuration{
-// Checks: map[string]conf.Severity{
-// "tlsSettingsMissing": conf.SeverityWarning,
-// },
-// }
-// ingress := test.MockIngress()
+func TestValidateArbitraryKind(t *testing.T) {
+	c := conf.Configuration{
+		Checks: map[string]conf.Severity{
+			"pdbDisruptionsAllowedGreaterThanZero": conf.SeverityWarning,
+		},
+	}
+	pdb := unstructured.Unstructured{}
 
-// var actualResult Result
-// actualResult, err := ValidateIngress(&c, ingress)
-// if err != nil {
-// panic(err)
-// }
-// results := actualResult.Results["tlsSettingsMissing"]
+	var actualResult Result
+	actualResult, err := ValidateArbitraryKind(&c, &pdb)
+	if err != nil {
+		panic(err)
+	}
+	results := actualResult.Results["pdbDisruptionsAllowedGreaterThanZero"]
 
-// assert.False(t, results.Success)
-// assert.Equal(t, conf.Severity("warning"), results.Severity)
-// assert.Equal(t, "Security", results.Category)
-// assert.EqualValues(t, "Ingress does not have TLS configured", results.Message)
+	assert.False(t, results.Success)
+	assert.Equal(t, conf.Severity("warning"), results.Severity)
+	assert.Equal(t, "Security", results.Category)
+	assert.EqualValues(t, "Ingress does not have TLS configured", results.Message)
 
-// tls := extv1beta1.IngressTLS{
-// Hosts:      []string{"test"},
-// SecretName: "secret",
-// }
+	// tls := extv1beta1.IngressTLS{
+	// Hosts:      []string{"test"},
+	// SecretName: "secret",
+	// }
 
-// ingress.Spec.TLS = []extv1beta1.IngressTLS{tls}
-// actualResult, err = ValidateIngress(&c, ingress)
-// if err != nil {
-// panic(err)
-// }
-// results = actualResult.Results["tlsSettingsMissing"]
+	// ingress.Spec.TLS = []extv1beta1.IngressTLS{tls}
+	// actualResult, err = ValidateIngress(&c, ingress)
+	// if err != nil {
+	// panic(err)
+	// }
+	// results = actualResult.Results["pdbDisruptionsAllowedGreaterThanZero"]
 
-// assert.True(t, results.Success)
-// assert.Equal(t, conf.Severity("warning"), results.Severity)
-// assert.Equal(t, "Security", results.Category)
-// assert.EqualValues(t, "Ingress has TLS configured", results.Message)
+	// assert.True(t, results.Success)
+	// assert.Equal(t, conf.Severity("warning"), results.Severity)
+	// assert.Equal(t, "Security", results.Category)
+	// assert.EqualValues(t, "Ingress has TLS configured", results.Message)
 
-// }
+}
