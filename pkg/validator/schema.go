@@ -240,7 +240,7 @@ func applyArbitrarySchemaChecks(conf *config.Configuration, unst *unstructured.U
 	}
 	checkIDs := getSortedKeys(conf.Checks)
 	for _, checkID := range checkIDs {
-		check, err := resolveCheck(conf, checkID, unst.GetKind(), config.TargetArbitrary, objMeta, "", false)
+		check, err := resolveCheck(conf, checkID, unst.GetKind(), config.TargetOther, objMeta, "", false)
 
 		if err != nil {
 			return nil, err

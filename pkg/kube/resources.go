@@ -40,7 +40,7 @@ type ResourceProvider struct {
 	Namespaces     []corev1.Namespace
 	Controllers    []GenericWorkload
 	Ingresses      []v1beta1.Ingress
-	ArbitraryKinds []*unstructured.Unstructured
+	ArbitraryKinds map[string]*unstructured.Unstructured
 }
 
 type k8sResource struct {
@@ -232,13 +232,12 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		}
 	}
 
-	var arbitraryObjects []*unstructured.Unstructured
+	var arbitraryObjects map[string]*unstructured.Unstructured
 	for _, kind := range additionalKinds {
-		apiVersion := "Not sure where to get this"
-		fqKind := schema.FromAPIVersionAndKind(apiVersion, string(kind))
-		mapping, err := (restMapper).RESTMapping(fqKind.GroupKind(), fqKind.Version)
+		groupKind := schema.ParseGroupKind(string(kind))
+		mapping, err := (restMapper).RESTMapping(groupKind)
 		if err != nil {
-			logrus.Warnf("Error retrieving mapping of API %s and Kind %s because of error: %v", apiVersion, kind, err)
+			logrus.Warnf("Error retrieving mapping of Kind %s because of error: %v", kind, err)
 			return nil, err
 		}
 
@@ -248,7 +247,7 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 			return nil, err
 		}
 		for _, obj := range objects.Items {
-			arbitraryObjects = append(arbitraryObjects, &obj)
+			arbitraryObjects[string(kind)] = &obj
 		}
 	}
 
@@ -389,7 +388,7 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 				fmt.Println(resource.Kind)
 				return err
 			}
-			resources.ArbitraryKinds = append(resources.ArbitraryKinds, &unst)
+			resources.ArbitraryKinds[resource.Kind] = &unst
 		}
 	}
 	return err
