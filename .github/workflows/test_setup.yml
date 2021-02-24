@@ -1,0 +1,27 @@
+name: Test setup-polaris
+on:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build-int:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup polaris
+        uses: ./.github/actions/setup-polaris
+        with:
+          version: 3.0.3
+      - name: Use command
+        run: polaris version
+
+  build-ext:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup polaris
+        uses: fairwindsops/polaris/.github/actions/setup-polaris@master
+        with:
+          version: 3.0.3
+      - name: Use command
+        run: polaris version

@@ -17,8 +17,8 @@ require (
 	github.com/prometheus/client_golang v1.9.0 // indirect
 	github.com/qri-io/jsonschema v0.1.1
 	github.com/rogpeppe/go-internal v1.6.2 // indirect
-	github.com/sirupsen/logrus v1.7.0
-	github.com/spf13/cobra v1.1.1
+	github.com/sirupsen/logrus v1.8.0
+	github.com/spf13/cobra v1.1.3
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
 	go.uber.org/zap v1.16.0 // indirect
@@ -27,10 +27,9 @@ require (
 	golang.org/x/sys v0.0.0-20201231184435-2d18734c6014 // indirect
 	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf // indirect
 	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
-	k8s.io/api v0.20.2
-	k8s.io/apimachinery v0.20.2
+	k8s.io/api v0.20.4
+	k8s.io/apimachinery v0.20.4
 	k8s.io/client-go v0.20.2
 	k8s.io/component-base v0.20.1 // indirect
 	sigs.k8s.io/controller-runtime v0.7.0

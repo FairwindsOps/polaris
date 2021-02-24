@@ -1,0 +1,22 @@
+name: 'Install polaris'
+description: 'Download a specific polaris version'
+
+inputs:
+  version:
+    description: 'version of polaris'
+    required: true
+    default: 'latest'
+
+runs:
+  using: 'docker'
+  image: './Dockerfile'
+  args:
+    - ${{ inputs.version }}
+
+outputs:
+  version:
+    description: 'Version of polaris installed'
+
+branding:
+  icon: 'download-cloud'
+  color: 'gray-dark'

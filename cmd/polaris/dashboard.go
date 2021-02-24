@@ -27,10 +27,12 @@ import (
 var serverPort int
 var basePath string
 var loadAuditFile string
+var listeningAddress string
 
 func init() {
 	rootCmd.AddCommand(dashboardCmd)
 	dashboardCmd.PersistentFlags().IntVarP(&serverPort, "port", "p", 8080, "Port for the dashboard webserver.")
+	dashboardCmd.PersistentFlags().StringVar(&listeningAddress, "listening-address", "", "Listening Address for the dashboard webserver.")
 	dashboardCmd.PersistentFlags().StringVar(&basePath, "base-path", "/", "Path on which the dashboard is served.")
 	dashboardCmd.PersistentFlags().StringVar(&loadAuditFile, "load-audit-file", "", "Runs the dashboard with data saved from a past audit.")
 	dashboardCmd.PersistentFlags().StringVar(&auditPath, "audit-path", "", "If specified, audits one or more YAML files instead of a cluster.")
@@ -59,6 +61,6 @@ var dashboardCmd = &cobra.Command{
 		http.Handle("/", router)
 
 		logrus.Infof("Starting Polaris dashboard server on port %d", serverPort)
-		logrus.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", serverPort), nil))
+		logrus.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%d", listeningAddress, serverPort), nil))
 	},
 }

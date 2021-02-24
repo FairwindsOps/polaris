@@ -2,7 +2,6 @@ apiVersion: apps/v1beta2
 kind: DaemonSet
 metadata:
   name: fluentd-elasticsearch
-  namespace: kube-system
   labels:
     k8s-app: fluentd-logging
 spec:

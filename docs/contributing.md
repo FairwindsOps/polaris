@@ -32,12 +32,26 @@ We label issues with the ["good first issue" tag](https://github.com/FairwindsOp
 
 The following commands are all required to pass as part of Polaris testing:
 
-```
+```bash
 go list ./... | grep -v vendor | xargs golint -set_exit_status
 go list ./... | grep -v vendor | xargs go vet
 go test ./pkg/... -v -coverprofile cover.out
 ```
 
+### Webhook tests
+```bash
+kind create cluster --wait=90s --image kindest/node:v1.15.11 --name polaris-test
+docker build -t quay.io/fairwinds/polaris:debug . # or use your own registry
+docker push quay.io/fairwinds/polaris:debug
+helm repo add jetstack https://charts.jetstack.io
+kubectl create ns cert-manager
+helm install cert-manager jetstack/cert-manager --namespace cert-manager --version 0.16.1 --set "installCRDs=true" --wait
+POLARIS_IMAGE=quay.io/fairwinds/polaris:debug ./test/webhook_test.sh
+```
+to avoid the final cleanup for debugging purposes, you can run
+```bash
+SKIP_FINAL_CLEANUP=true IMAGE_TAG=debug ./test/webhook_test.sh
+```
 ## Creating a New Issue
 
 If you've encountered an issue that is not already reported, please create a [new issue](https://github.com/FairwindsOps/polaris/issues), choose `Bug Report`, `Feature Request` or `Misc.` and follow the instructions in the template. 
