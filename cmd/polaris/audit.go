@@ -32,6 +32,7 @@ import (
 )
 
 var setExitCode bool
+var onlyShowFailedTests bool
 var minScore int
 var auditOutputURL string
 var auditOutputFile string
@@ -42,6 +43,7 @@ func init() {
 	rootCmd.AddCommand(auditCmd)
 	auditCmd.PersistentFlags().StringVar(&auditPath, "audit-path", "", "If specified, audits one or more YAML files instead of a cluster.")
 	auditCmd.PersistentFlags().BoolVar(&setExitCode, "set-exit-code-on-danger", false, "Set an exit code of 3 when the audit contains danger-level issues.")
+	auditCmd.PersistentFlags().BoolVar(&onlyShowFailedTests, "only-show-failed-tests", false, "If specified, audit output will only show failed tests.")
 	auditCmd.PersistentFlags().IntVar(&minScore, "set-exit-code-below-score", 0, "Set an exit code of 4 when the score is below this threshold (1-100).")
 	auditCmd.PersistentFlags().StringVar(&auditOutputURL, "output-url", "", "Destination URL to send audit results.")
 	auditCmd.PersistentFlags().StringVar(&auditOutputFile, "output-file", "", "Destination file for audit results.")
@@ -81,7 +83,7 @@ func runAndReportAudit(ctx context.Context, c conf.Configuration, auditPath, wor
 		os.Exit(1)
 	}
 	var auditData validator.AuditData
-	auditData, err = validator.RunAudit(c, k)
+	auditData, err = validator.RunAudit(c, k, onlyShowFailedTests)
 
 	if err != nil {
 		logrus.Errorf("Error while running audit on resources: %v", err)

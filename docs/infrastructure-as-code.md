@@ -21,13 +21,22 @@ polaris version
 ```
 
 ## Running in a CI pipeline
-You can tell the CLI to set an exit code if it detects certain issues with your
-YAML files.
+
+### Set minimum score for an exit code 
+You can tell the CLI to set an exit code if it detects certain issues with your YAML files.
 For example, to fail if polaris detects *any* danger-level issues, or if the score drops below 90%:
 ```bash
 polaris audit --audit-path ./deploy/ \
   --set-exit-code-on-danger \
   --set-exit-code-below-score 90
+```
+
+### Output only showing failed tests
+The CLI to gives you ability to display results containing only failed tests. 
+For example:
+```bash
+polaris audit --audit-path ./deploy/ \
+  --only-show-failed-tests true
 ```
 
 ### As Github Action
