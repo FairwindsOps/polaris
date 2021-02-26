@@ -3,6 +3,8 @@ set -e
 
 # Testing to ensure that the webhook starts up, allows a correct deployment to pass,
 # and prevents a incorrectly formatted deployment.
+RED='\033[0;31m'
+NC='\033[0m' # No Color
 
 function get_timeout() {
   if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -101,7 +103,7 @@ for filename in test/webhook_cases/passing_test.*.yaml; do
     echo $filename
     if ! kubectl apply -n tests -f $filename; then
         ALL_TESTS_PASSED=0
-        echo -e "****Test Failed: Polaris prevented a deployment with no configuration issues****"
+        echo -e "${RED}****Test Failed: Polaris prevented a deployment with no configuration issues****${NC}"
     fi
     kubectl delete -n tests -f $filename || true
 done
@@ -112,7 +114,7 @@ for filename in test/webhook_cases/failing_test.*.yaml; do
     echo $filename
     if kubectl apply -n tests -f $filename; then
         ALL_TESTS_PASSED=0
-        echo -e "****Test Failed: Polaris should have prevented this deployment due to configuration issues.****"
+        echo -e "${RED}****Test Failed: Polaris should have prevented this deployment due to configuration issues.****${NC}"
         kubectl logs -n polaris $(kubectl get po -oname -n polaris | grep webhook)
     fi
     kubectl delete -n tests -f $filename || true

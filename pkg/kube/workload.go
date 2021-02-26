@@ -89,6 +89,7 @@ func NewGenericWorkloadFromPod(podResource kubeAPICoreV1.Pod, originalObject int
 			return workload, err
 		}
 		workload.ObjectMeta = objMeta
+		fmt.Println("set meta", objMeta.GetName(), objMeta.GetNamespace(), objMeta.GetAnnotations())
 	}
 	return workload, nil
 }

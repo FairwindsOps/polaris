@@ -15,15 +15,11 @@
 package validator
 
 import (
-	"strings"
-
 	"github.com/sirupsen/logrus"
 
 	conf "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
 )
-
-const exemptionAnnotationKey = "polaris.fairwinds.com/exempt"
 
 // ValidateController validates a single controller, returns a Result.
 func ValidateController(conf *conf.Configuration, controller kube.GenericWorkload) (Result, error) {
@@ -56,9 +52,6 @@ func ValidateControllers(config *conf.Configuration, kubeResources *kube.Resourc
 
 	results := []Result{}
 	for _, controller := range controllersToAudit {
-		if !config.DisallowExemptions && hasExemptionAnnotation(controller) {
-			continue
-		}
 		result, err := ValidateController(config, controller)
 		if err != nil {
 			logrus.Warn("An error occurred validating controller:", err)
@@ -68,10 +61,4 @@ func ValidateControllers(config *conf.Configuration, kubeResources *kube.Resourc
 	}
 
 	return results, nil
-}
-
-func hasExemptionAnnotation(ctrl kube.GenericWorkload) bool {
-	annot := ctrl.ObjectMeta.GetAnnotations()
-	val := annot[exemptionAnnotationKey]
-	return strings.ToLower(val) == "true"
 }
