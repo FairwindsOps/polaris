@@ -136,7 +136,6 @@ func hasExemptionAnnotation(ctrl kube.GenericWorkload, checkID string) bool {
 func applyPodSchemaChecks(conf *config.Configuration, controller kube.GenericWorkload) (ResultSet, error) {
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
-	fmt.Println("apply pod", controller.ObjectMeta.GetName(), controller.ObjectMeta.GetNamespace(), controller.ObjectMeta.GetAnnotations())
 	for _, checkID := range checkIDs {
 		if hasExemptionAnnotation(controller, checkID) {
 			continue
