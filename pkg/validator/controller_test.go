@@ -222,5 +222,21 @@ func TestControllerExemptions(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	assert.Equal(t, 0, len(actualResults))
+	expectedExemptSum := CountSummary{
+		Successes: uint(0),
+		Warnings:  uint(0),
+		Dangers:   uint(0),
+	}
+	assert.Equal(t, 1, len(actualResults))
+	assert.Equal(t, "Deployment", actualResults[0].Kind)
+	assert.EqualValues(t, expectedExemptSum, actualResults[0].GetSummary())
+
+	c.DisallowExemptions = true
+	actualResults, err = ValidateControllers(&c, resources)
+	if err != nil {
+		panic(err)
+	}
+	assert.Equal(t, 1, len(actualResults))
+	assert.Equal(t, "Deployment", actualResults[0].Kind)
+	assert.EqualValues(t, expectedSum, actualResults[0].GetSummary())
 }

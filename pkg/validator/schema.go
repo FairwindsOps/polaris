@@ -137,7 +137,7 @@ func applyPodSchemaChecks(conf *config.Configuration, controller kube.GenericWor
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
 	for _, checkID := range checkIDs {
-		if hasExemptionAnnotation(controller, checkID) {
+		if !conf.DisallowExemptions && hasExemptionAnnotation(controller, checkID) {
 			continue
 		}
 		check, err := resolveCheck(conf, checkID, controller.Kind, config.TargetPod, controller.ObjectMeta, "", false)
@@ -160,7 +160,7 @@ func applyControllerSchemaChecks(conf *config.Configuration, controller kube.Gen
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
 	for _, checkID := range checkIDs {
-		if hasExemptionAnnotation(controller, checkID) {
+		if !conf.DisallowExemptions && hasExemptionAnnotation(controller, checkID) {
 			continue
 		}
 		check, err := resolveCheck(conf, checkID, controller.Kind, config.TargetController, controller.ObjectMeta, "", false)
@@ -183,7 +183,7 @@ func applyContainerSchemaChecks(conf *config.Configuration, controller kube.Gene
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
 	for _, checkID := range checkIDs {
-		if hasExemptionAnnotation(controller, checkID) {
+		if !conf.DisallowExemptions && hasExemptionAnnotation(controller, checkID) {
 			continue
 		}
 		check, err := resolveCheck(conf, checkID, controller.Kind, config.TargetContainer, controller.ObjectMeta, container.Name, isInit)
