@@ -193,7 +193,20 @@ func TestControllerExemptions(t *testing.T) {
 			"livenessProbeMissing":  conf.SeverityWarning,
 		},
 	}
+	expectedSum := CountSummary{
+		Successes: uint(0),
+		Warnings:  uint(1),
+		Dangers:   uint(1),
+	}
+	expectedExemptSum := CountSummary{
+		Successes: uint(0),
+		Warnings:  uint(0),
+		Dangers:   uint(0),
+	}
+	var actualResults []Result
+
 	pod := test.MockPod()
+	pod.ObjectMeta.Namespace = "foo"
 	workload, err := kube.NewGenericWorkloadFromPod(pod, nil)
 	assert.NoError(t, err)
 	workload.Kind = "Deployment"
@@ -201,12 +214,6 @@ func TestControllerExemptions(t *testing.T) {
 		Controllers: []kube.GenericWorkload{workload},
 	}
 
-	expectedSum := CountSummary{
-		Successes: uint(0),
-		Warnings:  uint(1),
-		Dangers:   uint(1),
-	}
-	var actualResults []Result
 	actualResults, err = ValidateControllers(&c, resources)
 	if err != nil {
 		panic(err)
@@ -215,17 +222,24 @@ func TestControllerExemptions(t *testing.T) {
 	assert.Equal(t, "Deployment", actualResults[0].Kind)
 	assert.EqualValues(t, expectedSum, actualResults[0].GetSummary())
 
+	c.Exemptions = []conf.Exemption{{
+		Namespace: "foo",
+	}}
+	actualResults, err = ValidateControllers(&c, resources)
+	if err != nil {
+		panic(err)
+	}
+	assert.Equal(t, 1, len(actualResults))
+	assert.Equal(t, "Deployment", actualResults[0].Kind)
+	assert.EqualValues(t, expectedExemptSum, actualResults[0].GetSummary())
+
+	c.Exemptions = nil
 	resources.Controllers[0].ObjectMeta.SetAnnotations(map[string]string{
 		exemptionAnnotationKey: "true",
 	})
 	actualResults, err = ValidateControllers(&c, resources)
 	if err != nil {
 		panic(err)
-	}
-	expectedExemptSum := CountSummary{
-		Successes: uint(0),
-		Warnings:  uint(0),
-		Dangers:   uint(0),
 	}
 	assert.Equal(t, 1, len(actualResults))
 	assert.Equal(t, "Deployment", actualResults[0].Kind)
