@@ -76,6 +76,19 @@ func NewGenericWorkloadFromPod(podResource kubeAPICoreV1.Pod, originalObject int
 			return workload, err
 		}
 		workload.OriginalObjectJSON = bytes
+
+		var unst unstructured.Unstructured
+		err = json.Unmarshal(bytes, &unst.Object)
+		if err != nil {
+			logrus.Error("Couldn't marshal JSON for pod ", err)
+			return workload, err
+		}
+		objMeta, err := meta.Accessor(&unst)
+		if err != nil {
+			logrus.Error("Couldn't create meta accessor for unstructred ", err)
+			return workload, err
+		}
+		workload.ObjectMeta = objMeta
 	}
 	return workload, nil
 }

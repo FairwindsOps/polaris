@@ -116,17 +116,28 @@ func makeResult(conf *config.Configuration, check *config.SchemaCheck, passes bo
 	return result
 }
 
-func getExemptKey(checkID string) string {
-	return fmt.Sprintf("polaris.fairwinds.com/%s-exempt", checkID)
+const exemptionAnnotationKey = "polaris.fairwinds.com/exempt"
+const exemptionAnnotationPattern = "polaris.fairwinds.com/%s-exempt"
+
+func hasExemptionAnnotation(ctrl kube.GenericWorkload, checkID string) bool {
+	annot := ctrl.ObjectMeta.GetAnnotations()
+	val := annot[exemptionAnnotationKey]
+	if strings.ToLower(val) == "true" {
+		return true
+	}
+	checkKey := fmt.Sprintf(exemptionAnnotationPattern, checkID)
+	val = annot[checkKey]
+	if strings.ToLower(val) == "true" {
+		return true
+	}
+	return false
 }
 
 func applyPodSchemaChecks(conf *config.Configuration, controller kube.GenericWorkload) (ResultSet, error) {
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
-	objectAnnotations := controller.ObjectMeta.GetAnnotations()
 	for _, checkID := range checkIDs {
-		exemptValue := objectAnnotations[getExemptKey(checkID)]
-		if strings.ToLower(exemptValue) == "true" {
+		if !conf.DisallowExemptions && hasExemptionAnnotation(controller, checkID) {
 			continue
 		}
 		check, err := resolveCheck(conf, checkID, controller.Kind, config.TargetPod, controller.ObjectMeta, "", false)
@@ -148,10 +159,8 @@ func applyPodSchemaChecks(conf *config.Configuration, controller kube.GenericWor
 func applyControllerSchemaChecks(conf *config.Configuration, controller kube.GenericWorkload) (ResultSet, error) {
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
-	objectAnnotations := controller.ObjectMeta.GetAnnotations()
 	for _, checkID := range checkIDs {
-		exemptValue := objectAnnotations[getExemptKey(checkID)]
-		if strings.ToLower(exemptValue) == "true" {
+		if !conf.DisallowExemptions && hasExemptionAnnotation(controller, checkID) {
 			continue
 		}
 		check, err := resolveCheck(conf, checkID, controller.Kind, config.TargetController, controller.ObjectMeta, "", false)
@@ -173,13 +182,12 @@ func applyControllerSchemaChecks(conf *config.Configuration, controller kube.Gen
 func applyContainerSchemaChecks(conf *config.Configuration, controller kube.GenericWorkload, container *corev1.Container, isInit bool) (ResultSet, error) {
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
-	objectAnnotations := controller.ObjectMeta.GetAnnotations()
 	for _, checkID := range checkIDs {
-		exemptValue := objectAnnotations[getExemptKey(checkID)]
-		if strings.ToLower(exemptValue) == "true" {
+		if !conf.DisallowExemptions && hasExemptionAnnotation(controller, checkID) {
 			continue
 		}
 		check, err := resolveCheck(conf, checkID, controller.Kind, config.TargetContainer, controller.ObjectMeta, container.Name, isInit)
+
 		if err != nil {
 			return nil, err
 		} else if check == nil {
