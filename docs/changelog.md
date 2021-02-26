@@ -2,6 +2,9 @@
 sidebarDepth: 0
 ---
 
+## 3.1.4
+* Fixes for exemption annotations for the admission controller
+
 ## 3.1.3
 * Fixes for `privilegeEscalationAllowed` and `insecureCapabilities` checks to take Kubernetes defaults into account
 
