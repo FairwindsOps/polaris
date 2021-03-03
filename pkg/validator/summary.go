@@ -106,14 +106,18 @@ func (p PodResult) GetSummaryByCategory() CountSummaryByCategory {
 // GetSummary summarizes a Result
 func (c Result) GetSummary() CountSummary {
 	summary := c.Results.GetSummary()
-	summary.AddSummary(c.PodResult.GetSummary())
+	if c.PodResult != nil {
+		summary.AddSummary(c.PodResult.GetSummary())
+	}
 	return summary
 }
 
 // GetSummaryByCategory summarizes a Result
 func (c Result) GetSummaryByCategory() CountSummaryByCategory {
 	summary := c.Results.GetSummaryByCategory()
-	summary.AddSummary(c.PodResult.GetSummaryByCategory())
+	if c.PodResult != nil {
+		summary.AddSummary(c.PodResult.GetSummaryByCategory())
+	}
 	return summary
 }
 
