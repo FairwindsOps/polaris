@@ -2,6 +2,9 @@
 sidebarDepth: 0
 ---
 
+## 3.1.5
+* Fix UI display of Ingress checks
+
 ## 3.1.4
 * Fixes for exemption annotations for the admission controller
 
