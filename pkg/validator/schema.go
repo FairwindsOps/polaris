@@ -48,9 +48,8 @@ var (
 		"dangerousCapabilities",
 		"insecureCapabilities",
 		"priorityClassNotSet",
-		// Ingress checks
+		// Other checks
 		"tlsSettingsMissing",
-		// PodDisruptionBudget checks
 		"pdbDisruptionsAllowedGreaterThanZero",
 	}
 )
@@ -214,18 +213,22 @@ func applyContainerSchemaChecks(conf *config.Configuration, controller kube.Gene
 	return results, nil
 }
 
-func applyIngressSchemaChecks(conf *config.Configuration, ingress v1beta1.Ingress) (ResultSet, error) {
+func applyOtherSchemaChecks(conf *config.Configuration, unst *unstructured.Unstructured) (ResultSet, error) {
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
+	objMeta, err := meta.Accessor(unst)
+	if err != nil {
+		return results, err
+	}
 	for _, checkID := range checkIDs {
-		check, err := resolveCheck(conf, checkID, ingress.Kind, config.TargetIngress, ingress.ObjectMeta.GetObjectMeta(), "", false)
+		check, err := resolveCheck(conf, checkID, unst.GetKind(), "", objMeta, "", false)
 
 		if err != nil {
 			return nil, err
 		} else if check == nil {
 			continue
 		}
-		passes, err := check.CheckObject(ingress)
+		passes, err := check.CheckObject(unst)
 		if err != nil {
 			return nil, err
 		}
