@@ -9,7 +9,6 @@ import (
 
 	"github.com/gobuffalo/packr/v2"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -245,7 +244,7 @@ func applyArbitrarySchemaChecks(conf *config.Configuration, unst *unstructured.U
 	}
 	checkIDs := getSortedKeys(conf.Checks)
 	for _, checkID := range checkIDs {
-		check, err := resolveCheck(conf, checkID, unst.GetKind(), config.TargetOther, objMeta, "", false)
+		check, err := resolveCheck(conf, checkID, unst.GetKind(), "", objMeta, "", false)
 
 		if err != nil {
 			return nil, err
