@@ -120,7 +120,7 @@
       </div>
       <div class="result-messages expandable-content">
         <form id="namespaceFiltersForm" class="namespace-list">
-          {{ range $namespace, $ctrlResults := .AuditData.GetResultsByNamespace }}
+          {{ range $namespace, $results := .AuditData.GetResultsByNamespace }}
             <div class="namespace-row">
               <input type="checkbox" name="{{ $namespace }}" id="namespace-{{ $namespace }}">
               <label for="namespace-{{ $namespace }}">{{ $namespace }}</label>
@@ -132,20 +132,18 @@
     </div>
   </div>
 
-  {{ range $namespace, $ctrlResults := .FilteredAuditData.GetResultsByNamespace }}
+  {{ range $namespace, $results := .FilteredAuditData.GetResultsByNamespace }}
     <div id="{{ $namespace }}" class="card namespace">
       <h3>Namespace: <strong>{{ $namespace }}</strong></h3>
       <div class="expandable-table">
-        {{ range $ctrlResults }}
+        {{ range $index, $result := $results }}
           <div class="resource-info">
             <div class="status-bar">
               <div class="status">
                 <div class="failing">
-                  {{ if .PodResult }}
-                    <div class="warning" style="width: {{ getWarningWidth .PodResult.GetSummary 200 }}px;">
-                      <div class="passing" style="width: {{ getSuccessWidth .PodResult.GetSummary 200 }}px;"></div>
-                    </div>
-                  {{ end }}
+                  <div class="warning" style="width: {{ getWarningWidth $result.GetSummary 200 }}px;">
+                    <div class="passing" style="width: {{ getSuccessWidth $result.GetSummary 200 }}px;"></div>
+                  </div>
                 </div>
               </div>
             </div>
