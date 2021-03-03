@@ -13,17 +13,19 @@ import (
 type TargetKind string
 
 const (
+	// TargetController points to the controller's spec
+	TargetController TargetKind = "Controller"
 	// TargetContainer points to the container spec
 	TargetContainer TargetKind = "Container"
 	// TargetPod points to the pod spec
 	TargetPod TargetKind = "Pod"
-	// TargetController points to the controller's spec
-	TargetController TargetKind = "Controller"
-	// TargetIngress points to the ingress spec
-	TargetIngress TargetKind = "Ingress"
-	// TargetOther points to the generic spec
-	TargetOther TargetKind = "Other"
 )
+
+var HandledTargets = []TargetKind{
+	TargetController,
+	TargetContainer,
+	TargetPod,
+}
 
 // SchemaCheck is a Polaris check that runs using JSON Schema
 type SchemaCheck struct {

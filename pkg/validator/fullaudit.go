@@ -28,12 +28,6 @@ func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider, o
 	}
 	controllerCount := len(results)
 
-	ingressResults, err := ValidateIngresses(&config, kubeResources)
-	if err != nil {
-		return AuditData{}, err
-	}
-	results = append(results, ingressResults...)
-
 	arbitraryResults, err := ValidateArbitraryKinds(&config, kubeResources)
 	if err != nil {
 		return AuditData{}, err

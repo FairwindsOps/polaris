@@ -39,7 +39,6 @@ type ResourceProvider struct {
 	Nodes          []corev1.Node
 	Namespaces     []corev1.Namespace
 	Controllers    []GenericWorkload
-	Ingresses      []v1beta1.Ingress
 	ArbitraryKinds map[string]*unstructured.Unstructured
 }
 
@@ -205,11 +204,6 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		logrus.Errorf("Error fetching Pods: %v", err)
 		return nil, err
 	}
-	ingressList, err := kube.ExtensionsV1beta1().Ingresses("").List(ctx, listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching Ingresses: %v", err)
-		return nil, err
-	}
 
 	resources, err := restmapper.GetAPIGroupResources(kube.Discovery())
 	if err != nil {
@@ -218,17 +212,10 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 	}
 	restMapper := restmapper.NewDiscoveryRESTMapper(resources)
 
-	handledKinds := []conf.TargetKind{
-		conf.TargetContainer,
-		conf.TargetPod,
-		conf.TargetController,
-		conf.TargetIngress,
-	}
 	var additionalKinds []conf.TargetKind
 	for _, check := range c.CustomChecks {
-		if !funk.Contains(handledKinds, check.Target) {
+		if !funk.Contains(conf.HandledTargets, check.Target) {
 			additionalKinds = append(additionalKinds, check.Target)
-			handledKinds = append(handledKinds, check.Target)
 		}
 	}
 
@@ -267,7 +254,6 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		Nodes:          nodes.Items,
 		Namespaces:     namespaces.Items,
 		Controllers:    controllers,
-		Ingresses:      ingressList.Items,
 		ArbitraryKinds: arbitraryObjects,
 	}
 	return &api, nil
@@ -366,13 +352,6 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 			return err
 		}
 		resources.Controllers = append(resources.Controllers, workload)
-	} else if resource.Kind == "Ingress" {
-		ingress := v1beta1.Ingress{}
-		err = decoder.Decode(&ingress)
-		if err != nil {
-			return err
-		}
-		resources.Ingresses = append(resources.Ingresses, ingress)
 	} else {
 		newController, err := GetWorkloadFromBytes(contentBytes)
 		if err != nil {
