@@ -28,7 +28,7 @@ func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider, o
 	}
 	controllerCount := len(results)
 
-	arbitraryResults, err := ValidateArbitraryKinds(&config, kubeResources)
+	arbitraryResults, err := ValidateOtherKinds(&config, kubeResources)
 	if err != nil {
 		return AuditData{}, err
 	}

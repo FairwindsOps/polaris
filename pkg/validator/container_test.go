@@ -50,8 +50,8 @@ exemptions:
     - foo
 `
 
-func getEmptyWorkload(t *testing.T, name string) kube.GenericWorkload {
-	workload, err := kube.NewGenericWorkloadFromPod(corev1.Pod{
+func getEmptyWorkload(t *testing.T, name string) kube.GenericResource {
+	workload, err := kube.NewGenericResourceFromPod(corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
@@ -64,7 +64,7 @@ func testValidate(t *testing.T, container *corev1.Container, resourceConf *strin
 	testValidateWithWorkload(t, container, resourceConf, getEmptyWorkload(t, controllerName), expectedDangers, expectedWarnings, expectedSuccesses)
 }
 
-func testValidateWithWorkload(t *testing.T, container *corev1.Container, resourceConf *string, workload kube.GenericWorkload, expectedDangers []ResultMessage, expectedWarnings []ResultMessage, expectedSuccesses []ResultMessage) {
+func testValidateWithWorkload(t *testing.T, container *corev1.Container, resourceConf *string, workload kube.GenericResource, expectedDangers []ResultMessage, expectedWarnings []ResultMessage, expectedSuccesses []ResultMessage) {
 	parsedConf, err := conf.Parse([]byte(*resourceConf))
 	assert.NoError(t, err, "Expected no error when parsing config")
 
@@ -921,7 +921,7 @@ func TestValidateSecurity(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			workload, err := kube.NewGenericWorkloadFromPod(corev1.Pod{Spec: *tt.pod}, nil)
+			workload, err := kube.NewGenericResourceFromPod(corev1.Pod{Spec: *tt.pod}, nil)
 			assert.NoError(t, err)
 			results, err := applyContainerSchemaChecks(&conf.Configuration{Checks: tt.securityConf}, workload, tt.container, false)
 			if err != nil {
@@ -1066,7 +1066,7 @@ func TestValidateRunAsRoot(t *testing.T) {
 	}
 	for idx, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			workload, err := kube.NewGenericWorkloadFromPod(corev1.Pod{Spec: *tt.pod}, nil)
+			workload, err := kube.NewGenericResourceFromPod(corev1.Pod{Spec: *tt.pod}, nil)
 			assert.NoError(t, err)
 			results, err := applyContainerSchemaChecks(&config, workload, tt.container, false)
 			if err != nil {
@@ -1168,7 +1168,7 @@ func TestValidateResourcesEmptyContainerCPURequestsExempt(t *testing.T) {
 
 	expectedSuccesses := []ResultMessage{}
 
-	workload, err := kube.NewGenericWorkloadFromPod(corev1.Pod{
+	workload, err := kube.NewGenericResourceFromPod(corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "foo",
 			Annotations: map[string]string{

@@ -72,7 +72,7 @@ func TestAddResourcesFromReader(t *testing.T) {
 		SourceName:    "-",
 		Nodes:         []corev1.Node{},
 		Namespaces:    []corev1.Namespace{},
-		Controllers:   []GenericWorkload{},
+		Controllers:   []GenericResource{},
 	}
 	err = addResourcesFromReader(reader, resources)
 	assert.NoError(t, err)

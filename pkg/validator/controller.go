@@ -22,14 +22,14 @@ import (
 )
 
 // ValidateController validates a single controller, returns a Result.
-func ValidateController(conf *conf.Configuration, controller kube.GenericWorkload) (Result, error) {
+func ValidateController(conf *conf.Configuration, controller kube.GenericResource) (Result, error) {
 	podResult, err := ValidatePod(conf, controller)
 	if err != nil {
 		return Result{}, err
 	}
 
 	var controllerResult ResultSet
-	controllerResult, err = applyControllerSchemaChecks(conf, controller)
+	controllerResult, err = applyTopLevelSchemaChecks(conf, controller)
 	if err != nil {
 		return Result{}, err
 	}
