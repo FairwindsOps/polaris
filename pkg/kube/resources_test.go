@@ -10,7 +10,6 @@ import (
 	conf "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/test"
 	"github.com/stretchr/testify/assert"
-	corev1 "k8s.io/api/core/v1"
 )
 
 func TestGetResourcesFromPath(t *testing.T) {
@@ -66,15 +65,8 @@ func TestAddResourcesFromReader(t *testing.T) {
 	contents, err := ioutil.ReadFile("./test_files/test_2/multi.yaml")
 	assert.NoError(t, err)
 	reader := bytes.NewBuffer(contents)
-	resources := &ResourceProvider{
-		ServerVersion: "unknown",
-		SourceType:    "Path",
-		SourceName:    "-",
-		Nodes:         []corev1.Node{},
-		Namespaces:    []corev1.Namespace{},
-		Controllers:   []GenericResource{},
-	}
-	err = addResourcesFromReader(reader, resources)
+	resources := newResourceProvider("unknown", "Path", "-")
+	err = addResourcesFromReader(reader, &resources)
 	assert.NoError(t, err)
 
 	assert.Equal(t, 0, len(resources.Nodes), "Should not have any nodes")
