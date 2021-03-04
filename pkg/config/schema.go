@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/qri-io/jsonschema"
 	corev1 "k8s.io/api/core/v1"
@@ -158,13 +159,13 @@ func (check SchemaCheck) CheckObject(obj interface{}) (bool, error) {
 }
 
 // IsActionable decides if this check applies to a particular target
-func (check SchemaCheck) IsActionable(target TargetKind, controllerType string, isInit bool) bool {
-	if check.Target != target {
+func (check SchemaCheck) IsActionable(target TargetKind, kind string, isInit bool) bool {
+	if check.Target != target && string(check.Target) != kind && !strings.HasSuffix(string(check.Target), "/"+kind) {
 		return false
 	}
 	isIncluded := len(check.Controllers.Include) == 0
 	for _, inclusion := range check.Controllers.Include {
-		if inclusion == controllerType {
+		if inclusion == kind {
 			isIncluded = true
 			break
 		}
@@ -173,7 +174,7 @@ func (check SchemaCheck) IsActionable(target TargetKind, controllerType string, 
 		return false
 	}
 	for _, exclusion := range check.Controllers.Exclude {
-		if exclusion == controllerType {
+		if exclusion == kind {
 			return false
 		}
 	}

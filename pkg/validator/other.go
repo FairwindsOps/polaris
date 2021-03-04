@@ -17,34 +17,34 @@ package validator
 import (
 	conf "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
-
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-// ValidateArbitraryKinds validates all the unstructured objects in a ResourceProvider
-func ValidateArbitraryKinds(config *conf.Configuration, kubeResources *kube.ResourceProvider) ([]Result, error) {
+// ValidateOtherKinds validates all the unstructured objects in a ResourceProvider
+func ValidateOtherKinds(config *conf.Configuration, kubeResources *kube.ResourceProvider) ([]Result, error) {
 	var results []Result
-	for _, arb := range kubeResources.ArbitraryKinds {
-		result, err := ValidateArbitraryKind(config, arb)
-		if err != nil {
-			return []Result{}, err
+	for _, resources := range kubeResources.OtherKinds {
+		for _, res := range resources {
+			result, err := ValidateOtherKind(config, res)
+			if err != nil {
+				return []Result{}, err
+			}
+			results = append(results, result)
 		}
-		results = append(results, result)
 	}
 	return results, nil
 }
 
-// ValidateArbitraryKind validates a single unstructured object
-func ValidateArbitraryKind(config *conf.Configuration, arb *unstructured.Unstructured) (Result, error) {
-	results, err := applyArbitrarySchemaChecks(config, arb)
+// ValidateOtherKind validates a single unstructured object
+func ValidateOtherKind(config *conf.Configuration, res kube.GenericResource) (Result, error) {
+	results, err := applyTopLevelSchemaChecks(config, res)
 	if err != nil {
 		return Result{}, err
 	}
 
 	result := Result{
-		Kind:      arb.GetKind(),
-		Name:      arb.GetName(),
-		Namespace: arb.GetNamespace(),
+		Kind:      res.Kind,
+		Name:      res.ObjectMeta.GetName(),
+		Namespace: res.ObjectMeta.GetNamespace(),
 		Results:   results,
 	}
 

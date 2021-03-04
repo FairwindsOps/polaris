@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"runtime"
@@ -52,14 +53,17 @@ func init() {
 
 func TestChecks(t *testing.T) {
 	for _, tc := range testCases {
-		workload, err := kube.GetWorkloadFromBytes(tc.input)
-		assert.NoError(t, err)
+		res, err := kube.NewGenericResourceFromBytes(tc.input)
+		if err != nil {
+			fmt.Println("error parsing", string(tc.input))
+			panic(err)
+		}
 		c, err := config.Parse([]byte("checks:\n  " + tc.check + ": danger"))
 		assert.NoError(t, err)
-		var result validator.Result
-		result, err = validator.ValidateController(&c, *workload)
+		result, err := validator.ApplyAllSchemaChecks(&c, res)
 		assert.NoError(t, err)
 		summary := result.GetSummary()
+		fmt.Println(tc.check, summary)
 		if tc.failure {
 			message := "Check " + tc.check + " passed unexpectedly"
 			assert.Equal(t, uint(0), summary.Successes, message)

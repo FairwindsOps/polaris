@@ -18,21 +18,22 @@ import (
 	"testing"
 
 	conf "github.com/fairwindsops/polaris/pkg/config"
+	"github.com/fairwindsops/polaris/pkg/kube"
 	"github.com/stretchr/testify/assert"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-func TestValidateArbitraryKind(t *testing.T) {
+func TestValidateOtherKind(t *testing.T) {
 	c := conf.Configuration{
 		Checks: map[string]conf.Severity{
 			"pdbDisruptionsAllowedGreaterThanZero": conf.SeverityWarning,
 		},
 	}
 	pdb := unstructured.Unstructured{}
+	res, err := kube.NewGenericResourceFromUnstructured(&pdb)
 
-	var actualResult Result
-	actualResult, err := ValidateArbitraryKind(&c, &pdb)
+	actualResult, err := ValidateOtherKind(&c, res)
 	if err != nil {
 		panic(err)
 	}

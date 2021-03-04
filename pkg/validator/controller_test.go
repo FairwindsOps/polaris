@@ -34,7 +34,7 @@ func TestValidateController(t *testing.T) {
 			"hostPIDSet": conf.SeverityDanger,
 		},
 	}
-	deployment, err := kube.NewGenericWorkloadFromPod(test.MockPod(), nil)
+	deployment, err := kube.NewGenericResourceFromPod(test.MockPod(), nil)
 	assert.NoError(t, err)
 	deployment.Kind = "Deployment"
 	expectedSum := CountSummary{
@@ -126,7 +126,7 @@ func TestSkipHealthChecks(t *testing.T) {
 	}
 	pod := test.MockPod()
 	pod.Spec.InitContainers = []corev1.Container{test.MockContainer("test")}
-	deployment, err := kube.NewGenericWorkloadFromPod(pod, nil)
+	deployment, err := kube.NewGenericResourceFromPod(pod, nil)
 	assert.NoError(t, err)
 	deployment.Kind = "Deployment"
 	expectedSum := CountSummary{
@@ -149,7 +149,7 @@ func TestSkipHealthChecks(t *testing.T) {
 	assert.EqualValues(t, ResultSet{}, actualResult.PodResult.ContainerResults[0].Results)
 	assert.EqualValues(t, expectedResults, actualResult.PodResult.ContainerResults[1].Results)
 
-	job, err := kube.NewGenericWorkloadFromPod(test.MockPod(), nil)
+	job, err := kube.NewGenericResourceFromPod(test.MockPod(), nil)
 	assert.NoError(t, err)
 	job.Kind = "Job"
 	expectedSum = CountSummary{
@@ -167,7 +167,7 @@ func TestSkipHealthChecks(t *testing.T) {
 	assert.EqualValues(t, expectedSum, actualResult.GetSummary())
 	assert.EqualValues(t, expectedResults, actualResult.PodResult.ContainerResults[0].Results)
 
-	cronjob, err := kube.NewGenericWorkloadFromPod(test.MockPod(), nil)
+	cronjob, err := kube.NewGenericResourceFromPod(test.MockPod(), nil)
 	assert.NoError(t, err)
 	cronjob.Kind = "CronJob"
 	expectedSum = CountSummary{
@@ -207,11 +207,11 @@ func TestControllerExemptions(t *testing.T) {
 
 	pod := test.MockPod()
 	pod.ObjectMeta.Namespace = "foo"
-	workload, err := kube.NewGenericWorkloadFromPod(pod, nil)
+	workload, err := kube.NewGenericResourceFromPod(pod, nil)
 	assert.NoError(t, err)
 	workload.Kind = "Deployment"
 	resources := &kube.ResourceProvider{
-		Controllers: []kube.GenericWorkload{workload},
+		Controllers: []kube.GenericResource{workload},
 	}
 
 	actualResults, err = ValidateControllers(&c, resources)

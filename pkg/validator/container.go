@@ -22,7 +22,7 @@ import (
 )
 
 // ValidateContainer validates a single container from a given controller
-func ValidateContainer(conf *config.Configuration, controller kube.GenericWorkload, container *corev1.Container, isInit bool) (ContainerResult, error) {
+func ValidateContainer(conf *config.Configuration, controller kube.GenericResource, container *corev1.Container, isInit bool) (ContainerResult, error) {
 	results, err := applyContainerSchemaChecks(conf, controller, container, isInit)
 	if err != nil {
 		return ContainerResult{}, err
@@ -37,7 +37,7 @@ func ValidateContainer(conf *config.Configuration, controller kube.GenericWorklo
 }
 
 // ValidateAllContainers validates both init and regular containers
-func ValidateAllContainers(conf *config.Configuration, controller kube.GenericWorkload) ([]ContainerResult, error) {
+func ValidateAllContainers(conf *config.Configuration, controller kube.GenericResource) ([]ContainerResult, error) {
 	results := []ContainerResult{}
 	pod := controller.PodSpec
 	for _, container := range pod.InitContainers {

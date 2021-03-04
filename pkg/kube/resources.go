@@ -31,14 +31,14 @@ import (
 
 // ResourceProvider contains k8s resources to be audited
 type ResourceProvider struct {
-	ServerVersion  string
-	CreationTime   time.Time
-	SourceName     string
-	SourceType     string
-	Nodes          []corev1.Node
-	Namespaces     []corev1.Namespace
-	Controllers    []GenericWorkload
-	ArbitraryKinds map[string]*unstructured.Unstructured
+	ServerVersion string
+	CreationTime  time.Time
+	SourceName    string
+	SourceType    string
+	Nodes         []corev1.Node
+	Namespaces    []corev1.Namespace
+	Controllers   []GenericResource
+	OtherKinds    map[string][]GenericResource
 }
 
 type k8sResource struct {
@@ -50,7 +50,7 @@ var podSpecFields = []string{"jobTemplate", "spec", "template"}
 // CreateResourceProvider returns a new ResourceProvider object to interact with k8s resources
 func CreateResourceProvider(ctx context.Context, directory, workload string, c conf.Configuration) (*ResourceProvider, error) {
 	if workload != "" {
-		return CreateResourceProviderFromWorkload(ctx, workload)
+		return CreateResourceProviderFromResource(ctx, workload)
 	}
 	if directory != "" {
 		return CreateResourceProviderFromPath(directory)
@@ -58,8 +58,8 @@ func CreateResourceProvider(ctx context.Context, directory, workload string, c c
 	return CreateResourceProviderFromCluster(ctx, c)
 }
 
-// CreateResourceProviderFromWorkload creates a new ResourceProvider that just contains one workload
-func CreateResourceProviderFromWorkload(ctx context.Context, workload string) (*ResourceProvider, error) {
+// CreateResourceProviderFromResource creates a new ResourceProvider that just contains one workload
+func CreateResourceProviderFromResource(ctx context.Context, workload string) (*ResourceProvider, error) {
 	kubeConf, configError := config.GetConfig()
 	if configError != nil {
 		logrus.Errorf("Error fetching KubeConfig: %v", configError)
@@ -77,7 +77,7 @@ func CreateResourceProviderFromWorkload(ctx context.Context, workload string) (*
 	}
 	resources := ResourceProvider{
 		ServerVersion: serverVersion.Major + "." + serverVersion.Minor,
-		SourceType:    "Workload",
+		SourceType:    "Resource",
 		SourceName:    workload,
 		CreationTime:  time.Now(),
 		Nodes:         []corev1.Node{},
@@ -109,13 +109,13 @@ func CreateResourceProviderFromWorkload(ctx context.Context, workload string) (*
 		logrus.Errorf("Could not find workload %s: %v", workload, err)
 		return nil, err
 	}
-	workloadObj, err := NewGenericWorkloadFromUnstructured(kind, obj)
+	workloadObj, err := NewGenericResourceFromUnstructured(obj)
 	if err != nil {
 		logrus.Errorf("Could not parse workload %s: %v", workload, err)
 		return nil, err
 	}
 
-	resources.Controllers = []GenericWorkload{workloadObj}
+	resources.Controllers = []GenericResource{workloadObj}
 	return &resources, nil
 }
 
@@ -127,7 +127,7 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 		SourceName:    directory,
 		Nodes:         []corev1.Node{},
 		Namespaces:    []corev1.Namespace{},
-		Controllers:   []GenericWorkload{},
+		Controllers:   []GenericResource{},
 	}
 
 	if directory == "-" {
@@ -218,7 +218,7 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		}
 	}
 
-	var arbitraryObjects map[string]*unstructured.Unstructured
+	otherObjects := map[string][]GenericResource{}
 	for _, kind := range additionalKinds {
 		groupKind := schema.ParseGroupKind(string(kind))
 		mapping, err := (restMapper).RESTMapping(groupKind)
@@ -233,7 +233,14 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 			return nil, err
 		}
 		for _, obj := range objects.Items {
-			arbitraryObjects[string(kind)] = &obj
+			res, err := NewGenericResourceFromUnstructured(&obj)
+			if err != nil {
+				return nil, err
+			}
+			if _, ok := otherObjects[res.Kind]; !ok {
+				otherObjects[res.Kind] = make([]GenericResource, 0)
+			}
+			otherObjects[res.Kind] = append(otherObjects[res.Kind], res)
 		}
 	}
 
@@ -246,21 +253,21 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 	}
 
 	api := ResourceProvider{
-		ServerVersion:  serverVersion.Major + "." + serverVersion.Minor,
-		SourceType:     "Cluster",
-		SourceName:     clusterName,
-		CreationTime:   time.Now(),
-		Nodes:          nodes.Items,
-		Namespaces:     namespaces.Items,
-		Controllers:    controllers,
-		ArbitraryKinds: arbitraryObjects,
+		ServerVersion: serverVersion.Major + "." + serverVersion.Minor,
+		SourceType:    "Cluster",
+		SourceName:    clusterName,
+		CreationTime:  time.Now(),
+		Nodes:         nodes.Items,
+		Namespaces:    namespaces.Items,
+		Controllers:   controllers,
+		OtherKinds:    otherObjects,
 	}
 	return &api, nil
 }
 
 // LoadControllers loads a list of controllers from the kubeResources Pods
-func LoadControllers(ctx context.Context, pods []corev1.Pod, dynamicClientPointer *dynamic.Interface, restMapperPointer *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) ([]GenericWorkload, error) {
-	interfaces := []GenericWorkload{}
+func LoadControllers(ctx context.Context, pods []corev1.Pod, dynamicClientPointer *dynamic.Interface, restMapperPointer *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) ([]GenericResource, error) {
+	interfaces := []GenericResource{}
 	deduped := map[string]corev1.Pod{}
 	for _, pod := range pods {
 		owners := pod.ObjectMeta.OwnerReferences
@@ -271,7 +278,7 @@ func LoadControllers(ctx context.Context, pods []corev1.Pod, dynamicClientPointe
 		deduped[pod.ObjectMeta.Namespace+"/"+owners[0].Kind+"/"+owners[0].Name] = pod
 	}
 	for _, pod := range deduped {
-		workload, err := NewGenericWorkload(ctx, pod, dynamicClientPointer, restMapperPointer, objectCache)
+		workload, err := NewGenericResource(ctx, pod, dynamicClientPointer, restMapperPointer, objectCache)
 		if err != nil {
 			return nil, err
 		}
@@ -282,8 +289,8 @@ func LoadControllers(ctx context.Context, pods []corev1.Pod, dynamicClientPointe
 
 // Because the controllers with an Owner take on the name of the Owner, this eliminates any duplicates.
 // In cases like CronJobs older children can hang around, so this takes the most recent.
-func deduplicateControllers(inputControllers []GenericWorkload) []GenericWorkload {
-	controllerMap := make(map[string]GenericWorkload)
+func deduplicateControllers(inputControllers []GenericResource) []GenericResource {
+	controllerMap := make(map[string]GenericResource)
 	for _, controller := range inputControllers {
 		key := controller.ObjectMeta.GetNamespace() + "/" + controller.Kind + "/" + controller.ObjectMeta.GetName()
 		oldController, ok := controllerMap[key]
@@ -291,7 +298,7 @@ func deduplicateControllers(inputControllers []GenericWorkload) []GenericWorkloa
 			controllerMap[key] = controller
 		}
 	}
-	results := make([]GenericWorkload, 0)
+	results := make([]GenericResource, 0)
 	for _, controller := range controllerMap {
 		results = append(results, controller)
 	}
@@ -346,32 +353,23 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 		if err != nil {
 			return err
 		}
-		workload, err := NewGenericWorkloadFromPod(pod, pod)
+		workload, err := NewGenericResourceFromPod(pod, pod)
 		if err != nil {
 			return err
 		}
 		resources.Controllers = append(resources.Controllers, workload)
 	} else {
-		newController, err := GetWorkloadFromBytes(contentBytes)
+		newResource, err := NewGenericResourceFromBytes(contentBytes)
 		if err != nil {
 			return err
 		}
-		if newController != nil {
-			resources.Controllers = append(resources.Controllers, *newController)
-		} else if resource.Kind != "" {
-			unst := unstructured.Unstructured{}
-			err = decoder.Decode(&unst)
-			if err != nil {
-				fmt.Println(resource.Kind)
-				return err
+		if newResource.PodSpec != nil {
+			resources.Controllers = append(resources.Controllers, newResource)
+		} else {
+			if _, ok := resources.OtherKinds[resource.Kind]; !ok {
+				resources.OtherKinds[resource.Kind] = make([]GenericResource, 0)
 			}
-			if resources.ArbitraryKinds == nil {
-				resources.ArbitraryKinds = map[string]*unstructured.Unstructured{
-					resource.Kind: &unst,
-				}
-			} else {
-				resources.ArbitraryKinds[resource.Kind] = &unst
-			}
+			resources.OtherKinds[resource.Kind] = append(resources.OtherKinds[resource.Kind], newResource)
 		}
 	}
 	return err
