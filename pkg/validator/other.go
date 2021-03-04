@@ -36,7 +36,7 @@ func ValidateOtherKinds(config *conf.Configuration, kubeResources *kube.Resource
 
 // ValidateOtherKind validates a single unstructured object
 func ValidateOtherKind(config *conf.Configuration, res kube.GenericResource) (Result, error) {
-	results, err := applyTopLevelSchemaChecks(config, res)
+	results, err := applyTopLevelSchemaChecks(config, res, false)
 	if err != nil {
 		return Result{}, err
 	}

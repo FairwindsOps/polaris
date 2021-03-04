@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/qri-io/jsonschema"
+	"github.com/thoas/go-funk"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
@@ -160,7 +161,11 @@ func (check SchemaCheck) CheckObject(obj interface{}) (bool, error) {
 
 // IsActionable decides if this check applies to a particular target
 func (check SchemaCheck) IsActionable(target TargetKind, kind string, isInit bool) bool {
-	if check.Target != target && string(check.Target) != kind && !strings.HasSuffix(string(check.Target), "/"+kind) {
+	if funk.Contains(HandledTargets, target) {
+		if check.Target != target {
+			return false
+		}
+	} else if string(check.Target) != kind && !strings.HasSuffix(string(check.Target), "/"+kind) {
 		return false
 	}
 	isIncluded := len(check.Controllers.Include) == 0

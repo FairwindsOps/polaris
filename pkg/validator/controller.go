@@ -29,7 +29,7 @@ func ValidateController(conf *conf.Configuration, controller kube.GenericResourc
 	}
 
 	var controllerResult ResultSet
-	controllerResult, err = applyTopLevelSchemaChecks(conf, controller)
+	controllerResult, err = applyTopLevelSchemaChecks(conf, controller, true)
 	if err != nil {
 		return Result{}, err
 	}

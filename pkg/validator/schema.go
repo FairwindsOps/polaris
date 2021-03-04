@@ -154,58 +154,78 @@ func hasExemptionAnnotation(objMeta metaV1.Object, checkID string) bool {
 }
 
 func ApplyAllSchemaChecks(conf *config.Configuration, resource kube.GenericResource) (Result, error) {
+	if resource.PodSpec == nil {
+		return applyNonControllerSchemaChecks(conf, resource)
+	} else {
+		return applyControllerSchemaChecks(conf, resource)
+	}
+}
+
+func applyNonControllerSchemaChecks(conf *config.Configuration, resource kube.GenericResource) (Result, error) {
 	finalResult := Result{
 		Kind:      resource.Kind,
 		Name:      resource.ObjectMeta.GetName(),
 		Namespace: resource.ObjectMeta.GetNamespace(),
 	}
-	resultSet, err := applyTopLevelSchemaChecks(conf, resource)
+	resultSet, err := applyTopLevelSchemaChecks(conf, resource, false)
+	finalResult.Results = resultSet
+	return finalResult, err
+}
+
+func applyControllerSchemaChecks(conf *config.Configuration, resource kube.GenericResource) (Result, error) {
+	finalResult := Result{
+		Kind:      resource.Kind,
+		Name:      resource.ObjectMeta.GetName(),
+		Namespace: resource.ObjectMeta.GetNamespace(),
+	}
+	resultSet, err := applyTopLevelSchemaChecks(conf, resource, true)
 	if err != nil {
 		return finalResult, err
 	}
 	finalResult.Results = resultSet
-	if resource.PodSpec != nil {
-		podRS, err := applyPodSchemaChecks(conf, resource)
+
+	podRS, err := applyPodSchemaChecks(conf, resource)
+	if err != nil {
+		return finalResult, err
+	}
+	podRes := PodResult{
+		Results:          podRS,
+		ContainerResults: []ContainerResult{},
+	}
+
+	for _, container := range resource.PodSpec.InitContainers {
+		results, err := applyContainerSchemaChecks(conf, resource, &container, true)
 		if err != nil {
 			return finalResult, err
 		}
-		podRes := PodResult{
-			Results:          podRS,
-			ContainerResults: []ContainerResult{},
+		cRes := ContainerResult{
+			Name:    container.Name,
+			Results: results,
 		}
-
-		for _, container := range resource.PodSpec.InitContainers {
-			results, err := applyContainerSchemaChecks(conf, resource, &container, true)
-			if err != nil {
-				return finalResult, err
-			}
-			cRes := ContainerResult{
-				Name:    container.Name,
-				Results: results,
-			}
-			podRes.ContainerResults = append(podRes.ContainerResults, cRes)
-		}
-		for _, container := range resource.PodSpec.Containers {
-			results, err := applyContainerSchemaChecks(conf, resource, &container, false)
-			if err != nil {
-				return finalResult, err
-			}
-			cRes := ContainerResult{
-				Name:    container.Name,
-				Results: results,
-			}
-			podRes.ContainerResults = append(podRes.ContainerResults, cRes)
-		}
-
-		finalResult.PodResult = &podRes
+		podRes.ContainerResults = append(podRes.ContainerResults, cRes)
 	}
+	for _, container := range resource.PodSpec.Containers {
+		results, err := applyContainerSchemaChecks(conf, resource, &container, false)
+		if err != nil {
+			return finalResult, err
+		}
+		cRes := ContainerResult{
+			Name:    container.Name,
+			Results: results,
+		}
+		podRes.ContainerResults = append(podRes.ContainerResults, cRes)
+	}
+
+	finalResult.PodResult = &podRes
 	return finalResult, nil
 }
 
-func applyTopLevelSchemaChecks(conf *config.Configuration, res kube.GenericResource) (ResultSet, error) {
+func applyTopLevelSchemaChecks(conf *config.Configuration, res kube.GenericResource, isController bool) (ResultSet, error) {
 	test := schemaTestCase{
-		Target:   config.TargetController,
 		Resource: res,
+	}
+	if isController {
+		test.Target = config.TargetController
 	}
 	return applySchemaChecks(conf, test)
 }
