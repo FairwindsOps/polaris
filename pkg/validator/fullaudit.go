@@ -22,17 +22,19 @@ func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider, o
 		displayName = kubeResources.SourceName
 	}
 
-	results, err := ValidateControllers(&config, kubeResources)
+	results := []Result{}
+	controllerResults, err := ApplyAllSchemaChecksToAllResources(&config, kubeResources.Controllers)
 	if err != nil {
 		return AuditData{}, err
 	}
-	controllerCount := len(results)
-
-	arbitraryResults, err := ValidateOtherKinds(&config, kubeResources)
-	if err != nil {
-		return AuditData{}, err
+	results = append(results, controllerResults...)
+	for _, resources := range kubeResources.OtherKinds {
+		kindResults, err := ApplyAllSchemaChecksToAllResources(&config, resources)
+		if err != nil {
+			return AuditData{}, err
+		}
+		results = append(results, kindResults...)
 	}
-	results = append(results, arbitraryResults...)
 
 	auditData := AuditData{
 		PolarisOutputVersion: PolarisOutputVersion,
@@ -43,9 +45,8 @@ func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider, o
 		ClusterInfo: ClusterInfo{
 			Version:     kubeResources.ServerVersion,
 			Nodes:       len(kubeResources.Nodes),
-			Pods:        len(kubeResources.Controllers), // TODO validate that this is still valuable
 			Namespaces:  len(kubeResources.Namespaces),
-			Controllers: controllerCount,
+			Controllers: len(kubeResources.Controllers),
 		},
 		Results: results,
 	}

@@ -33,7 +33,7 @@ func TestValidateOtherKind(t *testing.T) {
 	pdb := unstructured.Unstructured{}
 	res, err := kube.NewGenericResourceFromUnstructured(&pdb)
 
-	actualResult, err := ValidateOtherKind(&c, res)
+	actualResult, err := applyNonControllerSchemaChecks(&c, res)
 	if err != nil {
 		panic(err)
 	}
