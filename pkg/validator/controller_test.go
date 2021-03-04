@@ -49,7 +49,7 @@ func TestValidateController(t *testing.T) {
 	}
 
 	var actualResult Result
-	actualResult, err = ValidateController(&c, deployment)
+	actualResult, err = applyControllerSchemaChecks(&c, deployment)
 	if err != nil {
 		panic(err)
 	}
@@ -74,7 +74,7 @@ func TestControllerLevelChecks(t *testing.T) {
 		}
 		for _, controller := range res.Controllers {
 			if controller.Kind == "Deployment" {
-				actualResult, err := ValidateController(&c, controller)
+				actualResult, err := applyControllerSchemaChecks(&c, controller)
 				if err != nil {
 					panic(err)
 				}
@@ -139,7 +139,7 @@ func TestSkipHealthChecks(t *testing.T) {
 		"livenessProbeMissing":  {ID: "livenessProbeMissing", Message: "Liveness probe should be configured", Success: false, Severity: "warning", Category: "Reliability"},
 	}
 	var actualResult Result
-	actualResult, err = ValidateController(&c, deployment)
+	actualResult, err = applyControllerSchemaChecks(&c, deployment)
 	if err != nil {
 		panic(err)
 	}
@@ -158,7 +158,7 @@ func TestSkipHealthChecks(t *testing.T) {
 		Dangers:   uint(0),
 	}
 	expectedResults = ResultSet{}
-	actualResult, err = ValidateController(&c, job)
+	actualResult, err = applyControllerSchemaChecks(&c, job)
 	if err != nil {
 		panic(err)
 	}
@@ -176,7 +176,7 @@ func TestSkipHealthChecks(t *testing.T) {
 		Dangers:   uint(0),
 	}
 	expectedResults = ResultSet{}
-	actualResult, err = ValidateController(&c, cronjob)
+	actualResult, err = applyControllerSchemaChecks(&c, cronjob)
 	if err != nil {
 		panic(err)
 	}
@@ -203,18 +203,16 @@ func TestControllerExemptions(t *testing.T) {
 		Warnings:  uint(0),
 		Dangers:   uint(0),
 	}
-	var actualResults []Result
 
 	pod := test.MockPod()
 	pod.ObjectMeta.Namespace = "foo"
 	workload, err := kube.NewGenericResourceFromPod(pod, nil)
 	assert.NoError(t, err)
 	workload.Kind = "Deployment"
-	resources := &kube.ResourceProvider{
-		Controllers: []kube.GenericResource{workload},
-	}
+	resources := []kube.GenericResource{workload}
 
-	actualResults, err = ValidateControllers(&c, resources)
+	var actualResults []Result
+	actualResults, err = ApplyAllSchemaChecksToAllResources(&c, resources)
 	if err != nil {
 		panic(err)
 	}
@@ -225,7 +223,7 @@ func TestControllerExemptions(t *testing.T) {
 	c.Exemptions = []conf.Exemption{{
 		Namespace: "foo",
 	}}
-	actualResults, err = ValidateControllers(&c, resources)
+	actualResults, err = ApplyAllSchemaChecksToAllResources(&c, resources)
 	if err != nil {
 		panic(err)
 	}
@@ -234,10 +232,10 @@ func TestControllerExemptions(t *testing.T) {
 	assert.EqualValues(t, expectedExemptSum, actualResults[0].GetSummary())
 
 	c.Exemptions = nil
-	resources.Controllers[0].ObjectMeta.SetAnnotations(map[string]string{
+	resources[0].ObjectMeta.SetAnnotations(map[string]string{
 		exemptionAnnotationKey: "true",
 	})
-	actualResults, err = ValidateControllers(&c, resources)
+	actualResults, err = ApplyAllSchemaChecksToAllResources(&c, resources)
 	if err != nil {
 		panic(err)
 	}
@@ -246,7 +244,7 @@ func TestControllerExemptions(t *testing.T) {
 	assert.EqualValues(t, expectedExemptSum, actualResults[0].GetSummary())
 
 	c.DisallowExemptions = true
-	actualResults, err = ValidateControllers(&c, resources)
+	actualResults, err = ApplyAllSchemaChecksToAllResources(&c, resources)
 	if err != nil {
 		panic(err)
 	}

@@ -153,6 +153,18 @@ func hasExemptionAnnotation(objMeta metaV1.Object, checkID string) bool {
 	return false
 }
 
+func ApplyAllSchemaChecksToAllResources(conf *config.Configuration, resources []kube.GenericResource) ([]Result, error) {
+	results := []Result{}
+	for _, resource := range resources {
+		result, err := ApplyAllSchemaChecks(conf, resource)
+		if err != nil {
+			return results, err
+		}
+		results = append(results, result)
+	}
+	return results, nil
+}
+
 func ApplyAllSchemaChecks(conf *config.Configuration, resource kube.GenericResource) (Result, error) {
 	if resource.PodSpec == nil {
 		return applyNonControllerSchemaChecks(conf, resource)

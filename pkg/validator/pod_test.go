@@ -50,13 +50,12 @@ func TestValidatePod(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
-	var actualPodResult PodResult
-	actualPodResult, err = ValidatePod(&c, deployment)
+	actualPodResult, err := applyControllerSchemaChecks(&c, deployment)
 	if err != nil {
 		panic(err)
 	}
 
-	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
+	assert.Equal(t, 1, len(actualPodResult.PodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualPodResult.GetSummary())
 	assert.EqualValues(t, expectedResults, actualPodResult.Results)
 }
@@ -86,13 +85,12 @@ func TestInvalidIPCPod(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
-	var actualPodResult PodResult
-	actualPodResult, err = ValidatePod(&c, workload)
+	actualPodResult, err := applyControllerSchemaChecks(&c, workload)
 	if err != nil {
 		panic(err)
 	}
 
-	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
+	assert.Equal(t, 1, len(actualPodResult.PodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualPodResult.GetSummary())
 	assert.EqualValues(t, expectedResults, actualPodResult.Results)
 }
@@ -123,13 +121,12 @@ func TestInvalidNetworkPod(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
-	var actualPodResult PodResult
-	actualPodResult, err = ValidatePod(&c, workload)
+	actualPodResult, err := applyControllerSchemaChecks(&c, workload)
 	if err != nil {
 		panic(err)
 	}
 
-	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
+	assert.Equal(t, 1, len(actualPodResult.PodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualPodResult.GetSummary())
 	assert.EqualValues(t, expectedResults, actualPodResult.Results)
 }
@@ -160,13 +157,12 @@ func TestInvalidPIDPod(t *testing.T) {
 		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Success: true, Severity: "warning", Category: "Security"},
 	}
 
-	var actualPodResult PodResult
-	actualPodResult, err = ValidatePod(&c, workload)
+	actualPodResult, err := applyControllerSchemaChecks(&c, workload)
 	if err != nil {
 		panic(err)
 	}
 
-	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
+	assert.Equal(t, 1, len(actualPodResult.PodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualPodResult.GetSummary())
 	assert.EqualValues(t, expectedResults, actualPodResult.Results)
 }
@@ -204,13 +200,12 @@ func TestExemption(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
-	var actualPodResult PodResult
-	actualPodResult, err = ValidatePod(&c, workload)
+	actualPodResult, err := applyControllerSchemaChecks(&c, workload)
 	if err != nil {
 		panic(err)
 	}
 
-	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
+	assert.Equal(t, 1, len(actualPodResult.PodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualPodResult.GetSummary())
 	assert.EqualValues(t, expectedResults, actualPodResult.Results)
 }
