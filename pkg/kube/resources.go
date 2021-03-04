@@ -41,6 +41,19 @@ type ResourceProvider struct {
 	OtherKinds    map[string][]GenericResource
 }
 
+func newResourceProvider(version, sourceType, sourceName string) ResourceProvider {
+	return ResourceProvider{
+		ServerVersion: version,
+		SourceType:    sourceType,
+		SourceName:    sourceName,
+		CreationTime:  time.Now(),
+		Nodes:         make([]corev1.Node, 0),
+		Namespaces:    make([]corev1.Namespace, 0),
+		Controllers:   make([]GenericResource, 0),
+		OtherKinds:    make(map[string][]GenericResource),
+	}
+}
+
 type k8sResource struct {
 	Kind string `yaml:"kind"`
 }
@@ -75,14 +88,7 @@ func CreateResourceProviderFromResource(ctx context.Context, workload string) (*
 		logrus.Errorf("Error fetching Cluster API version: %v", err)
 		return nil, err
 	}
-	resources := ResourceProvider{
-		ServerVersion: serverVersion.Major + "." + serverVersion.Minor,
-		SourceType:    "Resource",
-		SourceName:    workload,
-		CreationTime:  time.Now(),
-		Nodes:         []corev1.Node{},
-		Namespaces:    []corev1.Namespace{},
-	}
+	resources := newResourceProvider(serverVersion.Major+"."+serverVersion.Minor, "Resource", workload)
 
 	parts := strings.Split(workload, "/")
 	if len(parts) != 4 {
@@ -121,14 +127,7 @@ func CreateResourceProviderFromResource(ctx context.Context, workload string) (*
 
 // CreateResourceProviderFromPath returns a new ResourceProvider using the YAML files in a directory
 func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error) {
-	resources := ResourceProvider{
-		ServerVersion: "unknown",
-		SourceType:    "Path",
-		SourceName:    directory,
-		Nodes:         []corev1.Node{},
-		Namespaces:    []corev1.Namespace{},
-		Controllers:   []GenericResource{},
-	}
+	resources := newResourceProvider("unknown", "Path", directory)
 
 	if directory == "-" {
 		fi, err := os.Stdin.Stat()
@@ -251,17 +250,11 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		logrus.Errorf("Error loading controllers from pods: %v", err)
 		return nil, err
 	}
-
-	api := ResourceProvider{
-		ServerVersion: serverVersion.Major + "." + serverVersion.Minor,
-		SourceType:    "Cluster",
-		SourceName:    clusterName,
-		CreationTime:  time.Now(),
-		Nodes:         nodes.Items,
-		Namespaces:    namespaces.Items,
-		Controllers:   controllers,
-		OtherKinds:    otherObjects,
-	}
+	api := newResourceProvider(serverVersion.Major+"."+serverVersion.Minor, "Cluster", clusterName)
+	api.Nodes = nodes.Items
+	api.Namespaces = namespaces.Items
+	api.Controllers = controllers
+	api.OtherKinds = otherObjects
 	return &api, nil
 }
 
