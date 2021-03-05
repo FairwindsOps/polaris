@@ -204,6 +204,7 @@ func applyControllerSchemaChecks(conf *config.Configuration, resource kube.Gener
 		Results:          podRS,
 		ContainerResults: []ContainerResult{},
 	}
+	finalResult.PodResult = &podRes
 
 	for _, container := range resource.PodSpec.InitContainers {
 		results, err := applyContainerSchemaChecks(conf, resource, &container, true)
@@ -228,7 +229,6 @@ func applyControllerSchemaChecks(conf *config.Configuration, resource kube.Gener
 		podRes.ContainerResults = append(podRes.ContainerResults, cRes)
 	}
 
-	finalResult.PodResult = &podRes
 	return finalResult, nil
 }
 
