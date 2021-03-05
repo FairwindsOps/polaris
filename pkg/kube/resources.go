@@ -76,7 +76,7 @@ func (rkm resourceKindMap) GetNumberOfControllers() int {
 }
 
 // This is here for backward compatibility reasons
-func maybeTransformKindIntoGroupKind(k string) string {
+func maybeTransformKindIntoGroupKind(k conf.TargetKind) string {
 	if k == "Ingress" {
 		return "networking.k8s.io/Ingress"
 	}
@@ -260,8 +260,7 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 	}
 
 	for _, kind := range additionalKinds {
-		kind = maybeTransformKindIntoGroupKind(kind)
-		groupKind := schema.ParseGroupKind(string(kind))
+		groupKind := schema.ParseGroupKind(maybeTransformKindIntoGroupKind(kind))
 		mapping, err := (restMapper).RESTMapping(groupKind)
 		if err != nil {
 			logrus.Warnf("Error retrieving mapping of Kind %s because of error: %v", kind, err)
