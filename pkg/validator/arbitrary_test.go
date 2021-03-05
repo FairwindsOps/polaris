@@ -15,16 +15,18 @@
 package validator
 
 import (
+	"encoding/json"
 	"testing"
 
 	conf "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
 	"github.com/stretchr/testify/assert"
 
+	network "k8s.io/api/networking/v1beta1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-func TestValidateOtherKind(t *testing.T) {
+func TestValidatePDB(t *testing.T) {
 	c := conf.Configuration{
 		Checks: map[string]conf.Severity{
 			"pdbDisruptionsAllowedGreaterThanZero": conf.SeverityWarning,
@@ -44,22 +46,44 @@ func TestValidateOtherKind(t *testing.T) {
 	assert.Equal(t, conf.SeverityWarning, results.Severity)
 	assert.Equal(t, "Reliability", results.Category)
 	assert.EqualValues(t, "disruptionsAllowed is not greater than zero", results.Message)
+}
 
-	// tls := extv1beta1.IngressTLS{
-	// Hosts:      []string{"test"},
-	// SecretName: "secret",
-	// }
+func TestValidateIngress(t *testing.T) {
+	c := conf.Configuration{
+		Checks: map[string]conf.Severity{
+			"tlsSettingsMissing": conf.SeverityWarning,
+		},
+	}
+	tls := network.IngressTLS{
+		Hosts:      []string{"test"},
+		SecretName: "secret",
+	}
 
-	// ingress.Spec.TLS = []extv1beta1.IngressTLS{tls}
-	// actualResult, err = ValidateIngress(&c, ingress)
-	// if err != nil {
-	// panic(err)
-	// }
-	// results = actualResult.Results["pdbDisruptionsAllowedGreaterThanZero"]
+	ingress := network.Ingress{}
+	ingress.Spec.TLS = []network.IngressTLS{tls}
+	b, err := json.Marshal(ingress)
+	if err != nil {
+		panic(err)
+	}
+	unst := unstructured.Unstructured{}
+	err = json.Unmarshal(b, &unst.Object)
+	if err != nil {
+		panic(err)
+	}
+	res, err := kube.NewGenericResourceFromUnstructured(&unst)
+	if err != nil {
+		panic(err)
+	}
+	res.Kind = "Ingress"
 
-	// assert.True(t, results.Success)
-	// assert.Equal(t, conf.Severity("warning"), results.Severity)
-	// assert.Equal(t, "Security", results.Category)
-	// assert.EqualValues(t, "Ingress has TLS configured", results.Message)
+	actualResult, err := applyNonControllerSchemaChecks(&c, res)
+	if err != nil {
+		panic(err)
+	}
+	results := actualResult.Results["tlsSettingsMissing"]
 
+	assert.True(t, results.Success)
+	assert.Equal(t, conf.SeverityWarning, results.Severity)
+	assert.Equal(t, "Security", results.Category)
+	assert.EqualValues(t, "Ingress has TLS configured", results.Message)
 }
