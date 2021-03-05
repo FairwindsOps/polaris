@@ -71,7 +71,7 @@ exemptions:
   - namespace: polaris
 `
 
-func createMeta(name, namespace string) metav1.Object {
+func createMeta(namespace, name string) metav1.Object {
 	unst := unstructured.Unstructured{}
 	obj, err := meta.Accessor(&unst)
 	if err != nil {
