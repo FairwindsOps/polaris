@@ -23,12 +23,7 @@ func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider, o
 	}
 
 	results := []Result{}
-	controllerResults, err := ApplyAllSchemaChecksToAllResources(&config, kubeResources.Controllers)
-	if err != nil {
-		return AuditData{}, err
-	}
-	results = append(results, controllerResults...)
-	for _, resources := range kubeResources.OtherKinds {
+	for _, resources := range kubeResources.Resources {
 		kindResults, err := ApplyAllSchemaChecksToAllResources(&config, resources)
 		if err != nil {
 			return AuditData{}, err
@@ -46,7 +41,7 @@ func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider, o
 			Version:     kubeResources.ServerVersion,
 			Nodes:       len(kubeResources.Nodes),
 			Namespaces:  len(kubeResources.Namespaces),
-			Controllers: len(kubeResources.Controllers),
+			Controllers: kubeResources.Resources.GetNumberOfControllers(),
 		},
 		Results: results,
 	}
