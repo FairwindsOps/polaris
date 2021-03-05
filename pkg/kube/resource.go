@@ -104,9 +104,9 @@ func NewGenericResourceFromBytes(contentBytes []byte) (GenericResource, error) {
 	return NewGenericResourceFromUnstructured(&unst)
 }
 
-// NewGenericResourceFromAPI builds a new workload for a given Pod
-func NewGenericResourceFromAPI(ctx context.Context, podResource kubeAPICoreV1.Pod, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) (GenericResource, error) {
-	workload, err := newGenericResourceFromAPI(ctx, podResource, dynamicClient, restMapper, objectCache)
+// ResolveControllerFromPod builds a new workload for a given Pod
+func ResolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) (GenericResource, error) {
+	workload, err := resolveControllerFromPod(ctx, podResource, dynamicClient, restMapper, objectCache)
 	if err != nil {
 		return workload, err
 	}
@@ -116,7 +116,7 @@ func NewGenericResourceFromAPI(ctx context.Context, podResource kubeAPICoreV1.Po
 	return workload, err
 }
 
-func newGenericResourceFromAPI(ctx context.Context, podResource kubeAPICoreV1.Pod, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) (GenericResource, error) {
+func resolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) (GenericResource, error) {
 	podWorkload, err := NewGenericResourceFromPod(podResource, nil)
 	if err != nil {
 		return podWorkload, err
