@@ -58,14 +58,6 @@ type schemaTestCase struct {
 	Container       *corev1.Container
 }
 
-func (test schemaTestCase) getName() string {
-	name := fmt.Sprintf("%s/%s/%s", test.Resource.Kind, test.Resource.ObjectMeta.GetNamespace(), test.Resource.ObjectMeta.GetName())
-	if test.Container != nil {
-		name += "/" + test.Container.Name
-	}
-	return name + ": " + string(test.Target)
-}
-
 func init() {
 	schemaBox = packr.New("Schemas", "../../checks")
 	for _, checkID := range checkOrder {
