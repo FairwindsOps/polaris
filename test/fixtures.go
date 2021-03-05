@@ -19,7 +19,7 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
-func newUnstructured(apiVersion, kind, namespace, name string, spec interface{}) unstructured.Unstructured {
+func newUnstructured(apiVersion, kind, namespace, name string, spec map[string]interface{}) unstructured.Unstructured {
 	return unstructured.Unstructured{
 		Object: map[string]interface{}{
 			"apiVersion": apiVersion,
@@ -69,7 +69,7 @@ func MockIngress() extv1beta1.Ingress {
 }
 
 // MockController creates a mock controller and pod
-func MockController(apiVersion, kind, namespace, name string, spec interface{}, podSpec corev1.PodSpec, dest interface{}) corev1.Pod {
+func MockController(apiVersion, kind, namespace, name string, spec map[string]interface{}, podSpec corev1.PodSpec, dest interface{}) corev1.Pod {
 	unst := newUnstructured(apiVersion, kind, namespace, name, spec)
 	pod := corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -143,25 +143,10 @@ func MockJob(namespace, name string) (batchv1.Job, corev1.Pod) {
 func MockCronJob(namespace, name string) (batchv1beta1.CronJob, corev1.Pod) {
 	cj := batchv1beta1.CronJob{}
 	p := MockPod()
-	b, err := json.Marshal(p.Spec)
-	if err != nil {
-		panic(err)
-	}
-	pSpec := map[string]interface{}{}
-	err = json.Unmarshal(b, &pSpec)
-	if err != nil {
-		panic(err)
-	}
-	spec := map[string]interface{}{
-		"job_template": map[string]interface{}{
-			"spec": map[string]interface{}{
-				"template": map[string]interface{}{
-					"spec": pSpec,
-				},
-			},
-		},
-	}
+	spec := map[string]interface{}{}
 	pod := MockController("batch/v1beta1", "CronJob", namespace, name, spec, p.Spec, &cj)
+	cj.Spec.JobTemplate.Spec.Template.Spec = pod.Spec
+
 	return cj, pod
 }
 

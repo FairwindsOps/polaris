@@ -57,8 +57,9 @@ func TestGetTemplateData(t *testing.T) {
 				continue
 			}
 			found = true
-			assert.Equal(t, 1, len(result.PodResult.ContainerResults))
-			assert.Equal(t, expected.results, len(result.PodResult.ContainerResults[0].Results))
+			if assert.Equal(t, 1, len(result.PodResult.ContainerResults), "bad container results for "+result.Kind) {
+				assert.Equal(t, expected.results, len(result.PodResult.ContainerResults[0].Results))
+			}
 		}
 		assert.Equal(t, found, true)
 	}
