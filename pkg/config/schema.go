@@ -23,6 +23,7 @@ const (
 	TargetPod TargetKind = "Pod"
 )
 
+// HandledTargets is a list of target names that are explicitly handled
 var HandledTargets = []TargetKind{
 	TargetController,
 	TargetContainer,
