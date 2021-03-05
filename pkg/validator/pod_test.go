@@ -57,7 +57,7 @@ func TestValidatePod(t *testing.T) {
 
 	assert.Equal(t, 1, len(actualPodResult.PodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualPodResult.GetSummary())
-	assert.EqualValues(t, expectedResults, actualPodResult.Results)
+	assert.EqualValues(t, expectedResults, actualPodResult.PodResult.Results)
 }
 
 func TestInvalidIPCPod(t *testing.T) {
@@ -92,7 +92,7 @@ func TestInvalidIPCPod(t *testing.T) {
 
 	assert.Equal(t, 1, len(actualPodResult.PodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualPodResult.GetSummary())
-	assert.EqualValues(t, expectedResults, actualPodResult.Results)
+	assert.EqualValues(t, expectedResults, actualPodResult.PodResult.Results)
 }
 
 func TestInvalidNetworkPod(t *testing.T) {
@@ -128,7 +128,7 @@ func TestInvalidNetworkPod(t *testing.T) {
 
 	assert.Equal(t, 1, len(actualPodResult.PodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualPodResult.GetSummary())
-	assert.EqualValues(t, expectedResults, actualPodResult.Results)
+	assert.EqualValues(t, expectedResults, actualPodResult.PodResult.Results)
 }
 
 func TestInvalidPIDPod(t *testing.T) {
@@ -164,7 +164,7 @@ func TestInvalidPIDPod(t *testing.T) {
 
 	assert.Equal(t, 1, len(actualPodResult.PodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualPodResult.GetSummary())
-	assert.EqualValues(t, expectedResults, actualPodResult.Results)
+	assert.EqualValues(t, expectedResults, actualPodResult.PodResult.Results)
 }
 
 func TestExemption(t *testing.T) {
@@ -207,5 +207,5 @@ func TestExemption(t *testing.T) {
 
 	assert.Equal(t, 1, len(actualPodResult.PodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualPodResult.GetSummary())
-	assert.EqualValues(t, expectedResults, actualPodResult.Results)
+	assert.EqualValues(t, expectedResults, actualPodResult.PodResult.Results)
 }
