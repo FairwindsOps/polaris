@@ -271,7 +271,7 @@ func LoadControllers(ctx context.Context, pods []corev1.Pod, dynamicClientPointe
 		deduped[pod.ObjectMeta.Namespace+"/"+owners[0].Kind+"/"+owners[0].Name] = pod
 	}
 	for _, pod := range deduped {
-		workload, err := NewGenericResource(ctx, pod, dynamicClientPointer, restMapperPointer, objectCache)
+		workload, err := NewGenericResourceFromAPI(ctx, pod, dynamicClientPointer, restMapperPointer, objectCache)
 		if err != nil {
 			return nil, err
 		}
