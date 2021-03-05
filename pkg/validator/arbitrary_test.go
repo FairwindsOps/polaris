@@ -32,6 +32,7 @@ func TestValidateOtherKind(t *testing.T) {
 	}
 	pdb := unstructured.Unstructured{}
 	res, err := kube.NewGenericResourceFromUnstructured(&pdb)
+	res.Kind = "PodDisruptionBudget"
 
 	actualResult, err := applyNonControllerSchemaChecks(&c, res)
 	if err != nil {
@@ -40,9 +41,9 @@ func TestValidateOtherKind(t *testing.T) {
 	results := actualResult.Results["pdbDisruptionsAllowedGreaterThanZero"]
 
 	assert.False(t, results.Success)
-	assert.Equal(t, conf.Severity("warning"), results.Severity)
-	assert.Equal(t, "Security", results.Category)
-	assert.EqualValues(t, "Ingress does not have TLS configured", results.Message)
+	assert.Equal(t, conf.SeverityWarning, results.Severity)
+	assert.Equal(t, "Reliability", results.Category)
+	assert.EqualValues(t, "disruptionsAllowed is not greater than zero", results.Message)
 
 	// tls := extv1beta1.IngressTLS{
 	// Hosts:      []string{"test"},
