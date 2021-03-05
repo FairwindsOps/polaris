@@ -104,9 +104,9 @@ func NewGenericResourceFromBytes(contentBytes []byte) (GenericResource, error) {
 	return NewGenericResourceFromUnstructured(&unst)
 }
 
-// NewGenericResource builds a new workload for a given Pod
-func NewGenericResource(ctx context.Context, podResource kubeAPICoreV1.Pod, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) (GenericResource, error) {
-	workload, err := newGenericResource(ctx, podResource, dynamicClient, restMapper, objectCache)
+// NewGenericResourceFromAPI builds a new workload for a given Pod
+func NewGenericResourceFromAPI(ctx context.Context, podResource kubeAPICoreV1.Pod, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) (GenericResource, error) {
+	workload, err := newGenericResourceFromAPI(ctx, podResource, dynamicClient, restMapper, objectCache)
 	if err != nil {
 		return workload, err
 	}
@@ -116,14 +116,14 @@ func NewGenericResource(ctx context.Context, podResource kubeAPICoreV1.Pod, dyna
 	return workload, err
 }
 
-func newGenericResource(ctx context.Context, podResource kubeAPICoreV1.Pod, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) (GenericResource, error) {
-	workload, err := NewGenericResourceFromPod(podResource, nil)
+func newGenericResourceFromAPI(ctx context.Context, podResource kubeAPICoreV1.Pod, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) (GenericResource, error) {
+	podWorkload, err := NewGenericResourceFromPod(podResource, nil)
 	if err != nil {
-		return workload, err
+		return podWorkload, err
 	}
-	// If an owner exists then set the name to the workload.
-	// This allows us to handle CRDs creating Workloads or DeploymentConfigs in OpenShift.
-	owners := workload.ObjectMeta.GetOwnerReferences()
+	topKind := "Pod"
+	topMeta := podWorkload.ObjectMeta
+	owners := podResource.ObjectMeta.GetOwnerReferences()
 	lastKey := ""
 	for len(owners) > 0 {
 		if len(owners) > 1 {
@@ -133,12 +133,12 @@ func newGenericResource(ctx context.Context, podResource kubeAPICoreV1.Pod, dyna
 		if firstOwner.Kind == "Node" {
 			break
 		}
-		workload.Kind = firstOwner.Kind
-		key := fmt.Sprintf("%s/%s/%s", firstOwner.Kind, workload.ObjectMeta.GetNamespace(), firstOwner.Name)
+		topKind = firstOwner.Kind
+		key := fmt.Sprintf("%s/%s/%s", firstOwner.Kind, topMeta.GetNamespace(), firstOwner.Name)
 		lastKey = key
 		abstractObject, ok := objectCache[key]
 		if !ok {
-			err = cacheAllObjectsOfKind(ctx, firstOwner.APIVersion, firstOwner.Kind, dynamicClient, restMapper, objectCache)
+			err := cacheAllObjectsOfKind(ctx, firstOwner.APIVersion, firstOwner.Kind, dynamicClient, restMapper, objectCache)
 			if err != nil {
 				logrus.Warnf("Error caching objects of Kind %s %v", firstOwner.Kind, err)
 				break
@@ -153,26 +153,22 @@ func newGenericResource(ctx context.Context, podResource kubeAPICoreV1.Pod, dyna
 		objMeta, err := meta.Accessor(&abstractObject)
 		if err != nil {
 			logrus.Warnf("Error retrieving parent metadata %s of API %s and Kind %s because of error: %v ", firstOwner.Name, firstOwner.APIVersion, firstOwner.Kind, err)
-			return workload, err
+			return GenericResource{}, err
 		}
-		workload.ObjectMeta = objMeta
+		topMeta = objMeta
 		owners = abstractObject.GetOwnerReferences()
 	}
 
 	if lastKey != "" {
 		unst := objectCache[lastKey]
-		bytes, err := json.Marshal(&unst)
-		if err != nil {
-			return workload, err
-		}
-		workload.OriginalObjectJSON = bytes
-	} else {
-		bytes, err := json.Marshal(podResource)
-		if err != nil {
-			return workload, err
-		}
-		workload.OriginalObjectJSON = bytes
+		return NewGenericResourceFromUnstructured(&unst)
 	}
+	workload, err := NewGenericResourceFromPod(podResource, podResource)
+	if err != nil {
+		return workload, err
+	}
+	workload.Kind = topKind
+	workload.ObjectMeta = topMeta
 	return workload, nil
 }
 
