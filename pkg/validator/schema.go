@@ -252,9 +252,10 @@ func applyPodSchemaChecks(conf *config.Configuration, controller kube.GenericRes
 
 func applyContainerSchemaChecks(conf *config.Configuration, controller kube.GenericResource, container *corev1.Container, isInit bool) (ResultSet, error) {
 	test := schemaTestCase{
-		Target:    config.TargetContainer,
-		Resource:  controller,
-		Container: container,
+		Target:          config.TargetContainer,
+		Resource:        controller,
+		Container:       container,
+		IsInitContianer: isInit,
 	}
 	return applySchemaChecks(conf, test)
 }
