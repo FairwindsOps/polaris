@@ -72,33 +72,31 @@ func TestControllerLevelChecks(t *testing.T) {
 			Severity: "danger",
 			Category: "Reliability",
 		}
-		for _, controller := range res.Controllers {
-			if controller.Kind == "Deployment" {
-				actualResult, err := applyControllerSchemaChecks(&c, controller)
-				if err != nil {
-					panic(err)
-				}
-				if controller.ObjectMeta.GetName() == "test-deployment-2" {
-					expectedResult.Success = true
-					expectedResult.Message = "Multiple replicas are scheduled"
-				} else if controller.ObjectMeta.GetName() == "test-deployment" {
-					expectedResult.Success = false
-					expectedResult.Message = "Only one replica is scheduled"
-				}
-				expectedResults := ResultSet{
-					"multipleReplicasForDeployment": expectedResult,
-				}
-
-				assert.Equal(t, "Deployment", actualResult.Kind)
-				assert.Equal(t, 1, len(actualResult.Results), "should be equal")
-				assert.EqualValues(t, expectedResults, actualResult.Results, controller.ObjectMeta.GetName())
+		for _, controller := range res.Resources["Deployment"] {
+			actualResult, err := applyControllerSchemaChecks(&c, controller)
+			if err != nil {
+				panic(err)
 			}
+			if controller.ObjectMeta.GetName() == "test-deployment-2" {
+				expectedResult.Success = true
+				expectedResult.Message = "Multiple replicas are scheduled"
+			} else if controller.ObjectMeta.GetName() == "test-deployment" {
+				expectedResult.Success = false
+				expectedResult.Message = "Only one replica is scheduled"
+			}
+			expectedResults := ResultSet{
+				"multipleReplicasForDeployment": expectedResult,
+			}
+
+			assert.Equal(t, "Deployment", actualResult.Kind)
+			assert.Equal(t, 1, len(actualResult.Results), "should be equal")
+			assert.EqualValues(t, expectedResults, actualResult.Results, controller.ObjectMeta.GetName())
 		}
 	}
 
 	res, err := kube.CreateResourceProviderFromPath("../kube/test_files/test_1")
 	assert.Equal(t, nil, err, "Error should be nil")
-	assert.Equal(t, 9, len(res.Controllers), "Should have eight controllers")
+	assert.Equal(t, 11, res.Resources.GetLength())
 	testResources(res)
 
 	replicaSpec := map[string]interface{}{"replicas": 2}
@@ -113,7 +111,7 @@ func TestControllerLevelChecks(t *testing.T) {
 	k8s, dynamicClient := test.SetupTestAPI(&d1, &p1, &d2, &p2)
 	res, err = kube.CreateResourceProviderFromAPI(context.Background(), k8s, "test", &dynamicClient, conf.Configuration{})
 	assert.Equal(t, err, nil, "error should be nil")
-	assert.Equal(t, 2, len(res.Controllers), "Should have two controllers")
+	assert.Equal(t, 2, res.Resources.GetLength(), "Should have two controllers")
 	testResources(res)
 }
 

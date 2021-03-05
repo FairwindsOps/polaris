@@ -37,8 +37,42 @@ type ResourceProvider struct {
 	SourceType    string
 	Nodes         []corev1.Node
 	Namespaces    []corev1.Namespace
-	Controllers   []GenericResource
-	OtherKinds    map[string][]GenericResource
+	Resources     resourceKindMap
+}
+
+type resourceKindMap map[string][]GenericResource
+
+func (rkm resourceKindMap) addResource(r GenericResource) {
+	if _, ok := rkm[r.Kind]; !ok {
+		rkm[r.Kind] = make([]GenericResource, 0)
+	}
+	rkm[r.Kind] = append(rkm[r.Kind], r)
+}
+
+func (rkm resourceKindMap) addResources(rs []GenericResource) {
+	for _, r := range rs {
+		rkm.addResource(r)
+	}
+}
+
+func (rkm resourceKindMap) GetLength() int {
+	total := 0
+	for _, rs := range rkm {
+		total += len(rs)
+	}
+	return total
+}
+
+func (rkm resourceKindMap) GetNumberOfControllers() int {
+	total := 0
+	for _, rs := range rkm {
+		for _, r := range rs {
+			if r.PodSpec != nil {
+				total++
+			}
+		}
+	}
+	return total
 }
 
 func newResourceProvider(version, sourceType, sourceName string) ResourceProvider {
@@ -49,8 +83,7 @@ func newResourceProvider(version, sourceType, sourceName string) ResourceProvide
 		CreationTime:  time.Now(),
 		Nodes:         make([]corev1.Node, 0),
 		Namespaces:    make([]corev1.Namespace, 0),
-		Controllers:   make([]GenericResource, 0),
-		OtherKinds:    make(map[string][]GenericResource),
+		Resources:     make(map[string][]GenericResource),
 	}
 }
 
@@ -121,7 +154,7 @@ func CreateResourceProviderFromResource(ctx context.Context, workload string) (*
 		return nil, err
 	}
 
-	resources.Controllers = []GenericResource{workloadObj}
+	resources.Resources.addResource(workloadObj)
 	return &resources, nil
 }
 
@@ -132,7 +165,7 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 	if directory == "-" {
 		fi, err := os.Stdin.Stat()
 		if err == nil && fi.Mode()&os.ModeNamedPipe == os.ModeNamedPipe {
-			if err := addResourcesFromReader(os.Stdin, &resources); err != nil {
+			if err := resources.addResourcesFromReader(os.Stdin); err != nil {
 				return nil, err
 			}
 			return &resources, nil
@@ -148,7 +181,7 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 			logrus.Errorf("Error reading file: %v", path)
 			return err
 		}
-		return addResourcesFromYaml(string(contents), &resources)
+		return resources.addResourcesFromYaml(string(contents))
 	}
 
 	err := filepath.Walk(directory, visitFile)
@@ -186,6 +219,7 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		logrus.Errorf("Error fetching Cluster API version: %v", err)
 		return nil, err
 	}
+	provider := newResourceProvider(serverVersion.Major+"."+serverVersion.Minor, "Cluster", clusterName)
 
 	nodes, err := kube.CoreV1().Nodes().List(ctx, listOpts)
 	if err != nil {
@@ -217,7 +251,6 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		}
 	}
 
-	otherObjects := map[string][]GenericResource{}
 	for _, kind := range additionalKinds {
 		groupKind := schema.ParseGroupKind(string(kind))
 		mapping, err := (restMapper).RESTMapping(groupKind)
@@ -236,10 +269,7 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 			if err != nil {
 				return nil, err
 			}
-			if _, ok := otherObjects[res.Kind]; !ok {
-				otherObjects[res.Kind] = make([]GenericResource, 0)
-			}
-			otherObjects[res.Kind] = append(otherObjects[res.Kind], res)
+			provider.Resources.addResource(res)
 		}
 	}
 
@@ -250,12 +280,10 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		logrus.Errorf("Error loading controllers from pods: %v", err)
 		return nil, err
 	}
-	api := newResourceProvider(serverVersion.Major+"."+serverVersion.Minor, "Cluster", clusterName)
-	api.Nodes = nodes.Items
-	api.Namespaces = namespaces.Items
-	api.Controllers = controllers
-	api.OtherKinds = otherObjects
-	return &api, nil
+	provider.Nodes = nodes.Items
+	provider.Namespaces = namespaces.Items
+	provider.Resources.addResources(controllers)
+	return &provider, nil
 }
 
 // LoadControllers loads a list of controllers from the kubeResources Pods
@@ -291,32 +319,34 @@ func deduplicateControllers(inputControllers []GenericResource) []GenericResourc
 			controllerMap[key] = controller
 		}
 	}
-	results := make([]GenericResource, 0)
+	results := make([]GenericResource, len(controllerMap))
+	idx := 0
 	for _, controller := range controllerMap {
-		results = append(results, controller)
+		results[idx] = controller
+		idx++
 	}
 	return results
 }
 
-func addResourcesFromReader(reader io.Reader, resources *ResourceProvider) error {
+func (resources *ResourceProvider) addResourcesFromReader(reader io.Reader) error {
 	contents, err := ioutil.ReadAll(reader)
 	if err != nil {
 		logrus.Errorf("Error reading from %v: %v", reader, err)
 		return err
 	}
-	if err := addResourcesFromYaml(string(contents), resources); err != nil {
+	if err := resources.addResourcesFromYaml(string(contents)); err != nil {
 		return err
 	}
 	return nil
 }
 
-func addResourcesFromYaml(contents string, resources *ResourceProvider) error {
+func (resources *ResourceProvider) addResourcesFromYaml(contents string) error {
 	specs := regexp.MustCompile("[\r\n]-+[\r\n]").Split(string(contents), -1)
 	for _, spec := range specs {
 		if strings.TrimSpace(spec) == "" {
 			continue
 		}
-		err := addResourceFromString(spec, resources)
+		err := resources.addResourceFromString(spec)
 		if err != nil {
 			logrus.Errorf("Error parsing YAML: (%v)", err)
 			return err
@@ -325,7 +355,7 @@ func addResourcesFromYaml(contents string, resources *ResourceProvider) error {
 	return nil
 }
 
-func addResourceFromString(contents string, resources *ResourceProvider) error {
+func (resources *ResourceProvider) addResourceFromString(contents string) error {
 	contentBytes := []byte(contents)
 	decoder := k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(contentBytes), 1000)
 	resource := k8sResource{}
@@ -340,7 +370,9 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 		ns := corev1.Namespace{}
 		err = decoder.Decode(&ns)
 		resources.Namespaces = append(resources.Namespaces, ns)
-	} else if resource.Kind == "Pod" {
+	}
+
+	if resource.Kind == "Pod" {
 		pod := corev1.Pod{}
 		err = decoder.Decode(&pod)
 		if err != nil {
@@ -350,20 +382,13 @@ func addResourceFromString(contents string, resources *ResourceProvider) error {
 		if err != nil {
 			return err
 		}
-		resources.Controllers = append(resources.Controllers, workload)
+		resources.Resources.addResource(workload)
 	} else {
 		newResource, err := NewGenericResourceFromBytes(contentBytes)
 		if err != nil {
 			return err
 		}
-		if newResource.PodSpec != nil {
-			resources.Controllers = append(resources.Controllers, newResource)
-		} else {
-			if _, ok := resources.OtherKinds[resource.Kind]; !ok {
-				resources.OtherKinds[resource.Kind] = make([]GenericResource, 0)
-			}
-			resources.OtherKinds[resource.Kind] = append(resources.OtherKinds[resource.Kind], newResource)
-		}
+		resources.Resources.addResource(newResource)
 	}
 	return err
 }

@@ -21,7 +21,7 @@ func TestGetTemplateData(t *testing.T) {
 	k8s, dynamicClient := test.SetupTestAPI(test.GetMockControllers("test")...)
 	resources, err := kube.CreateResourceProviderFromAPI(context.Background(), k8s, "test", &dynamicClient, c)
 	assert.Equal(t, err, nil, "error should be nil")
-	assert.Equal(t, 5, len(resources.Controllers))
+	assert.Equal(t, 5, len(resources.Resources))
 
 	sum := CountSummary{
 		Successes: uint(0),
