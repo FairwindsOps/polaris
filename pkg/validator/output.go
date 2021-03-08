@@ -138,9 +138,9 @@ func fillString(id string, l int) string {
 
 func (res AuditData) GetPrettyOutput(useColor bool) string {
 	color.NoColor = !useColor
-	str := fmt.Sprintf("Polaris audited %s %s at %s\n", res.SourceType, res.SourceName, res.AuditTime)
-	str += fmt.Sprintf("Nodes: %d Namespaces: %d | Controllers: %d\n", res.ClusterInfo.Nodes, res.ClusterInfo.Namespaces, res.ClusterInfo.Controllers)
-	str += fmt.Sprintf("Final score: %d\n", res.Score)
+	str := titleColor.Sprint(fmt.Sprintf("\n\nPolaris audited %s %s at %s\n", res.SourceType, res.SourceName, res.AuditTime))
+	str += color.CyanString(fmt.Sprintf("    Nodes: %d | Namespaces: %d | Controllers: %d\n", res.ClusterInfo.Nodes, res.ClusterInfo.Namespaces, res.ClusterInfo.Controllers))
+	str += color.GreenString(fmt.Sprintf("    Final score: %d\n", res.Score))
 	str += "\n"
 	for _, result := range res.Results {
 		str += result.GetPrettyOutput() + "\n"
