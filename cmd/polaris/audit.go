@@ -38,7 +38,7 @@ var auditOutputURL string
 var auditOutputFile string
 var auditOutputFormat string
 var resourceToAudit string
-var noColor bool
+var useColor bool
 
 func init() {
 	rootCmd.AddCommand(auditCmd)
@@ -49,7 +49,7 @@ func init() {
 	auditCmd.PersistentFlags().StringVar(&auditOutputURL, "output-url", "", "Destination URL to send audit results.")
 	auditCmd.PersistentFlags().StringVar(&auditOutputFile, "output-file", "", "Destination file for audit results.")
 	auditCmd.PersistentFlags().StringVarP(&auditOutputFormat, "format", "f", "json", "Output format for results - json, yaml, pretty, or score.")
-	auditCmd.PersistentFlags().BoolVar(&noColor, "no-color", false, "Whether to use color in pretty format.")
+	auditCmd.PersistentFlags().BoolVar(&useColor, "color", true, "Whether to use color in pretty format.")
 	auditCmd.PersistentFlags().StringVar(&displayName, "display-name", "", "An optional identifier for the audit.")
 	auditCmd.PersistentFlags().StringVar(&resourceToAudit, "resource", "", "Audit a specific resource, in the format namespace/kind/version/name, e.g. nginx-ingress/Deployment.apps/v1/default-backend.")
 }
@@ -63,7 +63,7 @@ var auditCmd = &cobra.Command{
 			config.DisplayName = displayName
 		}
 
-		auditData := runAndReportAudit(cmd.Context(), config, auditPath, resourceToAudit, auditOutputFile, auditOutputURL, auditOutputFormat, noColor)
+		auditData := runAndReportAudit(cmd.Context(), config, auditPath, resourceToAudit, auditOutputFile, auditOutputURL, auditOutputFormat, useColor)
 
 		summary := auditData.GetSummary()
 		score := summary.GetScore()
@@ -77,7 +77,7 @@ var auditCmd = &cobra.Command{
 	},
 }
 
-func runAndReportAudit(ctx context.Context, c conf.Configuration, auditPath, workload, outputFile, outputURL, outputFormat string, noColor bool) validator.AuditData {
+func runAndReportAudit(ctx context.Context, c conf.Configuration, auditPath, workload, outputFile, outputURL, outputFormat string, useColor bool) validator.AuditData {
 	// Create a kubernetes client resource provider
 	k, err := kube.CreateResourceProvider(ctx, auditPath, workload)
 	if err != nil {
@@ -101,7 +101,7 @@ func runAndReportAudit(ctx context.Context, c conf.Configuration, auditPath, wor
 			outputBytes, err = yaml.JSONToYAML(jsonBytes)
 		}
 	} else if outputFormat == "pretty" {
-		outputBytes = []byte(auditData.GetPrettyOutput(!noColor))
+		outputBytes = []byte(auditData.GetPrettyOutput(useColor))
 	} else {
 		outputBytes, err = json.MarshalIndent(auditData, "", "  ")
 	}
