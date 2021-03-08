@@ -96,6 +96,9 @@ type PodResult struct {
 }
 
 func (res *PodResult) removeSuccessfulResults() {
+	if res == nil {
+		return
+	}
 	res.Results.removeSuccessfulResults()
 	for _, containerResult := range res.ContainerResults {
 		containerResult.removeSuccessfulResults()
