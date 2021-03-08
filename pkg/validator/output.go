@@ -186,6 +186,9 @@ func (res ResultSet) GetPrettyOutput() string {
 				status = color.RedString(dangerMessage)
 			}
 		}
+		if color.NoColor {
+			status = status[2:] // remove emoji
+		}
 		str += fmt.Sprintf("%s%s %s\n", indent, checkColor.Sprint(fillString(msg.ID, minIDLength-len(indent))), status)
 		str += fmt.Sprintf("%s    %s - %s\n", indent, msg.Category, msg.Message)
 	}
