@@ -2,6 +2,9 @@
 sidebarDepth: 0
 ---
 
+## 3.1.6
+* Fix nil pointer issue with --only-output-failed-tests
+
 ## 3.1.5
 * Fix UI display of Ingress checks
 
