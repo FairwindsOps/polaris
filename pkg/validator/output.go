@@ -15,6 +15,7 @@
 package validator
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/fairwindsops/polaris/pkg/config"
@@ -23,6 +24,12 @@ import (
 const (
 	// PolarisOutputVersion is the version of the current output structure
 	PolarisOutputVersion = "1.0"
+)
+
+const (
+	successMessage = "✅ Success"
+	dangerMessage  = "❌ Danger"
+	warningMessage = "⚠️ Warning"
 )
 
 // AuditData contains all the data from a full Polaris audit
@@ -113,4 +120,56 @@ type ContainerResult struct {
 
 func (res *ContainerResult) removeSuccessfulResults() {
 	res.Results.removeSuccessfulResults()
+}
+
+func (res AuditData) GetPrettyOutput() string {
+	str := fmt.Sprintf("Polaris audited %s %s at %s\n", res.SourceType, res.SourceName, res.AuditTime)
+	str += fmt.Sprintf("Nodes: %d Namespaces: %d | Controllers: %d\n", res.ClusterInfo.Nodes, res.ClusterInfo.Namespaces, res.ClusterInfo.Controllers)
+	str += fmt.Sprintf("Final score: %d\n", res.Score)
+	str += "\n"
+	for _, result := range res.Results {
+		str += result.GetPrettyOutput() + "\n"
+	}
+	return str
+}
+
+func (res Result) GetPrettyOutput() string {
+	str := fmt.Sprintf("%s %s in namespace %s\n", res.Kind, res.Name, res.Namespace)
+	str += res.Results.GetPrettyOutput()
+	if res.PodResult != nil {
+		str += res.PodResult.GetPrettyOutput()
+	}
+	return str
+}
+
+func (res PodResult) GetPrettyOutput() string {
+	str := res.Results.GetPrettyOutput()
+	for _, cont := range res.ContainerResults {
+		str += cont.GetPrettyOutput() + "\n"
+	}
+	return str
+}
+
+func (res ContainerResult) GetPrettyOutput() string {
+	str := fmt.Sprintf("  container %s\n", res.Name)
+	str += res.Results.GetPrettyOutput()
+	return str
+}
+
+func (res ResultSet) GetPrettyOutput() string {
+	str := ""
+	for _, msg := range res {
+		status := successMessage
+		if !msg.Success {
+			if msg.Severity == config.SeverityWarning {
+				status = warningMessage
+			} else {
+				status = dangerMessage
+			}
+		}
+		str += fmt.Sprintf("  %s: %s", msg.ID, status)
+		str += fmt.Sprintf("      %s - %s", msg.Category, msg.Message)
+		str += "\n"
+	}
+	return str
 }

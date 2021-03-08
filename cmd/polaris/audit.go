@@ -98,6 +98,8 @@ func runAndReportAudit(ctx context.Context, c conf.Configuration, auditPath, wor
 		if err == nil {
 			outputBytes, err = yaml.JSONToYAML(jsonBytes)
 		}
+	} else if outputFormat == "pretty" {
+		outputBytes = []byte(auditData.GetPrettyOutput())
 	} else {
 		outputBytes, err = json.MarshalIndent(auditData, "", "  ")
 	}
