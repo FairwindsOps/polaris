@@ -136,6 +136,7 @@ func fillString(id string, l int) string {
 	return id
 }
 
+// GetPrettyOutput returns a human-readable string
 func (res AuditData) GetPrettyOutput(useColor bool) string {
 	color.NoColor = !useColor
 	str := titleColor.Sprint(fmt.Sprintf("\n\nPolaris audited %s %s at %s\n", res.SourceType, res.SourceName, res.AuditTime))
@@ -149,6 +150,7 @@ func (res AuditData) GetPrettyOutput(useColor bool) string {
 	return str
 }
 
+// GetPrettyOutput returns a human-readable string
 func (res Result) GetPrettyOutput() string {
 	str := titleColor.Sprint(fmt.Sprintf("%s %s in namespace %s\n", res.Kind, res.Name, res.Namespace))
 	str += res.Results.GetPrettyOutput()
@@ -158,6 +160,7 @@ func (res Result) GetPrettyOutput() string {
 	return str
 }
 
+// GetPrettyOutput returns a human-readable string
 func (res PodResult) GetPrettyOutput() string {
 	str := res.Results.GetPrettyOutput()
 	for _, cont := range res.ContainerResults {
@@ -166,6 +169,7 @@ func (res PodResult) GetPrettyOutput() string {
 	return str
 }
 
+// GetPrettyOutput returns a human-readable string
 func (res ContainerResult) GetPrettyOutput() string {
 	str := titleColor.Sprint(fmt.Sprintf("  Container %s\n", res.Name))
 	str += res.Results.GetPrettyOutput()
@@ -174,6 +178,7 @@ func (res ContainerResult) GetPrettyOutput() string {
 
 const minIDLength = 40
 
+// GetPrettyOutput returns a human-readable string
 func (res ResultSet) GetPrettyOutput() string {
 	indent := "    "
 	str := ""
