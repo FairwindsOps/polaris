@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/fatih/color"
+
 	"github.com/fairwindsops/polaris/pkg/config"
 )
 
@@ -26,10 +28,15 @@ const (
 	PolarisOutputVersion = "1.0"
 )
 
-const (
-	successMessage = "✅ Success"
+var (
+	successMessage = "🎉 Success"
 	dangerMessage  = "❌ Danger"
-	warningMessage = "⚠️ Warning"
+	warningMessage = "😬 Warning"
+)
+
+var (
+	titleColor = color.New(color.FgBlue).Add(color.Bold)
+	checkColor = color.New(color.FgCyan)
 )
 
 // AuditData contains all the data from a full Polaris audit
@@ -122,7 +129,15 @@ func (res *ContainerResult) removeSuccessfulResults() {
 	res.Results.removeSuccessfulResults()
 }
 
-func (res AuditData) GetPrettyOutput() string {
+func fillString(id string, l int) string {
+	for len(id) < l {
+		id += " "
+	}
+	return id
+}
+
+func (res AuditData) GetPrettyOutput(useColor bool) string {
+	color.NoColor = !useColor
 	str := fmt.Sprintf("Polaris audited %s %s at %s\n", res.SourceType, res.SourceName, res.AuditTime)
 	str += fmt.Sprintf("Nodes: %d Namespaces: %d | Controllers: %d\n", res.ClusterInfo.Nodes, res.ClusterInfo.Namespaces, res.ClusterInfo.Controllers)
 	str += fmt.Sprintf("Final score: %d\n", res.Score)
@@ -130,11 +145,12 @@ func (res AuditData) GetPrettyOutput() string {
 	for _, result := range res.Results {
 		str += result.GetPrettyOutput() + "\n"
 	}
+	color.NoColor = false
 	return str
 }
 
 func (res Result) GetPrettyOutput() string {
-	str := fmt.Sprintf("%s %s in namespace %s\n", res.Kind, res.Name, res.Namespace)
+	str := titleColor.Sprint(fmt.Sprintf("%s %s in namespace %s\n", res.Kind, res.Name, res.Namespace))
 	str += res.Results.GetPrettyOutput()
 	if res.PodResult != nil {
 		str += res.PodResult.GetPrettyOutput()
@@ -151,25 +167,27 @@ func (res PodResult) GetPrettyOutput() string {
 }
 
 func (res ContainerResult) GetPrettyOutput() string {
-	str := fmt.Sprintf("  container %s\n", res.Name)
+	str := titleColor.Sprint(fmt.Sprintf("  Container %s\n", res.Name))
 	str += res.Results.GetPrettyOutput()
 	return str
 }
 
+const minIDLength = 40
+
 func (res ResultSet) GetPrettyOutput() string {
+	indent := "    "
 	str := ""
 	for _, msg := range res {
-		status := successMessage
+		status := color.GreenString(successMessage)
 		if !msg.Success {
 			if msg.Severity == config.SeverityWarning {
-				status = warningMessage
+				status = color.YellowString(warningMessage)
 			} else {
-				status = dangerMessage
+				status = color.RedString(dangerMessage)
 			}
 		}
-		str += fmt.Sprintf("  %s: %s", msg.ID, status)
-		str += fmt.Sprintf("      %s - %s", msg.Category, msg.Message)
-		str += "\n"
+		str += fmt.Sprintf("%s%s %s\n", indent, checkColor.Sprint(fillString(msg.ID, minIDLength-len(indent))), status)
+		str += fmt.Sprintf("%s    %s - %s\n", indent, msg.Category, msg.Message)
 	}
 	return str
 }
