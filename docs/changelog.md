@@ -2,6 +2,9 @@
 sidebarDepth: 0
 ---
 
+## 3.2.0
+* Add `--format=pretty` option for CLI output
+
 ## 3.1.6
 * Fix nil pointer issue with --only-output-failed-tests
 
