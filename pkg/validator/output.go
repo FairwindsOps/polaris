@@ -15,7 +15,10 @@
 package validator
 
 import (
+	"fmt"
 	"time"
+
+	"github.com/fatih/color"
 
 	"github.com/fairwindsops/polaris/pkg/config"
 )
@@ -23,6 +26,17 @@ import (
 const (
 	// PolarisOutputVersion is the version of the current output structure
 	PolarisOutputVersion = "1.0"
+)
+
+var (
+	successMessage = "🎉 Success"
+	dangerMessage  = "❌ Danger"
+	warningMessage = "😬 Warning"
+)
+
+var (
+	titleColor = color.New(color.FgBlue).Add(color.Bold)
+	checkColor = color.New(color.FgCyan)
 )
 
 // AuditData contains all the data from a full Polaris audit
@@ -113,4 +127,75 @@ type ContainerResult struct {
 
 func (res *ContainerResult) removeSuccessfulResults() {
 	res.Results.removeSuccessfulResults()
+}
+
+func fillString(id string, l int) string {
+	for len(id) < l {
+		id += " "
+	}
+	return id
+}
+
+// GetPrettyOutput returns a human-readable string
+func (res AuditData) GetPrettyOutput(useColor bool) string {
+	color.NoColor = !useColor
+	str := titleColor.Sprint(fmt.Sprintf("\n\nPolaris audited %s %s at %s\n", res.SourceType, res.SourceName, res.AuditTime))
+	str += color.CyanString(fmt.Sprintf("    Nodes: %d | Namespaces: %d | Controllers: %d\n", res.ClusterInfo.Nodes, res.ClusterInfo.Namespaces, res.ClusterInfo.Controllers))
+	str += color.GreenString(fmt.Sprintf("    Final score: %d\n", res.Score))
+	str += "\n"
+	for _, result := range res.Results {
+		str += result.GetPrettyOutput() + "\n"
+	}
+	color.NoColor = false
+	return str
+}
+
+// GetPrettyOutput returns a human-readable string
+func (res Result) GetPrettyOutput() string {
+	str := titleColor.Sprint(fmt.Sprintf("%s %s in namespace %s\n", res.Kind, res.Name, res.Namespace))
+	str += res.Results.GetPrettyOutput()
+	if res.PodResult != nil {
+		str += res.PodResult.GetPrettyOutput()
+	}
+	return str
+}
+
+// GetPrettyOutput returns a human-readable string
+func (res PodResult) GetPrettyOutput() string {
+	str := res.Results.GetPrettyOutput()
+	for _, cont := range res.ContainerResults {
+		str += cont.GetPrettyOutput() + "\n"
+	}
+	return str
+}
+
+// GetPrettyOutput returns a human-readable string
+func (res ContainerResult) GetPrettyOutput() string {
+	str := titleColor.Sprint(fmt.Sprintf("  Container %s\n", res.Name))
+	str += res.Results.GetPrettyOutput()
+	return str
+}
+
+const minIDLength = 40
+
+// GetPrettyOutput returns a human-readable string
+func (res ResultSet) GetPrettyOutput() string {
+	indent := "    "
+	str := ""
+	for _, msg := range res {
+		status := color.GreenString(successMessage)
+		if !msg.Success {
+			if msg.Severity == config.SeverityWarning {
+				status = color.YellowString(warningMessage)
+			} else {
+				status = color.RedString(dangerMessage)
+			}
+		}
+		if color.NoColor {
+			status = status[2:] // remove emoji
+		}
+		str += fmt.Sprintf("%s%s %s\n", indent, checkColor.Sprint(fillString(msg.ID, minIDLength-len(indent))), status)
+		str += fmt.Sprintf("%s    %s - %s\n", indent, msg.Category, msg.Message)
+	}
+	return str
 }

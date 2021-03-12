@@ -3,7 +3,7 @@
   <br>
   <h3>Best Practices for Kubernetes Workload Configuration</h3>
   <a href="https://github.com/FairwindsOps/polaris">
-    <img src="https://img.shields.io/static/v1.svg?label=Version&message=3.0.0&color=239922">
+    <img src="https://img.shields.io/static/v1.svg?label=Version&message=3.1.6&color=239922">
   </a>
   <a href="https://goreportcard.com/report/github.com/FairwindsOps/polaris">
     <img src="https://goreportcard.com/badge/github.com/FairwindsOps/polaris">
@@ -11,11 +11,14 @@
   <a href="https://circleci.com/gh/FairwindsOps/polaris.svg">
     <img src="https://circleci.com/gh/FairwindsOps/polaris.svg?style=svg">
   </a>
+  <a href="https://insights.fairwinds.com/gh/FairwindsOps/polaris">
+    <img src="https://insights.fairwinds.com/v0/gh/FairwindsOps/polaris/badge.svg">
+  </a>
 </div>
 
 Fairwinds' Polaris keeps your clusters sailing smoothly. It runs a variety of checks to ensure that
 Kubernetes pods and controllers are configured using best practices, helping you avoid
-problems in the future. Polaris can be run in a few different modes:
+problems in the future.
 
 Polaris can be run in three different modes:
 * As a [dashboard](/dashboard), so you can audit what's running inside your cluster.
