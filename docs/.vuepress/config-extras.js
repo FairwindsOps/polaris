@@ -34,6 +34,13 @@ module.exports = {
         ],
       },
       {
+        title: "Usage",
+        collapsable: false,
+        children: [
+          "/cli",
+        ],
+      },
+      {
         title: "Customization",
         collapsable: false,
         children: [
