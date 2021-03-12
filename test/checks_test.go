@@ -61,9 +61,13 @@ func TestChecks(t *testing.T) {
 			panic(err)
 		}
 		c, err := config.Parse([]byte("checks:\n  " + tc.check + ": danger"))
-		assert.NoError(t, err)
+		if err != nil {
+			panic(err)
+		}
 		result, err := validator.ApplyAllSchemaChecks(&c, res)
-		assert.NoError(t, err)
+		if err != nil {
+			panic(err)
+		}
 		summary := result.GetSummary()
 		total := summary.Successes + summary.Dangers
 		msg := fmt.Sprintf("Check %s ran %d times instead of 1", tc.check, total)

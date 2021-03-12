@@ -4,13 +4,16 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"strings"
 	"text/template"
 
 	"github.com/qri-io/jsonschema"
 	"github.com/thoas/go-funk"
+	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	k8sYaml "k8s.io/apimachinery/pkg/util/yaml"
 )
 
 // TargetKind represents the part of the config to be validated
@@ -48,6 +51,25 @@ type SchemaCheck struct {
 
 type resourceMinimum string
 type resourceMaximum string
+
+func ParseCheck(rawBytes []byte) (SchemaCheck, error) {
+	fmt.Println("parse", string(rawBytes))
+	reader := bytes.NewReader(rawBytes)
+	check := SchemaCheck{}
+	d := k8sYaml.NewYAMLOrJSONDecoder(reader, 4096)
+	for {
+		if err := d.Decode(&check); err != nil {
+			if err == io.EOF {
+				return check, nil
+			}
+			return check, fmt.Errorf("Decoding schema check failed: %v", err)
+		}
+	}
+}
+
+func (check *SchemaCheck) MarshalYAML() (interface{}, error) {
+	return nil
+}
 
 func init() {
 	jsonschema.RegisterValidator("resourceMinimum", newResourceMinimum)
@@ -127,7 +149,6 @@ func validateRange(path string, limit interface{}, data interface{}, isMinimum b
 
 // Initialize sets up the schema
 func (check *SchemaCheck) Initialize(id string) error {
-	fmt.Println("init", id, check.JSONSchema, check.Schema)
 	check.ID = id
 	if check.JSONSchema != "" {
 		if err := json.Unmarshal([]byte(check.JSONSchema), &check.Schema); err != nil {
@@ -137,29 +158,34 @@ func (check *SchemaCheck) Initialize(id string) error {
 	return nil
 }
 
-func (check SchemaCheck) TemplateForResource(res interface{}) (SchemaCheck, error) {
-	newCheck := check
-	var tmpl *template.Template
-	var err error
-	tmpl = template.New(check.ID)
-	yaml, err := yaml.Marshal()
-	fmt.Println("json sch", check.JSONSchema)
-	tmpl, err = tmpl.Parse(check.JSONSchema)
+func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, error) {
+	yamlBytes, err := yaml.Marshal(check.Schema)
 	if err != nil {
-		return newCheck, err
+		return nil, err
 	}
+
+	tmpl := template.New(check.ID)
+	tmpl, err = tmpl.Parse(string(yamlBytes))
+	if err != nil {
+		return nil, err
+	}
+
 	w := bytes.Buffer{}
 	err = tmpl.Execute(&w, res)
 	if err != nil {
-		return newCheck, err
+		return nil, err
 	}
-	fmt.Println("templated", w.String())
-	newCheck.JSONSchema = w.String()
+	newCheck, err := ParseCheck(w.Bytes())
+	fmt.Println("parse check")
+	if err != nil {
+		fmt.Println("err", err)
+		return nil, err
+	}
 	err = newCheck.Initialize(check.ID)
 	if err != nil {
-		return newCheck, err
+		return nil, err
 	}
-	return newCheck, nil
+	return &newCheck, nil
 }
 
 // CheckPod checks a pod spec against the schema
