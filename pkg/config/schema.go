@@ -1,9 +1,11 @@
 package config
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"strings"
+	"text/template"
 
 	"github.com/qri-io/jsonschema"
 	"github.com/thoas/go-funk"
@@ -125,6 +127,7 @@ func validateRange(path string, limit interface{}, data interface{}, isMinimum b
 
 // Initialize sets up the schema
 func (check *SchemaCheck) Initialize(id string) error {
+	fmt.Println("init", id, check.JSONSchema, check.Schema)
 	check.ID = id
 	if check.JSONSchema != "" {
 		if err := json.Unmarshal([]byte(check.JSONSchema), &check.Schema); err != nil {
@@ -132,6 +135,31 @@ func (check *SchemaCheck) Initialize(id string) error {
 		}
 	}
 	return nil
+}
+
+func (check SchemaCheck) TemplateForResource(res interface{}) (SchemaCheck, error) {
+	newCheck := check
+	var tmpl *template.Template
+	var err error
+	tmpl = template.New(check.ID)
+	yaml, err := yaml.Marshal()
+	fmt.Println("json sch", check.JSONSchema)
+	tmpl, err = tmpl.Parse(check.JSONSchema)
+	if err != nil {
+		return newCheck, err
+	}
+	w := bytes.Buffer{}
+	err = tmpl.Execute(&w, res)
+	if err != nil {
+		return newCheck, err
+	}
+	fmt.Println("templated", w.String())
+	newCheck.JSONSchema = w.String()
+	err = newCheck.Initialize(check.ID)
+	if err != nil {
+		return newCheck, err
+	}
+	return newCheck, nil
 }
 
 // CheckPod checks a pod spec against the schema
