@@ -53,7 +53,6 @@ type resourceMinimum string
 type resourceMaximum string
 
 func ParseCheck(rawBytes []byte) (SchemaCheck, error) {
-	fmt.Println("parse", string(rawBytes))
 	reader := bytes.NewReader(rawBytes)
 	check := SchemaCheck{}
 	d := k8sYaml.NewYAMLOrJSONDecoder(reader, 4096)
@@ -65,10 +64,6 @@ func ParseCheck(rawBytes []byte) (SchemaCheck, error) {
 			return check, fmt.Errorf("Decoding schema check failed: %v", err)
 		}
 	}
-}
-
-func (check *SchemaCheck) MarshalYAML() (interface{}, error) {
-	return nil
 }
 
 func init() {
@@ -159,7 +154,7 @@ func (check *SchemaCheck) Initialize(id string) error {
 }
 
 func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, error) {
-	yamlBytes, err := yaml.Marshal(check.Schema)
+	yamlBytes, err := yaml.Marshal(check.Schema.Schema)
 	if err != nil {
 		return nil, err
 	}
@@ -175,10 +170,14 @@ func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, err
 	if err != nil {
 		return nil, err
 	}
-	newCheck, err := ParseCheck(w.Bytes())
-	fmt.Println("parse check")
+
+	newCheck := check
+	err = yaml.Unmarshal(w.Bytes(), &check.Schema)
+	if check.ID == "metadataMatchesName" {
+		fmt.Println("got tpl", w.String())
+		fmt.Printf("got check %#v", check.Schema.Schema)
+	}
 	if err != nil {
-		fmt.Println("err", err)
 		return nil, err
 	}
 	err = newCheck.Initialize(check.ID)
