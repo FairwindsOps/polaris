@@ -48,6 +48,7 @@ var (
 		// Other checks
 		"tlsSettingsMissing",
 		"pdbDisruptionsAllowedGreaterThanZero",
+		"metadataMatchesName",
 	}
 )
 
@@ -109,6 +110,10 @@ func resolveCheck(conf *config.Configuration, checkID string, test schemaTestCas
 	}
 	if !check.IsActionable(test.Target, test.Resource.Kind, test.IsInitContianer) {
 		return nil, nil
+	}
+	check, err := check.TemplateForResource(test.Resource.Resource.Object)
+	if err != nil {
+		return nil, err
 	}
 	return &check, nil
 }
