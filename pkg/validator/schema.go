@@ -1,16 +1,13 @@
 package validator
 
 import (
-	"bytes"
 	"fmt"
-	"io"
 	"sort"
 	"strings"
 
 	"github.com/gobuffalo/packr/v2"
 	corev1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
@@ -66,26 +63,12 @@ func init() {
 		if err != nil {
 			panic(err)
 		}
-		check, err := parseCheck(contents)
+		check, err := config.ParseCheck(contents)
 		if err != nil {
 			panic(err)
 		}
-		check.ID = checkID
+		check.Initialize(checkID)
 		builtInChecks[checkID] = check
-	}
-}
-
-func parseCheck(rawBytes []byte) (config.SchemaCheck, error) {
-	reader := bytes.NewReader(rawBytes)
-	check := config.SchemaCheck{}
-	d := yaml.NewYAMLOrJSONDecoder(reader, 4096)
-	for {
-		if err := d.Decode(&check); err != nil {
-			if err == io.EOF {
-				return check, nil
-			}
-			return check, fmt.Errorf("Decoding schema check failed: %v", err)
-		}
 	}
 }
 
@@ -111,11 +94,11 @@ func resolveCheck(conf *config.Configuration, checkID string, test schemaTestCas
 	if !check.IsActionable(test.Target, test.Resource.Kind, test.IsInitContianer) {
 		return nil, nil
 	}
-	check, err := check.TemplateForResource(test.Resource.Resource.Object)
+	checkPtr, err := check.TemplateForResource(test.Resource.Resource.Object)
 	if err != nil {
 		return nil, err
 	}
-	return &check, nil
+	return checkPtr, nil
 }
 
 func makeResult(conf *config.Configuration, check *config.SchemaCheck, passes bool) ResultMessage {
