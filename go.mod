@@ -16,8 +16,7 @@ require (
 	github.com/karrick/godirwalk v1.16.1 // indirect
 	github.com/kr/pretty v0.2.1 // indirect
 	github.com/prometheus/client_golang v1.9.0 // indirect
-	github.com/qri-io/jsonpointer v0.1.1
-	github.com/qri-io/jsonschema v0.2.0
+	github.com/qri-io/jsonschema v0.1.1
 	github.com/rogpeppe/go-internal v1.6.2 // indirect
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.1.3
