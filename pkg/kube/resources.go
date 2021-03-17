@@ -43,9 +43,6 @@ type ResourceProvider struct {
 type resourceKindMap map[string][]GenericResource
 
 func (rkm resourceKindMap) addResource(r GenericResource) {
-	if _, ok := rkm[r.Kind]; !ok {
-		rkm[r.Kind] = make([]GenericResource, 0)
-	}
 	rkm[r.Kind] = append(rkm[r.Kind], r)
 }
 
