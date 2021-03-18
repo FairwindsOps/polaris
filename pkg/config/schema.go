@@ -62,7 +62,6 @@ func ParseCheck(rawBytes []byte) (SchemaCheck, error) {
 	for {
 		if err := d.Decode(&check); err != nil {
 			if err == io.EOF {
-				//fmt.Printf("parse check %#v", check.Schema)
 				return check, nil
 			}
 			return check, fmt.Errorf("Decoding schema check failed: %v", err)
@@ -73,6 +72,7 @@ func ParseCheck(rawBytes []byte) (SchemaCheck, error) {
 func init() {
 	jsonschema.RegisterKeyword("resourceMinimum", newResourceMinimum)
 	jsonschema.RegisterKeyword("resourceMaximum", newResourceMaximum)
+	jsonschema.LoadDraft2019_09()
 }
 
 type includeExcludeList struct {
@@ -163,7 +163,6 @@ func (check *SchemaCheck) Initialize(id string) error {
 			return err
 		}
 		err = json.Unmarshal(jsonBytes, &check.SchemaFoo)
-		fmt.Printf("unmarshed: %s\n%#v\n", string(jsonBytes), &check.SchemaFoo)
 		if err != nil {
 			return err
 		}
@@ -172,9 +171,6 @@ func (check *SchemaCheck) Initialize(id string) error {
 }
 
 func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, error) {
-	if true == true {
-		return &check, nil
-	}
 	yamlBytes, err := yaml.Marshal(check)
 	if err != nil {
 		return nil, err
@@ -193,10 +189,6 @@ func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, err
 	}
 
 	newCheck, err := ParseCheck(w.Bytes())
-	if check.ID == "metadataMatchesName" {
-		fmt.Println("got tpl", w.String())
-		fmt.Printf("got check %#v", check.SchemaFoo)
-	}
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +207,6 @@ func (check SchemaCheck) CheckPod(pod *corev1.PodSpec) (bool, error) {
 // CheckController checks a controler's spec against the schema
 func (check SchemaCheck) CheckController(bytes []byte) (bool, error) {
 	errs, err := check.SchemaFoo.ValidateBytes(context.TODO(), bytes)
-	fmt.Println("vbytes2", errs, err)
 	return len(errs) == 0, err
 }
 
@@ -231,7 +222,6 @@ func (check SchemaCheck) CheckObject(obj interface{}) (bool, error) {
 		return false, err
 	}
 	errs, err := check.SchemaFoo.ValidateBytes(context.TODO(), bytes)
-	fmt.Println("vbytes1", errs, err)
 	return len(errs) == 0, err
 }
 

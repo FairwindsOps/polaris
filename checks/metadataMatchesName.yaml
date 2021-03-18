@@ -15,4 +15,4 @@ schema:
           required: ["app.kubernetes.io/name"]
           properties:
             app.kubernetes.io/name:
-              const: "{{ metadata.name }}"
+              const: "{{ .metadata.name }}"
