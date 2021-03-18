@@ -2,12 +2,14 @@ package config
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
 	"text/template"
 
+	"github.com/qri-io/jsonpointer"
 	"github.com/qri-io/jsonschema"
 	"github.com/thoas/go-funk"
 	"gopkg.in/yaml.v3"
@@ -37,16 +39,17 @@ var HandledTargets = []TargetKind{
 
 // SchemaCheck is a Polaris check that runs using JSON Schema
 type SchemaCheck struct {
-	ID             string                `yaml:"id"`
-	Category       string                `yaml:"category"`
-	SuccessMessage string                `yaml:"successMessage"`
-	FailureMessage string                `yaml:"failureMessage"`
-	Controllers    includeExcludeList    `yaml:"controllers"`
-	Containers     includeExcludeList    `yaml:"containers"`
-	Target         TargetKind            `yaml:"target"`
-	SchemaTarget   TargetKind            `yaml:"schemaTarget"`
-	Schema         jsonschema.RootSchema `yaml:"schema"`
-	JSONSchema     string                `yaml:"jsonSchema"`
+	ID             string                 `yaml:"id"`
+	Category       string                 `yaml:"category"`
+	SuccessMessage string                 `yaml:"successMessage"`
+	FailureMessage string                 `yaml:"failureMessage"`
+	Controllers    includeExcludeList     `yaml:"controllers"`
+	Containers     includeExcludeList     `yaml:"containers"`
+	Target         TargetKind             `yaml:"target"`
+	SchemaTarget   TargetKind             `yaml:"schemaTarget"`
+	Schema         map[string]interface{} `yaml:"schema"`
+	SchemaFoo      jsonschema.Schema      `yaml:""`
+	JSONSchema     string                 `yaml:"jsonSchema"`
 }
 
 type resourceMinimum string
@@ -59,6 +62,7 @@ func ParseCheck(rawBytes []byte) (SchemaCheck, error) {
 	for {
 		if err := d.Decode(&check); err != nil {
 			if err == io.EOF {
+				//fmt.Printf("parse check %#v", check.Schema)
 				return check, nil
 			}
 			return check, fmt.Errorf("Decoding schema check failed: %v", err)
@@ -67,8 +71,8 @@ func ParseCheck(rawBytes []byte) (SchemaCheck, error) {
 }
 
 func init() {
-	jsonschema.RegisterValidator("resourceMinimum", newResourceMinimum)
-	jsonschema.RegisterValidator("resourceMaximum", newResourceMaximum)
+	jsonschema.RegisterKeyword("resourceMinimum", newResourceMinimum)
+	jsonschema.RegisterKeyword("resourceMaximum", newResourceMaximum)
 }
 
 type includeExcludeList struct {
@@ -76,47 +80,55 @@ type includeExcludeList struct {
 	Exclude []string `yaml:"exclude"`
 }
 
-func newResourceMinimum() jsonschema.Validator {
+func newResourceMinimum() jsonschema.Keyword {
 	return new(resourceMinimum)
 }
 
-func newResourceMaximum() jsonschema.Validator {
+func newResourceMaximum() jsonschema.Keyword {
 	return new(resourceMaximum)
 }
 
+func (min *resourceMinimum) Register(uri string, registry *jsonschema.SchemaRegistry) {}
+func (min *resourceMinimum) Resolve(pointer jsonpointer.Pointer, uri string) *jsonschema.Schema {
+	return nil
+}
+func (min *resourceMinimum) Validate(propPath string, data interface{}, errs *[]jsonschema.KeyError) {}
+
 // Validate checks that a specified quanitity is not less than the minimum
-func (min resourceMinimum) Validate(path string, data interface{}, errs *[]jsonschema.ValError) {
-	err := validateRange(path, string(min), data, true)
+func (min *resourceMinimum) ValidateKeyword(ctx context.Context, currentState *jsonschema.ValidationState, data interface{}) {
+	err := validateRange(string(*min), data, true)
 	if err != nil {
-		*errs = append(*errs, *err...)
+		currentState.AddError(data, err.Error())
 	}
 }
 
-// Validate checks that a specified quanitity is not greater than the maximum
-func (max resourceMaximum) Validate(path string, data interface{}, errs *[]jsonschema.ValError) {
-	err := validateRange(path, string(max), data, false)
+func (min *resourceMaximum) Register(uri string, registry *jsonschema.SchemaRegistry) {}
+func (min *resourceMaximum) Resolve(pointer jsonpointer.Pointer, uri string) *jsonschema.Schema {
+	return nil
+}
+func (min *resourceMaximum) Validate(propPath string, data interface{}, errs *[]jsonschema.KeyError) {}
+
+// Validate checks that a specified quanitity is not less than the minimum
+func (min *resourceMaximum) ValidateKeyword(ctx context.Context, currentState *jsonschema.ValidationState, data interface{}) {
+	err := validateRange(string(*min), data, false)
 	if err != nil {
-		*errs = append(*errs, *err...)
+		currentState.AddError(data, err.Error())
 	}
 }
 
-func parseQuantity(i interface{}) (resource.Quantity, *[]jsonschema.ValError) {
+func parseQuantity(i interface{}) (resource.Quantity, error) {
 	resStr, ok := i.(string)
 	if !ok {
-		return resource.Quantity{}, &[]jsonschema.ValError{
-			{Message: fmt.Sprintf("Resource quantity %v is not a string", i)},
-		}
+		return resource.Quantity{}, fmt.Errorf("Resource quantity %v is not a string", i)
 	}
 	q, err := resource.ParseQuantity(resStr)
 	if err != nil {
-		return resource.Quantity{}, &[]jsonschema.ValError{
-			{Message: fmt.Sprintf("Could not parse resource quantity: %s", resStr)},
-		}
+		return resource.Quantity{}, fmt.Errorf("Could not parse resource quantity: %s", resStr)
 	}
 	return q, nil
 }
 
-func validateRange(path string, limit interface{}, data interface{}, isMinimum bool) *[]jsonschema.ValError {
+func validateRange(limit interface{}, data interface{}, isMinimum bool) error {
 	limitQuantity, err := parseQuantity(limit)
 	if err != nil {
 		return err
@@ -128,15 +140,11 @@ func validateRange(path string, limit interface{}, data interface{}, isMinimum b
 	cmp := limitQuantity.Cmp(actualQuantity)
 	if isMinimum {
 		if cmp == 1 {
-			return &[]jsonschema.ValError{
-				{Message: fmt.Sprintf("%s quantity %v is > %v", path, actualQuantity, limitQuantity)},
-			}
+			return fmt.Errorf("quantity %v is > %v", actualQuantity, limitQuantity)
 		}
 	} else {
 		if cmp == -1 {
-			return &[]jsonschema.ValError{
-				{Message: fmt.Sprintf("%s quantity %v is < %v", path, actualQuantity, limitQuantity)},
-			}
+			return fmt.Errorf("quantity %v is < %v", actualQuantity, limitQuantity)
 		}
 	}
 	return nil
@@ -146,7 +154,17 @@ func validateRange(path string, limit interface{}, data interface{}, isMinimum b
 func (check *SchemaCheck) Initialize(id string) error {
 	check.ID = id
 	if check.JSONSchema != "" {
-		if err := json.Unmarshal([]byte(check.JSONSchema), &check.Schema); err != nil {
+		if err := json.Unmarshal([]byte(check.JSONSchema), &check.SchemaFoo); err != nil {
+			return err
+		}
+	} else {
+		jsonBytes, err := json.Marshal(check.Schema)
+		if err != nil {
+			return err
+		}
+		err = json.Unmarshal(jsonBytes, &check.SchemaFoo)
+		fmt.Printf("unmarshed: %s\n%#v\n", string(jsonBytes), &check.SchemaFoo)
+		if err != nil {
 			return err
 		}
 	}
@@ -154,7 +172,10 @@ func (check *SchemaCheck) Initialize(id string) error {
 }
 
 func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, error) {
-	yamlBytes, err := yaml.Marshal(check.Schema.Schema)
+	if true == true {
+		return &check, nil
+	}
+	yamlBytes, err := yaml.Marshal(check)
 	if err != nil {
 		return nil, err
 	}
@@ -171,11 +192,10 @@ func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, err
 		return nil, err
 	}
 
-	newCheck := check
-	err = yaml.Unmarshal(w.Bytes(), &check.Schema)
+	newCheck, err := ParseCheck(w.Bytes())
 	if check.ID == "metadataMatchesName" {
 		fmt.Println("got tpl", w.String())
-		fmt.Printf("got check %#v", check.Schema.Schema)
+		fmt.Printf("got check %#v", check.SchemaFoo)
 	}
 	if err != nil {
 		return nil, err
@@ -194,7 +214,8 @@ func (check SchemaCheck) CheckPod(pod *corev1.PodSpec) (bool, error) {
 
 // CheckController checks a controler's spec against the schema
 func (check SchemaCheck) CheckController(bytes []byte) (bool, error) {
-	errs, err := check.Schema.ValidateBytes(bytes)
+	errs, err := check.SchemaFoo.ValidateBytes(context.TODO(), bytes)
+	fmt.Println("vbytes2", errs, err)
 	return len(errs) == 0, err
 }
 
@@ -209,7 +230,8 @@ func (check SchemaCheck) CheckObject(obj interface{}) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	errs, err := check.Schema.ValidateBytes(bytes)
+	errs, err := check.SchemaFoo.ValidateBytes(context.TODO(), bytes)
+	fmt.Println("vbytes1", errs, err)
 	return len(errs) == 0, err
 }
 
