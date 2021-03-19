@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gobuffalo/packr/v2"
+	"github.com/qri-io/jsonschema"
 	corev1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -101,12 +102,17 @@ func resolveCheck(conf *config.Configuration, checkID string, test schemaTestCas
 	return checkPtr, nil
 }
 
-func makeResult(conf *config.Configuration, check *config.SchemaCheck, passes bool) ResultMessage {
+func makeResult(conf *config.Configuration, check *config.SchemaCheck, passes bool, issues []jsonschema.KeyError) ResultMessage {
+	details := []string{}
+	for _, issue := range issues {
+		details = append(details, issue.Message)
+	}
 	result := ResultMessage{
 		ID:       check.ID,
 		Severity: conf.Checks[check.ID],
 		Category: check.Category,
 		Success:  passes,
+		Details:  details,
 	}
 	if passes {
 		result.Message = check.SuccessMessage
@@ -264,26 +270,27 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 		return nil, nil
 	}
 	var passes bool
+	var issues []jsonschema.KeyError
 	if check.SchemaTarget != "" {
 		if check.SchemaTarget == config.TargetPod && check.Target == config.TargetContainer {
 			podCopy := *test.Resource.PodSpec
 			podCopy.InitContainers = []corev1.Container{}
 			podCopy.Containers = []corev1.Container{*test.Container}
-			passes, err = check.CheckPod(&podCopy)
+			passes, issues, err = check.CheckPod(&podCopy)
 		} else {
 			return nil, fmt.Errorf("Unknown combination of target (%s) and schema target (%s)", check.Target, check.SchemaTarget)
 		}
 	} else if check.Target == config.TargetPod {
-		passes, err = check.CheckPod(test.Resource.PodSpec)
+		passes, issues, err = check.CheckPod(test.Resource.PodSpec)
 	} else if check.Target == config.TargetContainer {
-		passes, err = check.CheckContainer(test.Container)
+		passes, issues, err = check.CheckContainer(test.Container)
 	} else {
-		passes, err = check.CheckObject(test.Resource.Resource.Object)
+		passes, issues, err = check.CheckObject(test.Resource.Resource.Object)
 	}
 	if err != nil {
 		return nil, err
 	}
-	result := makeResult(conf, check, passes)
+	result := makeResult(conf, check, passes, issues)
 	return &result, nil
 }
 

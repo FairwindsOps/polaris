@@ -200,29 +200,29 @@ func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, err
 }
 
 // CheckPod checks a pod spec against the schema
-func (check SchemaCheck) CheckPod(pod *corev1.PodSpec) (bool, error) {
+func (check SchemaCheck) CheckPod(pod *corev1.PodSpec) (bool, []jsonschema.KeyError, error) {
 	return check.CheckObject(pod)
 }
 
 // CheckController checks a controler's spec against the schema
-func (check SchemaCheck) CheckController(bytes []byte) (bool, error) {
+func (check SchemaCheck) CheckController(bytes []byte) (bool, []jsonschema.KeyError, error) {
 	errs, err := check.SchemaFoo.ValidateBytes(context.TODO(), bytes)
-	return len(errs) == 0, err
+	return len(errs) == 0, errs, err
 }
 
 // CheckContainer checks a container spec against the schema
-func (check SchemaCheck) CheckContainer(container *corev1.Container) (bool, error) {
+func (check SchemaCheck) CheckContainer(container *corev1.Container) (bool, []jsonschema.KeyError, error) {
 	return check.CheckObject(container)
 }
 
 // CheckObject checks arbitrary data against the schema
-func (check SchemaCheck) CheckObject(obj interface{}) (bool, error) {
+func (check SchemaCheck) CheckObject(obj interface{}) (bool, []jsonschema.KeyError, error) {
 	bytes, err := json.Marshal(obj)
 	if err != nil {
-		return false, err
+		return false, nil, err
 	}
 	errs, err := check.SchemaFoo.ValidateBytes(context.TODO(), bytes)
-	return len(errs) == 0, err
+	return len(errs) == 0, errs, err
 }
 
 // IsActionable decides if this check applies to a particular target
