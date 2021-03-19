@@ -45,7 +45,7 @@ var (
 		// Other checks
 		"tlsSettingsMissing",
 		"pdbDisruptionsAllowedGreaterThanZero",
-		"metadataMatchesName",
+		"metadataAndNameMismatched",
 	}
 )
 
