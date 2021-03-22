@@ -102,7 +102,7 @@ func resolveCheck(conf *config.Configuration, checkID string, test schemaTestCas
 	return checkPtr, nil
 }
 
-func makeResult(conf *config.Configuration, check *config.SchemaCheck, passes bool, issues []jsonschema.KeyError) ResultMessage {
+func makeResult(conf *config.Configuration, check *config.SchemaCheck, passes bool, issues []jsonschema.ValError) ResultMessage {
 	details := []string{}
 	for _, issue := range issues {
 		details = append(details, issue.Message)
@@ -113,7 +113,7 @@ func makeResult(conf *config.Configuration, check *config.SchemaCheck, passes bo
 		Category: check.Category,
 		Success:  passes,
 		// FIXME: need to fix the tests before adding this back
-		// Details: detals
+		//Details: details,
 	}
 	if passes {
 		result.Message = check.SuccessMessage
@@ -271,7 +271,7 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 		return nil, nil
 	}
 	var passes bool
-	var issues []jsonschema.KeyError
+	var issues []jsonschema.ValError
 	if check.SchemaTarget != "" {
 		if check.SchemaTarget == config.TargetPod && check.Target == config.TargetContainer {
 			podCopy := *test.Resource.PodSpec

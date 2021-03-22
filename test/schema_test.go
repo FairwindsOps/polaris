@@ -80,6 +80,12 @@ func TestChecks(t *testing.T) {
 				message := "Check " + tc.check + " failed unexpectedly for " + tc.filename
 				assert.Equal(t, uint(1), summary.Successes, message)
 				assert.Equal(t, uint(0), summary.Dangers, message)
+				fmt.Println(tc.check)
+				fmt.Println("  ", result.Results)
+				if result.PodResult != nil {
+					fmt.Println("  ", result.PodResult.Results)
+					fmt.Println("  ", result.PodResult.ContainerResults[0].Results)
+				}
 			}
 		}
 	}
