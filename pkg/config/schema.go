@@ -36,16 +36,16 @@ var HandledTargets = []TargetKind{
 
 // SchemaCheck is a Polaris check that runs using JSON Schema
 type SchemaCheck struct {
-	ID             string                 `yaml:"id"`
-	Category       string                 `yaml:"category"`
-	SuccessMessage string                 `yaml:"successMessage"`
-	FailureMessage string                 `yaml:"failureMessage"`
-	Controllers    includeExcludeList     `yaml:"controllers"`
-	Containers     includeExcludeList     `yaml:"containers"`
-	Target         TargetKind             `yaml:"target"`
-	SchemaTarget   TargetKind             `yaml:"schemaTarget"`
-	Schema         map[string]interface{} `yaml:"schema"`
-	SchemaString   string                 `yaml:"jsonSchema"`
+	ID             string                 `yaml:"id" json:"id"`
+	Category       string                 `yaml:"category" json:"category"`
+	SuccessMessage string                 `yaml:"successMessage" json:"successMessage"`
+	FailureMessage string                 `yaml:"failureMessage" json:"failureMessage"`
+	Controllers    includeExcludeList     `yaml:"controllers" json:"controllers"`
+	Containers     includeExcludeList     `yaml:"containers" json:"containers"`
+	Target         TargetKind             `yaml:"target" json:"target"`
+	SchemaTarget   TargetKind             `yaml:"schemaTarget" json:"schemaTarget"`
+	Schema         map[string]interface{} `yaml:"schema" json:"schema"`
+	SchemaString   string                 `yaml:"jsonSchema" json:"jsonSchema"`
 	Validator      jsonschema.RootSchema  `yaml:"-"`
 }
 
@@ -147,6 +147,7 @@ func validateRange(path string, limit interface{}, data interface{}, isMinimum b
 // Initialize sets up the schema
 func (check *SchemaCheck) Initialize(id string) error {
 	check.ID = id
+	fmt.Println("init1", id, check.SchemaString)
 	if check.SchemaString == "" {
 		jsonBytes, err := json.Marshal(check.Schema)
 		if err != nil {
@@ -154,6 +155,7 @@ func (check *SchemaCheck) Initialize(id string) error {
 		}
 		check.SchemaString = string(jsonBytes)
 	}
+	fmt.Println("init", id, check.SchemaString)
 	err := json.Unmarshal([]byte(check.SchemaString), &check.Validator)
 	return err
 }
