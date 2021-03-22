@@ -162,6 +162,7 @@ func (check *SchemaCheck) Initialize(id string) error {
 		if err != nil {
 			return err
 		}
+		check.JSONSchema = string(jsonBytes)
 		err = json.Unmarshal(jsonBytes, &check.SchemaFoo)
 		if err != nil {
 			return err
