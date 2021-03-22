@@ -10,7 +10,6 @@ import (
 
 	"github.com/qri-io/jsonschema"
 	"github.com/thoas/go-funk"
-	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	k8sYaml "k8s.io/apimachinery/pkg/util/yaml"
@@ -37,33 +36,36 @@ var HandledTargets = []TargetKind{
 
 // SchemaCheck is a Polaris check that runs using JSON Schema
 type SchemaCheck struct {
-	ID             string                `yaml:"id"`
-	Category       string                `yaml:"category"`
-	SuccessMessage string                `yaml:"successMessage"`
-	FailureMessage string                `yaml:"failureMessage"`
-	Controllers    includeExcludeList    `yaml:"controllers"`
-	Containers     includeExcludeList    `yaml:"containers"`
-	Target         TargetKind            `yaml:"target"`
-	SchemaTarget   TargetKind            `yaml:"schemaTarget"`
-	Schema         jsonschema.RootSchema `yaml:"schema"`
-	JSONSchema     string                `yaml:"jsonSchema"`
+	ID             string                 `yaml:"id"`
+	Category       string                 `yaml:"category"`
+	SuccessMessage string                 `yaml:"successMessage"`
+	FailureMessage string                 `yaml:"failureMessage"`
+	Controllers    includeExcludeList     `yaml:"controllers"`
+	Containers     includeExcludeList     `yaml:"containers"`
+	Target         TargetKind             `yaml:"target"`
+	SchemaTarget   TargetKind             `yaml:"schemaTarget"`
+	Schema         map[string]interface{} `yaml:"schema"`
+	SchemaString   string                 `yaml:"jsonSchema"`
+	Validator      jsonschema.RootSchema  `yaml:"-"`
 }
 
 type resourceMinimum string
 type resourceMaximum string
 
-func ParseCheck(rawBytes []byte) (SchemaCheck, error) {
+func ParseCheck(id string, rawBytes []byte) (SchemaCheck, error) {
 	reader := bytes.NewReader(rawBytes)
 	check := SchemaCheck{}
 	d := k8sYaml.NewYAMLOrJSONDecoder(reader, 4096)
 	for {
 		if err := d.Decode(&check); err != nil {
 			if err == io.EOF {
-				return check, nil
+				break
 			}
 			return check, fmt.Errorf("Decoding schema check failed: %v", err)
 		}
 	}
+	check.Initialize(id)
+	return check, nil
 }
 
 func init() {
@@ -145,31 +147,21 @@ func validateRange(path string, limit interface{}, data interface{}, isMinimum b
 // Initialize sets up the schema
 func (check *SchemaCheck) Initialize(id string) error {
 	check.ID = id
-	if check.JSONSchema != "" {
-		if err := json.Unmarshal([]byte(check.JSONSchema), &check.Schema); err != nil {
-			return err
-		}
-	} else {
+	if check.SchemaString == "" {
 		jsonBytes, err := json.Marshal(check.Schema)
 		if err != nil {
 			return err
 		}
-		check.JSONSchema = string(jsonBytes)
-		if err := json.Unmarshal([]byte(check.JSONSchema), &check.Schema); err != nil {
-			return err
-		}
+		check.SchemaString = string(jsonBytes)
 	}
-	return nil
+	err := json.Unmarshal([]byte(check.SchemaString), &check.Validator)
+	return err
 }
 
 func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, error) {
-	yamlBytes, err := yaml.Marshal(check)
-	if err != nil {
-		return nil, err
-	}
-
-	tmpl := template.New(check.ID)
-	tmpl, err = tmpl.Parse(string(yamlBytes))
+	newCheck := check
+	tmpl := template.New(newCheck.ID)
+	tmpl, err := tmpl.Parse(newCheck.SchemaString)
 	if err != nil {
 		return nil, err
 	}
@@ -180,16 +172,9 @@ func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, err
 		return nil, err
 	}
 
-	newCheck, err := ParseCheck(w.Bytes())
-	err = yaml.Unmarshal(w.Bytes(), &check.Schema)
-	if err != nil {
-		return nil, err
-	}
-	err = newCheck.Initialize(check.ID)
-	if err != nil {
-		return nil, err
-	}
-	return &newCheck, nil
+	newCheck.SchemaString = w.String()
+	newCheck.Initialize(newCheck.ID)
+	return &newCheck, err
 }
 
 // CheckPod checks a pod spec against the schema
@@ -199,7 +184,7 @@ func (check SchemaCheck) CheckPod(pod *corev1.PodSpec) (bool, []jsonschema.ValEr
 
 // CheckController checks a controler's spec against the schema
 func (check SchemaCheck) CheckController(bytes []byte) (bool, []jsonschema.ValError, error) {
-	errs, err := check.Schema.ValidateBytes(bytes)
+	errs, err := check.Validator.ValidateBytes(bytes)
 	return len(errs) == 0, errs, err
 }
 
@@ -214,7 +199,7 @@ func (check SchemaCheck) CheckObject(obj interface{}) (bool, []jsonschema.ValErr
 	if err != nil {
 		return false, nil, err
 	}
-	errs, err := check.Schema.ValidateBytes(bytes)
+	errs, err := check.Validator.ValidateBytes(bytes)
 	return len(errs) == 0, errs, err
 }
 

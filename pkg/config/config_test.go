@@ -16,6 +16,7 @@ package config
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -142,7 +143,9 @@ func TestConfigNoServerError(t *testing.T) {
 
 func TestConfigWithCustomChecks(t *testing.T) {
 	valid := map[string]interface{}{
-		"securityContext": map[string]interface{}{},
+		"securityContext": map[string]interface{}{
+			"foo": "bar",
+		},
 	}
 	invalid := map[string]interface{}{
 		"notSecurityContext": map[string]interface{}{},
@@ -161,9 +164,11 @@ func TestConfigWithCustomChecks(t *testing.T) {
 	parsedConf, err = Parse([]byte(confCustomChecksWithJSONSchema))
 	assert.NoError(t, err, "Expected no error when parsing YAML config")
 	assert.Equal(t, 1, len(parsedConf.CustomChecks))
-	isValid, _, err = parsedConf.CustomChecks["foo"].CheckObject(valid)
+	isValid, problems, err := parsedConf.CustomChecks["foo"].CheckObject(valid)
 	assert.NoError(t, err)
-	assert.Equal(t, true, isValid)
+	if !assert.Equal(t, true, isValid) {
+		fmt.Println(problems[0].PropertyPath, problems[0].InvalidValue, problems[0].Message)
+	}
 	isValid, _, err = parsedConf.CustomChecks["foo"].CheckObject(invalid)
 	assert.NoError(t, err)
 	assert.Equal(t, false, isValid)

@@ -64,11 +64,10 @@ func init() {
 		if err != nil {
 			panic(err)
 		}
-		check, err := config.ParseCheck(contents)
+		check, err := config.ParseCheck(checkID, contents)
 		if err != nil {
 			panic(err)
 		}
-		check.Initialize(checkID)
 		builtInChecks[checkID] = check
 	}
 }
