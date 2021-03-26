@@ -99,13 +99,13 @@ func (v *Validator) handleInternal(req admission.Request) (*validator.PodResult,
 	} else {
 		pod, originalObject, err = GetObjectFromRawRequest(req.Object.Raw)
 	}
-	controller, err := kube.NewGenericWorkloadFromPod(pod, originalObject)
+	controller, err := kube.NewGenericResourceFromPod(pod, originalObject)
 	if err != nil {
 		return nil, err
 	}
 	controller.Kind = req.AdmissionRequest.Kind.Kind
 	var controllerResult validator.Result
-	controllerResult, err = validator.ValidateController(&v.Config, controller)
+	controllerResult, err = validator.ApplyAllSchemaChecks(&v.Config, controller)
 	if err != nil {
 		return nil, err
 	}

@@ -3,8 +3,10 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/qri-io/jsonschema"
+	"github.com/thoas/go-funk"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
@@ -13,15 +15,20 @@ import (
 type TargetKind string
 
 const (
+	// TargetController points to the controller's spec
+	TargetController TargetKind = "Controller"
 	// TargetContainer points to the container spec
 	TargetContainer TargetKind = "Container"
 	// TargetPod points to the pod spec
 	TargetPod TargetKind = "Pod"
-	// TargetController points to the controller's spec
-	TargetController TargetKind = "Controller"
-	// TargetIngress points to the ingress spec
-	TargetIngress TargetKind = "Ingress"
 )
+
+// HandledTargets is a list of target names that are explicitly handled
+var HandledTargets = []TargetKind{
+	TargetController,
+	TargetContainer,
+	TargetPod,
+}
 
 // SchemaCheck is a Polaris check that runs using JSON Schema
 type SchemaCheck struct {
@@ -154,13 +161,17 @@ func (check SchemaCheck) CheckObject(obj interface{}) (bool, error) {
 }
 
 // IsActionable decides if this check applies to a particular target
-func (check SchemaCheck) IsActionable(target TargetKind, controllerType string, isInit bool) bool {
-	if check.Target != target {
+func (check SchemaCheck) IsActionable(target TargetKind, kind string, isInit bool) bool {
+	if funk.Contains(HandledTargets, target) {
+		if check.Target != target {
+			return false
+		}
+	} else if string(check.Target) != kind && !strings.HasSuffix(string(check.Target), "/"+kind) {
 		return false
 	}
 	isIncluded := len(check.Controllers.Include) == 0
 	for _, inclusion := range check.Controllers.Include {
-		if inclusion == controllerType {
+		if inclusion == kind {
 			isIncluded = true
 			break
 		}
@@ -169,7 +180,7 @@ func (check SchemaCheck) IsActionable(target TargetKind, controllerType string, 
 		return false
 	}
 	for _, exclusion := range check.Controllers.Exclude {
-		if exclusion == controllerType {
+		if exclusion == kind {
 			return false
 		}
 	}

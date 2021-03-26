@@ -1,0 +1,18 @@
+successMessage: disruptionsAllowed is greater than zero
+failureMessage: disruptionsAllowed is not greater than zero
+category: Reliability
+target: PodDisruptionBudget
+schema:
+  '$schema': http://json-schema.org/draft-07/schema
+  type: object
+  required:
+  - status
+  properties:
+    status:
+      type: object
+      required:
+      - disruptionsAllowed
+      properties:
+        disruptionsAllowed:
+          type: integer
+          minimum: 1

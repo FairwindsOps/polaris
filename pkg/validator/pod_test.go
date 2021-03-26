@@ -36,7 +36,7 @@ func TestValidatePod(t *testing.T) {
 	}
 
 	p := test.MockPod()
-	deployment, err := kube.NewGenericWorkloadFromPod(p, nil)
+	deployment, err := kube.NewGenericResourceFromPod(p, nil)
 	assert.NoError(t, err)
 	expectedSum := CountSummary{
 		Successes: uint(4),
@@ -50,15 +50,14 @@ func TestValidatePod(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
-	var actualPodResult PodResult
-	actualPodResult, err = ValidatePod(&c, deployment)
+	actualPodResult, err := applyControllerSchemaChecks(&c, deployment)
 	if err != nil {
 		panic(err)
 	}
 
-	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
+	assert.Equal(t, 1, len(actualPodResult.PodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualPodResult.GetSummary())
-	assert.EqualValues(t, expectedResults, actualPodResult.Results)
+	assert.EqualValues(t, expectedResults, actualPodResult.PodResult.Results)
 }
 
 func TestInvalidIPCPod(t *testing.T) {
@@ -73,7 +72,7 @@ func TestInvalidIPCPod(t *testing.T) {
 
 	p := test.MockPod()
 	p.Spec.HostIPC = true
-	workload, err := kube.NewGenericWorkloadFromPod(p, nil)
+	workload, err := kube.NewGenericResourceFromPod(p, nil)
 	assert.NoError(t, err)
 	expectedSum := CountSummary{
 		Successes: uint(3),
@@ -86,15 +85,14 @@ func TestInvalidIPCPod(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
-	var actualPodResult PodResult
-	actualPodResult, err = ValidatePod(&c, workload)
+	actualPodResult, err := applyControllerSchemaChecks(&c, workload)
 	if err != nil {
 		panic(err)
 	}
 
-	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
+	assert.Equal(t, 1, len(actualPodResult.PodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualPodResult.GetSummary())
-	assert.EqualValues(t, expectedResults, actualPodResult.Results)
+	assert.EqualValues(t, expectedResults, actualPodResult.PodResult.Results)
 }
 
 func TestInvalidNetworkPod(t *testing.T) {
@@ -109,7 +107,7 @@ func TestInvalidNetworkPod(t *testing.T) {
 
 	p := test.MockPod()
 	p.Spec.HostNetwork = true
-	workload, err := kube.NewGenericWorkloadFromPod(p, nil)
+	workload, err := kube.NewGenericResourceFromPod(p, nil)
 	assert.NoError(t, err)
 	expectedSum := CountSummary{
 		Successes: uint(3),
@@ -123,15 +121,14 @@ func TestInvalidNetworkPod(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
-	var actualPodResult PodResult
-	actualPodResult, err = ValidatePod(&c, workload)
+	actualPodResult, err := applyControllerSchemaChecks(&c, workload)
 	if err != nil {
 		panic(err)
 	}
 
-	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
+	assert.Equal(t, 1, len(actualPodResult.PodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualPodResult.GetSummary())
-	assert.EqualValues(t, expectedResults, actualPodResult.Results)
+	assert.EqualValues(t, expectedResults, actualPodResult.PodResult.Results)
 }
 
 func TestInvalidPIDPod(t *testing.T) {
@@ -146,7 +143,7 @@ func TestInvalidPIDPod(t *testing.T) {
 
 	p := test.MockPod()
 	p.Spec.HostPID = true
-	workload, err := kube.NewGenericWorkloadFromPod(p, nil)
+	workload, err := kube.NewGenericResourceFromPod(p, nil)
 	assert.NoError(t, err)
 	expectedSum := CountSummary{
 		Successes: uint(3),
@@ -160,15 +157,14 @@ func TestInvalidPIDPod(t *testing.T) {
 		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Success: true, Severity: "warning", Category: "Security"},
 	}
 
-	var actualPodResult PodResult
-	actualPodResult, err = ValidatePod(&c, workload)
+	actualPodResult, err := applyControllerSchemaChecks(&c, workload)
 	if err != nil {
 		panic(err)
 	}
 
-	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
+	assert.Equal(t, 1, len(actualPodResult.PodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualPodResult.GetSummary())
-	assert.EqualValues(t, expectedResults, actualPodResult.Results)
+	assert.EqualValues(t, expectedResults, actualPodResult.PodResult.Results)
 }
 
 func TestExemption(t *testing.T) {
@@ -192,7 +188,7 @@ func TestExemption(t *testing.T) {
 	p.ObjectMeta = metav1.ObjectMeta{
 		Name: "foo",
 	}
-	workload, err := kube.NewGenericWorkloadFromPod(p, nil)
+	workload, err := kube.NewGenericResourceFromPod(p, nil)
 	assert.NoError(t, err)
 	expectedSum := CountSummary{
 		Successes: uint(3),
@@ -204,13 +200,12 @@ func TestExemption(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
-	var actualPodResult PodResult
-	actualPodResult, err = ValidatePod(&c, workload)
+	actualPodResult, err := applyControllerSchemaChecks(&c, workload)
 	if err != nil {
 		panic(err)
 	}
 
-	assert.Equal(t, 1, len(actualPodResult.ContainerResults), "should be equal")
+	assert.Equal(t, 1, len(actualPodResult.PodResult.ContainerResults), "should be equal")
 	assert.EqualValues(t, expectedSum, actualPodResult.GetSummary())
-	assert.EqualValues(t, expectedResults, actualPodResult.Results)
+	assert.EqualValues(t, expectedResults, actualPodResult.PodResult.Results)
 }

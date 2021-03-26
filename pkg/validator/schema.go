@@ -9,7 +9,6 @@ import (
 
 	"github.com/gobuffalo/packr/v2"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
 
@@ -46,10 +45,18 @@ var (
 		"dangerousCapabilities",
 		"insecureCapabilities",
 		"priorityClassNotSet",
-		// Ingress checks
+		// Other checks
 		"tlsSettingsMissing",
+		"pdbDisruptionsAllowedGreaterThanZero",
 	}
 )
+
+type schemaTestCase struct {
+	Target          config.TargetKind
+	Resource        kube.GenericResource
+	IsInitContianer bool
+	Container       *corev1.Container
+}
 
 func init() {
 	schemaBox = packr.New("Schemas", "../../checks")
@@ -81,7 +88,10 @@ func parseCheck(rawBytes []byte) (config.SchemaCheck, error) {
 	}
 }
 
-func resolveCheck(conf *config.Configuration, checkID, kind string, target config.TargetKind, meta metaV1.Object, containerName string, isInitContainer bool) (*config.SchemaCheck, error) {
+func resolveCheck(conf *config.Configuration, checkID string, test schemaTestCase) (*config.SchemaCheck, error) {
+	if !conf.DisallowExemptions && hasExemptionAnnotation(test.Resource.ObjectMeta, checkID) {
+		return nil, nil
+	}
 	check, ok := conf.CustomChecks[checkID]
 	if !ok {
 		check, ok = builtInChecks[checkID]
@@ -90,12 +100,14 @@ func resolveCheck(conf *config.Configuration, checkID, kind string, target confi
 		return nil, fmt.Errorf("Check %s not found", checkID)
 	}
 
-	namespace := meta.GetNamespace()
-	name := meta.GetName()
-	if !conf.IsActionable(check.ID, namespace, name, containerName) {
+	containerName := ""
+	if test.Container != nil {
+		containerName = test.Container.Name
+	}
+	if !conf.IsActionable(check.ID, test.Resource.ObjectMeta, containerName) {
 		return nil, nil
 	}
-	if !check.IsActionable(target, kind, isInitContainer) {
+	if !check.IsActionable(test.Target, test.Resource.Kind, test.IsInitContianer) {
 		return nil, nil
 	}
 	return &check, nil
@@ -119,8 +131,8 @@ func makeResult(conf *config.Configuration, check *config.SchemaCheck, passes bo
 const exemptionAnnotationKey = "polaris.fairwinds.com/exempt"
 const exemptionAnnotationPattern = "polaris.fairwinds.com/%s-exempt"
 
-func hasExemptionAnnotation(ctrl kube.GenericWorkload, checkID string) bool {
-	annot := ctrl.ObjectMeta.GetAnnotations()
+func hasExemptionAnnotation(objMeta metaV1.Object, checkID string) bool {
+	annot := objMeta.GetAnnotations()
 	val := annot[exemptionAnnotationKey]
 	if strings.ToLower(val) == "true" {
 		return true
@@ -133,101 +145,158 @@ func hasExemptionAnnotation(ctrl kube.GenericWorkload, checkID string) bool {
 	return false
 }
 
-func applyPodSchemaChecks(conf *config.Configuration, controller kube.GenericWorkload) (ResultSet, error) {
-	results := ResultSet{}
-	checkIDs := getSortedKeys(conf.Checks)
-	for _, checkID := range checkIDs {
-		if !conf.DisallowExemptions && hasExemptionAnnotation(controller, checkID) {
-			continue
-		}
-		check, err := resolveCheck(conf, checkID, controller.Kind, config.TargetPod, controller.ObjectMeta, "", false)
-
+// ApplyAllSchemaChecksToAllResources applies available checks to a list of resources
+func ApplyAllSchemaChecksToAllResources(conf *config.Configuration, resources []kube.GenericResource) ([]Result, error) {
+	results := []Result{}
+	for _, resource := range resources {
+		result, err := ApplyAllSchemaChecks(conf, resource)
 		if err != nil {
-			return nil, err
-		} else if check == nil {
-			continue
+			return results, err
 		}
-		passes, err := check.CheckPod(&controller.PodSpec)
-		if err != nil {
-			return nil, err
-		}
-		results[check.ID] = makeResult(conf, check, passes)
+		results = append(results, result)
 	}
 	return results, nil
 }
 
-func applyControllerSchemaChecks(conf *config.Configuration, controller kube.GenericWorkload) (ResultSet, error) {
+// ApplyAllSchemaChecks applies available checks to a single resource
+func ApplyAllSchemaChecks(conf *config.Configuration, resource kube.GenericResource) (Result, error) {
+	if resource.PodSpec == nil {
+		return applyNonControllerSchemaChecks(conf, resource)
+	}
+	return applyControllerSchemaChecks(conf, resource)
+}
+
+func applyNonControllerSchemaChecks(conf *config.Configuration, resource kube.GenericResource) (Result, error) {
+	finalResult := Result{
+		Kind:      resource.Kind,
+		Name:      resource.ObjectMeta.GetName(),
+		Namespace: resource.ObjectMeta.GetNamespace(),
+	}
+	resultSet, err := applyTopLevelSchemaChecks(conf, resource, false)
+	finalResult.Results = resultSet
+	return finalResult, err
+}
+
+func applyControllerSchemaChecks(conf *config.Configuration, resource kube.GenericResource) (Result, error) {
+	finalResult := Result{
+		Kind:      resource.Kind,
+		Name:      resource.ObjectMeta.GetName(),
+		Namespace: resource.ObjectMeta.GetNamespace(),
+	}
+	resultSet, err := applyTopLevelSchemaChecks(conf, resource, true)
+	if err != nil {
+		return finalResult, err
+	}
+	finalResult.Results = resultSet
+
+	podRS, err := applyPodSchemaChecks(conf, resource)
+	if err != nil {
+		return finalResult, err
+	}
+	podRes := PodResult{
+		Results:          podRS,
+		ContainerResults: []ContainerResult{},
+	}
+	finalResult.PodResult = &podRes
+
+	for _, container := range resource.PodSpec.InitContainers {
+		results, err := applyContainerSchemaChecks(conf, resource, &container, true)
+		if err != nil {
+			return finalResult, err
+		}
+		cRes := ContainerResult{
+			Name:    container.Name,
+			Results: results,
+		}
+		podRes.ContainerResults = append(podRes.ContainerResults, cRes)
+	}
+	for _, container := range resource.PodSpec.Containers {
+		results, err := applyContainerSchemaChecks(conf, resource, &container, false)
+		if err != nil {
+			return finalResult, err
+		}
+		cRes := ContainerResult{
+			Name:    container.Name,
+			Results: results,
+		}
+		podRes.ContainerResults = append(podRes.ContainerResults, cRes)
+	}
+
+	return finalResult, nil
+}
+
+func applyTopLevelSchemaChecks(conf *config.Configuration, res kube.GenericResource, isController bool) (ResultSet, error) {
+	test := schemaTestCase{
+		Resource: res,
+	}
+	if isController {
+		test.Target = config.TargetController
+	}
+	return applySchemaChecks(conf, test)
+}
+
+func applyPodSchemaChecks(conf *config.Configuration, controller kube.GenericResource) (ResultSet, error) {
+	test := schemaTestCase{
+		Target:   config.TargetPod,
+		Resource: controller,
+	}
+	return applySchemaChecks(conf, test)
+}
+
+func applyContainerSchemaChecks(conf *config.Configuration, controller kube.GenericResource, container *corev1.Container, isInit bool) (ResultSet, error) {
+	test := schemaTestCase{
+		Target:          config.TargetContainer,
+		Resource:        controller,
+		Container:       container,
+		IsInitContianer: isInit,
+	}
+	return applySchemaChecks(conf, test)
+}
+
+func applySchemaChecks(conf *config.Configuration, test schemaTestCase) (ResultSet, error) {
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
 	for _, checkID := range checkIDs {
-		if !conf.DisallowExemptions && hasExemptionAnnotation(controller, checkID) {
-			continue
-		}
-		check, err := resolveCheck(conf, checkID, controller.Kind, config.TargetController, controller.ObjectMeta, "", false)
-
+		result, err := applySchemaCheck(conf, checkID, test)
 		if err != nil {
-			return nil, err
-		} else if check == nil {
-			continue
+			return results, err
 		}
-		passes, err := check.CheckController(controller.OriginalObjectJSON)
-		if err != nil {
-			return nil, err
+		if result != nil {
+			results[checkID] = *result
 		}
-		results[check.ID] = makeResult(conf, check, passes)
 	}
 	return results, nil
 }
 
-func applyContainerSchemaChecks(conf *config.Configuration, controller kube.GenericWorkload, container *corev1.Container, isInit bool) (ResultSet, error) {
-	results := ResultSet{}
-	checkIDs := getSortedKeys(conf.Checks)
-	for _, checkID := range checkIDs {
-		if !conf.DisallowExemptions && hasExemptionAnnotation(controller, checkID) {
-			continue
-		}
-		check, err := resolveCheck(conf, checkID, controller.Kind, config.TargetContainer, controller.ObjectMeta, container.Name, isInit)
-
-		if err != nil {
-			return nil, err
-		} else if check == nil {
-			continue
-		}
-		var passes bool
-		if check.SchemaTarget == config.TargetPod {
-			podCopy := controller.PodSpec
+func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTestCase) (*ResultMessage, error) {
+	check, err := resolveCheck(conf, checkID, test)
+	if err != nil {
+		return nil, err
+	} else if check == nil {
+		return nil, nil
+	}
+	var passes bool
+	if check.SchemaTarget != "" {
+		if check.SchemaTarget == config.TargetPod && check.Target == config.TargetContainer {
+			podCopy := *test.Resource.PodSpec
 			podCopy.InitContainers = []corev1.Container{}
-			podCopy.Containers = []corev1.Container{*container}
+			podCopy.Containers = []corev1.Container{*test.Container}
 			passes, err = check.CheckPod(&podCopy)
 		} else {
-			passes, err = check.CheckContainer(container)
+			return nil, fmt.Errorf("Unknown combination of target (%s) and schema target (%s)", check.Target, check.SchemaTarget)
 		}
-		if err != nil {
-			return nil, err
-		}
-		results[check.ID] = makeResult(conf, check, passes)
+	} else if check.Target == config.TargetPod {
+		passes, err = check.CheckPod(test.Resource.PodSpec)
+	} else if check.Target == config.TargetContainer {
+		passes, err = check.CheckContainer(test.Container)
+	} else {
+		passes, err = check.CheckObject(test.Resource.Resource.Object)
 	}
-	return results, nil
-}
-
-func applyIngressSchemaChecks(conf *config.Configuration, ingress v1beta1.Ingress) (ResultSet, error) {
-	results := ResultSet{}
-	checkIDs := getSortedKeys(conf.Checks)
-	for _, checkID := range checkIDs {
-		check, err := resolveCheck(conf, checkID, ingress.Kind, config.TargetIngress, ingress.ObjectMeta.GetObjectMeta(), "", false)
-
-		if err != nil {
-			return nil, err
-		} else if check == nil {
-			continue
-		}
-		passes, err := check.CheckObject(ingress)
-		if err != nil {
-			return nil, err
-		}
-		results[check.ID] = makeResult(conf, check, passes)
+	if err != nil {
+		return nil, err
 	}
-	return results, nil
+	result := makeResult(conf, check, passes)
+	return &result, nil
 }
 
 func getSortedKeys(m map[string]config.Severity) []string {

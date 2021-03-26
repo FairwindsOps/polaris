@@ -1,7 +1,6 @@
 package kube
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -13,22 +12,23 @@ import (
 	kubeAPIMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	k8sYaml "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/dynamic"
 )
 
-// GenericWorkload is a base implementation with some free methods for inherited structs
-type GenericWorkload struct {
+// GenericResource is a base implementation with some free methods for inherited structs
+type GenericResource struct {
 	Kind               string
-	PodSpec            kubeAPICoreV1.PodSpec
 	ObjectMeta         kubeAPIMetaV1.Object
+	Resource           unstructured.Unstructured
+	PodSpec            *kubeAPICoreV1.PodSpec
 	OriginalObjectJSON []byte
 }
 
-// NewGenericWorkloadFromUnstructured creates a workload from an unstructured.Unstructured
-func NewGenericWorkloadFromUnstructured(kind string, unst *unstructured.Unstructured) (GenericWorkload, error) {
-	workload := GenericWorkload{
-		Kind: kind,
+// NewGenericResourceFromUnstructured creates a workload from an unstructured.Unstructured
+func NewGenericResourceFromUnstructured(unst *unstructured.Unstructured) (GenericResource, error) {
+	workload := GenericResource{
+		Kind:     unst.GetKind(),
+		Resource: *unst,
 	}
 
 	objMeta, err := meta.Accessor(unst)
@@ -49,25 +49,27 @@ func NewGenericWorkloadFromUnstructured(kind string, unst *unstructured.Unstruct
 		return workload, err
 	}
 	podSpecMap := GetPodSpec(m)
-	b, err = json.Marshal(podSpecMap)
-	if err != nil {
-		return workload, err
+	if podSpecMap != nil {
+		b, err = json.Marshal(podSpecMap)
+		if err != nil {
+			return workload, err
+		}
+		podSpec := kubeAPICoreV1.PodSpec{}
+		err = json.Unmarshal(b, &podSpec)
+		if err != nil {
+			return workload, err
+		}
+		workload.PodSpec = &podSpec
 	}
-	podSpec := kubeAPICoreV1.PodSpec{}
-	err = json.Unmarshal(b, &podSpec)
-	if err != nil {
-		return workload, err
-	}
-	workload.PodSpec = podSpec
 
 	return workload, nil
 }
 
-// NewGenericWorkloadFromPod builds a new workload for a given Pod without looking at parents
-func NewGenericWorkloadFromPod(podResource kubeAPICoreV1.Pod, originalObject interface{}) (GenericWorkload, error) {
-	workload := GenericWorkload{
+// NewGenericResourceFromPod builds a new workload for a given Pod without looking at parents
+func NewGenericResourceFromPod(podResource kubeAPICoreV1.Pod, originalObject interface{}) (GenericResource, error) {
+	workload := GenericResource{
 		Kind:       "Pod",
-		PodSpec:    podResource.Spec,
+		PodSpec:    &podResource.Spec,
 		ObjectMeta: podResource.ObjectMeta.GetObjectMeta(),
 	}
 	if originalObject != nil {
@@ -77,13 +79,12 @@ func NewGenericWorkloadFromPod(podResource kubeAPICoreV1.Pod, originalObject int
 		}
 		workload.OriginalObjectJSON = bytes
 
-		var unst unstructured.Unstructured
-		err = json.Unmarshal(bytes, &unst.Object)
+		err = json.Unmarshal(bytes, &workload.Resource.Object)
 		if err != nil {
 			logrus.Error("Couldn't marshal JSON for pod ", err)
 			return workload, err
 		}
-		objMeta, err := meta.Accessor(&unst)
+		objMeta, err := meta.Accessor(&workload.Resource)
 		if err != nil {
 			logrus.Error("Couldn't create meta accessor for unstructred ", err)
 			return workload, err
@@ -93,26 +94,36 @@ func NewGenericWorkloadFromPod(podResource kubeAPICoreV1.Pod, originalObject int
 	return workload, nil
 }
 
-// NewGenericWorkload builds a new workload for a given Pod
-func NewGenericWorkload(ctx context.Context, podResource kubeAPICoreV1.Pod, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) (GenericWorkload, error) {
-	workload, err := newGenericWorkload(ctx, podResource, dynamicClient, restMapper, objectCache)
+// NewGenericResourceFromBytes parses a generic kubernetes resource
+func NewGenericResourceFromBytes(contentBytes []byte) (GenericResource, error) {
+	unst := unstructured.Unstructured{}
+	err := yaml.Unmarshal(contentBytes, &unst.Object)
+	if err != nil {
+		return GenericResource{}, err
+	}
+	return NewGenericResourceFromUnstructured(&unst)
+}
+
+// ResolveControllerFromPod builds a new workload for a given Pod
+func ResolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) (GenericResource, error) {
+	workload, err := resolveControllerFromPod(ctx, podResource, dynamicClient, restMapper, objectCache)
 	if err != nil {
 		return workload, err
 	}
 	if len(workload.OriginalObjectJSON) == 0 {
-		return NewGenericWorkloadFromPod(podResource, podResource)
+		return NewGenericResourceFromPod(podResource, podResource)
 	}
 	return workload, err
 }
 
-func newGenericWorkload(ctx context.Context, podResource kubeAPICoreV1.Pod, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) (GenericWorkload, error) {
-	workload, err := NewGenericWorkloadFromPod(podResource, nil)
+func resolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) (GenericResource, error) {
+	podWorkload, err := NewGenericResourceFromPod(podResource, nil)
 	if err != nil {
-		return workload, err
+		return podWorkload, err
 	}
-	// If an owner exists then set the name to the workload.
-	// This allows us to handle CRDs creating Workloads or DeploymentConfigs in OpenShift.
-	owners := workload.ObjectMeta.GetOwnerReferences()
+	topKind := "Pod"
+	topMeta := podWorkload.ObjectMeta
+	owners := podResource.ObjectMeta.GetOwnerReferences()
 	lastKey := ""
 	for len(owners) > 0 {
 		if len(owners) > 1 {
@@ -122,12 +133,12 @@ func newGenericWorkload(ctx context.Context, podResource kubeAPICoreV1.Pod, dyna
 		if firstOwner.Kind == "Node" {
 			break
 		}
-		workload.Kind = firstOwner.Kind
-		key := fmt.Sprintf("%s/%s/%s", firstOwner.Kind, workload.ObjectMeta.GetNamespace(), firstOwner.Name)
+		topKind = firstOwner.Kind
+		key := fmt.Sprintf("%s/%s/%s", firstOwner.Kind, topMeta.GetNamespace(), firstOwner.Name)
 		lastKey = key
 		abstractObject, ok := objectCache[key]
 		if !ok {
-			err = cacheAllObjectsOfKind(ctx, firstOwner.APIVersion, firstOwner.Kind, dynamicClient, restMapper, objectCache)
+			err := cacheAllObjectsOfKind(ctx, firstOwner.APIVersion, firstOwner.Kind, dynamicClient, restMapper, objectCache)
 			if err != nil {
 				logrus.Warnf("Error caching objects of Kind %s %v", firstOwner.Kind, err)
 				break
@@ -142,26 +153,22 @@ func newGenericWorkload(ctx context.Context, podResource kubeAPICoreV1.Pod, dyna
 		objMeta, err := meta.Accessor(&abstractObject)
 		if err != nil {
 			logrus.Warnf("Error retrieving parent metadata %s of API %s and Kind %s because of error: %v ", firstOwner.Name, firstOwner.APIVersion, firstOwner.Kind, err)
-			return workload, err
+			return GenericResource{}, err
 		}
-		workload.ObjectMeta = objMeta
+		topMeta = objMeta
 		owners = abstractObject.GetOwnerReferences()
 	}
 
 	if lastKey != "" {
 		unst := objectCache[lastKey]
-		bytes, err := json.Marshal(&unst)
-		if err != nil {
-			return workload, err
-		}
-		workload.OriginalObjectJSON = bytes
-	} else {
-		bytes, err := json.Marshal(podResource)
-		if err != nil {
-			return workload, err
-		}
-		workload.OriginalObjectJSON = bytes
+		return NewGenericResourceFromUnstructured(&unst)
 	}
+	workload, err := NewGenericResourceFromPod(podResource, podResource)
+	if err != nil {
+		return workload, err
+	}
+	workload.Kind = topKind
+	workload.ObjectMeta = topMeta
 	return workload, nil
 }
 
@@ -206,38 +213,4 @@ func GetPodSpec(yaml map[string]interface{}) interface{} {
 		return yaml
 	}
 	return nil
-}
-
-// GetWorkloadFromBytes parses a GenericWorkload
-func GetWorkloadFromBytes(contentBytes []byte) (*GenericWorkload, error) {
-	yamlNode := make(map[string]interface{})
-	err := yaml.Unmarshal(contentBytes, &yamlNode)
-	if err != nil {
-		logrus.Errorf("Invalid YAML: %s", string(contentBytes))
-		return nil, err
-	}
-	finalDoc := make(map[string]interface{})
-	finalDoc["metadata"] = yamlNode["metadata"]
-	finalDoc["apiVersion"] = "v1"
-	finalDoc["kind"] = "Pod"
-	podSpec := GetPodSpec(yamlNode)
-	if podSpec == nil {
-		return nil, nil
-	}
-	finalDoc["spec"] = podSpec
-	marshaledYaml, err := yaml.Marshal(finalDoc)
-	if err != nil {
-		logrus.Errorf("Could not marshal yaml: %v", err)
-		return nil, err
-	}
-	decoder := k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(marshaledYaml), 1000)
-	pod := kubeAPICoreV1.Pod{}
-	err = decoder.Decode(&pod)
-	newController, err := NewGenericWorkloadFromPod(pod, yamlNode)
-
-	if err != nil {
-		return nil, err
-	}
-	newController.Kind = yamlNode["kind"].(string)
-	return &newController, nil
 }
