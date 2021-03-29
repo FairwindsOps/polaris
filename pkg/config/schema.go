@@ -147,7 +147,6 @@ func validateRange(path string, limit interface{}, data interface{}, isMinimum b
 // Initialize sets up the schema
 func (check *SchemaCheck) Initialize(id string) error {
 	check.ID = id
-	fmt.Println("init1", id, check.SchemaString)
 	if check.SchemaString == "" {
 		jsonBytes, err := json.Marshal(check.Schema)
 		if err != nil {
@@ -155,7 +154,6 @@ func (check *SchemaCheck) Initialize(id string) error {
 		}
 		check.SchemaString = string(jsonBytes)
 	}
-	fmt.Println("init", id, check.SchemaString)
 	err := json.Unmarshal([]byte(check.SchemaString), &check.Validator)
 	return err
 }
