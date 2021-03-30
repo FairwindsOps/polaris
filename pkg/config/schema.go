@@ -52,6 +52,7 @@ type SchemaCheck struct {
 type resourceMinimum string
 type resourceMaximum string
 
+// ParseCheck parses a check from a byte array
 func ParseCheck(id string, rawBytes []byte) (SchemaCheck, error) {
 	reader := bytes.NewReader(rawBytes)
 	check := SchemaCheck{}
@@ -158,6 +159,7 @@ func (check *SchemaCheck) Initialize(id string) error {
 	return err
 }
 
+// TemplateForResource fills out a check's templated fields given a particular resource
 func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, error) {
 	newCheck := check
 	tmpl := template.New(newCheck.ID)
