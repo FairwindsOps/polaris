@@ -161,7 +161,7 @@ func (check *SchemaCheck) Initialize(id string) error {
 
 // TemplateForResource fills out a check's templated fields given a particular resource
 func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, error) {
-	newCheck := check
+	newCheck := check // Make a copy of the check, since we're going to modify the schema
 	tmpl := template.New(newCheck.ID)
 	tmpl, err := tmpl.Parse(newCheck.SchemaString)
 	if err != nil {
