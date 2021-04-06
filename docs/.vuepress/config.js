@@ -42,7 +42,7 @@ const baseConfig = {
   ],
   themeConfig: {
     docsRepo: "",
-    docsDir: 'docs-md',
+    docsDir: 'docs',
     editLinks: true,
     editLinkText: "Help us improve this page",
     logo: '/img/fairwinds-logo.svg',
