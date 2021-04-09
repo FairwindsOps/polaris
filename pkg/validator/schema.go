@@ -1,16 +1,14 @@
 package validator
 
 import (
-	"bytes"
 	"fmt"
-	"io"
 	"sort"
 	"strings"
 
 	"github.com/gobuffalo/packr/v2"
+	"github.com/qri-io/jsonschema"
 	corev1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
@@ -48,6 +46,7 @@ var (
 		// Other checks
 		"tlsSettingsMissing",
 		"pdbDisruptionsAllowedGreaterThanZero",
+		"metadataAndNameMismatched",
 	}
 )
 
@@ -65,26 +64,11 @@ func init() {
 		if err != nil {
 			panic(err)
 		}
-		check, err := parseCheck(contents)
+		check, err := config.ParseCheck(checkID, contents)
 		if err != nil {
 			panic(err)
 		}
-		check.ID = checkID
 		builtInChecks[checkID] = check
-	}
-}
-
-func parseCheck(rawBytes []byte) (config.SchemaCheck, error) {
-	reader := bytes.NewReader(rawBytes)
-	check := config.SchemaCheck{}
-	d := yaml.NewYAMLOrJSONDecoder(reader, 4096)
-	for {
-		if err := d.Decode(&check); err != nil {
-			if err == io.EOF {
-				return check, nil
-			}
-			return check, fmt.Errorf("Decoding schema check failed: %v", err)
-		}
 	}
 }
 
@@ -110,15 +94,25 @@ func resolveCheck(conf *config.Configuration, checkID string, test schemaTestCas
 	if !check.IsActionable(test.Target, test.Resource.Kind, test.IsInitContianer) {
 		return nil, nil
 	}
-	return &check, nil
+	checkPtr, err := check.TemplateForResource(test.Resource.Resource.Object)
+	if err != nil {
+		return nil, err
+	}
+	return checkPtr, nil
 }
 
-func makeResult(conf *config.Configuration, check *config.SchemaCheck, passes bool) ResultMessage {
+func makeResult(conf *config.Configuration, check *config.SchemaCheck, passes bool, issues []jsonschema.ValError) ResultMessage {
+	details := []string{}
+	for _, issue := range issues {
+		details = append(details, issue.Message)
+	}
 	result := ResultMessage{
 		ID:       check.ID,
 		Severity: conf.Checks[check.ID],
 		Category: check.Category,
 		Success:  passes,
+		// FIXME: need to fix the tests before adding this back
+		//Details: details,
 	}
 	if passes {
 		result.Message = check.SuccessMessage
@@ -276,26 +270,27 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 		return nil, nil
 	}
 	var passes bool
+	var issues []jsonschema.ValError
 	if check.SchemaTarget != "" {
 		if check.SchemaTarget == config.TargetPod && check.Target == config.TargetContainer {
 			podCopy := *test.Resource.PodSpec
 			podCopy.InitContainers = []corev1.Container{}
 			podCopy.Containers = []corev1.Container{*test.Container}
-			passes, err = check.CheckPod(&podCopy)
+			passes, issues, err = check.CheckPod(&podCopy)
 		} else {
 			return nil, fmt.Errorf("Unknown combination of target (%s) and schema target (%s)", check.Target, check.SchemaTarget)
 		}
 	} else if check.Target == config.TargetPod {
-		passes, err = check.CheckPod(test.Resource.PodSpec)
+		passes, issues, err = check.CheckPod(test.Resource.PodSpec)
 	} else if check.Target == config.TargetContainer {
-		passes, err = check.CheckContainer(test.Container)
+		passes, issues, err = check.CheckContainer(test.Container)
 	} else {
-		passes, err = check.CheckObject(test.Resource.Resource.Object)
+		passes, issues, err = check.CheckObject(test.Resource.Resource.Object)
 	}
 	if err != nil {
 		return nil, err
 	}
-	result := makeResult(conf, check, passes)
+	result := makeResult(conf, check, passes, issues)
 	return &result, nil
 }
 

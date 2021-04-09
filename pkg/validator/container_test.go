@@ -75,14 +75,17 @@ func testValidateWithWorkload(t *testing.T, container *corev1.Container, resourc
 	}
 	summary := results.GetSummary()
 
-	assert.Equal(t, uint(len(expectedWarnings)), summary.Warnings)
-	assert.ElementsMatch(t, expectedWarnings, results.GetWarnings())
+	if assert.Equal(t, uint(len(expectedWarnings)), summary.Warnings) {
+		assert.ElementsMatch(t, expectedWarnings, results.GetWarnings())
+	}
 
-	assert.Equal(t, uint(len(expectedDangers)), summary.Dangers)
-	assert.ElementsMatch(t, expectedDangers, results.GetDangers())
+	if assert.Equal(t, uint(len(expectedDangers)), summary.Dangers) {
+		assert.ElementsMatch(t, expectedDangers, results.GetDangers())
+	}
 
-	assert.Equal(t, uint(len(expectedSuccesses)), summary.Successes)
-	assert.ElementsMatch(t, expectedSuccesses, results.GetSuccesses())
+	if assert.Equal(t, uint(len(expectedSuccesses)), summary.Successes) {
+		assert.ElementsMatch(t, expectedSuccesses, results.GetSuccesses())
+	}
 }
 
 func TestValidateResourcesEmptyConfig(t *testing.T) {

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    securityContext:
+      runAsNonRoot: false

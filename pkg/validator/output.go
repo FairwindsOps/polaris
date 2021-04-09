@@ -71,6 +71,7 @@ type ClusterInfo struct {
 type ResultMessage struct {
 	ID       string
 	Message  string
+	Details  []string
 	Success  bool
 	Severity config.Severity
 	Category string

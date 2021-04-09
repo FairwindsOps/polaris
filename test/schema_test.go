@@ -18,9 +18,10 @@ import (
 var testCases = []testCase{}
 
 type testCase struct {
-	check   string
-	input   []byte
-	failure bool
+	check    string
+	filename string
+	input    []byte
+	failure  bool
 }
 
 func init() {
@@ -43,9 +44,10 @@ func init() {
 				panic(err)
 			}
 			testCases = append(testCases, testCase{
-				check:   check,
-				input:   body,
-				failure: strings.Contains(tc.Name(), "failure"),
+				filename: tc.Name(),
+				check:    check,
+				input:    body,
+				failure:  strings.Contains(tc.Name(), "failure"),
 			})
 		}
 	}
@@ -59,19 +61,23 @@ func TestChecks(t *testing.T) {
 			panic(err)
 		}
 		c, err := config.Parse([]byte("checks:\n  " + tc.check + ": danger"))
-		assert.NoError(t, err)
+		if err != nil {
+			panic(err)
+		}
 		result, err := validator.ApplyAllSchemaChecks(&c, res)
-		assert.NoError(t, err)
+		if err != nil {
+			panic(err)
+		}
 		summary := result.GetSummary()
 		total := summary.Successes + summary.Dangers
 		msg := fmt.Sprintf("Check %s ran %d times instead of 1", tc.check, total)
 		if assert.Equal(t, uint(1), total, msg) {
 			if tc.failure {
-				message := "Check " + tc.check + " passed unexpectedly"
+				message := "Check " + tc.check + " passed unexpectedly for " + tc.filename
 				assert.Equal(t, uint(0), summary.Successes, message)
 				assert.Equal(t, uint(1), summary.Dangers, message)
 			} else {
-				message := "Check " + tc.check + " failed unexpectedly"
+				message := "Check " + tc.check + " failed unexpectedly for " + tc.filename
 				assert.Equal(t, uint(1), summary.Successes, message)
 				assert.Equal(t, uint(0), summary.Dangers, message)
 			}
