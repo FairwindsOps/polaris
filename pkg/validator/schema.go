@@ -116,7 +116,7 @@ func makeResult(conf *config.Configuration, check *config.SchemaCheck, passes bo
 		Category: check.Category,
 		Success:  passes,
 		// FIXME: need to fix the tests before adding this back
-		Details: details,
+		//Details: details,
 	}
 	if passes {
 		result.Message = check.SuccessMessage

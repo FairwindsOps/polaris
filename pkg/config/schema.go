@@ -77,21 +77,7 @@ func ParseCheck(id string, rawBytes []byte) (SchemaCheck, error) {
 	if err != nil {
 		return check, err
 	}
-	if check.SchemaString == "" {
-		jsonBytes, err := json.Marshal(check.Schema)
-		if err != nil {
-			return check, err
-		}
-		check.SchemaString = string(jsonBytes)
-	}
-	for kind, schema := range check.AdditionalSchemas {
-		jsonBytes, err := json.Marshal(schema)
-		if err != nil {
-			return check, err
-		}
-		check.AdditionalSchemaStrings[kind] = string(jsonBytes)
-	}
-	check.ID = id
+	check.Initialize(id)
 	return check, nil
 }
 
@@ -174,17 +160,23 @@ func validateRange(path string, limit interface{}, data interface{}, isMinimum b
 // Initialize sets up the schema
 func (check *SchemaCheck) Initialize(id string) error {
 	check.ID = id
-	check.AdditionalValidators = map[string]jsonschema.RootSchema{}
-	for kind, schemaStr := range check.AdditionalSchemaStrings {
-		val := jsonschema.RootSchema{}
-		err := unmarshalYAMLOrJSON([]byte(schemaStr), &val)
+	if check.SchemaString == "" {
+		jsonBytes, err := json.Marshal(check.Schema)
 		if err != nil {
 			return err
 		}
-		check.AdditionalValidators[kind] = val
+		check.SchemaString = string(jsonBytes)
 	}
-	err := unmarshalYAMLOrJSON([]byte(check.SchemaString), &check.Validator)
-	return err
+	for kind, schema := range check.AdditionalSchemas {
+		jsonBytes, err := json.Marshal(schema)
+		if err != nil {
+			return err
+		}
+		check.AdditionalSchemaStrings[kind] = string(jsonBytes)
+	}
+	check.Schema = map[string]interface{}{}
+	check.AdditionalSchemas = map[string]map[string]interface{}{}
+	return nil
 }
 
 // TemplateForResource fills out a check's templated fields given a particular resource
@@ -219,7 +211,20 @@ func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, err
 		}
 	}
 
-	err := newCheck.Initialize(newCheck.ID)
+	newCheck.AdditionalValidators = map[string]jsonschema.RootSchema{}
+	for kind, schemaStr := range newCheck.AdditionalSchemaStrings {
+		val := jsonschema.RootSchema{}
+		err := unmarshalYAMLOrJSON([]byte(schemaStr), &val)
+		if err != nil {
+			// return nil, err
+			panic(err)
+		}
+		newCheck.AdditionalValidators[kind] = val
+	}
+	err := unmarshalYAMLOrJSON([]byte(newCheck.SchemaString), &newCheck.Validator)
+	if err != nil {
+		panic(err)
+	}
 	return &newCheck, err
 }
 
