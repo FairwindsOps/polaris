@@ -49,27 +49,49 @@ type SchemaCheck struct {
 	SchemaString            string                            `yaml:"jsonSchema" json:"jsonSchema"`
 	Validator               jsonschema.RootSchema             `yaml:"-"`
 	AdditionalSchemas       map[string]map[string]interface{} `yaml:"additionalSchemas" json:"additionalSchemas"`
-	AdditionalSchemaStrings map[string]string                 `yaml:"additionalJSONSchemas" json:"additionalJSONSchemas"`
+	AdditionalSchemaStrings map[string]string                 `yaml:"additionalSchemaStrings" json:"additionalSchemaStrings"`
 	AdditionalValidators    map[string]jsonschema.RootSchema  `yaml:"-"`
 }
 
 type resourceMinimum string
 type resourceMaximum string
 
-// ParseCheck parses a check from a byte array
-func ParseCheck(id string, rawBytes []byte) (SchemaCheck, error) {
-	reader := bytes.NewReader(rawBytes)
-	check := SchemaCheck{}
+func unmarshalYAMLOrJSON(raw []byte, dest interface{}) error {
+	reader := bytes.NewReader(raw)
 	d := k8sYaml.NewYAMLOrJSONDecoder(reader, 4096)
 	for {
-		if err := d.Decode(&check); err != nil {
+		if err := d.Decode(dest); err != nil {
 			if err == io.EOF {
 				break
 			}
-			return check, fmt.Errorf("Decoding schema check failed: %v", err)
+			return fmt.Errorf("Decoding schema check failed: %v", err)
 		}
 	}
-	check.Initialize(id)
+	return nil
+}
+
+// ParseCheck parses a check from a byte array
+func ParseCheck(id string, rawBytes []byte) (SchemaCheck, error) {
+	check := SchemaCheck{}
+	err := unmarshalYAMLOrJSON(rawBytes, &check)
+	if err != nil {
+		return check, err
+	}
+	if check.SchemaString == "" {
+		jsonBytes, err := json.Marshal(check.Schema)
+		if err != nil {
+			return check, err
+		}
+		check.SchemaString = string(jsonBytes)
+	}
+	for kind, schema := range check.AdditionalSchemas {
+		jsonBytes, err := json.Marshal(schema)
+		if err != nil {
+			return check, err
+		}
+		check.AdditionalSchemaStrings[kind] = string(jsonBytes)
+	}
+	check.ID = id
 	return check, nil
 }
 
@@ -152,29 +174,16 @@ func validateRange(path string, limit interface{}, data interface{}, isMinimum b
 // Initialize sets up the schema
 func (check *SchemaCheck) Initialize(id string) error {
 	check.ID = id
-	if check.SchemaString == "" {
-		jsonBytes, err := json.Marshal(check.Schema)
-		if err != nil {
-			return err
-		}
-		check.SchemaString = string(jsonBytes)
-	}
-	check.AdditionalSchemaStrings = map[string]string{}
 	check.AdditionalValidators = map[string]jsonschema.RootSchema{}
-	for kind, schema := range check.AdditionalSchemas {
-		jsonBytes, err := json.Marshal(schema)
-		if err != nil {
-			return err
-		}
-		check.AdditionalSchemaStrings[kind] = string(jsonBytes)
+	for kind, schemaStr := range check.AdditionalSchemaStrings {
 		val := jsonschema.RootSchema{}
-		err = json.Unmarshal([]byte(check.AdditionalSchemaStrings[kind]), &val)
+		err := unmarshalYAMLOrJSON([]byte(schemaStr), &val)
 		if err != nil {
 			return err
 		}
 		check.AdditionalValidators[kind] = val
 	}
-	err := json.Unmarshal([]byte(check.SchemaString), &check.Validator)
+	err := unmarshalYAMLOrJSON([]byte(check.SchemaString), &check.Validator)
 	return err
 }
 
@@ -203,20 +212,15 @@ func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, err
 			return nil, err
 		}
 
-		schemaMap := map[string]interface{}{}
-		err = json.Unmarshal(w.Bytes(), &schemaMap)
-		if err != nil {
-			return nil, err
-		}
 		if kind == "" {
-			newCheck.Schema = schemaMap
+			newCheck.SchemaString = w.String()
 		} else {
-			newCheck.AdditionalSchemas[kind] = schemaMap
+			newCheck.AdditionalSchemaStrings[kind] = w.String()
 		}
 	}
 
-	newCheck.Initialize(newCheck.ID)
-	return &newCheck, nil
+	err := newCheck.Initialize(newCheck.ID)
+	return &newCheck, err
 }
 
 // CheckPod checks a pod spec against the schema

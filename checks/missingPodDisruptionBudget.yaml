@@ -14,20 +14,11 @@ schema:
       properties:
         labels:
           type: object
-          required: ["app.kubernetes.io/name"]
-          properties:
-            "app.kubernetes.io/name": "{{ .metadata.name }}"
-additionalSchemas:
-  PodDisruptionBudget:
-    '$schema': http://json-schema.org/draft-07/schema
+          minProperties: 1
+additionalSchemaStrings:
+  PodDisruptionBudget: |
     type: object
     properties:
-      metadata:
-        type: object
-        properties:
-          name:
-            type: string
-            const: "{{ .metadata.name }}-pdb"
       spec:
         type: object
         required: ["selector"]
@@ -38,8 +29,11 @@ additionalSchemas:
             properties:
               matchLabels:
                 type: object
-                required: ["app.kubernetes.io/name"]
-                properties:
-                  app.kubernetes.io/name:
-                    type: string
-                    pattern: "^{{ .metadata.name }}$"
+                anyOf:
+                {{ range $key, $value := .metadata.labels }}
+                - properties:
+                    "{{ $key }}":
+                      type: string
+                      const: {{ $value }}
+                  required: ["{{ $key }}"]
+                {{ end }}
