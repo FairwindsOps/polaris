@@ -254,6 +254,7 @@ func (check SchemaCheck) CheckObject(obj interface{}) (bool, []jsonschema.ValErr
 	return len(errs) == 0, errs, err
 }
 
+// CheckAdditionalObjects looks for an object that passes the specified additional schema
 func (check SchemaCheck) CheckAdditionalObjects(kind string, objects []interface{}) (bool, error) {
 	val, ok := check.AdditionalValidators[kind]
 	if !ok {
