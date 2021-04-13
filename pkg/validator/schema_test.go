@@ -144,14 +144,14 @@ func TestValidateResourcesInit(t *testing.T) {
 	assert.NoError(t, err, "Expected no error when parsing config")
 
 	var results ResultSet
-	results, err = applyContainerSchemaChecks(&parsedConf, controller, emptyContainer, false)
+	results, err = applyContainerSchemaChecks(&parsedConf, nil, controller, emptyContainer, false)
 	if err != nil {
 		panic(err)
 	}
 	assert.Equal(t, uint(1), results.GetSummary().Dangers)
 	assert.Equal(t, uint(1), results.GetSummary().Warnings)
 
-	results, err = applyContainerSchemaChecks(&parsedConf, controller, emptyContainer, true)
+	results, err = applyContainerSchemaChecks(&parsedConf, nil, controller, emptyContainer, true)
 	if err != nil {
 		panic(err)
 	}

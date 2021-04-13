@@ -36,17 +36,20 @@ var HandledTargets = []TargetKind{
 
 // SchemaCheck is a Polaris check that runs using JSON Schema
 type SchemaCheck struct {
-	ID             string                 `yaml:"id" json:"id"`
-	Category       string                 `yaml:"category" json:"category"`
-	SuccessMessage string                 `yaml:"successMessage" json:"successMessage"`
-	FailureMessage string                 `yaml:"failureMessage" json:"failureMessage"`
-	Controllers    includeExcludeList     `yaml:"controllers" json:"controllers"`
-	Containers     includeExcludeList     `yaml:"containers" json:"containers"`
-	Target         TargetKind             `yaml:"target" json:"target"`
-	SchemaTarget   TargetKind             `yaml:"schemaTarget" json:"schemaTarget"`
-	Schema         map[string]interface{} `yaml:"schema" json:"schema"`
-	SchemaString   string                 `yaml:"jsonSchema" json:"jsonSchema"`
-	Validator      jsonschema.RootSchema  `yaml:"-"`
+	ID                      string                            `yaml:"id" json:"id"`
+	Category                string                            `yaml:"category" json:"category"`
+	SuccessMessage          string                            `yaml:"successMessage" json:"successMessage"`
+	FailureMessage          string                            `yaml:"failureMessage" json:"failureMessage"`
+	Controllers             includeExcludeList                `yaml:"controllers" json:"controllers"`
+	Containers              includeExcludeList                `yaml:"containers" json:"containers"`
+	Target                  TargetKind                        `yaml:"target" json:"target"`
+	SchemaTarget            TargetKind                        `yaml:"schemaTarget" json:"schemaTarget"`
+	Schema                  map[string]interface{}            `yaml:"schema" json:"schema"`
+	SchemaString            string                            `yaml:"jsonSchema" json:"jsonSchema"`
+	Validator               jsonschema.RootSchema             `yaml:"-"`
+	AdditionalSchemas       map[string]map[string]interface{} `yaml:"additionalSchemas" json:"additionalSchemas"`
+	AdditionalSchemaStrings map[string]string                 `yaml:"additionalJSONSchemas" json:"additionalJSONSchemas"`
+	AdditionalValidators    map[string]jsonschema.RootSchema  `yaml:"-"`
 }
 
 type resourceMinimum string
@@ -155,6 +158,21 @@ func (check *SchemaCheck) Initialize(id string) error {
 		}
 		check.SchemaString = string(jsonBytes)
 	}
+	check.AdditionalSchemaStrings = map[string]string{}
+	check.AdditionalValidators = map[string]jsonschema.RootSchema{}
+	for kind, schema := range check.AdditionalSchemas {
+		jsonBytes, err := json.Marshal(schema)
+		if err != nil {
+			return err
+		}
+		check.AdditionalSchemaStrings[kind] = string(jsonBytes)
+		val := jsonschema.RootSchema{}
+		err = json.Unmarshal([]byte(check.AdditionalSchemaStrings[kind]), &val)
+		if err != nil {
+			return err
+		}
+		check.AdditionalValidators[kind] = val
+	}
 	err := json.Unmarshal([]byte(check.SchemaString), &check.Validator)
 	return err
 }
@@ -162,21 +180,34 @@ func (check *SchemaCheck) Initialize(id string) error {
 // TemplateForResource fills out a check's templated fields given a particular resource
 func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, error) {
 	newCheck := check // Make a copy of the check, since we're going to modify the schema
-	tmpl := template.New(newCheck.ID)
-	tmpl, err := tmpl.Parse(newCheck.SchemaString)
-	if err != nil {
-		return nil, err
+
+	templateStrings := map[string]string{
+		"": newCheck.SchemaString,
+	}
+	for kind, schema := range newCheck.AdditionalSchemaStrings {
+		templateStrings[kind] = schema
 	}
 
-	w := bytes.Buffer{}
-	err = tmpl.Execute(&w, res)
-	if err != nil {
-		return nil, err
+	for kind, tmplString := range templateStrings {
+		tmpl := template.New(newCheck.ID)
+		tmpl, err := tmpl.Parse(tmplString)
+		if err != nil {
+			return nil, err
+		}
+		w := bytes.Buffer{}
+		err = tmpl.Execute(&w, res)
+		if err != nil {
+			return nil, err
+		}
+		if kind == "" {
+			newCheck.SchemaString = w.String()
+		} else {
+			newCheck.AdditionalSchemaStrings[kind] = w.String()
+		}
 	}
 
-	newCheck.SchemaString = w.String()
 	newCheck.Initialize(newCheck.ID)
-	return &newCheck, err
+	return &newCheck, nil
 }
 
 // CheckPod checks a pod spec against the schema

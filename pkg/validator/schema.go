@@ -53,10 +53,11 @@ var (
 )
 
 type schemaTestCase struct {
-	Target          config.TargetKind
-	Resource        kube.GenericResource
-	IsInitContianer bool
-	Container       *corev1.Container
+	Target           config.TargetKind
+	Resource         kube.GenericResource
+	IsInitContianer  bool
+	Container        *corev1.Container
+	ResourceProvider *kube.ResourceProvider
 }
 
 func init() {
@@ -146,7 +147,7 @@ func hasExemptionAnnotation(objMeta metaV1.Object, checkID string) bool {
 func ApplyAllSchemaChecksToResourceProvider(conf *config.Configuration, resourceProvider *kube.ResourceProvider) ([]Result, error) {
 	results := []Result{}
 	for _, resources := range resourceProvider.Resources {
-		kindResults, err := ApplyAllSchemaChecksToAllResources(conf, resources)
+		kindResults, err := ApplyAllSchemaChecksToAllResources(conf, resourceProvider, resources)
 		if err != nil {
 			return results, err
 		}
@@ -156,10 +157,10 @@ func ApplyAllSchemaChecksToResourceProvider(conf *config.Configuration, resource
 }
 
 // ApplyAllSchemaChecksToAllResources applies available checks to a list of resources
-func ApplyAllSchemaChecksToAllResources(conf *config.Configuration, resources []kube.GenericResource) ([]Result, error) {
+func ApplyAllSchemaChecksToAllResources(conf *config.Configuration, resourceProvider *kube.ResourceProvider, resources []kube.GenericResource) ([]Result, error) {
 	results := []Result{}
 	for _, resource := range resources {
-		result, err := ApplyAllSchemaChecks(conf, resource)
+		result, err := ApplyAllSchemaChecks(conf, resourceProvider, resource)
 		if err != nil {
 			return results, err
 		}
@@ -169,37 +170,37 @@ func ApplyAllSchemaChecksToAllResources(conf *config.Configuration, resources []
 }
 
 // ApplyAllSchemaChecks applies available checks to a single resource
-func ApplyAllSchemaChecks(conf *config.Configuration, resource kube.GenericResource) (Result, error) {
+func ApplyAllSchemaChecks(conf *config.Configuration, resourceProvider *kube.ResourceProvider, resource kube.GenericResource) (Result, error) {
 	if resource.PodSpec == nil {
-		return applyNonControllerSchemaChecks(conf, resource)
+		return applyNonControllerSchemaChecks(conf, resourceProvider, resource)
 	}
-	return applyControllerSchemaChecks(conf, resource)
+	return applyControllerSchemaChecks(conf, resourceProvider, resource)
 }
 
-func applyNonControllerSchemaChecks(conf *config.Configuration, resource kube.GenericResource) (Result, error) {
+func applyNonControllerSchemaChecks(conf *config.Configuration, resourceProvider *kube.ResourceProvider, resource kube.GenericResource) (Result, error) {
 	finalResult := Result{
 		Kind:      resource.Kind,
 		Name:      resource.ObjectMeta.GetName(),
 		Namespace: resource.ObjectMeta.GetNamespace(),
 	}
-	resultSet, err := applyTopLevelSchemaChecks(conf, resource, false)
+	resultSet, err := applyTopLevelSchemaChecks(conf, resourceProvider, resource, false)
 	finalResult.Results = resultSet
 	return finalResult, err
 }
 
-func applyControllerSchemaChecks(conf *config.Configuration, resource kube.GenericResource) (Result, error) {
+func applyControllerSchemaChecks(conf *config.Configuration, resourceProvider *kube.ResourceProvider, resource kube.GenericResource) (Result, error) {
 	finalResult := Result{
 		Kind:      resource.Kind,
 		Name:      resource.ObjectMeta.GetName(),
 		Namespace: resource.ObjectMeta.GetNamespace(),
 	}
-	resultSet, err := applyTopLevelSchemaChecks(conf, resource, true)
+	resultSet, err := applyTopLevelSchemaChecks(conf, resourceProvider, resource, true)
 	if err != nil {
 		return finalResult, err
 	}
 	finalResult.Results = resultSet
 
-	podRS, err := applyPodSchemaChecks(conf, resource)
+	podRS, err := applyPodSchemaChecks(conf, resourceProvider, resource)
 	if err != nil {
 		return finalResult, err
 	}
@@ -210,7 +211,7 @@ func applyControllerSchemaChecks(conf *config.Configuration, resource kube.Gener
 	finalResult.PodResult = &podRes
 
 	for _, container := range resource.PodSpec.InitContainers {
-		results, err := applyContainerSchemaChecks(conf, resource, &container, true)
+		results, err := applyContainerSchemaChecks(conf, resourceProvider, resource, &container, true)
 		if err != nil {
 			return finalResult, err
 		}
@@ -221,7 +222,7 @@ func applyControllerSchemaChecks(conf *config.Configuration, resource kube.Gener
 		podRes.ContainerResults = append(podRes.ContainerResults, cRes)
 	}
 	for _, container := range resource.PodSpec.Containers {
-		results, err := applyContainerSchemaChecks(conf, resource, &container, false)
+		results, err := applyContainerSchemaChecks(conf, resourceProvider, resource, &container, false)
 		if err != nil {
 			return finalResult, err
 		}
@@ -235,9 +236,10 @@ func applyControllerSchemaChecks(conf *config.Configuration, resource kube.Gener
 	return finalResult, nil
 }
 
-func applyTopLevelSchemaChecks(conf *config.Configuration, res kube.GenericResource, isController bool) (ResultSet, error) {
+func applyTopLevelSchemaChecks(conf *config.Configuration, resources *kube.ResourceProvider, res kube.GenericResource, isController bool) (ResultSet, error) {
 	test := schemaTestCase{
-		Resource: res,
+		ResourceProvider: resources,
+		Resource:         res,
 	}
 	if isController {
 		test.Target = config.TargetController
@@ -245,20 +247,22 @@ func applyTopLevelSchemaChecks(conf *config.Configuration, res kube.GenericResou
 	return applySchemaChecks(conf, test)
 }
 
-func applyPodSchemaChecks(conf *config.Configuration, controller kube.GenericResource) (ResultSet, error) {
+func applyPodSchemaChecks(conf *config.Configuration, resources *kube.ResourceProvider, controller kube.GenericResource) (ResultSet, error) {
 	test := schemaTestCase{
-		Target:   config.TargetPod,
-		Resource: controller,
+		Target:           config.TargetPod,
+		ResourceProvider: resources,
+		Resource:         controller,
 	}
 	return applySchemaChecks(conf, test)
 }
 
-func applyContainerSchemaChecks(conf *config.Configuration, controller kube.GenericResource, container *corev1.Container, isInit bool) (ResultSet, error) {
+func applyContainerSchemaChecks(conf *config.Configuration, resources *kube.ResourceProvider, controller kube.GenericResource, container *corev1.Container, isInit bool) (ResultSet, error) {
 	test := schemaTestCase{
-		Target:          config.TargetContainer,
-		Resource:        controller,
-		Container:       container,
-		IsInitContianer: isInit,
+		Target:           config.TargetContainer,
+		ResourceProvider: resources,
+		Resource:         controller,
+		Container:        container,
+		IsInitContianer:  isInit,
 	}
 	return applySchemaChecks(conf, test)
 }
