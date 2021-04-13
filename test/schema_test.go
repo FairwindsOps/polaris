@@ -63,8 +63,8 @@ func TestChecks(t *testing.T) {
 		if err != nil {
 			panic(err)
 		}
-		assert.Equal(t, 1, len(results))
-		summary := results[0].GetSummary()
+		auditData := validator.AuditData{Results: results}
+		summary := auditData.GetSummary()
 		total := summary.Successes + summary.Dangers
 		msg := fmt.Sprintf("Check %s ran %d times instead of 1", tc.check, total)
 		if assert.Equal(t, uint(1), total, msg) {

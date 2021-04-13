@@ -124,10 +124,8 @@ func (c Result) GetSummaryByCategory() CountSummaryByCategory {
 // GetSummary summarizes AuditData
 func (a AuditData) GetSummary() CountSummary {
 	summary := CountSummary{}
-	for _, ctrlResult := range a.Results {
-		if ctrlResult.PodResult != nil {
-			summary.AddSummary(ctrlResult.GetSummary())
-		}
+	for _, res := range a.Results {
+		summary.AddSummary(res.GetSummary())
 	}
 	return summary
 }

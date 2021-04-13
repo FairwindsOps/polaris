@@ -1,10 +1,10 @@
-apiVersion: v1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx
+  name: zookeeper
+  labels:
+    app: zookeeper
 spec:
   containers:
-  - name: nginx
-    image: nginx
-    securityContext:
-      runAsNonRoot: false
+  - name: zookeeper
+    image: zookeeper

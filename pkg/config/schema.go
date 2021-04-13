@@ -3,6 +3,7 @@ package config
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -187,6 +188,8 @@ func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, err
 	for kind, schema := range newCheck.AdditionalSchemaStrings {
 		templateStrings[kind] = schema
 	}
+	newCheck.SchemaString = ""
+	newCheck.AdditionalSchemaStrings = map[string]string{}
 
 	for kind, tmplString := range templateStrings {
 		tmpl := template.New(newCheck.ID)
@@ -199,10 +202,16 @@ func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, err
 		if err != nil {
 			return nil, err
 		}
+
+		schemaMap := map[string]interface{}{}
+		err = json.Unmarshal(w.Bytes(), &schemaMap)
+		if err != nil {
+			return nil, err
+		}
 		if kind == "" {
-			newCheck.SchemaString = w.String()
+			newCheck.Schema = schemaMap
 		} else {
-			newCheck.AdditionalSchemaStrings[kind] = w.String()
+			newCheck.AdditionalSchemas[kind] = schemaMap
 		}
 	}
 
@@ -234,6 +243,27 @@ func (check SchemaCheck) CheckObject(obj interface{}) (bool, []jsonschema.ValErr
 	}
 	errs, err := check.Validator.ValidateBytes(bytes)
 	return len(errs) == 0, errs, err
+}
+
+func (check SchemaCheck) CheckAdditionalObjects(kind string, objects []interface{}) (bool, error) {
+	val, ok := check.AdditionalValidators[kind]
+	if !ok {
+		return false, errors.New("No validator found for " + kind)
+	}
+	for _, obj := range objects {
+		bytes, err := json.Marshal(obj)
+		if err != nil {
+			return false, err
+		}
+		errs, err := val.ValidateBytes(bytes)
+		if err != nil {
+			return false, err
+		}
+		if len(errs) == 0 {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // IsActionable decides if this check applies to a particular target

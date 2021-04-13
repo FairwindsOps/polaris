@@ -116,7 +116,7 @@ func makeResult(conf *config.Configuration, check *config.SchemaCheck, passes bo
 		Category: check.Category,
 		Success:  passes,
 		// FIXME: need to fix the tests before adding this back
-		//Details: details,
+		Details: details,
 	}
 	if passes {
 		result.Message = check.SuccessMessage
@@ -309,6 +309,20 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 	}
 	if err != nil {
 		return nil, err
+	}
+	for kind := range check.AdditionalValidators {
+		if !passes {
+			break
+		}
+		resources := test.ResourceProvider.Resources[kind]
+		objects := make([]interface{}, len(resources))
+		for idx, res := range resources {
+			objects[idx] = res.Resource.Object
+		}
+		passes, err = check.CheckAdditionalObjects(kind, objects)
+		if err != nil {
+			return nil, err
+		}
 	}
 	result := makeResult(conf, check, passes, issues)
 	return &result, nil
