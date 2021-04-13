@@ -7,6 +7,7 @@ import (
 
 	"github.com/gobuffalo/packr/v2"
 	"github.com/qri-io/jsonschema"
+	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -47,6 +48,7 @@ var (
 		"tlsSettingsMissing",
 		"pdbDisruptionsAllowedGreaterThanZero",
 		"metadataAndNameMismatched",
+		"missingPodDisruptionBudget",
 	}
 )
 
@@ -66,6 +68,7 @@ func init() {
 		}
 		check, err := config.ParseCheck(checkID, contents)
 		if err != nil {
+			logrus.Errorf("Error while parsing check %s", checkID)
 			panic(err)
 		}
 		builtInChecks[checkID] = check
@@ -137,6 +140,19 @@ func hasExemptionAnnotation(objMeta metaV1.Object, checkID string) bool {
 		return true
 	}
 	return false
+}
+
+// ApplyAllSchemaChecksToResourceProvider applies all available checks to a ResourceProvider
+func ApplyAllSchemaChecksToResourceProvider(conf *config.Configuration, resourceProvider *kube.ResourceProvider) ([]Result, error) {
+	results := []Result{}
+	for _, resources := range resourceProvider.Resources {
+		kindResults, err := ApplyAllSchemaChecksToAllResources(conf, resources)
+		if err != nil {
+			return results, err
+		}
+		results = append(results, kindResults...)
+	}
+	return results, nil
 }
 
 // ApplyAllSchemaChecksToAllResources applies available checks to a list of resources
