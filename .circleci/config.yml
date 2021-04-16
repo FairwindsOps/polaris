@@ -58,16 +58,6 @@ references:
         helm install cert-manager jetstack/cert-manager --namespace cert-manager --version 0.16.1 --set "installCRDs=true" --wait
         echo "Install cert-manager successful"
 
-  # Test scripts
-  update_coverage: &update_coverage
-    run:
-      name: Update Coverage
-      command: |
-        if [[ -z $CIRCLE_PR_NUMBER ]]; then
-          bash <(curl -s https://codecov.io/bash)
-        else
-          echo "Skipping coverage for forked PR"
-        fi
   test_binary_dashboard: &test_binary_dashboard
     run:
       name: Test Dashboard
@@ -166,7 +156,6 @@ jobs:
       - run: go list ./... | grep -v vendor | xargs go vet
       - run: go test ./pkg/... -coverprofile=coverage.txt -covermode=count
       - run: go run main.go audit --audit-path ./deploy --set-exit-code-below-score 100 --set-exit-code-on-danger
-      - *update_coverage
       - *test_binary_dashboard
 
   insights:
