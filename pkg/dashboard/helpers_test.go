@@ -58,6 +58,7 @@ func TestSuccessWidth(t *testing.T) {
 
 	assert.Equal(t, expectedOutput, actual)
 }
+
 func TestGetGrade(t *testing.T) {
 	input := validator.CountSummary{
 		Successes: 10,
@@ -237,3 +238,4 @@ func TestStringInSlice(t *testing.T) {
 	assert.Equal(t, expectedOutput, actual)
 	assert.NotEqual(t, true, actual)
 }
+
