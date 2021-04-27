@@ -216,14 +216,13 @@ func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, err
 		val := jsonschema.RootSchema{}
 		err := unmarshalYAMLOrJSON([]byte(schemaStr), &val)
 		if err != nil {
-			// return nil, err
-			panic(err)
+			return nil, err
 		}
 		newCheck.AdditionalValidators[kind] = val
 	}
 	err := unmarshalYAMLOrJSON([]byte(newCheck.SchemaString), &newCheck.Validator)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	return &newCheck, err
 }
