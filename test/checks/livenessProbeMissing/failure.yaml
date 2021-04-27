@@ -1,5 +1,14 @@
-
-
-      # If the command succeeds, it returns 0, and the kubelet considers the 
-      # container to be alive and healthy. If the command returns a non-zero 
-      # value, the kubelet kills the container and restarts it.
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    test: liveness
+  name: liveness-exec
+spec:
+  containers:
+  - name: liveness
+    image: k8s.gcr.io/busybox
+    args:
+    - /bin/sh
+    - -c
+    - touch /tmp/healthy; sleep 30; rm -rf /tmp/healthy; sleep 600.
