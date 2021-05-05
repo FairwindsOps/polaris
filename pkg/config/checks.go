@@ -6,6 +6,7 @@ import (
 )
 
 var (
+	// BuiltInChecks contains the checks that come pre-installed w/ Polaris
 	BuiltInChecks = map[string]SchemaCheck{}
 	schemaBox     = (*packr.Box)(nil)
 	// We explicitly set the order to avoid thrash in the
