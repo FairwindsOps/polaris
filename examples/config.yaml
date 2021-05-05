@@ -6,6 +6,10 @@ checks:
   pullPolicyNotAlways: warning
   readinessProbeMissing: warning
   livenessProbeMissing: warning
+  metadataAndNameMismatched: ignore
+  pdbDisruptionsAllowedGreaterThanZero: warning
+  missingPodDisruptionBudget: warning
+
   # efficiency
   cpuRequestsMissing: warning
   cpuLimitsMissing: warning

@@ -5,51 +5,12 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/gobuffalo/packr/v2"
 	"github.com/qri-io/jsonschema"
-	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
-)
-
-var (
-	schemaBox     = (*packr.Box)(nil)
-	builtInChecks = map[string]config.SchemaCheck{}
-	// We explicitly set the order to avoid thrash in the
-	// tests as we migrate toward JSON schema
-	checkOrder = []string{
-		// Controller Checks
-		"multipleReplicasForDeployment",
-		// Pod checks
-		"hostIPCSet",
-		"hostPIDSet",
-		"hostNetworkSet",
-		// Container checks
-		"memoryLimitsMissing",
-		"memoryRequestsMissing",
-		"cpuLimitsMissing",
-		"cpuRequestsMissing",
-		"readinessProbeMissing",
-		"livenessProbeMissing",
-		"pullPolicyNotAlways",
-		"tagNotSpecified",
-		"hostPortSet",
-		"runAsRootAllowed",
-		"runAsPrivileged",
-		"notReadOnlyRootFilesystem",
-		"privilegeEscalationAllowed",
-		"dangerousCapabilities",
-		"insecureCapabilities",
-		"priorityClassNotSet",
-		// Other checks
-		"tlsSettingsMissing",
-		"pdbDisruptionsAllowedGreaterThanZero",
-		"metadataAndNameMismatched",
-		"missingPodDisruptionBudget",
-	}
 )
 
 type schemaTestCase struct {
@@ -60,29 +21,13 @@ type schemaTestCase struct {
 	ResourceProvider *kube.ResourceProvider
 }
 
-func init() {
-	schemaBox = packr.New("Schemas", "../../checks")
-	for _, checkID := range checkOrder {
-		contents, err := schemaBox.Find(checkID + ".yaml")
-		if err != nil {
-			panic(err)
-		}
-		check, err := config.ParseCheck(checkID, contents)
-		if err != nil {
-			logrus.Errorf("Error while parsing check %s", checkID)
-			panic(err)
-		}
-		builtInChecks[checkID] = check
-	}
-}
-
 func resolveCheck(conf *config.Configuration, checkID string, test schemaTestCase) (*config.SchemaCheck, error) {
 	if !conf.DisallowExemptions && hasExemptionAnnotation(test.Resource.ObjectMeta, checkID) {
 		return nil, nil
 	}
 	check, ok := conf.CustomChecks[checkID]
 	if !ok {
-		check, ok = builtInChecks[checkID]
+		check, ok = config.BuiltInChecks[checkID]
 	}
 	if !ok {
 		return nil, fmt.Errorf("Check %s not found", checkID)
@@ -310,16 +255,16 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 	if err != nil {
 		return nil, err
 	}
-	for kind := range check.AdditionalValidators {
+	for groupkind := range check.AdditionalValidators {
 		if !passes {
 			break
 		}
-		resources := test.ResourceProvider.Resources[kind]
+		resources := test.ResourceProvider.Resources[groupkind]
 		objects := make([]interface{}, len(resources))
 		for idx, res := range resources {
 			objects[idx] = res.Resource.Object
 		}
-		passes, err = check.CheckAdditionalObjects(kind, objects)
+		passes, err = check.CheckAdditionalObjects(groupkind, objects)
 		if err != nil {
 			return nil, err
 		}

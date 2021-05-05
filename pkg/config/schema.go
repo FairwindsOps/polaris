@@ -254,10 +254,10 @@ func (check SchemaCheck) CheckObject(obj interface{}) (bool, []jsonschema.ValErr
 }
 
 // CheckAdditionalObjects looks for an object that passes the specified additional schema
-func (check SchemaCheck) CheckAdditionalObjects(kind string, objects []interface{}) (bool, error) {
-	val, ok := check.AdditionalValidators[kind]
+func (check SchemaCheck) CheckAdditionalObjects(groupkind string, objects []interface{}) (bool, error) {
+	val, ok := check.AdditionalValidators[groupkind]
 	if !ok {
-		return false, errors.New("No validator found for " + kind)
+		return false, errors.New("No validator found for " + groupkind)
 	}
 	for _, obj := range objects {
 		bytes, err := json.Marshal(obj)

@@ -16,7 +16,7 @@ schema:
           type: object
           minProperties: 1
 additionalSchemaStrings:
-  PodDisruptionBudget: |
+  policy/PodDisruptionBudget: |
     type: object
     properties:
       spec:

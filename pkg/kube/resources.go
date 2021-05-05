@@ -43,7 +43,9 @@ type ResourceProvider struct {
 type resourceKindMap map[string][]GenericResource
 
 func (rkm resourceKindMap) addResource(r GenericResource) {
-	rkm[r.Kind] = append(rkm[r.Kind], r)
+	gvk := r.Resource.GroupVersionKind()
+	key := gvk.Group + "/" + gvk.Kind
+	rkm[key] = append(rkm[key], r)
 }
 
 func (rkm resourceKindMap) addResources(rs []GenericResource) {
@@ -73,11 +75,24 @@ func (rkm resourceKindMap) GetNumberOfControllers() int {
 }
 
 // This is here for backward compatibility reasons
-func maybeTransformKindIntoGroupKind(k conf.TargetKind) string {
+func maybeTransformKindIntoGroupKind(k string) string {
 	if k == "Ingress" {
 		return "networking.k8s.io/Ingress"
+	} else if k == "PodDisruptionBudget" {
+		return "policy/PodDisruptionBudget"
 	}
-	return ""
+	return k
+}
+
+func parseGroupKind(gk string) schema.GroupKind {
+	i := strings.Index(gk, "/")
+	if i == -1 {
+		return schema.GroupKind{Kind: gk}
+	}
+
+	group := gk[:i]
+	kind := gk[i+1:]
+	return schema.GroupKind{Group: group, Kind: kind}
 }
 
 func newResourceProvider(version, sourceType, sourceName string) ResourceProvider {
@@ -248,16 +263,29 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		return nil, err
 	}
 	restMapper := restmapper.NewDiscoveryRESTMapper(resources)
+	allChecks := []conf.SchemaCheck{}
+	for _, check := range c.CustomChecks {
+		allChecks = append(allChecks, check)
+	}
+	for _, check := range conf.BuiltInChecks {
+		allChecks = append(allChecks, check)
+	}
 
 	var additionalKinds []conf.TargetKind
-	for _, check := range c.CustomChecks {
-		if !funk.Contains(conf.HandledTargets, check.Target) {
-			additionalKinds = append(additionalKinds, check.Target)
+	for _, check := range allChecks {
+		neededKinds := []conf.TargetKind{check.Target}
+		for key := range check.AdditionalSchemas {
+			neededKinds = append(neededKinds, conf.TargetKind(key))
+		}
+		for _, kind := range neededKinds {
+			if !funk.Contains(conf.HandledTargets, kind) {
+				additionalKinds = append(additionalKinds, kind)
+			}
 		}
 	}
 
 	for _, kind := range additionalKinds {
-		groupKind := schema.ParseGroupKind(maybeTransformKindIntoGroupKind(kind))
+		groupKind := parseGroupKind(maybeTransformKindIntoGroupKind(string(kind)))
 		mapping, err := (restMapper).RESTMapping(groupKind)
 		if err != nil {
 			logrus.Warnf("Error retrieving mapping of Kind %s because of error: %v", kind, err)

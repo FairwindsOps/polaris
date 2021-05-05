@@ -52,8 +52,8 @@ func TestGetMultipleResourceFromSingleFile(t *testing.T) {
 
 	assert.Equal(t, 0, len(resources.Nodes), "Should not have any nodes")
 
-	assert.Equal(t, 1, len(resources.Resources["Deployment"]), "Should have one controller")
-	assert.Equal(t, "dashboard", resources.Resources["Deployment"][0].PodSpec.Containers[0].Name)
+	assert.Equal(t, 1, len(resources.Resources["extensions/Deployment"]), "Should have one controller")
+	assert.Equal(t, "dashboard", resources.Resources["extensions/Deployment"][0].PodSpec.Containers[0].Name)
 
 	assert.Equal(t, 2, len(resources.Namespaces), "Should have a namespace")
 	assert.Equal(t, "polaris", resources.Namespaces[0].ObjectMeta.Name)
@@ -75,8 +75,8 @@ func TestAddResourcesFromReader(t *testing.T) {
 
 	assert.Equal(t, 0, len(resources.Nodes), "Should not have any nodes")
 
-	assert.Equal(t, 1, len(resources.Resources["Deployment"]), "Should have one controller")
-	assert.Equal(t, "dashboard", resources.Resources["Deployment"][0].PodSpec.Containers[0].Name)
+	assert.Equal(t, 1, len(resources.Resources["extensions/Deployment"]), "Should have one controller")
+	assert.Equal(t, "dashboard", resources.Resources["extensions/Deployment"][0].PodSpec.Containers[0].Name)
 
 	assert.Equal(t, 2, len(resources.Namespaces), "Should have a namespace")
 	assert.Equal(t, "polaris", resources.Namespaces[0].ObjectMeta.Name)
