@@ -7,7 +7,7 @@ checks:
   readinessProbeMissing: warning
   livenessProbeMissing: warning
   metadataAndNameMismatched: ignore
-  pdbDisruptionsAllowedGreaterThanZero: warning
+  pdbDisruptionsIsZero: warning
   missingPodDisruptionBudget: ignore
 
   # efficiency
