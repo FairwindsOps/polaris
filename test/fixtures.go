@@ -207,6 +207,12 @@ func SetupTestAPI(objects ...runtime.Object) (kubernetes.Interface, dynamic.Inte
 				{Name: "statefulsets/scale", Namespaced: true, Kind: "Scale", Group: "apps", Version: "v1beta1"},
 			},
 		},
+		{
+			GroupVersion: "policy",
+			APIResources: []metav1.APIResource{
+				{Name: "poddisruptionbudgets", Namespaced: true, Kind: "PodDisruptionBudget"},
+			},
+		},
 	}
 	return k, dynamicClient
 }
