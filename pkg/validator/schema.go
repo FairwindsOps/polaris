@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/qri-io/jsonschema"
+	"github.com/thoas/go-funk"
 	corev1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -260,10 +261,9 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 			break
 		}
 		resources := test.ResourceProvider.Resources[groupkind]
-		objects := make([]interface{}, len(resources))
-		for idx, res := range resources {
-			objects[idx] = res.Resource.Object
-		}
+		objects := funk.Map(resources, func(res kube.GenericResource) interface{} {
+			return res.Resource.Object
+		}).([]interface{})
 		passes, err = check.CheckAdditionalObjects(groupkind, objects)
 		if err != nil {
 			return nil, err
