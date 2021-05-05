@@ -37,7 +37,7 @@ var (
 		"priorityClassNotSet",
 		// Other checks
 		"tlsSettingsMissing",
-		"pdbDisruptionsAllowedGreaterThanZero",
+		"pdbDisruptionsIsZero",
 		"metadataAndNameMismatched",
 		"missingPodDisruptionBudget",
 	}

@@ -8,7 +8,8 @@ sidebarDepth: 0
 * Add support for multi-resource checks (see docs)
 
 ### Breaking Changes
-* `jsonSchema` is now `schemaString`
+* In custom checks, `jsonSchema` is now `schemaString`
+* Check `pdbDisruptionsAllowedGreaterThanZero` is now called `pdbDisruptionsIsZero`
 
 ## 3.2.0
 * Add `--format=pretty` option for CLI output

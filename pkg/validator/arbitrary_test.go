@@ -29,7 +29,7 @@ import (
 func TestValidatePDB(t *testing.T) {
 	c := conf.Configuration{
 		Checks: map[string]conf.Severity{
-			"pdbDisruptionsAllowedGreaterThanZero": conf.SeverityWarning,
+			"pdbDisruptionsIsZero": conf.SeverityWarning,
 		},
 	}
 	pdb := unstructured.Unstructured{}
@@ -40,7 +40,7 @@ func TestValidatePDB(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	results := actualResult.Results["pdbDisruptionsAllowedGreaterThanZero"]
+	results := actualResult.Results["pdbDisruptionsIsZero"]
 
 	assert.False(t, results.Success)
 	assert.Equal(t, conf.SeverityWarning, results.Severity)
