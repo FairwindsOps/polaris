@@ -8,7 +8,7 @@ checks:
   livenessProbeMissing: warning
   metadataAndNameMismatched: ignore
   pdbDisruptionsAllowedGreaterThanZero: warning
-  missingPodDisruptionBudget: warning
+  missingPodDisruptionBudget: ignore
 
   # efficiency
   cpuRequestsMissing: warning
