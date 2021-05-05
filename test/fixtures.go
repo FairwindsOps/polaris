@@ -208,6 +208,12 @@ func SetupTestAPI(objects ...runtime.Object) (kubernetes.Interface, dynamic.Inte
 			},
 		},
 		{
+			GroupVersion: "networking.k8s.io",
+			APIResources: []metav1.APIResource{
+				{Name: "ingresses", Namespaced: true, Kind: "Ingress"},
+			},
+		},
+		{
 			GroupVersion: "policy",
 			APIResources: []metav1.APIResource{
 				{Name: "poddisruptionbudgets", Namespaced: true, Kind: "PodDisruptionBudget"},
