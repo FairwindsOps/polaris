@@ -10,6 +10,7 @@ import (
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	extv1beta1 "k8s.io/api/extensions/v1beta1"
+	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -162,6 +163,7 @@ func SetupTestAPI(objects ...runtime.Object) (kubernetes.Interface, dynamic.Inte
 	scheme := runtime.NewScheme()
 	appsv1.AddToScheme(scheme)
 	corev1.AddToScheme(scheme)
+	policyv1beta1.AddToScheme(scheme)
 	fake.AddToScheme(scheme)
 	dynamicClient := dynamicFake.NewSimpleDynamicClient(scheme, objects...)
 	k := fake.NewSimpleClientset(objects...)
@@ -208,15 +210,15 @@ func SetupTestAPI(objects ...runtime.Object) (kubernetes.Interface, dynamic.Inte
 			},
 		},
 		{
-			GroupVersion: "networking.k8s.io",
+			GroupVersion: "networking.k8s.io/v1",
 			APIResources: []metav1.APIResource{
-				{Name: "ingresses", Namespaced: true, Kind: "Ingress"},
+				{Name: "ingresses", Namespaced: true, Kind: "Ingress", Version: "v1"},
 			},
 		},
 		{
-			GroupVersion: "policy",
+			GroupVersion: policyv1beta1.SchemeGroupVersion.String(),
 			APIResources: []metav1.APIResource{
-				{Name: "poddisruptionbudgets", Namespaced: true, Kind: "PodDisruptionBudget"},
+				{Name: "poddisruptionbudgets", Namespaced: true, Kind: "PodDisruptionBudget", Version: "v1"},
 			},
 		},
 	}

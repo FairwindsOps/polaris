@@ -3,7 +3,6 @@ package kube
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io/ioutil"
 	"testing"
 	"time"
@@ -29,8 +28,7 @@ func TestGetResourcesFromPath(t *testing.T) {
 	assert.Equal(t, "two", provider.Namespaces[0].ObjectMeta.Name)
 
 	namespaceCount := map[string]int{}
-	for kind, resources := range provider.Resources {
-		fmt.Println("found", kind, len(resources))
+	for _, resources := range provider.Resources {
 		for _, controller := range resources {
 			namespaceCount[controller.ObjectMeta.GetNamespace()]++
 		}
