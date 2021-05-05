@@ -2,6 +2,14 @@
 sidebarDepth: 0
 ---
 
+## 4.0.0
+* Add support for arbitrary resources, like Ingress or PodDisruptionBudget
+* Add support check templating (see docs)
+* Add support for multi-resource checks (see docs)
+
+### Breaking Changes
+* `jsonSchema` is now `schemaString`
+
 ## 3.2.0
 * Add `--format=pretty` option for CLI output
 

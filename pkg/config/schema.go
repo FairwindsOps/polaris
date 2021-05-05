@@ -46,7 +46,7 @@ type SchemaCheck struct {
 	Target                  TargetKind                        `yaml:"target" json:"target"`
 	SchemaTarget            TargetKind                        `yaml:"schemaTarget" json:"schemaTarget"`
 	Schema                  map[string]interface{}            `yaml:"schema" json:"schema"`
-	SchemaString            string                            `yaml:"jsonSchema" json:"jsonSchema"`
+	SchemaString            string                            `yaml:"schemaString" json:"schemaString"`
 	Validator               jsonschema.RootSchema             `yaml:"-" json:"-"`
 	AdditionalSchemas       map[string]map[string]interface{} `yaml:"additionalSchemas" json:"additionalSchemas"`
 	AdditionalSchemaStrings map[string]string                 `yaml:"additionalSchemaStrings" json:"additionalSchemaStrings"`
