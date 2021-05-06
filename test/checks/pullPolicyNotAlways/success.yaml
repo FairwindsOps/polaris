@@ -3,10 +3,10 @@ kind: Pod
 metadata:
   name: nginx
   labels:
-    app.kubernetes.io/name: nginx
+    env: test
 spec:
-  hostIPC: false
   containers:
-  - name: nginx 
+  - name: nginx
     image: nginx
-        
+    imagePullPolicy: Always
+    

@@ -5,8 +5,7 @@ metadata:
   labels:
     app.kubernetes.io/name: nginx
 spec:
-  hostIPC: false
+  hostNetwork: true
   containers:
   - name: nginx 
     image: nginx
-        
