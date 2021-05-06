@@ -22,13 +22,9 @@ func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider, o
 		displayName = kubeResources.SourceName
 	}
 
-	results := []Result{}
-	for _, resources := range kubeResources.Resources {
-		kindResults, err := ApplyAllSchemaChecksToAllResources(&config, resources)
-		if err != nil {
-			return AuditData{}, err
-		}
-		results = append(results, kindResults...)
+	results, err := ApplyAllSchemaChecksToResourceProvider(&config, kubeResources)
+	if err != nil {
+		return AuditData{}, err
 	}
 
 	auditData := AuditData{

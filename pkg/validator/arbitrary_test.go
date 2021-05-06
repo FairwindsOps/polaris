@@ -29,18 +29,18 @@ import (
 func TestValidatePDB(t *testing.T) {
 	c := conf.Configuration{
 		Checks: map[string]conf.Severity{
-			"pdbDisruptionsAllowedGreaterThanZero": conf.SeverityWarning,
+			"pdbDisruptionsIsZero": conf.SeverityWarning,
 		},
 	}
 	pdb := unstructured.Unstructured{}
 	res, err := kube.NewGenericResourceFromUnstructured(&pdb)
 	res.Kind = "PodDisruptionBudget"
 
-	actualResult, err := applyNonControllerSchemaChecks(&c, res)
+	actualResult, err := applyNonControllerSchemaChecks(&c, nil, res)
 	if err != nil {
 		panic(err)
 	}
-	results := actualResult.Results["pdbDisruptionsAllowedGreaterThanZero"]
+	results := actualResult.Results["pdbDisruptionsIsZero"]
 
 	assert.False(t, results.Success)
 	assert.Equal(t, conf.SeverityWarning, results.Severity)
@@ -76,7 +76,7 @@ func TestValidateIngress(t *testing.T) {
 	}
 	res.Kind = "Ingress"
 
-	actualResult, err := applyNonControllerSchemaChecks(&c, res)
+	actualResult, err := applyNonControllerSchemaChecks(&c, nil, res)
 	if err != nil {
 		panic(err)
 	}
