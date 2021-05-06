@@ -11,6 +11,7 @@ key | default | description
 `pullPolicyNotAlways` | `warning` | Fails when an image pull policy is not `always`.
 `priorityClassNotSet` | `ignore` | Fails when a priorityClassName is not set for a pod.
 `multipleReplicasForDeployment` | `ignore` | Fails when there is only one replica for a deployment.
+`missingPodDisruptionBudget` | `ignore` 
 
 ## Background
 
