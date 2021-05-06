@@ -3,6 +3,7 @@ package config
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -36,34 +37,45 @@ var HandledTargets = []TargetKind{
 
 // SchemaCheck is a Polaris check that runs using JSON Schema
 type SchemaCheck struct {
-	ID             string                 `yaml:"id" json:"id"`
-	Category       string                 `yaml:"category" json:"category"`
-	SuccessMessage string                 `yaml:"successMessage" json:"successMessage"`
-	FailureMessage string                 `yaml:"failureMessage" json:"failureMessage"`
-	Controllers    includeExcludeList     `yaml:"controllers" json:"controllers"`
-	Containers     includeExcludeList     `yaml:"containers" json:"containers"`
-	Target         TargetKind             `yaml:"target" json:"target"`
-	SchemaTarget   TargetKind             `yaml:"schemaTarget" json:"schemaTarget"`
-	Schema         map[string]interface{} `yaml:"schema" json:"schema"`
-	SchemaString   string                 `yaml:"jsonSchema" json:"jsonSchema"`
-	Validator      jsonschema.RootSchema  `yaml:"-"`
+	ID                      string                            `yaml:"id" json:"id"`
+	Category                string                            `yaml:"category" json:"category"`
+	SuccessMessage          string                            `yaml:"successMessage" json:"successMessage"`
+	FailureMessage          string                            `yaml:"failureMessage" json:"failureMessage"`
+	Controllers             includeExcludeList                `yaml:"controllers" json:"controllers"`
+	Containers              includeExcludeList                `yaml:"containers" json:"containers"`
+	Target                  TargetKind                        `yaml:"target" json:"target"`
+	SchemaTarget            TargetKind                        `yaml:"schemaTarget" json:"schemaTarget"`
+	Schema                  map[string]interface{}            `yaml:"schema" json:"schema"`
+	SchemaString            string                            `yaml:"schemaString" json:"schemaString"`
+	Validator               jsonschema.RootSchema             `yaml:"-" json:"-"`
+	AdditionalSchemas       map[string]map[string]interface{} `yaml:"additionalSchemas" json:"additionalSchemas"`
+	AdditionalSchemaStrings map[string]string                 `yaml:"additionalSchemaStrings" json:"additionalSchemaStrings"`
+	AdditionalValidators    map[string]jsonschema.RootSchema  `yaml:"-" json:"-"`
 }
 
 type resourceMinimum string
 type resourceMaximum string
 
-// ParseCheck parses a check from a byte array
-func ParseCheck(id string, rawBytes []byte) (SchemaCheck, error) {
-	reader := bytes.NewReader(rawBytes)
-	check := SchemaCheck{}
+func unmarshalYAMLOrJSON(raw []byte, dest interface{}) error {
+	reader := bytes.NewReader(raw)
 	d := k8sYaml.NewYAMLOrJSONDecoder(reader, 4096)
 	for {
-		if err := d.Decode(&check); err != nil {
+		if err := d.Decode(dest); err != nil {
 			if err == io.EOF {
 				break
 			}
-			return check, fmt.Errorf("Decoding schema check failed: %v", err)
+			return fmt.Errorf("Decoding schema check failed: %v", err)
 		}
+	}
+	return nil
+}
+
+// ParseCheck parses a check from a byte array
+func ParseCheck(id string, rawBytes []byte) (SchemaCheck, error) {
+	check := SchemaCheck{}
+	err := unmarshalYAMLOrJSON(rawBytes, &check)
+	if err != nil {
+		return check, err
 	}
 	check.Initialize(id)
 	return check, nil
@@ -155,27 +167,63 @@ func (check *SchemaCheck) Initialize(id string) error {
 		}
 		check.SchemaString = string(jsonBytes)
 	}
-	err := json.Unmarshal([]byte(check.SchemaString), &check.Validator)
-	return err
+	for kind, schema := range check.AdditionalSchemas {
+		jsonBytes, err := json.Marshal(schema)
+		if err != nil {
+			return err
+		}
+		check.AdditionalSchemaStrings[kind] = string(jsonBytes)
+	}
+	check.Schema = map[string]interface{}{}
+	check.AdditionalSchemas = map[string]map[string]interface{}{}
+	return nil
 }
 
 // TemplateForResource fills out a check's templated fields given a particular resource
 func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, error) {
 	newCheck := check // Make a copy of the check, since we're going to modify the schema
-	tmpl := template.New(newCheck.ID)
-	tmpl, err := tmpl.Parse(newCheck.SchemaString)
+
+	templateStrings := map[string]string{
+		"": newCheck.SchemaString,
+	}
+	for kind, schema := range newCheck.AdditionalSchemaStrings {
+		templateStrings[kind] = schema
+	}
+	newCheck.SchemaString = ""
+	newCheck.AdditionalSchemaStrings = map[string]string{}
+
+	for kind, tmplString := range templateStrings {
+		tmpl := template.New(newCheck.ID)
+		tmpl, err := tmpl.Parse(tmplString)
+		if err != nil {
+			return nil, err
+		}
+		w := bytes.Buffer{}
+		err = tmpl.Execute(&w, res)
+		if err != nil {
+			return nil, err
+		}
+
+		if kind == "" {
+			newCheck.SchemaString = w.String()
+		} else {
+			newCheck.AdditionalSchemaStrings[kind] = w.String()
+		}
+	}
+
+	newCheck.AdditionalValidators = map[string]jsonschema.RootSchema{}
+	for kind, schemaStr := range newCheck.AdditionalSchemaStrings {
+		val := jsonschema.RootSchema{}
+		err := unmarshalYAMLOrJSON([]byte(schemaStr), &val)
+		if err != nil {
+			return nil, err
+		}
+		newCheck.AdditionalValidators[kind] = val
+	}
+	err := unmarshalYAMLOrJSON([]byte(newCheck.SchemaString), &newCheck.Validator)
 	if err != nil {
 		return nil, err
 	}
-
-	w := bytes.Buffer{}
-	err = tmpl.Execute(&w, res)
-	if err != nil {
-		return nil, err
-	}
-
-	newCheck.SchemaString = w.String()
-	newCheck.Initialize(newCheck.ID)
 	return &newCheck, err
 }
 
@@ -203,6 +251,28 @@ func (check SchemaCheck) CheckObject(obj interface{}) (bool, []jsonschema.ValErr
 	}
 	errs, err := check.Validator.ValidateBytes(bytes)
 	return len(errs) == 0, errs, err
+}
+
+// CheckAdditionalObjects looks for an object that passes the specified additional schema
+func (check SchemaCheck) CheckAdditionalObjects(groupkind string, objects []interface{}) (bool, error) {
+	val, ok := check.AdditionalValidators[groupkind]
+	if !ok {
+		return false, errors.New("No validator found for " + groupkind)
+	}
+	for _, obj := range objects {
+		bytes, err := json.Marshal(obj)
+		if err != nil {
+			return false, err
+		}
+		errs, err := val.ValidateBytes(bytes)
+		if err != nil {
+			return false, err
+		}
+		if len(errs) == 0 {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // IsActionable decides if this check applies to a particular target

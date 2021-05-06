@@ -154,10 +154,11 @@ func TestConfigWithCustomChecks(t *testing.T) {
 	parsedConf, err := Parse([]byte(confCustomChecks))
 	assert.NoError(t, err, "Expected no error when parsing YAML config")
 	assert.Equal(t, 1, len(parsedConf.CustomChecks))
-	isValid, _, err := parsedConf.CustomChecks["foo"].CheckObject(valid)
+	check, err := parsedConf.CustomChecks["foo"].TemplateForResource(map[string]interface{}{})
+	isValid, _, err := check.CheckObject(valid)
 	assert.NoError(t, err)
 	assert.Equal(t, true, isValid)
-	isValid, _, err = parsedConf.CustomChecks["foo"].CheckObject(invalid)
+	isValid, _, err = check.CheckObject(invalid)
 	assert.NoError(t, err)
 	assert.Equal(t, false, isValid)
 
@@ -169,7 +170,7 @@ func TestConfigWithCustomChecks(t *testing.T) {
 	if !assert.Equal(t, true, isValid) {
 		fmt.Println(problems[0].PropertyPath, problems[0].InvalidValue, problems[0].Message)
 	}
-	isValid, _, err = parsedConf.CustomChecks["foo"].CheckObject(invalid)
+	isValid, _, err = check.CheckObject(invalid)
 	assert.NoError(t, err)
 	assert.Equal(t, false, isValid)
 }

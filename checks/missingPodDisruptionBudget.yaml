@@ -1,0 +1,39 @@
+successMessage: A PodDisruptionBudget is attached
+failureMessage: Should have a PodDisruptionBudget
+category: Reliability
+target: Controller
+controllers:
+  include:
+  - Deployment
+schema:
+  '$schema': http://json-schema.org/draft-07/schema
+  type: object
+  properties:
+    metadata:
+      type: object
+      properties:
+        labels:
+          type: object
+          minProperties: 1
+additionalSchemaStrings:
+  policy/PodDisruptionBudget: |
+    type: object
+    properties:
+      spec:
+        type: object
+        required: ["selector"]
+        properties:
+          selector:
+            type: object
+            required: ["matchLabels"]
+            properties:
+              matchLabels:
+                type: object
+                anyOf:
+                {{ range $key, $value := .metadata.labels }}
+                - properties:
+                    "{{ $key }}":
+                      type: string
+                      const: {{ $value }}
+                  required: ["{{ $key }}"]
+                {{ end }}
