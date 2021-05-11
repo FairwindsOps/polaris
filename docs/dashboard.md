@@ -19,7 +19,7 @@ kubectl port-forward --namespace polaris svc/polaris-dashboard 8080:80
 ### Helm
 ```bash
 helm repo add fairwinds-stable https://charts.fairwinds.com/stable
-helm upgrade --install polaris fairwinds-stable/polaris --namespace polaris
+helm upgrade --install polaris fairwinds-stable/polaris --namespace polaris --create-namespace
 kubectl port-forward --namespace polaris svc/polaris-dashboard 8080:80
 ```
 
