@@ -6,8 +6,9 @@ metadata:
     app.kubernetes.io/name: nginx
 spec:
   containers:
-  - name: nginx 
+  - name: nginx
     image: nginx
     securityContext:
       capabilities:
-        add: ["NET_ADMIN", "SYS_ADMIN"]
+        add: ["ALL"]
+
