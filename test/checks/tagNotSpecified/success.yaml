@@ -6,6 +6,5 @@ metadata:
     env: test
 spec:
   containers:
-  - allOf: 
-    image:
-      pattern: ^.+:latest$
+  - image: nginx:v1.2.3
+    
