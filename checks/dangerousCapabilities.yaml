@@ -14,12 +14,13 @@ schema:
           properties:
             add:
               type: array
-              not:
-                contains:
-                  const: ALL
-              not:
-                contains:
-                  const: SYS_ADMIN
-              not:
-                contains:
-                  const: NET_ADMIN
+              allOf:
+                - not:
+                    contains:
+                      const: ALL
+                - not:
+                    contains:
+                      const: SYS_ADMIN
+                - not:
+                    contains:
+                      const: NET_ADMIN
