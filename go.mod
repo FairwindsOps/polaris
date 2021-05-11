@@ -19,7 +19,6 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
 	github.com/thoas/go-funk v0.8.0
-	golang.org/x/oauth2 v0.0.0-20201208152858-08078c50e5b5 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
 	k8s.io/api v0.21.0
 	k8s.io/apimachinery v0.21.0
