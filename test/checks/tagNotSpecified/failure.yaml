@@ -6,7 +6,4 @@ metadata:
     env: test
 spec:
   containers:
-  - allOf: 
-    image:
-      pattern: 
-    
+  - image: nginx
