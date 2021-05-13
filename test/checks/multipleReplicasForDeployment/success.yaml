@@ -6,3 +6,7 @@ metadata:
     env: test
 spec:
   replicas: 3
+  template:
+    spec:
+      containers: []
+
