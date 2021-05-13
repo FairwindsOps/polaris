@@ -105,7 +105,8 @@ func (v *Validator) handleInternal(req admission.Request) (*validator.PodResult,
 	}
 	controller.Kind = req.AdmissionRequest.Kind.Kind
 	var controllerResult validator.Result
-	controllerResult, err = validator.ApplyAllSchemaChecks(&v.Config, controller)
+	// TODO: consider enabling multi-resource checks
+	controllerResult, err = validator.ApplyAllSchemaChecks(&v.Config, nil, controller)
 	if err != nil {
 		return nil, err
 	}
