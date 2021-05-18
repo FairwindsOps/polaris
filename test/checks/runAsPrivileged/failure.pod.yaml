@@ -5,6 +5,8 @@ metadata:
   labels:
     env: test
 spec:
+  securityContext: 
+    privileged: false
   containers:
   - securityContext: 
-      privileged: false
+      privileged: true
