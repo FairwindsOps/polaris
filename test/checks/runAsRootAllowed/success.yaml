@@ -3,8 +3,10 @@ kind: Deployment
 metadata:
   name: nginx
 spec:
-  containers:
-  - name: nginx
-    image: nginx
-    securityContext:
-      runAsNonRoot: true
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        securityContext:
+          runAsNonRoot: true

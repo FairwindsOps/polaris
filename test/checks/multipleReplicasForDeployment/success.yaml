@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: nginx
+  labels:
+    env: test
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers: []
+
