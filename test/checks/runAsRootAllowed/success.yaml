@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: nginx
 spec:
- template:
+  template:
     spec:
       containers:
       - name: nginx
