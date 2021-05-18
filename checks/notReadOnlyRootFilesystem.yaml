@@ -10,11 +10,6 @@ schema:
       type: object
       anyOf:
       - required:
-        - runAsUser
-        properties:
-          runAsUser:
-            minimum: 1
-      - required:
         - readOnlyRootFilesystem
         properties:
           readOnlyRootFilesystem:
@@ -22,8 +17,6 @@ schema:
     notBadSecurityContext:
       type: object
       properties:
-        runAsUser:
-          minimum: 1
         readOnlyRootFilesystem:
           const: true
   type: object
