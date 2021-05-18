@@ -17,6 +17,7 @@ references:
         echo 'export PUSH_ALL_VERSION_TAGS=true' >> ${BASH_ENV}
         echo 'export GOPROXY=https://proxy.golang.org' >> ${BASH_ENV}
         echo 'export GO111MODULE=on' >> ${BASH_ENV}
+        echo 'export GOFLAGS=-mod=mod' >> ${BASH_ENV}
 
   install_k8s: &install_k8s
     run:
