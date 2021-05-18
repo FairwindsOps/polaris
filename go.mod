@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go v0.74.0 // indirect
 	github.com/Azure/go-autorest/autorest v0.11.15 // indirect
 	github.com/Azure/go-autorest/autorest/adal v0.9.10 // indirect
-	github.com/fatih/color v1.10.0
+	github.com/fatih/color v1.11.0
 	github.com/gobuffalo/packr/v2 v2.8.1
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.1.3 // indirect
