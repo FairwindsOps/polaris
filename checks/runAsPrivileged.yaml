@@ -19,24 +19,12 @@ schema:
           not:
             const: true
   type: object
-  anyOf:
-  - required:
-    - securityContext
-    properties:
-      securityContext:
-        $ref: "#/definitions/goodSecurityContext"
-      containers:
-        type: array
-        items:
-          properties:
-            securityContext:
-              $ref: "#/definitions/notBadSecurityContext"
-  - properties:
-      containers:
-        type: array
-        items:
-          required:
-          - securityContext
-          properties:
-            securityContext:
-              $ref: "#/definitions/goodSecurityContext"
+  properties:
+    securityContext:
+      $ref: "#/definitions/notBadSecurityContext"
+    containers:
+      type: array
+      items:
+        properties:
+          securityContext:
+            $ref: "#/definitions/notBadSecurityContext"
