@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  labels:
+    env: test
+spec:
+  securityContext:
+      readOnlyRootFilesystem: false
+  containers:
+    - name: container-a
+      securityContext:
+        readOnlyRootFilesystem: true
+    - name: container-b
+
