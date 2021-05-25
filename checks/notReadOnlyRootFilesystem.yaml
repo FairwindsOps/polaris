@@ -2,15 +2,42 @@ successMessage: Filesystem is read only
 failureMessage: Filesystem should be read only
 category: Security
 target: Container
+schemaTarget: Pod
 schema:
   '$schema': http://json-schema.org/draft-07/schema
-  type: object
-  required:
-  - securityContext
-  properties:
-    securityContext:
-      required:
-      - readOnlyRootFilesystem
+  definitions:
+    goodSecurityContext:
+      type: object
+      anyOf:
+      - required:
+        - readOnlyRootFilesystem
+        properties:
+          readOnlyRootFilesystem:
+            const: true
+    notBadSecurityContext:
+      type: object
       properties:
         readOnlyRootFilesystem:
           const: true
+  type: object
+  anyOf:
+  - required:
+    - securityContext
+    properties:
+      securityContext:
+        $ref: "#/definitions/goodSecurityContext"
+      containers:
+        type: array
+        items:
+          properties:
+            securityContext:
+              $ref: "#/definitions/notBadSecurityContext"
+  - properties:
+      containers:
+        type: array
+        items:
+          required:
+          - securityContext
+          properties:
+            securityContext:
+              $ref: "#/definitions/goodSecurityContext"

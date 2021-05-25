@@ -5,6 +5,8 @@ metadata:
   labels:
     app: zookeeper
 spec:
-  containers:
-  - name: zookeeper
-    image: zookeeper
+  template:
+    spec:
+      containers:
+      - name: zookeeper
+        image: zookeeper
