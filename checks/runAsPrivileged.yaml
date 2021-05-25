@@ -2,12 +2,23 @@ successMessage: Not running as privileged
 failureMessage: Should not be running as privileged
 category: Security
 target: Container
+schemaTarget: Pod
 schema:
   '$schema': http://json-schema.org/draft-07/schema
-  type: object
-  properties:
-    securityContext:
+  definitions:
+    notBadSecurityContext:
+      type: object
       properties:
         privileged:
           not:
             const: true
+  type: object
+  properties:
+    securityContext:
+      $ref: "#/definitions/notBadSecurityContext"
+    containers:
+      type: array
+      items:
+        properties:
+          securityContext:
+            $ref: "#/definitions/notBadSecurityContext"

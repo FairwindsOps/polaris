@@ -2,15 +2,42 @@ successMessage: Privilege escalation not allowed
 failureMessage: Privilege escalation should not be allowed
 category: Security
 target: Container
+schemaTarget: Pod
 schema:
   '$schema': http://json-schema.org/draft-07/schema
-  type: object
-  required:
-  - securityContext
-  properties:
-    securityContext:
-      required:
-      - allowPrivilegeEscalation
+  definitions:
+    goodSecurityContext:
+      type: object
+      anyOf:
+      - required:
+        - allowPrivilegeEscalation
+        properties:
+          allowPrivilegeEscalation:
+            const: false
+    notBadSecurityContext:
+      type: object
       properties:
         allowPrivilegeEscalation:
           const: false
+  type: object
+  anyOf:
+  - required:
+    - securityContext
+    properties:
+      securityContext:
+        $ref: "#/definitions/goodSecurityContext"
+      containers:
+        type: array
+        items:
+          properties:
+            securityContext:
+              $ref: "#/definitions/notBadSecurityContext"
+  - properties:
+      containers:
+        type: array
+        items:
+          required:
+          - securityContext
+          properties:
+            securityContext:
+              $ref: "#/definitions/goodSecurityContext"

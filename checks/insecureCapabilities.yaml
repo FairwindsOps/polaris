@@ -54,4 +54,3 @@ schema:
                     const: KILL
                 - contains:
                     const: AUDIT_WRITE
-

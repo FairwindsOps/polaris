@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  labels:
+    env: test
+spec:
+  securityContext:
+    capabilities:
+      drop:
+        - ALL
+  containers:
+  - name: nginx
+    image: nginx
+

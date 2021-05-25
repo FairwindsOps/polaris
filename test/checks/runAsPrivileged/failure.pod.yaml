@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  labels:
+    env: test
+spec:
+  securityContext: 
+    privileged: false
+  containers:
+  - securityContext: 
+      privileged: true
