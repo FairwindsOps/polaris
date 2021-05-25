@@ -177,7 +177,7 @@ jobs:
   release_binary:
     working_directory: /go/src/github.com/fairwindsops/polaris/
     docker:
-      - image: circleci/golang:1.13
+      - image: circleci/golang:1.16
     steps:
       - checkout
       - setup_remote_docker
