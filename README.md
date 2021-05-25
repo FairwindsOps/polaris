@@ -29,46 +29,12 @@ Polaris can be run in three different modes:
   <img src="https://polaris.docs.fairwinds.com/img/architecture.svg" alt="Polaris Architecture" width="550"/>
 </p>
 
-## Join the Fairwinds Open Source Community
-
-The goal of the Fairwinds Community is to exchange ideas, influence the open source roadmap, and network with fellow Kubernetes users. [Chat with us on Slack](https://join.slack.com/t/fairwindscommunity/shared_invite/zt-e3c6vj4l-3lIH6dvKqzWII5fSSFDi1g) or [join the user group](https://www.fairwinds.com/open-source-software-user-group) to get involved!
-
-
 ## Documentation
 Check out the [documentation at docs.fairwinds.com](https://polaris.docs.fairwinds.com)
 
-## Integration with Fairwinds Insights
-<p align="center">
-  <img src="https://polaris.docs.fairwinds.com/img/FW_Insights_Polaris.svg" alt="Fairwinds Insights" width="550"/>
-</p>
+## Join the Fairwinds Open Source Community
 
-[Fairwinds Insights](https://www.fairwinds.com/fairwinds-polaris-upgrade)
-is a platform for auditing Kubernetes clusters and enforcing policy. If you'd like to:
-* manage Polaris across a fleet of clusters
-* track findings over time
-* send results to services like Slack and Datadog
-* add additional checks from tools like
-[Trivy](https://github.com/aquasecurity/trivy),
-[Goldilocks](https://github.com/FairwindsOps/goldilocks/), and
-[OPA](https://www.openpolicyagent.org)
-
-you can sign up for a [free account here](https://insights.fairwinds.com?source=polaris).
-
-## Contributing
-PRs welcome! Check out the [Contributing Guidelines](https://polaris.docs.fairwinds.com/contributing) and [Code of Conduct](https://polaris.docs.fairwinds.com/code-of-conduct) for more information.
-
-## Further Information
-A history of changes to this project can be viewed in the [Changelog](https://polaris.docs.fairwinds.com/changelog)
-
-If you'd like to learn more about Polaris, or if you'd like to speak with
-a Kubernetes expert, you can contact `info@fairwinds.com` or [visit our website](https://fairwinds.com)
-
----
-
-<p align="center">
-  <img src="https://polaris.docs.fairwinds.com/img/dashboard-screenshot.png" alt="Polaris Dashboard" width="550"/>
-</p>
-
+The goal of the Fairwinds Community is to exchange ideas, influence the open source roadmap, and network with fellow Kubernetes users. [Chat with us on Slack](https://join.slack.com/t/fairwindscommunity/shared_invite/zt-e3c6vj4l-3lIH6dvKqzWII5fSSFDi1g) or [join the user group](https://www.fairwinds.com/open-source-software-user-group) to get involved!
 
 
 ## Other Projects from Fairwinds
@@ -80,6 +46,9 @@ Enjoying Polaris? Check out some of our other projects:
 * [rbac-manager](https://github.com/FairwindsOps/rbac-manager) - Simplify the management of RBAC in your Kubernetes clusters
 
 ## Fairwinds Insights
+<p align="center">
+  <img src="https://polaris.docs.fairwinds.com/img/FW_Insights_Polaris.svg" alt="Fairwinds Insights" width="550"/>
+</p>
 
 If you're interested in running Polaris in multiple clusters,
 tracking the results over time, integrating with Slack, Datadog, and Jira,
