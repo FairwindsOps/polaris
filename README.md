@@ -8,7 +8,7 @@
   <a href="https://goreportcard.com/report/github.com/FairwindsOps/polaris">
     <img src="https://goreportcard.com/badge/github.com/FairwindsOps/polaris">
   </a>
-  <a href="https://circleci.com/gh/FairwindsOps/polaris.svg">
+  <a href="https://circleci.com/gh/FairwindsOps/polaris">
     <img src="https://circleci.com/gh/FairwindsOps/polaris.svg?style=svg">
   </a>
   <a href="https://insights.fairwinds.com/gh/FairwindsOps/polaris">
