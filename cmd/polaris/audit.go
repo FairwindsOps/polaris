@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 
 	conf "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
@@ -39,6 +40,8 @@ var auditOutputFile string
 var auditOutputFormat string
 var resourceToAudit string
 var useColor bool
+var helmChart string
+var helmValues string
 
 func init() {
 	rootCmd.AddCommand(auditCmd)
@@ -52,6 +55,8 @@ func init() {
 	auditCmd.PersistentFlags().BoolVar(&useColor, "color", true, "Whether to use color in pretty format.")
 	auditCmd.PersistentFlags().StringVar(&displayName, "display-name", "", "An optional identifier for the audit.")
 	auditCmd.PersistentFlags().StringVar(&resourceToAudit, "resource", "", "Audit a specific resource, in the format namespace/kind/version/name, e.g. nginx-ingress/Deployment.apps/v1/default-backend.")
+	auditCmd.PersistentFlags().StringVar(&helmChart, "helm-chart", "", "Will fill out Helm template")
+	auditCmd.PersistentFlags().StringVar(&helmChart, "helm-values", "", "Optional flag to add helm values")
 }
 
 var auditCmd = &cobra.Command{
@@ -61,6 +66,14 @@ var auditCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		if displayName != "" {
 			config.DisplayName = displayName
+		}
+		if helmChart != "" {
+			var err error
+			auditPath, err = ProcessHelmTemplates(helmChart)
+			if err != nil {
+				logrus.Infof("Couldn't process helm chart: %v", err)
+				os.Exit(1)
+			}
 		}
 
 		auditData := runAndReportAudit(cmd.Context(), config, auditPath, resourceToAudit, auditOutputFile, auditOutputURL, auditOutputFormat, useColor)
@@ -75,6 +88,39 @@ var auditCmd = &cobra.Command{
 			os.Exit(4)
 		}
 	},
+}
+
+// ProcessHelmTemplates turns helm into yaml to be processed by Polaris or the other tools.
+func ProcessHelmTemplates(helmChart string) (string, error) {
+	cmd := exec.Command("helm", "dependency", "update", helmChart)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		logrus.Error(string(output))
+		return "", err
+	}
+
+	dir, err := ioutil.TempDir("", "*")
+	if err != nil {
+		return "", err
+	}
+	params := []string{
+		"template", helmChart,
+		helmChart,
+		"--output-dir",
+		dir,
+	}
+	if helmValues != "" {
+		params = append(params, "--values", helmValues)
+	}
+
+	cmd = exec.Command("helm", params...)
+	output, err = cmd.CombinedOutput()
+
+	if err != nil {
+		logrus.Error(string(output))
+		return "", err
+	}
+	return dir, nil
 }
 
 func runAndReportAudit(ctx context.Context, c conf.Configuration, auditPath, workload, outputFile, outputURL, outputFormat string, useColor bool) validator.AuditData {
