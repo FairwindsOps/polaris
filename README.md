@@ -47,7 +47,7 @@ Enjoying Polaris? Check out some of our other projects:
 
 ## Fairwinds Insights
 <p align="center">
-  <img src="https://polaris.docs.fairwinds.com/img/FW_Insights_Polaris.svg" alt="Fairwinds Insights" width="550"/>
+  <img src="https://polaris.docs.fairwinds.com/img/insights-banner.png" alt="Fairwinds Insights" width="550"/>
 </p>
 
 If you're interested in running Polaris in multiple clusters,
