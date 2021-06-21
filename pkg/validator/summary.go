@@ -1,7 +1,6 @@
 package validator
 
 import (
-	"fmt"
 	"sort"
 	"strings"
 
