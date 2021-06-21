@@ -181,7 +181,7 @@ func GetRouter(c config.Configuration, auditPath string, port int, basePath stri
 			}
 
 			var auditDataObj validator.AuditData
-			auditDataObj, err = validator.RunAudit(adjustedConf, k, false)
+			auditDataObj, err = validator.RunAudit(adjustedConf, k)
 			if err != nil {
 				http.Error(w, "Error Fetching Deployments", http.StatusInternalServerError)
 				return
@@ -214,7 +214,7 @@ func GetRouter(c config.Configuration, auditPath string, port int, basePath stri
 			}
 
 			var auditData validator.AuditData
-			auditData, err = validator.RunAudit(adjustedConf, k, false)
+			auditData, err = validator.RunAudit(adjustedConf, k)
 			if err != nil {
 				logrus.Errorf("Error getting audit data: %v", err)
 				http.Error(w, "Error running audit", 500)

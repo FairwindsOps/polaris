@@ -24,7 +24,6 @@ import (
 	"os"
 	"os/exec"
 
-	conf "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
 	"github.com/fairwindsops/polaris/pkg/validator"
 	"github.com/sirupsen/logrus"
@@ -76,7 +75,19 @@ var auditCmd = &cobra.Command{
 			}
 		}
 
-		auditData := runAndReportAudit(cmd.Context(), config, auditPath, resourceToAudit, auditOutputFile, auditOutputURL, auditOutputFormat, useColor)
+		k, err := kube.CreateResourceProvider(context.TODO(), auditPath, resourceToAudit, config)
+		if err != nil {
+			logrus.Errorf("Error fetching Kubernetes resources %v", err)
+			os.Exit(1)
+		}
+
+		auditData, err := validator.RunAudit(config, k)
+		if err != nil {
+			logrus.Errorf("Error while running audit on resources: %v", err)
+			os.Exit(1)
+		}
+
+		outputAudit(auditData, auditOutputFile, auditOutputURL, auditOutputFormat, useColor, onlyShowFailedTests)
 
 		summary := auditData.GetSummary()
 		score := summary.GetScore()
@@ -123,26 +134,17 @@ func ProcessHelmTemplates(helmChart string) (string, error) {
 	return dir, nil
 }
 
-func runAndReportAudit(ctx context.Context, c conf.Configuration, auditPath, workload, outputFile, outputURL, outputFormat string, useColor bool) validator.AuditData {
-	// Create a kubernetes client resource provider
-	k, err := kube.CreateResourceProvider(ctx, auditPath, workload, c)
-	if err != nil {
-		logrus.Errorf("Error fetching Kubernetes resources %v", err)
-		os.Exit(1)
+func outputAudit(auditData validator.AuditData, outputFile, outputURL, outputFormat string, useColor bool, onlyShowFailedTests bool) {
+	if onlyShowFailedTests {
+		auditData = auditData.RemoveSuccessfulResults()
 	}
-	var auditData validator.AuditData
-	auditData, err = validator.RunAudit(c, k, onlyShowFailedTests)
-
-	if err != nil {
-		logrus.Errorf("Error while running audit on resources: %v", err)
-		os.Exit(1)
-	}
-
 	var outputBytes []byte
+	var err error
 	if outputFormat == "score" {
 		outputBytes = []byte(fmt.Sprintf("%d\n", auditData.GetSummary().GetScore()))
 	} else if outputFormat == "yaml" {
-		jsonBytes, err := json.Marshal(auditData)
+		var jsonBytes []byte
+		jsonBytes, err = json.Marshal(auditData)
 		if err == nil {
 			outputBytes, err = yaml.JSONToYAML(jsonBytes)
 		}
@@ -201,5 +203,4 @@ func runAndReportAudit(ctx context.Context, c conf.Configuration, auditPath, wor
 			}
 		}
 	}
-	return auditData
 }
