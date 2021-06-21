@@ -134,7 +134,7 @@ func ProcessHelmTemplates(helmChart string) (string, error) {
 	return dir, nil
 }
 
-func outputAudit(auditData validator.AuditData, outputFile, outputURL, outputFormat string, useColor bool, onlyShowFailedTests bool) validator.AuditData {
+func outputAudit(auditData validator.AuditData, outputFile, outputURL, outputFormat string, useColor bool, onlyShowFailedTests bool) {
 	if onlyShowFailedTests {
 		auditData = auditData.RemoveSuccessfulResults()
 	}
@@ -203,5 +203,4 @@ func outputAudit(auditData validator.AuditData, outputFile, outputURL, outputFor
 			}
 		}
 	}
-	return auditData
 }
