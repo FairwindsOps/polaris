@@ -33,6 +33,8 @@ webhook
     --color                           Whether to use color in pretty format. (default true)
     --display-name string             An optional identifier for the audit.
 -f, --format string                   Output format for results - json, yaml, pretty, or score. (default "json")
+    --helm-chart string               Will fill out Helm template
+    --helm-values string              Optional flag to add helm values
 -h, --help                            help for audit
     --only-show-failed-tests          If specified, audit output will only show failed tests.
     --output-file string              Destination file for audit results.
@@ -40,7 +42,6 @@ webhook
     --resource string                 Audit a specific resource, in the format namespace/kind/version/name, e.g. nginx-ingress/Deployment.apps/v1/default-backend.
     --set-exit-code-below-score int   Set an exit code of 4 when the score is below this threshold (1-100).
     --set-exit-code-on-danger         Set an exit code of 3 when the audit contains danger-level issues.
-
 
 # webhook flags
     --disable-webhook-config-installer   disable the installer in the webhook server, so it won't install webhook configuration resources during bootstrapping.

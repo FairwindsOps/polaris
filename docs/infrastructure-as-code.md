@@ -55,6 +55,14 @@ polaris audit --audit-path ./deploy/ \
   --only-show-failed-tests true
 ```
 
+### Audit Helm Charts
+You can audit helm charts using the `--helm-chart` and `--helm-values` flags:
+```
+polaris audit \
+  --helm-chart ./deploy/chart \
+  --helm-values ./deploy/chart/values.yml
+```
+
 ### As Github Action
 #### Setup polaris action
 
