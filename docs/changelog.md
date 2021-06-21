@@ -1,6 +1,16 @@
 ---
 sidebarDepth: 0
 ---
+## 4.0.3
+* Fixed bad interaction between `--set-exit-score-below` and `--only-show-failed-tests`
+* Dependency updates
+* Support for Helm chart scanning
+
+## 4.0.2
+* Goreleaser fix
+
+## 4.0.1
+* Goreleaser fix
 
 ## 4.0.0
 * Add support for arbitrary resources, like Ingress or PodDisruptionBudget
