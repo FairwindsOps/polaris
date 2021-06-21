@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/thoas/go-funk"
 
 	"github.com/fairwindsops/polaris/pkg/config"
 )
@@ -52,10 +53,12 @@ type AuditData struct {
 }
 
 // RemoveSuccessfulResults remove all test that have passed.
-func (res *AuditData) RemoveSuccessfulResults() {
-	for _, auditDataResult := range res.Results {
-		auditDataResult.removeSuccessfulResults()
-	}
+func (res AuditData) RemoveSuccessfulResults() AuditData {
+	resCopy := res
+	resCopy.Results = funk.Map(res.Results, func(auditDataResult Result) Result {
+		return auditDataResult.removeSuccessfulResults()
+	}).([]Result)
+	return resCopy
 }
 
 // ClusterInfo contains Polaris results as well as some high-level stats
@@ -80,12 +83,14 @@ type ResultMessage struct {
 // ResultSet contiains the results for a set of checks
 type ResultSet map[string]ResultMessage
 
-func (res ResultSet) removeSuccessfulResults() {
+func (res ResultSet) removeSuccessfulResults() ResultSet {
+	newResults := ResultSet{}
 	for k, resultMessage := range res {
-		if resultMessage.Success {
-			delete(res, k)
+		if !resultMessage.Success {
+			newResults[k] = resultMessage
 		}
 	}
+	return newResults
 }
 
 // Result provides results for a Kubernetes object
@@ -98,9 +103,14 @@ type Result struct {
 	CreatedTime time.Time
 }
 
-func (res *Result) removeSuccessfulResults() {
-	res.Results.removeSuccessfulResults()
-	res.PodResult.removeSuccessfulResults()
+func (res Result) removeSuccessfulResults() Result {
+	resCopy := res
+	resCopy.Results = res.Results.removeSuccessfulResults()
+	if res.PodResult != nil {
+		podCopy := res.PodResult.removeSuccessfulResults()
+		resCopy.PodResult = &podCopy
+	}
+	return resCopy
 }
 
 // PodResult provides a list of validation messages for each pod.
@@ -110,14 +120,13 @@ type PodResult struct {
 	ContainerResults []ContainerResult
 }
 
-func (res *PodResult) removeSuccessfulResults() {
-	if res == nil {
-		return
-	}
-	res.Results.removeSuccessfulResults()
-	for _, containerResult := range res.ContainerResults {
-		containerResult.removeSuccessfulResults()
-	}
+func (res PodResult) removeSuccessfulResults() PodResult {
+	resCopy := PodResult{}
+	resCopy.Results = res.Results.removeSuccessfulResults()
+	resCopy.ContainerResults = funk.Map(res.ContainerResults, func(containerResult ContainerResult) ContainerResult {
+		return containerResult.removeSuccessfulResults()
+	}).([]ContainerResult)
+	return resCopy
 }
 
 // ContainerResult provides a list of validation messages for each container.
@@ -126,8 +135,10 @@ type ContainerResult struct {
 	Results ResultSet
 }
 
-func (res *ContainerResult) removeSuccessfulResults() {
-	res.Results.removeSuccessfulResults()
+func (res ContainerResult) removeSuccessfulResults() ContainerResult {
+	resCopy := res
+	resCopy.Results = res.Results.removeSuccessfulResults()
+	return resCopy
 }
 
 func fillString(id string, l int) string {

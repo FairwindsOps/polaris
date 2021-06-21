@@ -16,7 +16,7 @@ import (
 )
 
 // RunAudit runs a full Polaris audit and returns an AuditData object
-func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider, onlyShowFailedTests bool) (AuditData, error) {
+func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider) (AuditData, error) {
 	displayName := config.DisplayName
 	if displayName == "" {
 		displayName = kubeResources.SourceName
@@ -42,9 +42,6 @@ func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider, o
 		Results: results,
 	}
 	auditData.Score = auditData.GetSummary().GetScore()
-	if onlyShowFailedTests {
-		auditData.RemoveSuccessfulResults()
-	}
 	return auditData, nil
 }
 
