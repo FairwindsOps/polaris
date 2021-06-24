@@ -56,32 +56,6 @@ func NewWebhook(mgr manager.Manager, validator Validator) {
 	mgr.GetWebhookServer().Register(path, &webhook.Admission{Handler: &validator})
 }
 
-// GetObjectFromRawRequest returns the pod object and the controller's object from the raw json bytes.
-func GetObjectFromRawRequest(raw []byte) (corev1.Pod, interface{}, error) {
-	pod := corev1.Pod{}
-	var originalObject interface{}
-
-	decoded := map[string]interface{}{}
-	err := json.Unmarshal(raw, &decoded)
-	if err != nil {
-		return pod, originalObject, err
-	}
-	podMap := kube.GetPodSpec(decoded)
-	if podMap == nil {
-		return pod, originalObject, errors.New("Object does not contain pods")
-	}
-	encoded, err := json.Marshal(podMap)
-	if err != nil {
-		return pod, originalObject, err
-	}
-	err = json.Unmarshal(encoded, &pod.Spec)
-	if err != nil {
-		return pod, originalObject, err
-	}
-	originalObject = decoded
-	return pod, originalObject, err
-}
-
 func (v *Validator) handleInternal(req admission.Request) (*validator.Result, error) {
 	var controller kube.GenericResource
 	var err error
