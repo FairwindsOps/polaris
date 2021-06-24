@@ -82,11 +82,11 @@ func GetObjectFromRawRequest(raw []byte) (corev1.Pod, interface{}, error) {
 	return pod, originalObject, err
 }
 
-func (v *Validator) handleInternal(req admission.Request) (*validator.PodResult, error) {
-	pod := corev1.Pod{}
-	var originalObject interface{}
+func (v *Validator) handleInternal(req admission.Request) (*validator.Result, error) {
+	var controller kube.GenericResource
 	var err error
 	if req.AdmissionRequest.Kind.Kind == "Pod" {
+		pod := corev1.Pod{}
 		err := v.decoder.Decode(req, &pod)
 		if err != nil {
 			return nil, err
@@ -95,58 +95,64 @@ func (v *Validator) handleInternal(req admission.Request) (*validator.PodResult,
 			logrus.Infof("Allowing owned pod %s/%s to pass through webhook", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name)
 			return nil, nil
 		}
-		originalObject = pod
+		controller, err = kube.NewGenericResourceFromPod(pod, pod)
 	} else {
-		pod, originalObject, err = GetObjectFromRawRequest(req.Object.Raw)
+		controller, err = kube.NewGenericResourceFromBytes(req.Object.Raw)
 	}
-	controller, err := kube.NewGenericResourceFromPod(pod, originalObject)
 	if err != nil {
 		return nil, err
 	}
-	controller.Kind = req.AdmissionRequest.Kind.Kind
-	var controllerResult validator.Result
 	// TODO: consider enabling multi-resource checks
-	controllerResult, err = validator.ApplyAllSchemaChecks(&v.Config, nil, controller)
+	controllerResult, err := validator.ApplyAllSchemaChecks(&v.Config, nil, controller)
 	if err != nil {
 		return nil, err
 	}
-	return controllerResult.PodResult, nil
+	return &controllerResult, nil
 }
 
 // Handle for Validator to run validation checks.
 func (v *Validator) Handle(ctx context.Context, req admission.Request) admission.Response {
 	logrus.Info("Starting request")
-	podResult, err := v.handleInternal(req)
+	result, err := v.handleInternal(req)
 	if err != nil {
 		logrus.Errorf("Error validating request: %v", err)
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 	allowed := true
 	reason := ""
-	if podResult != nil {
-		numDangers := podResult.GetSummary().Dangers
+	if result != nil {
+		numDangers := result.GetSummary().Dangers
 		if numDangers > 0 {
 			allowed = false
-			reason = getFailureReason(*podResult)
+			reason = getFailureReason(*result)
 		}
-		logrus.Infof("%d validation errors found when validating %s", numDangers, podResult.Name)
+		logrus.Infof("%d validation errors found when validating %s", numDangers, result.Name)
 	}
 	return admission.ValidationResponse(allowed, reason)
 }
 
-func getFailureReason(podResult validator.PodResult) string {
+func getFailureReason(result validator.Result) string {
 	reason := "\nPolaris prevented this deployment due to configuration problems:\n"
 
-	for _, message := range podResult.Results {
+	for _, message := range result.Results {
 		if !message.Success && message.Severity == config.SeverityDanger {
-			reason += fmt.Sprintf("- Pod: %s\n", message.Message)
+			reason += fmt.Sprintf("- %s: %s\n", result.Kind, message.Message)
 		}
 	}
 
-	for _, containerResult := range podResult.ContainerResults {
-		for _, message := range containerResult.Results {
+	podResult := result.PodResult
+	if podResult != nil {
+		for _, message := range podResult.Results {
 			if !message.Success && message.Severity == config.SeverityDanger {
-				reason += fmt.Sprintf("- Container %s: %s\n", containerResult.Name, message.Message)
+				reason += fmt.Sprintf("- Pod: %s\n", message.Message)
+			}
+		}
+
+		for _, containerResult := range podResult.ContainerResults {
+			for _, message := range containerResult.Results {
+				if !message.Success && message.Severity == config.SeverityDanger {
+					reason += fmt.Sprintf("- Container %s: %s\n", containerResult.Name, message.Message)
+				}
 			}
 		}
 	}
