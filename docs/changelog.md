@@ -1,6 +1,9 @@
 ---
 sidebarDepth: 0
 ---
+## 4.0.4
+* Bugfix for validating webhook and non-pod checks
+
 ## 4.0.3
 * Fixed bad interaction between `--set-exit-score-below` and `--only-show-failed-tests`
 * Dependency updates
