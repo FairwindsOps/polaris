@@ -13,8 +13,10 @@
     padding-right: 40px;
     box-shadow: none;
 }
-.card.insights img {
-  max-width: 400px;
+.card.transparent {
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
 }
 .card.insights a {
   background-color: #20162D;
