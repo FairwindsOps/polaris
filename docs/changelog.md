@@ -1,6 +1,9 @@
 ---
 sidebarDepth: 0
 ---
+## 4.0.5
+* Bugfix for repeated objects on the dashboard
+
 ## 4.0.4
 * Bugfix for validating webhook and non-pod checks
 
