@@ -7,7 +7,7 @@ changelog:
     - '^docs:'
     - '^test:'
 builds:
-  - id: watcher
+  - id: polaris
     env:
       - CGO_ENABLED=0
       - GO111MODULE=on
@@ -18,6 +18,10 @@ builds:
     goarm:
       - 6
       - 7
+archives:
+  - id: polaris
+    builds: ["polaris"]
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
 brews:
   - name: polaris
     github:
