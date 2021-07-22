@@ -68,7 +68,7 @@ var auditCmd = &cobra.Command{
 		}
 		if helmChart != "" {
 			var err error
-			auditPath, err = ProcessHelmTemplates(helmChart)
+			auditPath, err = ProcessHelmTemplates(helmChart, helmValues)
 			if err != nil {
 				logrus.Infof("Couldn't process helm chart: %v", err)
 				os.Exit(1)
@@ -102,7 +102,7 @@ var auditCmd = &cobra.Command{
 }
 
 // ProcessHelmTemplates turns helm into yaml to be processed by Polaris or the other tools.
-func ProcessHelmTemplates(helmChart string) (string, error) {
+func ProcessHelmTemplates(helmChart, helmValues string) (string, error) {
 	cmd := exec.Command("helm", "dependency", "update", helmChart)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
