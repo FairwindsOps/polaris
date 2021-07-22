@@ -1,6 +1,9 @@
 ---
 sidebarDepth: 0
 ---
+## 4.0.7
+* Fix goreleaser format
+
 ## 4.0.6
 * Change goreleaser format
 * Fix `--helm-values` flag

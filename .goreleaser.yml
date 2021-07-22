@@ -21,7 +21,7 @@ builds:
 archives:
   - id: polaris
     builds: ["polaris"]
-    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}"
 brews:
   - name: polaris
     github:
