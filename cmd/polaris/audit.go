@@ -55,7 +55,7 @@ func init() {
 	auditCmd.PersistentFlags().StringVar(&displayName, "display-name", "", "An optional identifier for the audit.")
 	auditCmd.PersistentFlags().StringVar(&resourceToAudit, "resource", "", "Audit a specific resource, in the format namespace/kind/version/name, e.g. nginx-ingress/Deployment.apps/v1/default-backend.")
 	auditCmd.PersistentFlags().StringVar(&helmChart, "helm-chart", "", "Will fill out Helm template")
-	auditCmd.PersistentFlags().StringVar(&helmChart, "helm-values", "", "Optional flag to add helm values")
+	auditCmd.PersistentFlags().StringVar(&helmValues, "helm-values", "", "Optional flag to add helm values")
 }
 
 var auditCmd = &cobra.Command{
@@ -68,7 +68,7 @@ var auditCmd = &cobra.Command{
 		}
 		if helmChart != "" {
 			var err error
-			auditPath, err = ProcessHelmTemplates(helmChart)
+			auditPath, err = ProcessHelmTemplates(helmChart, helmValues)
 			if err != nil {
 				logrus.Infof("Couldn't process helm chart: %v", err)
 				os.Exit(1)
@@ -102,7 +102,7 @@ var auditCmd = &cobra.Command{
 }
 
 // ProcessHelmTemplates turns helm into yaml to be processed by Polaris or the other tools.
-func ProcessHelmTemplates(helmChart string) (string, error) {
+func ProcessHelmTemplates(helmChart, helmValues string) (string, error) {
 	cmd := exec.Command("helm", "dependency", "update", helmChart)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
