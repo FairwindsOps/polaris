@@ -1,6 +1,10 @@
 ---
 sidebarDepth: 0
 ---
+## 4.0.6
+* Change goreleaser format
+* Fix `--helm-values` flag
+
 ## 4.0.5
 * Bugfix for repeated objects on the dashboard
 
