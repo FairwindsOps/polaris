@@ -277,6 +277,9 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		for key := range check.AdditionalSchemas {
 			neededKinds = append(neededKinds, conf.TargetKind(key))
 		}
+		for key := range check.AdditionalSchemaStrings {
+			neededKinds = append(neededKinds, conf.TargetKind(key))
+		}
 		for _, kind := range neededKinds {
 			if !funk.Contains(conf.HandledTargets, kind) {
 				additionalKinds = append(additionalKinds, kind)

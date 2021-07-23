@@ -167,6 +167,9 @@ func (check *SchemaCheck) Initialize(id string) error {
 		}
 		check.SchemaString = string(jsonBytes)
 	}
+	if check.AdditionalSchemaStrings == nil {
+		check.AdditionalSchemaStrings = make(map[string]string)
+	}
 	for kind, schema := range check.AdditionalSchemas {
 		jsonBytes, err := json.Marshal(schema)
 		if err != nil {

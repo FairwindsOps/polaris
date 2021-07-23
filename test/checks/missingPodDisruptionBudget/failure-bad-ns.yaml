@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zookeeper
+  namespace: rightnamespace
+  labels:
+    app: zookeeper
+spec:
+  template:
+    spec:
+      containers:
+      - name: zookeeper
+        image: zookeeper
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: zk-pdb
+  namespace: wrongnamespace
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: zookeeper

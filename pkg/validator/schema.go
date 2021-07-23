@@ -261,6 +261,13 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 			break
 		}
 		resources := test.ResourceProvider.Resources[groupkind]
+		namespace := test.Resource.ObjectMeta.GetNamespace()
+		if test.Resource.Kind == "Namespace" {
+			namespace = test.Resource.ObjectMeta.GetName()
+		}
+		resources = funk.Filter(resources, func(res kube.GenericResource) bool {
+			return res.ObjectMeta.GetNamespace() == namespace
+		}).([]kube.GenericResource)
 		objects := funk.Map(resources, func(res kube.GenericResource) interface{} {
 			return res.Resource.Object
 		}).([]interface{})

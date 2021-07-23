@@ -40,6 +40,7 @@ var (
 		"pdbDisruptionsIsZero",
 		"metadataAndNameMismatched",
 		"missingPodDisruptionBudget",
+		"namespaceHasAlertmanagerConfig",
 	}
 )
 
