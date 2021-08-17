@@ -1,3 +1,8 @@
+---
+meta:
+  - name: description
+    content: "Fairwinds Polaris | Documentation | Polaris can be used on the command line to audit local Kubernetes manifests stored in YAML files."
+---
 # Infrastructure as Code
 > Want to see results for all your IaC repos in one place? Check out
 > [Fairwinds Insights](https://www.fairwinds.com/fairwinds-polaris-upgrade)

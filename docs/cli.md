@@ -1,3 +1,8 @@
+---
+meta:
+  - name: description
+    content: "Fairwinds Polaris | Learn your CLI options"
+---
 #### CLI Options
 
 ```

@@ -1,3 +1,8 @@
+---
+meta:
+  - name: description
+    content: "Fairwinds Polaris | Documentation: Create your own checks, you can use JSON Schema"
+---
 # Custom Checks
 
 If you'd like to create your own checks, you can use [JSON Schema](https://json-schema.org/).

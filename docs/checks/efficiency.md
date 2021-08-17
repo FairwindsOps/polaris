@@ -1,3 +1,8 @@
+---
+meta:
+  - name: description
+    content: "Fairwinds Polaris | Ensure that CPU and memory settings are configured, so that Kubernetes can schedule your workload effectively"
+---
 # Efficiency
 
 These checks ensure that CPU and memory settings are configured, so that

@@ -1,3 +1,8 @@
+---
+meta:
+  - name: description
+    content: "Fairwinds Polaris | Exemptions"
+---
 # Exemptions
 Sometimes a workload really does need to do things that Polaris considers insecure. For instance,
 many of the `kube-system` workloads need to run as root, or need access to the host network. In these

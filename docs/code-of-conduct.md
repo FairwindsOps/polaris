@@ -1,3 +1,8 @@
+---
+meta:
+  - name: description
+    content: "Fairwinds Polaris | Contribution Code of Conduct"
+---
 # Code of Conduct
 
 ## Our Pledge
