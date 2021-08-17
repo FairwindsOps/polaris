@@ -1,3 +1,8 @@
+---
+meta:
+  - name: description
+    content: "Fairwinds Polaris | Security Checks Documentation"
+---
 # Security
 
 These checks are related to security concerns. Workloads that fail these

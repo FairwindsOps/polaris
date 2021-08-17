@@ -1,3 +1,8 @@
+---
+meta:
+  - name: description
+    content: "Fairwinds Polaris | Documentation: Polaris can be run as an admission controller that acts as a validating webhook."
+---
 # Admission Controller
 > Want to manage the Admission Controller across multiple clusters? Check out
 > [Fairwinds Insights](https://www.fairwinds.com/fairwinds-polaris-upgrade)

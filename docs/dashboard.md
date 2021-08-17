@@ -1,3 +1,8 @@
+---
+meta:
+  - name: description
+    content: "Fairwinds Polaris | Ways to run Polaris | The Polaris dashboard can be installed on a cluster using kubectl or Helm"
+---
 # Dashboard
 
 > Want to see Polaris results for all your clusters in a single dashboard? Check out

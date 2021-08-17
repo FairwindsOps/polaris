@@ -1,3 +1,8 @@
+---
+meta:
+  - name: description
+    content: "Fairwinds Polaris | Make sure your Kubernetes workloads are always available, and are running the correct image."
+---
 # Reliability
 
 These checks help to make sure your workloads are always available,

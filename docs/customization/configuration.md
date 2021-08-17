@@ -1,3 +1,8 @@
+---
+meta:
+  - name: description
+    content: "Fairwinds Polaris | Learn about Polaris defaults and how to customize configurations. "
+---
 # Configuration
 
 The default Polaris configuration can be [seen here](https://github.com/FairwindsOps/polaris/blob/master/examples/config.yaml).
