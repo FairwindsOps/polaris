@@ -5,6 +5,9 @@ meta:
     content: "Fairwinds Polaris | Changelog"
 
 ---
+## 4.0.8
+* Fix support for namespace checks
+
 ## 4.0.7
 * Fix goreleaser format
 

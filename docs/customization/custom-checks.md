@@ -98,6 +98,19 @@ customChecks:
                   resourceMaximum: "2"
 ```
 
+## Resource Presence
+You can test for the presence of a resource in each Namespace. For example, to
+ensure an AlertmanagerConfig is in every Namespace:
+```yaml
+successMessage: Namespace has monitoring configuration
+failureMessage: Namespace should have monitoring configuration
+category: Security
+target: Namespace
+schema: {}
+additionalSchemas:
+  monitoring.coreos.com/AlertmanagerConfig: {}
+```
+
 ## Templating
 You can also utilize go templating in your JSON schema in order to match one field against another.
 E.g. here is the built-in check to ensure that the `name` annotation matches the object's name:

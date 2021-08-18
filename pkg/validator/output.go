@@ -164,7 +164,11 @@ func (res AuditData) GetPrettyOutput(useColor bool) string {
 
 // GetPrettyOutput returns a human-readable string
 func (res Result) GetPrettyOutput() string {
-	str := titleColor.Sprint(fmt.Sprintf("%s %s in namespace %s\n", res.Kind, res.Name, res.Namespace))
+	str := titleColor.Sprint(fmt.Sprintf("%s %s", res.Kind, res.Name))
+	if res.Namespace != "" {
+		str += titleColor.Sprint(fmt.Sprintf("in namespace %s", res.Namespace))
+	}
+	str += "\n"
 	str += res.Results.GetPrettyOutput()
 	if res.PodResult != nil {
 		str += res.PodResult.GetPrettyOutput()

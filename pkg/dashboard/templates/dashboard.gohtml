@@ -136,7 +136,11 @@
 
   {{ range $namespace, $results := .FilteredAuditData.GetResultsByNamespace }}
     <div id="{{ $namespace }}" class="card namespace">
+      {{ if eq $namespace "" }}
+      <h3>Cluster Resources</h3>
+      {{ else }}
       <h3>Namespace: <strong>{{ $namespace }}</strong></h3>
+      {{ end }}
       <div class="expandable-table">
         {{ range $index, $result := $results }}
           <div class="resource-info">
