@@ -27,18 +27,6 @@ checks:
   hostNetworkSet: warning
   hostPortSet: warning
   tlsSettingsMissing: warning
-  alertmanager: danger
-
-customChecks:
-  alertmanager:
-    successMessage: Namespace has monitoring configuration
-    failureMessage: Namespace should have monitoring configuration
-    category: Security
-    target: Namespace
-    schema: {}
-    additionalSchemas:
-      monitoring.coreos.com/AlertmanagerConfig: {}
-
 
 exemptions:
   - namespace: kube-system
