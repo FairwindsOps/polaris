@@ -9,4 +9,4 @@ spec:
       - name: nginx
         image: nginx
         securityContext:
-          runAsNonRoot: false
+          runAsNonRoot: true
