@@ -23,6 +23,8 @@ schema:
               oneOf:
               - contains:
                   const: ALL
+              - contains:
+                  const: all
               - allOf:
                 - contains:
                     const: NET_ADMIN

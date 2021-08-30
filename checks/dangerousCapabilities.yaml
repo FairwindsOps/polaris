@@ -20,6 +20,9 @@ schema:
                       const: ALL
                 - not:
                     contains:
+                      const: all
+                - not:
+                    contains:
                       const: SYS_ADMIN
                 - not:
                     contains:
