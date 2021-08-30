@@ -3,12 +3,12 @@ kind: Pod
 metadata:
   name: nginx
   labels:
-    env: test
+    app.kubernetes.io/name: nginx
 spec:
   containers:
   - name: nginx
     image: nginx
     securityContext:
       capabilities:
-        drop:
-        - All
+        add:
+        - nEt_aDmIn

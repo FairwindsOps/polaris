@@ -17,13 +17,10 @@ schema:
               allOf:
                 - not:
                     contains:
-                      const: ALL
+                      pattern: '^(?i)ALL$'
                 - not:
                     contains:
-                      const: all
+                      pattern: '^(?i)SYS_ADMIN$'
                 - not:
                     contains:
-                      const: SYS_ADMIN
-                - not:
-                    contains:
-                      const: NET_ADMIN
+                      pattern: '^(?i)NET_ADMIN$'
