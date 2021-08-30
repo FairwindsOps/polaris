@@ -45,7 +45,7 @@ func TestValidatePDB(t *testing.T) {
 	assert.False(t, results.Success)
 	assert.Equal(t, conf.SeverityWarning, results.Severity)
 	assert.Equal(t, "Reliability", results.Category)
-	assert.EqualValues(t, "disruptionsAllowed is not greater than zero", results.Message)
+	assert.EqualValues(t, "Voluntary evictions are not possible", results.Message)
 }
 
 func TestValidateIngress(t *testing.T) {

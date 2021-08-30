@@ -1,18 +1,22 @@
-successMessage: disruptionsAllowed is greater than zero
-failureMessage: disruptionsAllowed is not greater than zero
+successMessage: Voluntary evictions are possible
+failureMessage: Voluntary evictions are not possible
 category: Reliability
 target: policy/PodDisruptionBudget
 schema:
   '$schema': http://json-schema.org/draft-07/schema
   type: object
   required:
-  - status
+  - spec
   properties:
-    status:
+    spec:
       type: object
-      required:
-      - disruptionsAllowed
       properties:
-        disruptionsAllowed:
-          type: integer
-          minimum: 1
+          minAvailable:
+            not:
+              const: '100%'
+          maxUnavailable:
+            allOf:
+            - not:
+                const: 0
+            - not:
+                const: '0%'

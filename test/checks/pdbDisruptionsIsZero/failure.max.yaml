@@ -4,5 +4,5 @@ metadata:
   name: nginx
   labels:
     env: test
-status:
-  disruptionsAllowed: 0
+spec:
+  maxUnavailable: 0

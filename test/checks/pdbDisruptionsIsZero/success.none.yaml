@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: PodDisruptionBudget
+metadata:
+  name: nginx
+  labels:
+    env: test
+spec: {}
