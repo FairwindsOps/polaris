@@ -4,5 +4,6 @@ metadata:
   name: nginx
   labels:
     env: test
-status:
-  disruptionsAllowed: 1
+spec:
+  minAvaiable: 5
+  maxUnavailable: 10%
