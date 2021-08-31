@@ -10,4 +10,4 @@ spec:
     image: nginx
     securityContext:
       capabilities:
-        add:
+        add: ["all"]

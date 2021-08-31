@@ -22,35 +22,35 @@ schema:
               type: array
               oneOf:
               - contains:
-                  const: ALL
+                  pattern: '^(?i)ALL$'
               - allOf:
                 - contains:
-                    const: NET_ADMIN
+                    pattern: '^(?i)NET_ADMIN$'
                 - contains:
-                    const: CHOWN
+                    pattern: '^(?i)CHOWN$'
                 - contains:
-                    const: DAC_OVERRIDE
+                    pattern: '^(?i)DAC_OVERRIDE$'
                 - contains:
-                    const: FSETID
+                    pattern: '^(?i)FSETID$'
                 - contains:
-                    const: FOWNER
+                    pattern: '^(?i)FOWNER$'
                 - contains:
-                    const: MKNOD
+                    pattern: '^(?i)MKNOD$'
                 - contains:
-                    const: NET_RAW
+                    pattern: '^(?i)NET_RAW$'
                 - contains:
-                    const: SETGID
+                    pattern: '^(?i)SETGID$'
                 - contains:
-                    const: SETUID
+                    pattern: '^(?i)SETUID$'
                 - contains:
-                    const: SETFCAP
+                    pattern: '^(?i)SETFCAP$'
                 - contains:
-                    const: SETPCAP
+                    pattern: '^(?i)SETPCAP$'
                 - contains:
-                    const: NET_BIND_SERVICE
+                    pattern: '^(?i)NET_BIND_SERVICE$'
                 - contains:
-                    const: SYS_CHROOT
+                    pattern: '^(?i)SYS_CHROOT$'
                 - contains:
-                    const: KILL
+                    pattern: '^(?i)KILL$'
                 - contains:
-                    const: AUDIT_WRITE
+                    pattern: '^(?i)AUDIT_WRITE$'

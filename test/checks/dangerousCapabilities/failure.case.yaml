@@ -11,3 +11,4 @@ spec:
     securityContext:
       capabilities:
         add:
+        - nEt_aDmIn
