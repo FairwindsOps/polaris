@@ -3,7 +3,7 @@
   <br>
   <h3>Best Practices for Kubernetes Workload Configuration</h3>
   <a href="https://github.com/FairwindsOps/polaris">
-    <img src="https://img.shields.io/static/v1.svg?label=Version&message=4.0.8&color=239922">
+    <img src="https://img.shields.io/static/v1.svg?label=Version&message=4.1.0&color=239922">
   </a>
   <a href="https://goreportcard.com/report/github.com/FairwindsOps/polaris">
     <img src="https://goreportcard.com/badge/github.com/FairwindsOps/polaris">
