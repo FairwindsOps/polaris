@@ -119,7 +119,7 @@ spec:
         - dashboard
         - --port
         - "8080"
-        image: 'quay.io/fairwinds/polaris:4.0'
+        image: 'quay.io/fairwinds/polaris:4.1'
         imagePullPolicy: 'Always'
         name: dashboard
         ports:

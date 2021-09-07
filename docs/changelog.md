@@ -5,6 +5,13 @@ meta:
     content: "Fairwinds Polaris | Changelog"
 
 ---
+## 4.1.0
+* Handle case-insentitivity in capabilities checks
+* Change test for PDB disruptions to better handle IaC
+
+## 4.0.9
+* Update Alpine base image
+
 ## 4.0.8
 * Fix support for namespace checks
 
