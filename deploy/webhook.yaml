@@ -117,7 +117,7 @@ spec:
           command:
             - polaris
             - webhook
-          image: 'quay.io/fairwinds/polaris:4.0'
+          image: 'quay.io/fairwinds/polaris:4.1'
           imagePullPolicy: 'Always'
           ports:
             - containerPort: 9876
