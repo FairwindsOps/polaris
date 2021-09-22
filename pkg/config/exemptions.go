@@ -11,7 +11,7 @@ func (conf Configuration) IsActionable(ruleID string, objMeta metav1.Object, con
 	if severity, ok := conf.Checks[ruleID]; !ok || !severity.IsActionable() {
 		return false
 	}
-	if conf.DisallowExemptions {
+	if conf.DisallowExemptions || conf.DisallowConfigExemptions {
 		return true
 	}
 	for _, exemption := range conf.Exemptions {

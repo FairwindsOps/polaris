@@ -25,7 +25,7 @@ import (
 )
 
 var configPath string
-var disallowExemptions bool
+var disallowExemptions, disallowConfigExemptions, disallowAnnotationExemptions bool
 var logLevel string
 var auditPath string
 var displayName string
@@ -37,7 +37,9 @@ var (
 func init() {
 	// Flags
 	rootCmd.PersistentFlags().StringVarP(&configPath, "config", "c", "", "Location of Polaris configuration file.")
-	rootCmd.PersistentFlags().BoolVarP(&disallowExemptions, "disallow-exemptions", "", false, "Disallow any exemptions from configuration file.")
+	rootCmd.PersistentFlags().BoolVarP(&disallowExemptions, "disallow-exemptions", "", false, "Disallow any configured exemption.")
+	rootCmd.PersistentFlags().BoolVarP(&disallowConfigExemptions, "disallow-config-exemptions", "", false, "Disallow exemptions set within the configuration file.")
+	rootCmd.PersistentFlags().BoolVarP(&disallowAnnotationExemptions, "disallow-annotation-exemptions", "", false, "Disallow any exemption defined as a controller annotation.")
 	rootCmd.PersistentFlags().StringVarP(&logLevel, "log-level", "", logrus.InfoLevel.String(), "Logrus log level.")
 	flag.Parse()
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
@@ -63,10 +65,9 @@ var rootCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		if disallowExemptions {
-			config.DisallowExemptions = true
-		}
-
+		config.DisallowExemptions = disallowExemptions
+		config.DisallowConfigExemptions = disallowConfigExemptions
+		config.DisallowAnnotationExemptions = disallowAnnotationExemptions
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		logrus.Error("You must specify a sub-command.")

@@ -19,10 +19,12 @@ webhook
       Runs the webhook webserver
 
 # global flags
--c, --config string         Location of Polaris configuration file.
-    --disallow-exemptions   Disallow any exemptions from configuration file.
-    --kubeconfig string     Paths to a kubeconfig. Only required if out-of-cluster.
-    --log-level string      Logrus log level. (default "info")
+-c, --config string                    Location of Polaris configuration file.
+    --disallow-exemptions              Disallow any exemptions from configuration file.
+    --disallow-config-exemptions       Disallow exemptions set within the configuration file.
+    --disallow-annotation-exemptions   Disallow any exemption defined as a controller annotation.
+    --kubeconfig string                Paths to a kubeconfig. Only required if out-of-cluster.
+    --log-level string                 Logrus log level. (default "info")
 
 # dashboard flags
     --audit-path string          If specified, audits one or more YAML files instead of a cluster.
