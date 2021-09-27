@@ -3,7 +3,7 @@ module github.com/fairwindsops/polaris
 go 1.15
 
 require (
-	github.com/fatih/color v1.12.0
+	github.com/fatih/color v1.13.0
 	github.com/gobuffalo/packr/v2 v2.8.1
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.1.3 // indirect
