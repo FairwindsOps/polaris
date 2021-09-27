@@ -29,11 +29,13 @@ import (
 
 // Configuration contains all of the config for the validation checks.
 type Configuration struct {
-	DisplayName        string                 `json:"displayName"`
-	Checks             map[string]Severity    `json:"checks"`
-	CustomChecks       map[string]SchemaCheck `json:"customChecks"`
-	Exemptions         []Exemption            `json:"exemptions"`
-	DisallowExemptions bool                   `json:"disallowExemptions"`
+	DisplayName                  string                 `json:"displayName"`
+	Checks                       map[string]Severity    `json:"checks"`
+	CustomChecks                 map[string]SchemaCheck `json:"customChecks"`
+	Exemptions                   []Exemption            `json:"exemptions"`
+	DisallowExemptions           bool                   `json:"disallowExemptions"`
+	DisallowConfigExemptions     bool                   `json:"disallowConfigExemptions"`
+	DisallowAnnotationExemptions bool                   `json:"disallowAnnotationExemptions"`
 }
 
 // Exemption represents an exemption to normal rules

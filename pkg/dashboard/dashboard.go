@@ -130,13 +130,17 @@ func writeTemplate(tmpl *template.Template, data *templateData, w http.ResponseW
 
 func getConfigForQuery(base config.Configuration, query url.Values) config.Configuration {
 	c := base
-	exemptions := query.Get("disallowExemptions")
-	if exemptions == "false" {
-		c.DisallowExemptions = false
-	}
-	if exemptions == "true" {
+	switch query.Get("disallowExemptions") {
+	case "true":
 		c.DisallowExemptions = true
+		c.DisallowConfigExemptions = true
+		c.DisallowAnnotationExemptions = true
+	default:
+		c.DisallowExemptions = false
+		c.DisallowConfigExemptions = false
+		c.DisallowAnnotationExemptions = false
 	}
+
 	return c
 }
 

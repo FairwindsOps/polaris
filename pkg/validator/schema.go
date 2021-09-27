@@ -23,7 +23,9 @@ type schemaTestCase struct {
 }
 
 func resolveCheck(conf *config.Configuration, checkID string, test schemaTestCase) (*config.SchemaCheck, error) {
-	if !conf.DisallowExemptions && hasExemptionAnnotation(test.Resource.ObjectMeta, checkID) {
+	if !conf.DisallowExemptions &&
+		!conf.DisallowAnnotationExemptions &&
+		hasExemptionAnnotation(test.Resource.ObjectMeta, checkID) {
 		return nil, nil
 	}
 	check, ok := conf.CustomChecks[checkID]
