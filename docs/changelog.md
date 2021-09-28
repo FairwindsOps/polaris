@@ -5,6 +5,11 @@ meta:
     content: "Fairwinds Polaris | Changelog"
 
 ---
+
+## 4.2.0
+* New flags `--disallow-(config|annotation)-exemptions`
+* Kubernetes dependency updates
+* Documentation updates
 ## 4.1.0
 * Handle case-insentitivity in capabilities checks
 * Change test for PDB disruptions to better handle IaC

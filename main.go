@@ -15,12 +15,12 @@
 package main
 
 import (
-	"github.com/fairwindsops/polaris/cmd/polaris"
+	cmd "github.com/fairwindsops/polaris/cmd/polaris"
 )
 
 const (
 	// Version represents the current release version of Polaris
-	Version = "4.1.0"
+	Version = "4.2.0"
 )
 
 func main() {
