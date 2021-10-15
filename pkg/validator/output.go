@@ -166,7 +166,7 @@ func (res AuditData) GetPrettyOutput(useColor bool) string {
 func (res Result) GetPrettyOutput() string {
 	str := titleColor.Sprint(fmt.Sprintf("%s %s", res.Kind, res.Name))
 	if res.Namespace != "" {
-		str += titleColor.Sprint(fmt.Sprintf("in namespace %s", res.Namespace))
+		str += titleColor.Sprint(fmt.Sprintf(" in namespace %s", res.Namespace))
 	}
 	str += "\n"
 	str += res.Results.GetPrettyOutput()
