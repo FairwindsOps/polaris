@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"k8s.io/client-go/tools/clientcmd"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -114,14 +115,14 @@ type k8sResource struct {
 var podSpecFields = []string{"jobTemplate", "spec", "template"}
 
 // CreateResourceProvider returns a new ResourceProvider object to interact with k8s resources
-func CreateResourceProvider(ctx context.Context, directory, workload string, c conf.Configuration) (*ResourceProvider, error) {
+func CreateResourceProvider(ctx context.Context, directory, workload string, c conf.Configuration, kubeConfigPath string) (*ResourceProvider, error) {
 	if workload != "" {
 		return CreateResourceProviderFromResource(ctx, workload)
 	}
 	if directory != "" {
 		return CreateResourceProviderFromPath(directory)
 	}
-	return CreateResourceProviderFromCluster(ctx, c)
+	return CreateResourceProviderFromCluster(ctx, c, kubeConfigPath)
 }
 
 // CreateResourceProviderFromResource creates a new ResourceProvider that just contains one workload
@@ -212,8 +213,11 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 }
 
 // CreateResourceProviderFromCluster creates a new ResourceProvider using live data from a cluster
-func CreateResourceProviderFromCluster(ctx context.Context, c conf.Configuration) (*ResourceProvider, error) {
+func CreateResourceProviderFromCluster(ctx context.Context, c conf.Configuration, kubeConfigPath string) (*ResourceProvider, error) {
 	kubeConf, configError := config.GetConfig()
+	if kubeConfigPath != "" {
+		kubeConf, configError = clientcmd.BuildConfigFromFlags("", kubeConfigPath)
+	}
 	if configError != nil {
 		logrus.Errorf("Error fetching KubeConfig: %v", configError)
 		return nil, configError
@@ -263,7 +267,7 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		return nil, err
 	}
 	restMapper := restmapper.NewDiscoveryRESTMapper(resources)
-	allChecks := []conf.SchemaCheck{}
+	var allChecks []conf.SchemaCheck
 	for _, check := range c.CustomChecks {
 		allChecks = append(allChecks, check)
 	}
@@ -324,7 +328,7 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 
 // LoadControllers loads a list of controllers from the kubeResources Pods
 func LoadControllers(ctx context.Context, pods []corev1.Pod, dynamicClientPointer *dynamic.Interface, restMapperPointer *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) ([]GenericResource, error) {
-	interfaces := []GenericResource{}
+	var interfaces []GenericResource
 	deduped := map[string]corev1.Pod{}
 	for _, pod := range pods {
 		owners := pod.ObjectMeta.OwnerReferences
@@ -377,7 +381,7 @@ func (resources *ResourceProvider) addResourcesFromReader(reader io.Reader) erro
 }
 
 func (resources *ResourceProvider) addResourcesFromYaml(contents string) error {
-	specs := regexp.MustCompile("[\r\n]-+[\r\n]").Split(string(contents), -1)
+	specs := regexp.MustCompile("[\r\n]-+[\r\n]").Split(contents, -1)
 	for _, spec := range specs {
 		if strings.TrimSpace(spec) == "" {
 			continue
