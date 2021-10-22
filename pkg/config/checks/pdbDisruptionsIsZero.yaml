@@ -1,0 +1,22 @@
+successMessage: Voluntary evictions are possible
+failureMessage: Voluntary evictions are not possible
+category: Reliability
+target: policy/PodDisruptionBudget
+schema:
+  '$schema': http://json-schema.org/draft-07/schema
+  type: object
+  required:
+  - spec
+  properties:
+    spec:
+      type: object
+      properties:
+          minAvailable:
+            not:
+              const: '100%'
+          maxUnavailable:
+            allOf:
+            - not:
+                const: 0
+            - not:
+                const: '0%'
