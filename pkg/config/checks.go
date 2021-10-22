@@ -44,7 +44,7 @@ var (
 )
 
 func init() {
-	schemaBox = packr.New("Schemas", "../../checks")
+	schemaBox = packr.New("Schemas", "./checks")
 	for _, checkID := range checkOrder {
 		contents, err := schemaBox.Find(checkID + ".yaml")
 		if err != nil {

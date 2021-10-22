@@ -8,9 +8,9 @@ Each check can be assigned a `severity`. Only checks with a severity of `danger`
 
 Polaris validation checks fall into several different categories:
 
-- [Security](/checks/security.md)
-- [Reliability](/checks/reliability.md)
-- [Efficiency](/checks/efficiency.md)
+- [Security](/pkg/config/checks/security.md)
+- [Reliability](/pkg/config/checks/reliability.md)
+- [Efficiency](/pkg/config/checks/efficiency.md)
 
 To change the default severity levels, or to turn checks on or off, you can create your own `config.yaml`:
 ```yaml
