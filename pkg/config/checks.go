@@ -43,8 +43,8 @@ var (
 	}
 )
 
-func init() {
-	schemaBox = packr.New("Schemas", "./checks")
+func InitPolaris(path string) {
+	schemaBox = packr.New("Schemas", path)
 	for _, checkID := range checkOrder {
 		contents, err := schemaBox.Find(checkID + ".yaml")
 		if err != nil {
