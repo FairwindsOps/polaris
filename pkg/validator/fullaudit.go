@@ -38,6 +38,7 @@ func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider) (
 			Nodes:       len(kubeResources.Nodes),
 			Namespaces:  len(kubeResources.Namespaces),
 			Controllers: kubeResources.Resources.GetNumberOfControllers(),
+			Node:        kubeResources.Nodes,
 		},
 		Results: results,
 	}

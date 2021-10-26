@@ -16,6 +16,7 @@ package validator
 
 import (
 	"fmt"
+	corev1 "k8s.io/api/core/v1"
 	"time"
 
 	"github.com/fatih/color"
@@ -69,6 +70,7 @@ type ClusterInfo struct {
 	Pods        int
 	Namespaces  int
 	Controllers int
+	Node        []corev1.Node
 }
 
 // ResultMessage is the result of a given check
