@@ -41,6 +41,7 @@ func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider) (
 		},
 		Results: results,
 	}
+	auditData.Summary = auditData.GetSummary()
 	auditData.Score = auditData.GetSummary().GetScore()
 	return auditData, nil
 }

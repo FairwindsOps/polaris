@@ -50,6 +50,7 @@ type AuditData struct {
 	ClusterInfo          ClusterInfo
 	Results              []Result
 	Score                uint
+	Summary              CountSummary
 }
 
 // RemoveSuccessfulResults remove all test that have passed.
