@@ -16,6 +16,7 @@ package validator
 
 import (
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/fatih/color"
@@ -198,7 +199,13 @@ const minIDLength = 40
 func (res ResultSet) GetPrettyOutput() string {
 	indent := "    "
 	str := ""
-	for _, msg := range res {
+	keys := []string{}
+	for key := range res {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		msg := res[key]
 		status := color.GreenString(successMessage)
 		if !msg.Success {
 			if msg.Severity == config.SeverityWarning {
