@@ -11,7 +11,7 @@ jobs:
       - name: Setup polaris
         uses: ./.github/actions/setup-polaris
         with:
-          version: 3.0.3
+          version: 4.2.0
       - name: Use command
         run: polaris version
 
@@ -22,6 +22,6 @@ jobs:
       - name: Setup polaris
         uses: fairwindsops/polaris/.github/actions/setup-polaris@master
         with:
-          version: 3.0.3
+          version: 4.2.0
       - name: Use command
         run: polaris version

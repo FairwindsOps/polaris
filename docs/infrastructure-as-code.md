@@ -88,9 +88,9 @@ The version number of the release tag.
 ##### Example usage
 
 ```yaml
-uses: fairwindsops/polaris@master
+uses: fairwindsops/polaris/.github/actions/setup-polaris@master
 with:
-  version: "3.0.3"
+  version: 4.2.0
 ```
 
 Example inside a job:
@@ -99,9 +99,9 @@ Example inside a job:
 steps:
   - uses: actions/checkout@v2
   - name: Setup polaris
-    uses: fairwindsops/polaris@master
+    uses: fairwindsops/polaris/.github/actions/setup-polaris@master
     with:
-      version: 3.0.3
+      version: 4.2.0
 
   - name: Use command
     run: polaris version
