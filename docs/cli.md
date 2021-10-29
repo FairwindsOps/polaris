@@ -3,7 +3,30 @@ meta:
   - name: description
     content: "Fairwinds Polaris | Learn your CLI options"
 ---
-#### CLI Options
+
+## Installation
+
+### From GitHub Releases
+Visit the [releases page](https://github.com/FairwindsOps/polaris/releases) to find the release
+that's right for your environment. For example, on Linux:
+```
+curl -L "https://github.com/FairwindsOps/polaris/releases/download/4.2.0/polaris_linux_amd64.tar.gz" > polaris.tar.gz
+tar -xvf polaris.tar.gz
+sudo mv polaris /usr/local/bin/
+```
+
+### Homebrew
+```
+brew tap fairwindsops/tap
+brew install fairwindsops/tap/polaris
+```
+
+### From source
+```
+go get github.com/fairwindsops/polaris
+```
+
+## CLI Options
 
 ```
 # top-level commands
