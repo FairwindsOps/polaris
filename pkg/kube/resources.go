@@ -120,7 +120,7 @@ func CreateResourceProvider(ctx context.Context, directory, workload string, c c
 		return CreateResourceProviderFromResource(ctx, workload)
 	}
 	if directory != "" {
-		return CreateResourceProviderFromPath(directory, kubeConfigPath)
+		return CreateResourceProviderFromPath(directory)
 	}
 	return CreateResourceProviderFromCluster(ctx, c, kubeConfigPath)
 }
@@ -142,7 +142,7 @@ func CreateResourceProviderFromResource(ctx context.Context, workload string) (*
 		logrus.Errorf("Error fetching Cluster API version: %v", err)
 		return nil, err
 	}
-	resources := newResourceProvider(serverVersion.Major+"."+serverVersion.Minor, "Resource", workload)
+	resources := newResourceProvider(serverVersion.GitVersion, "Resource", workload)
 
 	parts := strings.Split(workload, "/")
 	if len(parts) != 4 {
@@ -180,18 +180,8 @@ func CreateResourceProviderFromResource(ctx context.Context, workload string) (*
 }
 
 // CreateResourceProviderFromPath returns a new ResourceProvider using the YAML files in a directory
-func CreateResourceProviderFromPath(directory string, kubeConfigPath string) (*ResourceProvider, error) {
-	kube, err := getAPI(kubeConfigPath)
-	listOpts := metav1.ListOptions{}
-	if err != nil {
-		return nil, err
-	}
-	serverVersion, err := kube.Discovery().ServerVersion()
-	if err != nil {
-		logrus.Errorf("Error fetching Cluster API version: %v", err)
-		return nil, err
-	}
-	resources := newResourceProvider(serverVersion.GitVersion, "Path", directory)
+func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error) {
+	resources := newResourceProvider("unknown", "Path", directory)
 
 	if directory == "-" {
 		fi, err := os.Stdin.Stat()
@@ -215,19 +205,10 @@ func CreateResourceProviderFromPath(directory string, kubeConfigPath string) (*R
 		return resources.addResourcesFromYaml(string(contents))
 	}
 
-	err = filepath.Walk(directory, visitFile)
+	err := filepath.Walk(directory, visitFile)
 	if err != nil {
 		return nil, err
 	}
-
-	nodes, err := kube.CoreV1().Nodes().List(context.TODO(), listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching Nodes: %v", err)
-		return nil, err
-	}
-
-	resources.Nodes = nodes.Items
-
 	return &resources, nil
 }
 
@@ -254,23 +235,6 @@ func CreateResourceProviderFromCluster(ctx context.Context, c conf.Configuration
 	return CreateResourceProviderFromAPI(ctx, api, kubeConf.Host, &dynamicInterface, c)
 }
 
-func getAPI(kubeConfigPath string) (kubernetes.Interface, error) {
-	kubeConf, configError := config.GetConfig()
-	if kubeConfigPath != "" {
-		kubeConf, configError = clientcmd.BuildConfigFromFlags("", kubeConfigPath)
-	}
-	if configError != nil {
-		logrus.Errorf("Error fetching KubeConfig: %v", configError)
-		return nil, configError
-	}
-	api, err := kubernetes.NewForConfig(kubeConf)
-	if err != nil {
-		logrus.Errorf("Error creating Kubernetes client: %v", err)
-		return nil, err
-	}
-	return api, err
-}
-
 // CreateResourceProviderFromAPI creates a new ResourceProvider from an existing k8s interface
 func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interface, clusterName string, dynamic *dynamic.Interface, c conf.Configuration) (*ResourceProvider, error) {
 	listOpts := metav1.ListOptions{}
@@ -279,7 +243,7 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		logrus.Errorf("Error fetching Cluster API version: %v", err)
 		return nil, err
 	}
-	provider := newResourceProvider(serverVersion.GitVersion, "Cluster", clusterName)
+	provider := newResourceProvider(serverVersion.Major+"."+serverVersion.Minor, "Cluster", clusterName)
 
 	nodes, err := kube.CoreV1().Nodes().List(ctx, listOpts)
 	if err != nil {
@@ -417,7 +381,7 @@ func (resources *ResourceProvider) addResourcesFromReader(reader io.Reader) erro
 }
 
 func (resources *ResourceProvider) addResourcesFromYaml(contents string) error {
-	specs := regexp.MustCompile("[\r\n]-+[\r\n]").Split(contents, -1)
+	specs := regexp.MustCompile("[\r\n]-+[\r\n]").Split(string(contents), -1)
 	for _, spec := range specs {
 		if strings.TrimSpace(spec) == "" {
 			continue
