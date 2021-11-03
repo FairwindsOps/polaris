@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import data from './data.json';
 import LeftNavBar from './components/Navigation/LeftBar/LeftNavBar';
 import TopNavBar from './components/Navigation/TopBar/TopNavBar';
+
 import './App.scss';
+import data from './data.json';
 
 function App() {
   const [pageDisplay, setPageDisplay] = useState<string>('dashboard');
@@ -10,26 +11,30 @@ function App() {
   const [selectedNamespace, setSelectedNamespace] = useState<string>('');
 
   useEffect(() => {
-    const allNamespaces: string[] = [];
-    data.Results.forEach(result => {
-      if (!allNamespaces.includes(result.Namespace)) {
-        allNamespaces.push(result.Namespace);
-      }
-    })
-    setNamespaces(allNamespaces);
-  }, [])
+    const allNamespaces: Set<string> = new Set();
+    data.Results.forEach((result) => {
+      allNamespaces.add(result.Namespace);
+    });
+    setNamespaces(Array.from(allNamespaces));
+    setSelectedNamespace('');
+  }, []);
 
   return (
     <div className="App">
       <LeftNavBar />
-      <div className="app-content">
-        <TopNavBar pageDisplay={pageDisplay} setPageDisplay={setPageDisplay} namespaces={namespaces} setSelected={setSelectedNamespace} />
-        {pageDisplay === 'dashboard' && (
-          <h1 style={{ marginTop: '1rem' }}>Polaris Dashboard</h1>
-        )}
-        {pageDisplay === 'namespaces' && (
-          <h1 style={{ marginTop: '1rem' }}>{selectedNamespace} Namespace</h1>
-        )}
+      <div id="mainContainer">
+        <TopNavBar
+          pageDisplay={pageDisplay}
+          setPageDisplay={setPageDisplay}
+          namespaces={namespaces}
+          setSelected={setSelectedNamespace}
+        />
+        <main className="app-content">
+          {pageDisplay === 'dashboard' && <h1>Polaris Dashboard</h1>}
+          {pageDisplay === 'namespaces' && (
+            <h1>{selectedNamespace} Namespace</h1>
+          )}
+        </main>
       </div>
     </div>
   );

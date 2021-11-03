@@ -6,6 +6,14 @@
   color: white;
   height: 100vh;
   padding: 1rem;
+  width: 250px;
+  min-width: 250px;
+
+  .top-div {
+    img {
+      width: 220px;
+    }
+  }
 
   .bottom-div {
     display: flex;
