@@ -1,0 +1,57 @@
+.left-nav-bar {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: #23103a;
+  color: white;
+  width: 12rem;
+  height: 100vh;
+  padding: 1rem;
+
+  .bottom-div {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    gap: 1rem;
+
+    .links-title {
+      color: #eceeef;
+      font-size: 1rem;
+      font-weight: 300;
+      margin-bottom: 0;
+    }
+
+    .nav-link-section {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 1rem;
+      // margin-bottom: 1rem;
+      text-decoration: none;
+
+      .link-name {
+        font-size: 1.2rem;
+        font-weight: 300;
+        margin-bottom: 0;
+      }
+
+      .docs {
+        color: white;
+      }
+    }
+
+    .external-links {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: space-between;
+    }
+    .feedback {
+      text-decoration: none;
+      color: white;
+      font-size: 1rem;
+      font-weight: 300;
+    }
+  }
+}
