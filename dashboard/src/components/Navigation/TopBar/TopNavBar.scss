@@ -1,15 +1,16 @@
 .top-nav-bar {
-  width: auto;
   z-index: 3;
   background-color: white;
   height: 3rem;
   position: sticky;
   top: 0;
+  padding-bottom: 0 !important;
 
   .top-nav {
     padding: 0 24px;
     height: inherit;
     align-content: end;
+    width: 100%;
 
     .nav-item > .dropdown-menu {
       max-height: 15rem;
@@ -28,6 +29,7 @@
         margin-bottom: -2px;
         border-bottom: 2px solid #445688;
         color: #445688;
+        padding-bottom: 14px;
       }
     }
 

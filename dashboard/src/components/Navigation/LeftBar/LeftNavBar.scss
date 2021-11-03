@@ -4,8 +4,6 @@
   justify-content: space-between;
   background-color: #23103a;
   color: white;
-  min-width: 15vw;
-  // width: 10%;
   height: 100vh;
   padding: 1rem;
 
@@ -28,7 +26,6 @@
       flex-wrap: wrap;
       align-items: center;
       gap: 1rem;
-      // margin-bottom: 1rem;
       text-decoration: none;
 
       .link-name {

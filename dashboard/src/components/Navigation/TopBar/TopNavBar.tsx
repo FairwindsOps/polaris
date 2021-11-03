@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Nav, NavDropdown } from 'react-bootstrap';
+import { Nav, Navbar, NavDropdown } from 'react-bootstrap';
 import './TopNavBar.scss';
 
 type NavProps = {
@@ -37,7 +37,7 @@ const TopNavBar = ({ pageDisplay, setPageDisplay, namespaces, setSelected }: Nav
   };
 
   return (
-    <div className="top-nav-bar">
+    <Navbar className="top-nav-bar" expand={true}>
       <Nav variant="tabs" className="top-nav">
         <NavDropdown title={selectedNamespace} id="nav-dropdown" active={pageDisplay === 'namespaces'} onSelect={(namespace: any) => handleNamespaceSelection(namespace)}>
           <NavDropdown.Item key={'all-namespaces'} eventKey={'all-namespaces'}>
@@ -51,7 +51,7 @@ const TopNavBar = ({ pageDisplay, setPageDisplay, namespaces, setSelected }: Nav
           </Nav.Link>
         </Nav.Item>
       </Nav>
-    </div>
+    </Navbar>
   )
 }
 
