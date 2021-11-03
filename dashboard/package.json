@@ -45,6 +45,7 @@
     ]
   },
   "devDependencies": {
+    "@axe-core/react": "^4.3.1",
     "prettier": "^2.4.1"
   }
 }
