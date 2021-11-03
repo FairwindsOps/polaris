@@ -1,0 +1,38 @@
+.top-nav-bar {
+  width: auto;
+  z-index: 3;
+  background-color: white;
+  height: 3rem;
+  position: sticky;
+  top: 0;
+
+  .top-nav {
+    padding: 0 24px;
+    height: inherit;
+    align-content: end;
+
+    .nav-item > .dropdown-menu {
+      max-height: 15rem;
+      overflow: auto;
+    }
+
+    .nav-item > .nav-link {
+      color: #495057;
+
+      &:hover,
+      &:focus {
+        border-color: transparent;
+      }
+      &.active {
+        border-color: #fff #fff;
+        margin-bottom: -2px;
+        border-bottom: 2px solid #445688;
+        color: #445688;
+      }
+    }
+
+    #nav-dropdown {
+      padding-left: 0;
+    }
+  }
+}

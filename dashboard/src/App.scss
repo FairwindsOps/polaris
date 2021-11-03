@@ -1,0 +1,14 @@
+@import "~bootstrap/scss/bootstrap.scss";
+
+.App {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 1rem;
+  width: 100vw;
+  height: 100vh;
+
+  .app-content {
+    width: auto;
+  }
+}

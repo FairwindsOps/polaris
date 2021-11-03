@@ -1,12 +1,12 @@
 import React from 'react';
 // import Settings from '../../assets/icons/settings.svg';
-import Docs from '../../assets/icons/docs.svg';
-import RightArrow from '../../assets/icons/rightArrow.svg';
-import Github from '../../assets/icons/github.svg';
-import Twitter from '../../assets/icons/twitter.svg';
-import Slack from '../../assets/icons/slack.svg';
-import Email from '../../assets/icons/email.svg';
-import './LeftNavBar.react.scss';
+import Docs from '../../../assets/icons/docs.svg';
+import RightArrow from '../../../assets/icons/rightArrow.svg';
+import Github from '../../../assets/icons/github.svg';
+import Twitter from '../../../assets/icons/twitter.svg';
+import Slack from '../../../assets/icons/slack.svg';
+import Email from '../../../assets/icons/email.svg';
+import './LeftNavBar.scss';
 
 const LeftNavBar = (): JSX.Element => {
   return (
