@@ -75,7 +75,7 @@ var auditCmd = &cobra.Command{
 			}
 		}
 
-		k, err := kube.CreateResourceProvider(context.TODO(), auditPath, resourceToAudit, config)
+		k, err := kube.CreateResourceProvider(context.TODO(), auditPath, resourceToAudit, config, "")
 		if err != nil {
 			logrus.Errorf("Error fetching Kubernetes resources %v", err)
 			os.Exit(1)
@@ -196,7 +196,7 @@ func outputAudit(auditData validator.AuditData, outputFile, outputURL, outputFor
 		}
 
 		if outputFile != "" {
-			err := ioutil.WriteFile(outputFile, []byte(outputBytes), 0644)
+			err := ioutil.WriteFile(outputFile, outputBytes, 0644)
 			if err != nil {
 				logrus.Errorf("Error writing output to file: %v", err)
 				os.Exit(1)
