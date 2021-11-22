@@ -17,9 +17,9 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/thoas/go-funk v0.9.1
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
-	k8s.io/api v0.22.2
-	k8s.io/apimachinery v0.22.2
-	k8s.io/client-go v0.22.2
+	k8s.io/api v0.22.4
+	k8s.io/apimachinery v0.22.4
+	k8s.io/client-go v0.22.4
 	sigs.k8s.io/controller-runtime v0.10.1
 	sigs.k8s.io/yaml v1.3.0
 )
