@@ -87,8 +87,8 @@ references:
     run:
       name: Install GoReleaser
       command: |
-        curl -fsSLo goreleaser.deb https://github.com/goreleaser/goreleaser/releases/download/v0.174.2/goreleaser_amd64.deb
-        echo "bad33997ea9977a84196bdca1d5993fada909cd81c3e88d52bd297666bea61a4 goreleaser.deb" | sha256sum -c -
+        curl -fsSLo goreleaser.deb https://github.com/goreleaser/goreleaser/releases/download/v1.0.0/goreleaser_1.0.0_amd64.deb
+        echo "853e94141e0fd7a9d3962a54fb9283cedd253b7a36211856204152a524b1942c goreleaser.deb" | sha256sum -c -
         sudo dpkg -i goreleaser.deb
         rm goreleaser.deb
 
