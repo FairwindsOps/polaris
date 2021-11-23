@@ -204,10 +204,7 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 		return resources.addResourcesFromYaml(string(contents))
 	}
 
-	err := filepath.Walk(directory, visitFile)
-	if err != nil {
-		return nil, err
-	}
+	filepath.Walk(directory, visitFile) // silently skip invalid files by always returning error as nil
 	return &resources, nil
 }
 
@@ -384,7 +381,7 @@ func (resources *ResourceProvider) addResourcesFromYaml(contents string) error {
 		}
 		err := resources.addResourceFromString(spec)
 		if err != nil {
-			logrus.Errorf("Error parsing YAML: (%v)", err)
+			logrus.Warnf("Skipped - Cannot parse YAML: (%v)", err)
 			return err
 		}
 	}
@@ -399,7 +396,6 @@ func (resources *ResourceProvider) addResourceFromString(contents string) error 
 	decoder = k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(contentBytes), 1000)
 
 	if err != nil {
-		logrus.Errorf("Invalid YAML: %s", string(contents))
 		return err
 	}
 	if resource.Kind == "Namespace" {
