@@ -208,7 +208,10 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 		return nil
 	}
 
-	filepath.Walk(directory, visitFile) // silently skip invalid files by always returning error as nil
+	err := filepath.Walk(directory, visitFile)
+	if err != nil {
+		return nil, err
+	}
 	return &resources, nil
 }
 
