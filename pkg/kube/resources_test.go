@@ -58,6 +58,11 @@ func TestGetMultipleResourceFromSingleFile(t *testing.T) {
 	assert.Equal(t, "polaris-2", resources.Namespaces[1].ObjectMeta.Name)
 }
 
+func TestGetMultipleResourceFromBadFile(t *testing.T) {
+	_, err := CreateResourceProviderFromPath("./test_files/test_3")
+	assert.Equal(t, nil, err, "CreateResource From Path should fail with bad yaml")
+}
+
 func TestAddResourcesFromReader(t *testing.T) {
 	contents, err := ioutil.ReadFile("./test_files/test_2/multi.yaml")
 	assert.NoError(t, err)
