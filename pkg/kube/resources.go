@@ -201,7 +201,11 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 			logrus.Errorf("Error reading file: %v", path)
 			return err
 		}
-		return resources.addResourcesFromYaml(string(contents))
+		err = resources.addResourcesFromYaml(string(contents))
+		if err != nil {
+			logrus.Warnf("Skipping %s: cannot add resource from YAML: %v", path, err)
+		}
+		return nil
 	}
 
 	filepath.Walk(directory, visitFile) // silently skip invalid files by always returning error as nil
@@ -379,11 +383,7 @@ func (resources *ResourceProvider) addResourcesFromYaml(contents string) error {
 		if strings.TrimSpace(spec) == "" {
 			continue
 		}
-		err := resources.addResourceFromString(spec)
-		if err != nil {
-			logrus.Warnf("Skipped - Cannot parse YAML: (%v)", err)
-			return err
-		}
+		return resources.addResourceFromString(spec)
 	}
 	return nil
 }
