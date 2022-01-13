@@ -5,6 +5,10 @@ meta:
     content: "Fairwinds Polaris | Changelog"
 
 ---
+## 5.0.0
+* Renamed `multipleReplicasForDeployment` to `deploymentMissingReplicas`
+* Changed `RunAsRootAllowed` and `hostNetworkSet` default severity to `danger`
+* Changed `deploymentMissingReplicas` default severity to `warning`
 
 ## 4.2.0
 * New flags `--disallow-(config|annotation)-exemptions`
