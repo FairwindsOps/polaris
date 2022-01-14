@@ -1,52 +1,59 @@
----
-name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
-
----
-
----
-name: Bug report
-about: Let us know about an unexpected error, a crash, or an incorrect behavior.
-
----
-### Installation Process
-<!---
-Did you install on your local machine, or in a kubernetes cluster? Did you use kubectl, helm, brew, a GitHub release, or the source code? Let us know below.
--->
-
-### Version
-<!---
-What version are you running? Is it the latest version? If not, please try with the latest version, as your issue may have been fixed.
--->
-
-```
-...
-```
-
-### Expected Behavior
-<!--
-What should have happened?
--->
-
-### Actual Behavior
-<!--
-What actually happened?
--->
-
-### Steps to Reproduce
-<!--
-Please list the full steps required to reproduce the issue.
--->
-
-### Additional Context
-<!--
-Are there anything atypical about your situation that we should know?
--->
-
-### References
-<!--
-Are there any other GitHub issues (open or closed) or Pull Requests that should be linked here?
--->
+name: Bug Report
+description: File a bug report
+labels: [bug, triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report! Please fill the form below.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+      description: What is the expected or desired behavior?
+    validations:
+      required: true
+  - type: textarea
+    id: reproducible
+    attributes:
+      label: How can we reproduce this?
+      description: Please share the steps that we can take to reproduce this. Also include any relevant configuration.
+    validations:
+      required: true
+  - type: textarea
+    id: version
+    attributes:
+      label: version
+      description: The version of the tool that you are using.
+      render: bash
+    validations:
+      required: true
+  - type: checkboxes
+    id: search
+    attributes:
+      label: Search
+      options:
+        - label: I did search for other open and closed issues before opening this.
+          required: true
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow the CODE_OF_CONDUCT in this repository.
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
+  - type: textarea
+    id: ctx
+    attributes:
+      label: Additional context
+      description: Anything else you would like to add
+    validations:
+      required: false
