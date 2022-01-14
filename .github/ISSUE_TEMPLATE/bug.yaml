@@ -32,7 +32,6 @@ body:
     attributes:
       label: version
       description: The version of the tool that you are using.
-      render: bash
     validations:
       required: true
   - type: checkboxes
