@@ -1,13 +1,13 @@
-**Why This PR?**
-_a short description of why this PR is needed_
+This PR fixes issue #
 
-Fixes #
-
-**Changes**
-Changes proposed in this pull request:
-*
-
-**Checklist:**
-
+## Checklist
 * [ ] I have signed the CLA
-* [ ] I have updated/added any relevant documentation related to this PR
+* [ ] I have updated/added any relevant documentation
+  
+## Description
+### What's the goal of this PR?
+
+### What changes did you make?
+  
+### What alternative solution should we consider, if any?
+
