@@ -102,7 +102,7 @@ metadata:
     app: polaris
     component: dashboard
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: polaris
@@ -119,7 +119,7 @@ spec:
         - dashboard
         - --port
         - "8080"
-        image: 'quay.io/fairwinds/polaris:4.2'
+        image: 'quay.io/fairwinds/polaris:5.0'
         imagePullPolicy: 'Always'
         name: dashboard
         ports:

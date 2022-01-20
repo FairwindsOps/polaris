@@ -13,7 +13,7 @@ var (
 	// tests as we migrate toward JSON schema
 	checkOrder = []string{
 		// Controller Checks
-		"multipleReplicasForDeployment",
+		"deploymentMissingReplicas",
 		// Pod checks
 		"hostIPCSet",
 		"hostPIDSet",

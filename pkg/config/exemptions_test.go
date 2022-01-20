@@ -25,40 +25,40 @@ import (
 
 var confContainerTest = `
 checks:
-  multipleReplicasForDeployment: warning
+  deploymentMissingReplicas: warning
   priorityClassNotSet: warning
   pullPolicyNotAlways: warning
 exemptions:
   - namespace: prometheus
     rules:
-      - multipleReplicasForDeployment
+      - deploymentMissingReplicas
   - controllerNames: 
       - controller2
     rules:
-      - multipleReplicasForDeployment
+      - deploymentMissingReplicas
   - namespace: kube-system
     controllerNames:
       - controller3
     rules:
-      - multipleReplicasForDeployment
+      - deploymentMissingReplicas
   - containerNames:
       - container41
       - container42
     rules:
-      - multipleReplicasForDeployment
+      - deploymentMissingReplicas
   - namespace: kube-system
     containerNames:
       - container51
       - container52
     rules:
-      - multipleReplicasForDeployment
+      - deploymentMissingReplicas
   - controllerNames:
       - controller6
     containerNames:
       - container61
       - container62
     rules:
-      - multipleReplicasForDeployment
+      - deploymentMissingReplicas
   - namespace: kube-system
     controllerNames:
       - controller7
@@ -66,7 +66,7 @@ exemptions:
       - container71
       - container72
     rules:
-      - multipleReplicasForDeployment
+      - deploymentMissingReplicas
       - priorityClassNotSet
   - namespace: polaris
 `
@@ -86,22 +86,22 @@ func TestNamespaceExemptionForSpecifiedRules(t *testing.T) {
 	parsedConf, err := Parse([]byte(confContainerTest))
 	assert.NoError(t, err)
 
-	actionable := parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("prometheus", ""), "")
+	actionable := parsedConf.IsActionable("deploymentMissingReplicas", createMeta("prometheus", ""), "")
 	assert.False(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("prometheus", "controller1"), "container11")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("prometheus", "controller1"), "container11")
 	assert.False(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("prometheus", ""), "container11")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("prometheus", ""), "container11")
 	assert.False(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("prometheus", "controller1"), "")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("prometheus", "controller1"), "")
 	assert.False(t, actionable)
 
 	actionable = parsedConf.IsActionable("pullPolicyNotAlways", createMeta("prometheus", "controller1"), "")
 	assert.True(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("kube-system", ""), "")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("kube-system", ""), "")
 	assert.True(t, actionable)
 }
 
@@ -109,16 +109,16 @@ func TestNamespaceExemptionForAllRules(t *testing.T) {
 	parsedConf, err := Parse([]byte(confContainerTest))
 	assert.NoError(t, err)
 
-	actionable := parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("polaris", ""), "")
+	actionable := parsedConf.IsActionable("deploymentMissingReplicas", createMeta("polaris", ""), "")
 	assert.False(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("polaris", "controller1"), "container11")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("polaris", "controller1"), "container11")
 	assert.False(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("polaris", ""), "container11")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("polaris", ""), "container11")
 	assert.False(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("polaris", "controller1"), "")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("polaris", "controller1"), "")
 	assert.False(t, actionable)
 
 	actionable = parsedConf.IsActionable("pullPolicyNotAlways", createMeta("polaris", "controller1"), "")
@@ -129,28 +129,28 @@ func TestControllerExemption(t *testing.T) {
 	parsedConf, err := Parse([]byte(confContainerTest))
 	assert.NoError(t, err)
 
-	actionable := parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("", "controller2"), "")
+	actionable := parsedConf.IsActionable("deploymentMissingReplicas", createMeta("", "controller2"), "")
 	assert.False(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("", "controller2"), "container21")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("", "controller2"), "container21")
 	assert.False(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("prometheus", "controller2"), "container21")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("prometheus", "controller2"), "container21")
 	assert.False(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("prometheus", "controller2"), "")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("prometheus", "controller2"), "")
 	assert.False(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("", "controller3"), "")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("", "controller3"), "")
 	assert.True(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("kube-system", "controller3"), "")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("kube-system", "controller3"), "")
 	assert.False(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("kube-system", "controller3"), "container31")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("kube-system", "controller3"), "container31")
 	assert.False(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("kube-system", "controller4"), "")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("kube-system", "controller4"), "")
 	assert.True(t, actionable)
 }
 
@@ -158,22 +158,22 @@ func TestOnlyContainerExemption(t *testing.T) {
 	parsedConf, err := Parse([]byte(confContainerTest))
 	assert.NoError(t, err)
 
-	actionable := parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("", ""), "container41")
+	actionable := parsedConf.IsActionable("deploymentMissingReplicas", createMeta("", ""), "container41")
 	assert.False(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("", ""), "container42")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("", ""), "container42")
 	assert.False(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("", "controller4"), "container41")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("", "controller4"), "container41")
 	assert.False(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("kube-system", ""), "container41")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("kube-system", ""), "container41")
 	assert.False(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("kube-system", "controller4"), "container41")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("kube-system", "controller4"), "container41")
 	assert.False(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("", ""), "container51")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("", ""), "container51")
 	assert.True(t, actionable)
 }
 
@@ -181,25 +181,25 @@ func TestNamespaceAndContainerExemption(t *testing.T) {
 	parsedConf, err := Parse([]byte(confContainerTest))
 	assert.NoError(t, err)
 
-	actionable := parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("kube-system", ""), "container51")
+	actionable := parsedConf.IsActionable("deploymentMissingReplicas", createMeta("kube-system", ""), "container51")
 	assert.False(t, actionable)
 
 	actionable = parsedConf.IsActionable("priorityClassNotSet", createMeta("kube-system", ""), "container51")
 	assert.True(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("kube-system", "controller5"), "container51")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("kube-system", "controller5"), "container51")
 	assert.False(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("kube-system", "controller5"), "")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("kube-system", "controller5"), "")
 	assert.True(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("insights-agent", ""), "container51")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("insights-agent", ""), "container51")
 	assert.True(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("", ""), "container51")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("", ""), "container51")
 	assert.True(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("", "controller5"), "container51")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("", "controller5"), "container51")
 	assert.True(t, actionable)
 }
 
@@ -207,25 +207,25 @@ func TestControllerAndContainerExemption(t *testing.T) {
 	parsedConf, err := Parse([]byte(confContainerTest))
 	assert.NoError(t, err)
 
-	actionable := parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("", "controller6"), "container61")
+	actionable := parsedConf.IsActionable("deploymentMissingReplicas", createMeta("", "controller6"), "container61")
 	assert.False(t, actionable)
 
 	actionable = parsedConf.IsActionable("priorityClassNotSet", createMeta("", "controller6"), "container61")
 	assert.True(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("kube-system", "controller6"), "container61")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("kube-system", "controller6"), "container61")
 	assert.False(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("kube-system", "controller6"), "")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("kube-system", "controller6"), "")
 	assert.True(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("", "controller7"), "container61")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("", "controller7"), "container61")
 	assert.True(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("", ""), "container61")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("", ""), "container61")
 	assert.True(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("kube-system", ""), "container61")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("kube-system", ""), "container61")
 	assert.True(t, actionable)
 }
 
@@ -233,28 +233,28 @@ func TestContainerExemption(t *testing.T) {
 	parsedConf, err := Parse([]byte(confContainerTest))
 	assert.NoError(t, err)
 
-	actionable := parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("", ""), "container71")
+	actionable := parsedConf.IsActionable("deploymentMissingReplicas", createMeta("", ""), "container71")
 	assert.True(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("kube-system", ""), "container71")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("kube-system", ""), "container71")
 	assert.True(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("", "controller7"), "container71")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("", "controller7"), "container71")
 	assert.True(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("kube-system", "controller7"), "")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("kube-system", "controller7"), "")
 	assert.True(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("kube-system", "controller7"), "container71")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("kube-system", "controller7"), "container71")
 	assert.False(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("insights-agent", "controller7"), "container71")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("insights-agent", "controller7"), "container71")
 	assert.True(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("kube-system", "controller6"), "container71")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("kube-system", "controller6"), "container71")
 	assert.True(t, actionable)
 
-	actionable = parsedConf.IsActionable("multipleReplicasForDeployment", createMeta("kube-system", "controller7"), "container61")
+	actionable = parsedConf.IsActionable("deploymentMissingReplicas", createMeta("kube-system", "controller7"), "container61")
 	assert.True(t, actionable)
 
 	actionable = parsedConf.IsActionable("priorityClassNotSet", createMeta("kube-system", "controller7"), "container71")
