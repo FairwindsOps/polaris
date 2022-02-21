@@ -26,6 +26,18 @@ archives:
   - id: polaris
     builds: ["polaris"]
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}"
+signs:
+- cmd: cosign
+  args: ["sign-blob", "--key=hashivault://cosign", "-output-signature=${signature}", "${artifact}"]
+  artifacts: checksum
+release:
+  prerelease: auto
+  footer: |
+    You can verify the signature of the checksums.txt file using [cosign](https://github.com/sigstore/cosign).
+
+    ```
+    cosign verify-blob checksums.txt --signature=checksums.txt.sig  --key https://artifacts.fairwinds.com/cosign.pub
+    ```
 brews:
   - name: polaris
     tap:
