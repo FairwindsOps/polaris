@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  rok8s: fairwinds/rok8s-scripts@11
+
 executors:
   vm:
     machine:
@@ -82,16 +85,6 @@ references:
           echo "Skipping Kubernetes tests for forked PR"
         fi
 
-  # Release scripts
-  install_goreleaser: &install_goreleaser
-    run:
-      name: Install GoReleaser
-      command: |
-        curl -fsSLo goreleaser.deb https://github.com/goreleaser/goreleaser/releases/download/v1.1.0/goreleaser_1.1.0_amd64.deb
-        echo "182ae9b820aced214acc3a8633187750d3678b8192f66dfa05490c9e96be8f09 goreleaser.deb" | sha256sum -c -
-        sudo dpkg -i goreleaser.deb
-        rm goreleaser.deb
-
   docker_build: &docker_build
     run:
       name: Docker login and build
@@ -116,6 +109,26 @@ references:
         upload_url=$(echo $upload_url | sed -e 's/.*\(https.*\){.*$/\1/')
         curl -X POST "$upload_url?name=dashboard.yaml" --data-binary "@./deploy/dashboard.yaml" -H "Authorization: Bearer $GITHUB_TOKEN" -H "Content-Type: application/x-yaml"
         curl -X POST "$upload_url?name=webhook.yaml" --data-binary "@./deploy/webhook.yaml" -H "Authorization: Bearer $GITHUB_TOKEN" -H "Content-Type: application/x-yaml"
+
+  enable_experimental_features: &enable_experimental_docker_features
+    run:
+      name: enable experimental features
+      command: |
+        set -ex
+        apk --update add openssh
+        ssh remote-docker \<<EOF
+          sudo bash -c 'echo "{\"experimental\": true}" > /etc/docker/daemon.json'
+          sudo systemctl restart docker
+        EOF
+  install_vault_alpine: &install_vault_alpine
+    run:
+      name: install hashicorp vault
+      command: |
+        apk --update add curl yq
+        cd /tmp
+        curl -LO https://releases.hashicorp.com/vault/1.9.3/vault_1.9.3_linux_amd64.zip
+        unzip vault_1.9.3_linux_amd64.zip
+        mv vault /usr/bin/vault
 
 jobs:
   build:
@@ -176,16 +189,25 @@ jobs:
 
   release_binary:
     working_directory: /go/src/github.com/fairwindsops/polaris/
+    resource_class: large
+    shell: /bin/bash
     docker:
-      - image: circleci/golang:1.16
+      - image: goreleaser/goreleaser:v1.3.0
     steps:
       - checkout
-      - setup_remote_docker
+      - setup_remote_docker:
+          version: 20.10.6
+      - *enable_experimental_docker_features
+      - *install_vault_alpine
+      - rok8s/get_vault_env:
+          vault_path: repo/global/env
+      - rok8s/get_vault_env:
+          vault_path: repo/polaris/env
       - *set_environment_variables
-      - *install_goreleaser
       - run: go get -u github.com/gobuffalo/packr/v2/packr2
       - run: git checkout -- . # FIXME: the go get makes the directory dirty
       - run: packr2
+      - run: echo 'export GORELEASER_CURRENT_TAG="${CIRCLE_TAG}"' >> $BASH_ENV
       - run: goreleaser
       - *release_deploy_configs
 
@@ -198,7 +220,6 @@ jobs:
       - setup_remote_docker
       - *set_environment_variables
       - *docker_build_and_push
-
   publish_docs:
     docker:
       - image: cimg/node:15.5.1
@@ -213,17 +234,34 @@ jobs:
             npm run check-links
             npm run build
       - run:
-          name: Install AWS CLI
+          name: Install Tools
           command: |
+            cd /tmp
+            echo "Installing AWS CLI"
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
             unzip awscliv2.zip
             sudo ./aws/install
+
+            echo "Installing Hashicorp Vault"
+            curl -LO https://releases.hashicorp.com/vault/1.9.3/vault_1.9.3_linux_amd64.zip
+            unzip vault_1.9.3_linux_amd64.zip
+            sudo mv vault /usr/bin/vault
+            sudo chmod +x /usr/bin/vault
+            vault --version
+
+            echo "Installing yq"
+            curl -LO https://github.com/mikefarah/yq/releases/download/v4.16.2/yq_linux_amd64.tar.gz
+            tar -zxvf yq_linux_amd64.tar.gz
+            sudo mv yq_linux_amd64 /usr/bin/yq
+            sudo chmod +x /usr/bin/yq
+            yq --version
+      - rok8s/get_vault_env:
+          vault_path: repo/polaris/env
       - run:
           name: Publish Docs Site to S3
           command: |
             cd ./dist
             aws s3 sync ./ s3://polaris.docs.fairwinds.com --delete
-
 workflows:
   version: 2
 
