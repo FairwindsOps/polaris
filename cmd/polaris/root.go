@@ -25,7 +25,7 @@ import (
 )
 
 var configPath string
-var disallowExemptions, disallowConfigExemptions, disallowAnnotationExemptions bool
+var disallowExemptions, disallowConfigExemptions, disallowAnnotationExemptions, fixChecks bool
 var logLevel string
 var auditPath string
 var displayName string
@@ -41,6 +41,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&disallowConfigExemptions, "disallow-config-exemptions", "", false, "Disallow exemptions set within the configuration file.")
 	rootCmd.PersistentFlags().BoolVarP(&disallowAnnotationExemptions, "disallow-annotation-exemptions", "", false, "Disallow any exemption defined as a controller annotation.")
 	rootCmd.PersistentFlags().StringVarP(&logLevel, "log-level", "", logrus.InfoLevel.String(), "Logrus log level.")
+	rootCmd.PersistentFlags().BoolVarP(&fixChecks, "fix", "", false, "Fix yaml definition in infrastructure as code with mutations")
 	flag.Parse()
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 }
@@ -68,6 +69,7 @@ var rootCmd = &cobra.Command{
 		config.DisallowExemptions = disallowExemptions
 		config.DisallowConfigExemptions = disallowConfigExemptions
 		config.DisallowAnnotationExemptions = disallowAnnotationExemptions
+		config.FixChecks = fixChecks
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		logrus.Error("You must specify a sub-command.")
