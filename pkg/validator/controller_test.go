@@ -64,11 +64,11 @@ func TestControllerLevelChecks(t *testing.T) {
 	testResources := func(res *kube.ResourceProvider) {
 		c := conf.Configuration{
 			Checks: map[string]conf.Severity{
-				"multipleReplicasForDeployment": conf.SeverityDanger,
+				"deploymentMissingReplicas": conf.SeverityDanger,
 			},
 		}
 		expectedResult := ResultMessage{
-			ID:       "multipleReplicasForDeployment",
+			ID:       "deploymentMissingReplicas",
 			Severity: "danger",
 			Category: "Reliability",
 		}
@@ -85,7 +85,7 @@ func TestControllerLevelChecks(t *testing.T) {
 				expectedResult.Message = "Only one replica is scheduled"
 			}
 			expectedResults := ResultSet{
-				"multipleReplicasForDeployment": expectedResult,
+				"deploymentMissingReplicas": expectedResult,
 			}
 
 			assert.Equal(t, "Deployment", actualResult.Kind)

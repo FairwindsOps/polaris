@@ -1,6 +1,6 @@
 checks:
   # reliability
-  multipleReplicasForDeployment: warning
+  deploymentMissingReplicas: warning
   priorityClassNotSet: warning
   tagNotSpecified: danger
   pullPolicyNotAlways: warning
@@ -16,11 +16,11 @@ checks:
   hostPIDSet: danger
   notReadOnlyRootFilesystem: warning
   privilegeEscalationAllowed: danger
-  runAsRootAllowed: warning
+  runAsRootAllowed: danger
   runAsPrivileged: danger
   dangerousCapabilities: danger
   insecureCapabilities: warning
-  hostNetworkSet: warning
+  hostNetworkSet: danger
   hostPortSet: warning
   # custom
   resourceLimits: warning
