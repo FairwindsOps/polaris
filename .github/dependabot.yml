@@ -1,44 +1,24 @@
 version: 2
 updates:
-- package-ecosystem: gomod
-  directory: "/"
-  schedule:
-    interval: weekly
-    time: "11:00"
-  ignore:
-  - dependency-name: cloud.google.com/go
-    versions:
-    - ">= 0.57.a, < 0.58"
-  - dependency-name: github.com/go-logr/logr
-    versions:
-    - ">= 0.2.a, < 0.3"
-  - dependency-name: github.com/go-logr/zapr
-    versions:
-    - ">= 0.2.a, < 0.3"
-  - dependency-name: github.com/googleapis/gnostic
-    versions:
-    - ">= 0.4.a, < 0.5"
-  - dependency-name: github.com/googleapis/gnostic
-    versions:
-    - ">= 0.5.a, < 0.6"
-  - dependency-name: github.com/qri-io/jsonschema
-    versions:
-    - ">= 0.2.a, < 0.3"
-  - dependency-name: k8s.io/api
-    versions:
-    - ">= 0.19.a, < 0.20"
-  - dependency-name: k8s.io/apimachinery
-    versions:
-    - ">= 0.19.a, < 0.20"
-  - dependency-name: k8s.io/client-go
-    versions:
-    - ">= 0.19.a, < 0.20"
-  - dependency-name: sigs.k8s.io/controller-runtime
-    versions:
-    - ">= 0.5.a, < 0.6"
-  - dependency-name: sigs.k8s.io/controller-runtime
-    versions:
-    - ">= 0.8.a, < 0.9"
-  - dependency-name: k8s.io/apimachinery
-    versions:
-    - 0.20.4
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "npm"
+    directory: "/docs"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+    ignore:
+      - dependency-name: "*"
+
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
