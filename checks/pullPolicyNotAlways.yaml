@@ -11,5 +11,5 @@ schema:
       const: Always
 mutations:
   - op: add
-    path: /spec/containers/0
-    value: {"imagePullPolicy":"Always"}
+    path: /spec/containers/0/imagePullPolicy
+    value: Always

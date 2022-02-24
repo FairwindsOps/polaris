@@ -33,7 +33,8 @@ func TestMutations(t *testing.T) {
 			for kind, resources := range tc.resources.Resources {
 				mutated, err := mutation.ApplyAllSchemaMutations(&c, tc.resources, resources[0])
 				assert.NoError(t, err)
-				assert.Equal(t, mutated, successResources.Resources[kind])
+				expected := successResources.Resources[kind][0]
+				assert.Equal(t, expected.Resource.Object, mutated.Resource.Object)
 			}
 		}
 	}

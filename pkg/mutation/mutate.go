@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	jsonpatch "github.com/evanphx/json-patch"
+	jsonpatch "github.com/evanphx/json-patch/v5"
 	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
 	"github.com/thoas/go-funk"
@@ -12,34 +12,32 @@ import (
 
 // ApplyAllSchemaMutations applies available mutation to a single resource
 func ApplyAllSchemaMutations(conf *config.Configuration, resourceProvider *kube.ResourceProvider, resource kube.GenericResource) (kube.GenericResource, error) {
-	resByte, err := resource.Resource.MarshalJSON()
-	if err != nil {
-		return resource, err
-	}
-	for checkID, _ := range conf.Checks {
+	resByte := resource.OriginalObjectJSON
+	var jsonByte []byte
+	for checkID := range conf.Checks {
 		if funk.Contains(conf.Mutations, checkID) {
 			customCheck, err := resolveCheck(conf, checkID, resource)
 			if err != nil {
 				return resource, err
 			}
-			for _, mutation := range customCheck.Mutation {
-				patchJSON, err := json.Marshal(mutation)
-				if err != nil {
-					return resource, err
-				}
-				patch, err := jsonpatch.DecodePatch(patchJSON)
-				if err != nil {
-					return resource, err
-				}
-				resByte, err = patch.Apply(resByte)
-				if err != nil {
-					return resource, err
-				}
 
+			mutationByte, err := json.Marshal(customCheck.Mutations)
+			if err != nil {
+				return resource, err
 			}
+
+			patch, err := jsonpatch.DecodePatch(mutationByte)
+			if err != nil {
+				return resource, err
+			}
+			jsonByte, err = patch.Apply(resByte)
+			if err != nil {
+				return resource, err
+			}
+
 		}
 	}
-	mutated, err := kube.NewGenericResourceFromBytes(resByte)
+	mutated, err := kube.NewGenericResourceFromBytes(jsonByte)
 	if err != nil {
 		return resource, err
 	}
