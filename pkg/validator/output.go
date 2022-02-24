@@ -20,7 +20,6 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/thoas/go-funk"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"github.com/fairwindsops/polaris/pkg/config"
 )
@@ -96,13 +95,12 @@ func (res ResultSet) removeSuccessfulResults() ResultSet {
 
 // Result provides results for a Kubernetes object
 type Result struct {
-	Name            string
-	Namespace       string
-	Kind            string
-	Results         ResultSet
-	PodResult       *PodResult
-	PatchedResource unstructured.Unstructured
-	CreatedTime     time.Time
+	Name        string
+	Namespace   string
+	Kind        string
+	Results     ResultSet
+	PodResult   *PodResult
+	CreatedTime time.Time
 }
 
 func (res Result) removeSuccessfulResults() Result {
