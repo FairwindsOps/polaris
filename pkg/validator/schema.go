@@ -22,7 +22,7 @@ type schemaTestCase struct {
 	ResourceProvider *kube.ResourceProvider
 }
 
-func ResolveCheck(conf *config.Configuration, checkID string, test schemaTestCase) (*config.SchemaCheck, error) {
+func resolveCheck(conf *config.Configuration, checkID string, test schemaTestCase) (*config.SchemaCheck, error) {
 	if !conf.DisallowExemptions &&
 		!conf.DisallowAnnotationExemptions &&
 		hasExemptionAnnotation(test.Resource.ObjectMeta, checkID) {
@@ -231,7 +231,7 @@ func applySchemaChecks(conf *config.Configuration, test schemaTestCase) (ResultS
 }
 
 func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTestCase) (*ResultMessage, error) {
-	check, err := ResolveCheck(conf, checkID, test)
+	check, err := resolveCheck(conf, checkID, test)
 	if err != nil {
 		return nil, err
 	} else if check == nil {
