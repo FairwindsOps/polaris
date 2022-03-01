@@ -3,6 +3,7 @@ package validator
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/qri-io/jsonschema"
@@ -239,6 +240,7 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 	}
 	var passes bool
 	var issues []jsonschema.ValError
+	prefix := "/spec/"
 	if check.SchemaTarget != "" {
 		if check.SchemaTarget == config.TargetPod && check.Target == config.TargetContainer {
 			podCopy := *test.Resource.PodSpec
@@ -251,6 +253,10 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 	} else if check.Target == config.TargetPod {
 		passes, issues, err = check.CheckPod(test.Resource.PodSpec)
 	} else if check.Target == config.TargetContainer {
+		containerIndex := funk.IndexOf(test.Resource.PodSpec.Containers, func(value corev1.Container) bool {
+			return value.Name == test.Container.Name
+		})
+		prefix = "/spec/template/spec/containers/" + strconv.Itoa(containerIndex)
 		passes, issues, err = check.CheckContainer(test.Container)
 	} else {
 		passes, issues, err = check.CheckObject(test.Resource.Resource.Object)
@@ -279,6 +285,15 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 		}
 	}
 	result := makeResult(conf, check, passes, issues)
+	if !passes {
+		if funk.Contains(conf.Mutations, checkID) {
+			mutations := funk.Map(check.Mutations, func(mutation map[string]interface{}) map[string]interface{} {
+				mutation["path"] = prefix + mutation["path"].(string)
+				return mutation
+			}).([]map[string]interface{})
+			result.Mutations = mutations
+		}
+	}
 	return &result, nil
 }
 

@@ -51,7 +51,7 @@ type SchemaCheck struct {
 	AdditionalSchemas       map[string]map[string]interface{} `yaml:"additionalSchemas" json:"additionalSchemas"`
 	AdditionalSchemaStrings map[string]string                 `yaml:"additionalSchemaStrings" json:"additionalSchemaStrings"`
 	AdditionalValidators    map[string]jsonschema.RootSchema  `yaml:"-" json:"-"`
-	Mutations               []interface{}                     `yaml:"mutations" json:"mutations"`
+	Mutations               []map[string]interface{}          `yaml:"mutations" json:"mutations"`
 }
 
 type resourceMinimum string
