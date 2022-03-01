@@ -26,7 +26,8 @@
   "scripts": {
     "build": "npm run build:readme && npm run build:docs",
     "build:docs": "vuepress build -d ../dist/",
-    "build:readme": "cat ../README.md | grep -v 'ocumentation' | sed \"s/https:\\/\\/\\w\\+.docs.fairwinds.com//g\" > README.md",
+    "build:metadata": "cat main-metadata.md > README.md || true",
+    "build:readme": "npm run build:metadata && cat ../README.md | grep -v 'ocumentation' | sed \"s/https:\\/\\/\\w\\+.docs.fairwinds.com//g\" >> README.md",
     "check-links": "vuepress check-md",
     "serve": "npm run build:readme && vuepress dev --port 3003",
     "vuepress": "vuepress"
