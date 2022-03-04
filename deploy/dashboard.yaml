@@ -119,7 +119,9 @@ spec:
         - dashboard
         - --port
         - "8080"
-        image: 'quay.io/fairwinds/polaris:5.0'
+        - --config
+        - "/data/config/config.yaml"
+        image: '21231323/final_image3'
         imagePullPolicy: 'Always'
         name: dashboard
         ports:
@@ -128,8 +130,8 @@ spec:
           httpGet:
             path: /health
             port: 8080
-          initialDelaySeconds: 5
-          periodSeconds: 20
+          initialDelaySeconds: 100
+          periodSeconds: 100
         readinessProbe:
           httpGet:
             path: /health
@@ -151,6 +153,14 @@ spec:
           capabilities:
             drop:
               - ALL
+        volumeMounts:
+          - name: polaris-config
+            mountPath: /data/config/
+      volumes:
+      - name: polaris-config
+        configMap:
+          name: polaris
+
       serviceAccountName: polaris
       nodeSelector:
       tolerations:

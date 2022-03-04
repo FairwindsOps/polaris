@@ -1,0 +1,335 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: polaris
+  namespace: polaris
+  labels:
+    infra.arc/repo.managed: kubernetes
+data:
+  config.yaml: |
+    checks:
+      # reliability
+      missingPodDisruptionBudget: ignore
+      httpannotations: warning
+      startuptimeCheck: warning
+
+
+      # efficiency
+      cpuRequestsMissing: warning
+      cpuLimitsMissing: warning
+
+      #security
+      runAsGroup: ignore
+      runAsUser: ignore
+      runAsRoot: ignore
+      httpannotations: ignore
+      checkTolerations: ignore
+
+     
+      
+    customChecks:
+      runAsGroup:
+        successMessage: Running as group
+        failureMessage: Should not be allowed to run as User
+        category: Security
+        target: Container
+        schemaTarget: Pod
+        schema:
+          '$schema': http://json-schema.org/draft-07/schema
+          definitions:
+            goodSecurityContext:
+              type: object
+              anyOf:
+              - required:
+                - runAsGroup
+                properties:
+                  runAsGroup:
+                    minimum: 1
+          type: object
+          anyOf:
+          - properties:
+              containers:
+                type: array
+                items:
+                  required:
+                  - securityContext
+                  properties:
+                    securityContext:
+                      $ref: "#/definitions/goodSecurityContext"
+      runAsUser:
+        successMessage: Running as User
+        failureMessage: Should not be allowed to run as User
+        category: Security
+        target: Container
+        schemaTarget: Pod
+        schema:
+          '$schema': http://json-schema.org/draft-07/schema
+          definitions:
+            goodSecurityContext:
+              type: object
+              anyOf:
+              - required:
+                - runAsUser
+                properties:
+                  runAsUser:
+                    minimum: 1
+          type: object
+          anyOf:
+          - properties:
+              containers:
+                type: array
+                items:
+                  required:
+                  - securityContext
+                  properties:
+                    securityContext:
+                      $ref: "#/definitions/goodSecurityContext"
+      runAsRoot:
+        successMessage: Running as root
+        failureMessage: Should not be allowed to run as root
+        category: Security
+        target: Container
+        schemaTarget: Pod
+        schema:
+          '$schema': http://json-schema.org/draft-07/schema
+          definitions:
+            goodSecurityContext:
+              type: object
+              anyOf:
+              - required:
+                - runAsRoot
+                properties:
+                  runAsRoot:
+                    const: true
+          type: object
+          anyOf:
+          - properties:
+              containers:
+                type: array
+                items:
+                  required:
+                  - securityContext
+                  properties:
+                    securityContext:
+                      $ref: "#/definitions/goodSecurityContext"
+        
+      checkTolerations:   
+        successMessage: App has not declared tolerations.
+        failureMessage: App declared tolerations
+        category: Security
+        target: Container
+        schemaTarget: Pod
+        schema:
+          '$schema': http://json-schema.org/draft-07/schema
+          type: object
+          properties:
+            tolerations:
+              type: object
+              effect:
+                type: string
+              key:
+                type: string
+
+
+      httpannotations:
+        successMessage: Http annotations are declared on service object
+        failureMessage: Http annotations are not declared on service object
+        target: Service
+        schema:
+          '$schema': http://json-schema.org/draft-07/schema
+          type: object
+          properties:
+            metadata:
+              type: object
+              required: ["annotations"]
+              properties:
+                annotations:
+                  type: object
+                  required: ["ad.datadoghq.com/service.check_names"]
+                  properties:
+                    ad.datadoghq.com/service.check_names:
+                      const: '["http_check"]'
+
+      startuptimeCheck:
+        successMessage: startup time is within limit
+        failureMessage: startup time exceeded the limit
+        category: Reliability
+        target: Container
+        schema:
+          '$schema': http://json-schema.org/draft-07/schema
+          
+
+
+    exemptions:
+      - namespace: kube-system
+        controllerNames:
+          - kube-apiservers
+          - kube-proxy
+          - kube-scheduler
+          - etcd-manager-events
+          - kube-controller-manager
+          - kube-dns
+          - etcd-manager-main
+        rules:
+          - hostPortSet
+          - hostNetworkSet
+          - readinessProbeMissing
+          - livenessProbeMissing
+          - cpuRequestsMissing
+          - cpuLimitsMissing
+          - memoryRequestsMissing
+          - memoryLimitsMissing
+          - runAsRootAllowed
+          - runAsPrivileged
+          - notReadOnlyRootFilesystem
+          - hostPIDSet
+
+      - controllerNames:
+          - kube-flannel-ds
+        rules:
+          - notReadOnlyRootFilesystem
+          - runAsRootAllowed
+          - notReadOnlyRootFilesystem
+          - readinessProbeMissing
+          - livenessProbeMissing
+          - cpuLimitsMissing
+
+      - controllerNames:
+          - cert-manager
+        rules:
+          - notReadOnlyRootFilesystem
+          - runAsRootAllowed
+          - readinessProbeMissing
+          - livenessProbeMissing
+
+      - controllerNames:
+          - cluster-autoscaler
+        rules:
+          - notReadOnlyRootFilesystem
+          - runAsRootAllowed
+          - readinessProbeMissing
+
+      - controllerNames:
+          - vpa
+        rules:
+          - runAsRootAllowed
+          - readinessProbeMissing
+          - livenessProbeMissing
+          - notReadOnlyRootFilesystem
+
+      - controllerNames:
+          - datadog
+        rules:
+          - runAsRootAllowed
+          - readinessProbeMissing
+          - livenessProbeMissing
+          - notReadOnlyRootFilesystem
+
+      - controllerNames:
+          - nginx-ingress-controller
+        rules:
+          - privilegeEscalationAllowed
+          - insecureCapabilities
+          - runAsRootAllowed
+
+      - controllerNames:
+          - dns-controller
+          - datadog-datadog
+          - kube-flannel-ds
+          - kube2iam
+          - aws-iam-authenticator
+          - datadog
+          - kube2iam
+        rules:
+          - hostNetworkSet
+
+      - controllerNames:
+          - aws-iam-authenticator
+          - aws-cluster-autoscaler
+          - kube-state-metrics
+          - dns-controller
+          - external-dns
+          - dnsmasq
+          - autoscaler
+          - kubernetes-dashboard
+          - install-cni
+          - kube2iam
+        rules:
+          - readinessProbeMissing
+          - livenessProbeMissing
+
+      - controllerNames:
+          - aws-iam-authenticator
+          - nginx-ingress-default-backend
+          - aws-cluster-autoscaler
+          - kube-state-metrics
+          - dns-controller
+          - external-dns
+          - kubedns
+          - dnsmasq
+          - autoscaler
+          - tiller
+          - kube2iam
+        rules:
+          - runAsRootAllowed
+
+      - controllerNames:
+          - aws-iam-authenticator
+          - nginx-ingress-controller
+          - nginx-ingress-default-backend
+          - aws-cluster-autoscaler
+          - kube-state-metrics
+          - dns-controller
+          - external-dns
+          - kubedns
+          - dnsmasq
+          - autoscaler
+          - tiller
+          - kube2iam
+        rules:
+          - notReadOnlyRootFilesystem
+
+      - controllerNames:
+          - cert-manager
+          - dns-controller
+          - kubedns
+          - dnsmasq
+          - autoscaler
+          - insights-agent-goldilocks-vpa-install
+          - datadog
+        rules:
+          - cpuRequestsMissing
+          - cpuLimitsMissing
+          - memoryRequestsMissing
+          - memoryLimitsMissing
+
+      - controllerNames:
+          - kube2iam
+          - kube-flannel-ds
+        rules:
+          - runAsPrivileged
+
+      - controllerNames:
+          - kube-hunter
+        rules:
+          - hostPIDSet
+
+      - controllerNames:
+          - polaris
+          - kube-hunter
+          - goldilocks
+          - insights-agent-goldilocks-vpa-install
+        rules:
+          - notReadOnlyRootFilesystem
+
+      - controllerNames:
+          - insights-agent-goldilocks-controller
+        rules:
+          - livenessProbeMissing
+          - readinessProbeMissing
+
+      - controllerNames:
+          - insights-agent-goldilocks-vpa-install
+          - kube-hunter
+        rules:
+          - runAsRootAllowed

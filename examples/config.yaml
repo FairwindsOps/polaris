@@ -1,37 +1,152 @@
 checks:
-  # reliability
-  deploymentMissingReplicas: warning
-  priorityClassNotSet: ignore
-  tagNotSpecified: danger
-  pullPolicyNotAlways: warning
-  readinessProbeMissing: warning
-  livenessProbeMissing: warning
-  metadataAndNameMismatched: ignore
-  pdbDisruptionsIsZero: warning
-  missingPodDisruptionBudget: ignore
-
-  # efficiency
-  cpuRequestsMissing: warning
-  cpuLimitsMissing: warning
-  memoryRequestsMissing: warning
-  memoryLimitsMissing: warning
+  startuptimeCheck: warning
   # security
-  hostIPCSet: danger
-  hostPIDSet: danger
-  notReadOnlyRootFilesystem: warning
-  privilegeEscalationAllowed: danger
-  runAsRootAllowed: danger
-  runAsPrivileged: danger
-  dangerousCapabilities: danger
-  insecureCapabilities: warning
-  hostNetworkSet: danger
-  hostPortSet: warning
-  tlsSettingsMissing: warning
+  runAsUser: warning
+  runAsGroup: warning
+  runAsRoot: warning
+  httpannotations: warning
+  checkTolerations: warning
+
+  
+customChecks:
+  runAsGroup:
+    successMessage: Running as group
+    failureMessage: Should not be allowed to run as User
+    category: Security
+    target: Container
+    schemaTarget: Pod
+    schema:
+      '$schema': http://json-schema.org/draft-07/schema
+      definitions:
+        goodSecurityContext:
+          type: object
+          anyOf:
+          - required:
+            - runAsGroup
+            properties:
+              runAsGroup:
+                minimum: 1
+      type: object
+      anyOf:
+      - properties:
+          containers:
+            type: array
+            items:
+              required:
+              - securityContext
+              properties:
+                securityContext:
+                  $ref: "#/definitions/goodSecurityContext"
+  runAsUser:
+    successMessage: Running as User
+    failureMessage: Should not be allowed to run as User
+    category: Security
+    target: Container
+    schemaTarget: Pod
+    schema:
+      '$schema': http://json-schema.org/draft-07/schema
+      definitions:
+        goodSecurityContext:
+          type: object
+          anyOf:
+          - required:
+            - runAsUser
+            properties:
+              runAsUser:
+                minimum: 1
+      type: object
+      anyOf:
+      - properties:
+          containers:
+            type: array
+            items:
+              required:
+              - securityContext
+              properties:
+                securityContext:
+                  $ref: "#/definitions/goodSecurityContext"
+  runAsRoot:
+    successMessage: Running as root
+    failureMessage: Should not be allowed to run as root
+    category: Security
+    target: Container
+    schemaTarget: Pod
+    schema:
+      '$schema': http://json-schema.org/draft-07/schema
+      definitions:
+        goodSecurityContext:
+          type: object
+          anyOf:
+          - required:
+            - runAsRoot
+            properties:
+              runAsRoot:
+                const: true
+      type: object
+      anyOf:
+      - properties:
+          containers:
+            type: array
+            items:
+              required:
+              - securityContext
+              properties:
+                securityContext:
+                  $ref: "#/definitions/goodSecurityContext"
+    
+  checkTolerations:   
+    successMessage: App has not declared tolerations.
+    failureMessage: App declared tolerations
+    category: Security
+    target: Container
+    schemaTarget: Pod
+    schema:
+      '$schema': http://json-schema.org/draft-07/schema
+      type: object
+      properties:
+        tolerations:
+          type: object
+          effect:
+            type: string
+          key:
+            type: string
+
+
+  httpannotations:
+    successMessage: Http annotations are declared on service object
+    failureMessage: Http annotations are not declared on service object
+    target: Service
+    schema:
+      '$schema': http://json-schema.org/draft-07/schema
+      type: object
+      properties:
+        metadata:
+          type: object
+          required: ["annotations"]
+          properties:
+            annotations:
+              type: object
+              required: ["ad.datadoghq.com/service.check_names"]
+              properties:
+                ad.datadoghq.com/service.check_names:
+                  const: '["http_check"]'
+
+  startuptimeCheck:
+    successMessage: startup time is within limit
+    failureMessage: startup time exceeded the limit
+    category: Reliability
+    target: Container
+    schema:
+      '$schema': http://json-schema.org/draft-07/schema
+      startup_time: 180
+
+      
+
 
 exemptions:
   - namespace: kube-system
     controllerNames:
-      - kube-apiserver
+      - kube-apiservers
       - kube-proxy
       - kube-scheduler
       - etcd-manager-events

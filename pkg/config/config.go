@@ -92,9 +92,17 @@ func Parse(rawBytes []byte) (Configuration, error) {
 		}
 	}
 	for key, check := range conf.CustomChecks {
-		err := check.Initialize(key)
-		if err != nil {
-			return conf, err
+		fmt.Println(key, check.ID, check)
+		if check.ID != "startuptimeCheck"{
+
+			err := check.Initialize(key)
+			if err != nil {
+				return conf, err
+			}
+		}
+		check.ID = key
+		if check.ID == "startuptimeCheck" {
+			fmt.Println(check)
 		}
 		conf.CustomChecks[key] = check
 		if _, ok := conf.Checks[key]; !ok {

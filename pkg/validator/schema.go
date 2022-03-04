@@ -29,6 +29,7 @@ func resolveCheck(conf *config.Configuration, checkID string, test schemaTestCas
 		return nil, nil
 	}
 	check, ok := conf.CustomChecks[checkID]
+	fmt.Println(check)
 	if !ok {
 		check, ok = config.BuiltInChecks[checkID]
 	}
@@ -230,7 +231,7 @@ func applySchemaChecks(conf *config.Configuration, test schemaTestCase) (ResultS
 	return results, nil
 }
 
-func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTestCase) (*ResultMessage, error) {
+/*func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTestCase) (*ResultMessage, error) {
 	check, err := resolveCheck(conf, checkID, test)
 	if err != nil {
 		return nil, err
@@ -281,7 +282,85 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 	result := makeResult(conf, check, passes, issues)
 	return &result, nil
 }
+*/
+func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTestCase) (*ResultMessage, error) {
 
+	fmt.Println(checkID)
+	check, err := resolveCheck(conf, checkID, test)
+	if err != nil {
+		return nil, err
+	} else if check == nil {
+		return nil, nil
+	}
+	//var data ResourceInfo
+	var passes bool
+	var issues []jsonschema.ValError
+	if check.SchemaTarget != "" {
+		if check.SchemaTarget == config.TargetPod && check.Target == config.TargetContainer {
+			podCopy := *test.Resource.PodSpec
+			podCopy.InitContainers = []corev1.Container{}
+			podCopy.Containers = []corev1.Container{*test.Container}
+			passes, issues, err = check.CheckPod(&podCopy)
+		} else {
+			return nil, fmt.Errorf("Unknown combination of target (%s) and schema target (%s)", check.Target, check.SchemaTarget)
+		}
+	} else if check.Target == config.TargetPod {
+		passes, issues, err = check.CheckPod(test.Resource.PodSpec)
+	} else if checkID == "startuptimeCheck" && check.Target == config.TargetContainer {
+		passes, issues, err = StartupTimeCheck(check, checkID, test)
+	}else if check.Target == config.TargetContainer {
+		passes, issues, err = check.CheckContainer(test.Container)
+	} else {
+		passes, issues, err = check.CheckObject(test.Resource.Resource.Object)
+	}
+	if err != nil {
+		return nil, err
+	}
+	for groupkind := range check.AdditionalValidators {
+		if !passes {
+			break
+		}
+		resources := test.ResourceProvider.Resources[groupkind]
+		namespace := test.Resource.ObjectMeta.GetNamespace()
+		if test.Resource.Kind == "Namespace" {
+			namespace = test.Resource.ObjectMeta.GetName()
+		}
+		resources = funk.Filter(resources, func(res kube.GenericResource) bool {
+			return res.ObjectMeta.GetNamespace() == namespace
+		}).([]kube.GenericResource)
+		objects := funk.Map(resources, func(res kube.GenericResource) interface{} {
+			return res.Resource.Object
+		}).([]interface{})
+		passes, err = check.CheckAdditionalObjects(groupkind, objects)
+		if err != nil {
+			return nil, err
+		}
+	}
+	result := makeResult(conf, check, passes, issues)
+	return &result, nil
+}
+func StartupTimeCheck(check *config.SchemaCheck, checkID string, test schemaTestCase) (bool,[]jsonschema.ValError, error){
+	//var finalStartupTime int;
+	startup_time, ok := check.Schema["startup_time"].(int)
+	fmt.Println(startup_time)
+	if !ok {
+		
+	   return false, nil,fmt.Errorf("startup time check not found for schema", checkID)
+	}		
+    actualInitialDelaySeconds := test.Container.ReadinessProbe.InitialDelaySeconds
+	actualPeriodSeconds := test.Container.ReadinessProbe.PeriodSeconds
+	actualStartupTime := actualInitialDelaySeconds + actualPeriodSeconds
+
+	if int(actualStartupTime) < startup_time{
+		message := "startup time is within limit"
+		check.SuccessMessage = message
+		return true, nil, nil;
+	}else {
+		message := "startup time exceeded the limit"
+		check.FailureMessage = message
+		return false,  nil, nil
+	}
+}
 func getSortedKeys(m map[string]config.Severity) []string {
 	keys := make([]string, 0, len(m))
 	for key := range m {
