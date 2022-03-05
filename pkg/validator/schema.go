@@ -29,7 +29,6 @@ func resolveCheck(conf *config.Configuration, checkID string, test schemaTestCas
 		return nil, nil
 	}
 	check, ok := conf.CustomChecks[checkID]
-	fmt.Println(check)
 	if !ok {
 		check, ok = config.BuiltInChecks[checkID]
 	}
@@ -47,11 +46,15 @@ func resolveCheck(conf *config.Configuration, checkID string, test schemaTestCas
 	if !check.IsActionable(test.Target, test.Resource.Kind, test.IsInitContianer) {
 		return nil, nil
 	}
-	checkPtr, err := check.TemplateForResource(test.Resource.Resource.Object)
-	if err != nil {
-		return nil, err
+	if checkID != "startuptimeCheck"{
+		checkPtr, err := check.TemplateForResource(test.Resource.Resource.Object)
+		if err != nil {
+			return nil, err
+		}
+		return checkPtr, nil
+	} else {
+		return &check, nil
 	}
-	return checkPtr, nil
 }
 
 func makeResult(conf *config.Configuration, check *config.SchemaCheck, passes bool, issues []jsonschema.ValError) ResultMessage {
@@ -285,7 +288,6 @@ func applySchemaChecks(conf *config.Configuration, test schemaTestCase) (ResultS
 */
 func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTestCase) (*ResultMessage, error) {
 
-	fmt.Println(checkID)
 	check, err := resolveCheck(conf, checkID, test)
 	if err != nil {
 		return nil, err
@@ -341,17 +343,20 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 }
 func StartupTimeCheck(check *config.SchemaCheck, checkID string, test schemaTestCase) (bool,[]jsonschema.ValError, error){
 	//var finalStartupTime int;
-	startup_time, ok := check.Schema["startup_time"].(int)
-	fmt.Println(startup_time)
+	startup_time, ok :=  check.Schema["startup_time"].(float64)
 	if !ok {
-		
-	   return false, nil,fmt.Errorf("startup time check not found for schema", checkID)
+	   return false, nil,fmt.Errorf("startup time check not found for schema", checkID, ok)
 	}		
-    actualInitialDelaySeconds := test.Container.ReadinessProbe.InitialDelaySeconds
-	actualPeriodSeconds := test.Container.ReadinessProbe.PeriodSeconds
+	if test.Container.ReadinessProbe == nil {
+		check.FailureMessage =  "Readiness probe not configured in order to perform startup probe check"
+		return false, nil, nil
+	}
+
+    	actualInitialDelaySeconds := test.Container.ReadinessProbe.InitialDelaySeconds
+	actualPeriodSeconds:= test.Container.ReadinessProbe.PeriodSeconds
 	actualStartupTime := actualInitialDelaySeconds + actualPeriodSeconds
 
-	if int(actualStartupTime) < startup_time{
+	if int(actualStartupTime) < int(startup_time){
 		message := "startup time is within limit"
 		check.SuccessMessage = message
 		return true, nil, nil;

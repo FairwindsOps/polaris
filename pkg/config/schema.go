@@ -58,6 +58,7 @@ type resourceMaximum string
 
 func unmarshalYAMLOrJSON(raw []byte, dest interface{}) error {
 	reader := bytes.NewReader(raw)
+
 	d := k8sYaml.NewYAMLOrJSONDecoder(reader, 4096)
 	for {
 		if err := d.Decode(dest); err != nil {
@@ -224,9 +225,10 @@ func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, err
 		newCheck.AdditionalValidators[kind] = val
 	}
 	err := unmarshalYAMLOrJSON([]byte(newCheck.SchemaString), &newCheck.Validator)
-	if err != nil {
-		return nil, err
-	}
+        if err != nil {
+               return nil, err
+        }
+
 	return &newCheck, err
 }
 
