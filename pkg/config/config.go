@@ -36,6 +36,7 @@ type Configuration struct {
 	DisallowExemptions           bool                   `json:"disallowExemptions"`
 	DisallowConfigExemptions     bool                   `json:"disallowConfigExemptions"`
 	DisallowAnnotationExemptions bool                   `json:"disallowAnnotationExemptions"`
+	KubeContext                  string                 `json:"kubeContext"`
 }
 
 // Exemption represents an exemption to normal rules
