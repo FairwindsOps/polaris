@@ -6,7 +6,7 @@ orbs:
 executors:
   vm:
     machine:
-      enabled: true
+      image: ubuntu:20.04
 
 references:
   set_environment_variables: &set_environment_variables
