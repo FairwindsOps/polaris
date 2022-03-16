@@ -287,6 +287,7 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		}
 	}
 
+	var kubernetesResources []GenericResource
 	for _, kind := range additionalKinds {
 		groupKind := parseGroupKind(maybeTransformKindIntoGroupKind(string(kind)))
 		mapping, err := (restMapper).RESTMapping(groupKind)
@@ -305,7 +306,7 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 			if err != nil {
 				return nil, err
 			}
-			provider.Resources.addResource(res)
+			kubernetesResources = append(kubernetesResources, res)
 		}
 	}
 
@@ -316,9 +317,12 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		logrus.Errorf("Error loading controllers from pods: %v", err)
 		return nil, err
 	}
+	// resources loaded from custom checks can also contain controllers and thus would be added twice to the provider
+	kubernetesResources = deduplicateControllers(append(kubernetesResources, controllers...))
+
 	provider.Nodes = nodes.Items
 	provider.Namespaces = namespaces.Items
-	provider.Resources.addResources(controllers)
+	provider.Resources.addResources(kubernetesResources)
 	return &provider, nil
 }
 
@@ -341,14 +345,14 @@ func LoadControllers(ctx context.Context, pods []corev1.Pod, dynamicClientPointe
 		}
 		interfaces = append(interfaces, workload)
 	}
-	return deduplicateControllers(interfaces), nil
+	return interfaces, nil
 }
 
 // Because the controllers with an Owner take on the name of the Owner, this eliminates any duplicates.
 // In cases like CronJobs older children can hang around, so this takes the most recent.
-func deduplicateControllers(inputControllers []GenericResource) []GenericResource {
+func deduplicateControllers(inputResources []GenericResource) []GenericResource {
 	controllerMap := make(map[string]GenericResource)
-	for _, controller := range inputControllers {
+	for _, controller := range inputResources {
 		key := controller.ObjectMeta.GetNamespace() + "/" + controller.Kind + "/" + controller.ObjectMeta.GetName()
 		oldController, ok := controllerMap[key]
 		if !ok || controller.ObjectMeta.GetCreationTimestamp().Time.After(oldController.ObjectMeta.GetCreationTimestamp().Time) {
