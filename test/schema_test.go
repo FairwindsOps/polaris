@@ -22,6 +22,7 @@ type testCase struct {
 	filename  string
 	resources *kube.ResourceProvider
 	failure   bool
+	config    config.Configuration
 }
 
 func init() {
@@ -38,8 +39,27 @@ func init() {
 		if err != nil {
 			panic(err)
 		}
+		configString := "checks:\n  " + check + ": danger"
+		checkPath := checkDir + "/check.yaml"
+		customCheckContent, err := ioutil.ReadFile(checkPath)
+		if err == nil {
+			lines := strings.Split(string(customCheckContent), "\n")
+			for idx := range lines {
+				lines[idx] = "    " + lines[idx]
+			}
+			configString += "\ncustomChecks:\n  " + check + ":\n"
+			configString += strings.Join(lines, "\n")
+		}
+		fmt.Println("string\n", configString)
 		for _, tc := range cases {
+			if tc.Name() == "check.yaml" {
+				continue
+			}
 			resources, err := kube.CreateResourceProviderFromPath(checkDir + "/" + tc.Name())
+			if err != nil {
+				panic(err)
+			}
+			c, err := config.Parse([]byte(configString))
 			if err != nil {
 				panic(err)
 			}
@@ -48,6 +68,7 @@ func init() {
 				check:     check,
 				resources: resources,
 				failure:   strings.Contains(tc.Name(), "failure"),
+				config:    c,
 			})
 		}
 	}
@@ -55,11 +76,8 @@ func init() {
 
 func TestChecks(t *testing.T) {
 	for _, tc := range testCases {
-		c, err := config.Parse([]byte("checks:\n  " + tc.check + ": danger"))
-		if err != nil {
-			panic(err)
-		}
-		results, err := validator.ApplyAllSchemaChecksToResourceProvider(&c, tc.resources)
+		fmt.Printf("\n\nTEST: %s\n", tc.check)
+		results, err := validator.ApplyAllSchemaChecksToResourceProvider(&tc.config, tc.resources)
 		if err != nil {
 			panic(err)
 		}

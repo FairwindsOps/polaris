@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -137,6 +138,7 @@ func applyNonControllerSchemaChecks(conf *config.Configuration, resourceProvider
 }
 
 func applyControllerSchemaChecks(conf *config.Configuration, resourceProvider *kube.ResourceProvider, resource kube.GenericResource) (Result, error) {
+	fmt.Println("apply controller")
 	finalResult := Result{
 		Kind:      resource.Kind,
 		Name:      resource.ObjectMeta.GetName(),
@@ -147,6 +149,17 @@ func applyControllerSchemaChecks(conf *config.Configuration, resourceProvider *k
 		return finalResult, err
 	}
 	finalResult.Results = resultSet
+
+	nonControllerResults, err := applyTopLevelSchemaChecks(conf, resourceProvider, resource, false)
+	if err != nil {
+		return finalResult, err
+	}
+	for key, val := range nonControllerResults {
+		if _, ok := finalResult.Results[key]; ok {
+			return finalResult, errors.New("Duplicate finding for check " + key)
+		}
+		finalResult.Results[key] = val
+	}
 
 	podRS, err := applyPodSchemaChecks(conf, resourceProvider, resource)
 	if err != nil {
@@ -185,6 +198,7 @@ func applyControllerSchemaChecks(conf *config.Configuration, resourceProvider *k
 }
 
 func applyTopLevelSchemaChecks(conf *config.Configuration, resources *kube.ResourceProvider, res kube.GenericResource, isController bool) (ResultSet, error) {
+	fmt.Println("apply top", isController)
 	test := schemaTestCase{
 		ResourceProvider: resources,
 		Resource:         res,
