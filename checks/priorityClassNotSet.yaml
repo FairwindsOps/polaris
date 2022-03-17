@@ -1,7 +1,7 @@
 successMessage: Priority class has been set
 failureMessage: Priority class should be set
 category: Security
-target: Pod
+target: PodSpec
 schema:
   '$schema': http://json-schema.org/draft-07/schema
   type: object

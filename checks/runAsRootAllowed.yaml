@@ -2,7 +2,7 @@ successMessage: Is not allowed to run as root
 failureMessage: Should not be allowed to run as root
 category: Security
 target: Container
-schemaTarget: Pod
+schemaTarget: PodSpec
 schema:
   '$schema': http://json-schema.org/draft-07/schema
   definitions:

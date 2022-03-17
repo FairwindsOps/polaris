@@ -197,7 +197,7 @@ func applyTopLevelSchemaChecks(conf *config.Configuration, resources *kube.Resou
 
 func applyPodSchemaChecks(conf *config.Configuration, resources *kube.ResourceProvider, controller kube.GenericResource) (ResultSet, error) {
 	test := schemaTestCase{
-		Target:           config.TargetPod,
+		Target:           config.TargetPodSpec,
 		ResourceProvider: resources,
 		Resource:         controller,
 	}
@@ -240,16 +240,16 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 	var passes bool
 	var issues []jsonschema.ValError
 	if check.SchemaTarget != "" {
-		if check.SchemaTarget == config.TargetPod && check.Target == config.TargetContainer {
+		if check.SchemaTarget == config.TargetPodSpec && check.Target == config.TargetContainer {
 			podCopy := *test.Resource.PodSpec
 			podCopy.InitContainers = []corev1.Container{}
 			podCopy.Containers = []corev1.Container{*test.Container}
-			passes, issues, err = check.CheckPod(&podCopy)
+			passes, issues, err = check.CheckPodSpec(&podCopy)
 		} else {
 			return nil, fmt.Errorf("Unknown combination of target (%s) and schema target (%s)", check.Target, check.SchemaTarget)
 		}
-	} else if check.Target == config.TargetPod {
-		passes, issues, err = check.CheckPod(test.Resource.PodSpec)
+	} else if check.Target == config.TargetPodSpec {
+		passes, issues, err = check.CheckPodSpec(test.Resource.PodSpec)
 	} else if check.Target == config.TargetContainer {
 		passes, issues, err = check.CheckContainer(test.Container)
 	} else {
