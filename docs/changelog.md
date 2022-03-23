@@ -5,6 +5,10 @@ meta:
     content: "Fairwinds Polaris | Changelog"
 
 ---
+## 5.1.0
+* Support `--context` flag for kubecontext
+* Treat core Kubernetes controllers (`Deployments`, `StatefulSets`, `DaemonSets`, `CronJobs`) as top-level objects, instead of following owner refs
+
 ## 5.0.0
 * Renamed `multipleReplicasForDeployment` to `deploymentMissingReplicas`
 * Changed `RunAsRootAllowed` and `hostNetworkSet` default severity to `danger`
