@@ -256,12 +256,8 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 		containerIndex := funk.IndexOf(test.Resource.PodSpec.Containers, func(value corev1.Container) bool {
 			return value.Name == test.Container.Name
 		})
-		if test.Resource.Kind == "CronJob" {
-			prefix = "/spec/jobTemplate/spec/template/spec/containers/" + strconv.Itoa(containerIndex)
-		} else {
-			// Job, Deployment, Pod, Daemonset, ReplicationController and Statefulset
-			prefix = "/spec/containers/" + strconv.Itoa(containerIndex)
-		}
+		// Job, Deployment, Pod, Daemonset, ReplicationController and Statefulset
+		prefix = "/spec/containers/" + strconv.Itoa(containerIndex)
 		passes, issues, err = check.CheckContainer(test.Container)
 	} else {
 		passes, issues, err = check.CheckObject(test.Resource.Resource.Object)
