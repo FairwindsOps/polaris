@@ -259,7 +259,7 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 		if test.Resource.Kind == "CronJob" {
 			prefix = "/spec/jobTemplate/spec/template/spec/containers/" + strconv.Itoa(containerIndex)
 		} else if test.Resource.Kind == "Pod" {
-			// Job, Deployment, Pod, Daemonset, ReplicationController and Statefulset
+			// Pod
 			prefix = "/spec/containers/" + strconv.Itoa(containerIndex)
 		} else {
 			// Job, Deployment, Daemonset, ReplicationController and Statefulset
@@ -296,10 +296,8 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 	if !passes {
 		if funk.Contains(conf.Mutations, checkID) {
 			mutations := funk.Map(check.Mutations, func(mutation map[string]interface{}) map[string]interface{} {
-				mutationCopy := map[string]interface{}{}
-				mutationCopy["path"] = prefix + mutation["path"].(string)
-				mutationCopy["op"] = mutation["op"]
-				mutationCopy["value"] = mutation["value"]
+				mutationCopy := deepCopyMutation(mutation)
+				mutationCopy["path"] = prefix + mutationCopy["path"].(string)
 				return mutationCopy
 			}).([]map[string]interface{})
 			result.Mutations = mutations
@@ -315,4 +313,12 @@ func getSortedKeys(m map[string]config.Severity) []string {
 	}
 	sort.Strings(keys)
 	return keys
+}
+
+func deepCopyMutation(source map[string]interface{}) map[string]interface{} {
+	destination := map[string]interface{}{}
+	for key, value := range source {
+		destination[key] = value
+	}
+	return destination
 }
