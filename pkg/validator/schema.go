@@ -240,7 +240,7 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 	}
 	var passes bool
 	var issues []jsonschema.ValError
-	prefix := "/spec/"
+	var prefix string
 	if check.SchemaTarget != "" {
 		if check.SchemaTarget == config.TargetPod && check.Target == config.TargetContainer {
 			podCopy := *test.Resource.PodSpec
@@ -256,7 +256,12 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 		containerIndex := funk.IndexOf(test.Resource.PodSpec.Containers, func(value corev1.Container) bool {
 			return value.Name == test.Container.Name
 		})
-		prefix = "/spec/template/spec/containers/" + strconv.Itoa(containerIndex)
+		if test.Resource.Kind == "CronJob" {
+			prefix = "/spec/jobTemplate/spec/template/spec/containers/" + strconv.Itoa(containerIndex)
+		} else {
+			// Job, Deployment, Pod, Daemonset, ReplicationController and Statefulset
+			prefix = "/spec/template/spec/containers/" + strconv.Itoa(containerIndex)
+		}
 		passes, issues, err = check.CheckContainer(test.Container)
 	} else {
 		passes, issues, err = check.CheckObject(test.Resource.Resource.Object)
