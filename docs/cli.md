@@ -20,6 +20,7 @@ webhook
 
 # global flags
 -c, --config string                    Location of Polaris configuration file.
+-x, --context string                   Set the kube context.
     --disallow-exemptions              Disallow any exemptions from configuration file.
     --disallow-config-exemptions       Disallow exemptions set within the configuration file.
     --disallow-annotation-exemptions   Disallow any exemption defined as a controller annotation.

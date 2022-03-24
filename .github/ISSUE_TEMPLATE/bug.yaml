@@ -30,8 +30,8 @@ body:
   - type: input
     id: version
     attributes:
-      label: version
-      description: The version of the tool that you are using.
+      label: Version
+      description: The version of the tool that you are using. If a helm chart, please share the name of the chart.
     validations:
       required: true
   - type: checkboxes

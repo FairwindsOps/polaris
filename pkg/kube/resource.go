@@ -114,6 +114,18 @@ func ResolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod
 	return workload, err
 }
 
+func isFinalKind(kind string) bool {
+	switch kind {
+		case
+			"Deployment",
+			"CronJob",
+			"StatefulSet",
+			"DaemonSet":
+			return true
+		}
+	return false
+	}
+
 func resolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) (GenericResource, error) {
 	podWorkload, err := NewGenericResourceFromPod(podResource, nil)
 	if err != nil {
@@ -155,6 +167,9 @@ func resolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod
 		}
 		topMeta = objMeta
 		owners = abstractObject.GetOwnerReferences()
+		if isFinalKind(topKind) {
+			break
+		}
 	}
 
 	if lastKey != "" {
