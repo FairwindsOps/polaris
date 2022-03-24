@@ -256,8 +256,15 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 		containerIndex := funk.IndexOf(test.Resource.PodSpec.Containers, func(value corev1.Container) bool {
 			return value.Name == test.Container.Name
 		})
-		// Job, Deployment, Pod, Daemonset, ReplicationController and Statefulset
-		prefix = "/spec/containers/" + strconv.Itoa(containerIndex)
+		if test.Resource.Kind == "CronJob" {
+			prefix = "/spec/jobTemplate/spec/template/spec/containers/" + strconv.Itoa(containerIndex)
+		} else if test.Resource.Kind == "Pod" {
+			// Job, Deployment, Pod, Daemonset, ReplicationController and Statefulset
+			prefix = "/spec/containers/" + strconv.Itoa(containerIndex)
+		} else {
+			// Job, Deployment, Daemonset, ReplicationController and Statefulset
+			prefix = "/spec/template/spec/containers/" + strconv.Itoa(containerIndex)
+		}
 		passes, issues, err = check.CheckContainer(test.Container)
 	} else {
 		passes, issues, err = check.CheckObject(test.Resource.Resource.Object)
@@ -289,8 +296,11 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 	if !passes {
 		if funk.Contains(conf.Mutations, checkID) {
 			mutations := funk.Map(check.Mutations, func(mutation map[string]interface{}) map[string]interface{} {
-				mutation["path"] = prefix + mutation["path"].(string)
-				return mutation
+				mutationCopy := map[string]interface{}{}
+				mutationCopy["path"] = prefix + mutation["path"].(string)
+				mutationCopy["op"] = mutation["op"]
+				mutationCopy["value"] = mutation["value"]
+				return mutationCopy
 			}).([]map[string]interface{})
 			result.Mutations = mutations
 		}
