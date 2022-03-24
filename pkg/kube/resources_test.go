@@ -60,7 +60,7 @@ func TestGetMultipleResourceFromSingleFile(t *testing.T) {
 
 func TestGetMultipleResourceFromBadFile(t *testing.T) {
 	_, err := CreateResourceProviderFromPath("./test_files/test_3")
-	assert.Equal(t, nil, err, "CreateResource From Path should fail with bad yaml")
+	assert.Equal(t, nil, err, "CreateResource From Path should not fail with bad yaml")
 }
 
 func TestAddResourcesFromReader(t *testing.T) {
