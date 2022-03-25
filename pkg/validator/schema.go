@@ -261,7 +261,7 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 			(test.Resource.Kind == "Statefulset") || (test.Resource.Kind == "Job") || (test.Resource.Kind == "ReplicationController") {
 			prefix = "/spec/template/spec"
 		} else {
-			logrus.Warn("Mutation for this this resource (%s) is not supported", test.Resource.Kind)
+			logrus.Warningf("Mutation for this this resource (%s) is not supported", test.Resource.Kind)
 		}
 	} else if check.Target == config.TargetContainer {
 		containerIndex := funk.IndexOf(test.Resource.PodSpec.Containers, func(value corev1.Container) bool {
@@ -275,7 +275,7 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 			(test.Resource.Kind == "Statefulset") || (test.Resource.Kind == "Job") || (test.Resource.Kind == "ReplicationController") {
 			prefix = "/spec/template/spec/containers/" + strconv.Itoa(containerIndex)
 		} else {
-			logrus.Warn("Mutation for this this resource (%s) is not supported", test.Resource.Kind)
+			logrus.Warningf("Mutation for this this resource (%s) is not supported", test.Resource.Kind)
 		}
 		passes, issues, err = check.CheckContainer(test.Container)
 	} else {
