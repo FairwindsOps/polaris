@@ -253,29 +253,14 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 		}
 	} else if check.Target == config.TargetPod {
 		passes, issues, err = check.CheckPod(test.Resource.PodSpec)
-		if test.Resource.Kind == "CronJob" {
-			prefix = "/spec/jobTemplate/spec/template/spec"
-		} else if test.Resource.Kind == "Pod" {
-			prefix = "/spec"
-		} else if (test.Resource.Kind == "Deployment") || (test.Resource.Kind == "Daemonset") ||
-			(test.Resource.Kind == "Statefulset") || (test.Resource.Kind == "Job") || (test.Resource.Kind == "ReplicationController") {
-			prefix = "/spec/template/spec"
-		} else {
-			logrus.Warningf("Mutation for this this resource (%s) is not supported", test.Resource.Kind)
-		}
+		prefix = getJSONSchemaPrefix(test.Resource.Kind)
 	} else if check.Target == config.TargetContainer {
 		containerIndex := funk.IndexOf(test.Resource.PodSpec.Containers, func(value corev1.Container) bool {
 			return value.Name == test.Container.Name
 		})
-		if test.Resource.Kind == "CronJob" {
-			prefix = "/spec/jobTemplate/spec/template/spec/containers/" + strconv.Itoa(containerIndex)
-		} else if test.Resource.Kind == "Pod" {
-			prefix = "/spec/containers/" + strconv.Itoa(containerIndex)
-		} else if (test.Resource.Kind == "Deployment") || (test.Resource.Kind == "Daemonset") ||
-			(test.Resource.Kind == "Statefulset") || (test.Resource.Kind == "Job") || (test.Resource.Kind == "ReplicationController") {
-			prefix = "/spec/template/spec/containers/" + strconv.Itoa(containerIndex)
-		} else {
-			logrus.Warningf("Mutation for this this resource (%s) is not supported", test.Resource.Kind)
+		prefix = getJSONSchemaPrefix(test.Resource.Kind)
+		if prefix != "" {
+			prefix += "/containers/" + strconv.Itoa(containerIndex)
 		}
 		passes, issues, err = check.CheckContainer(test.Container)
 	} else {
@@ -333,4 +318,18 @@ func deepCopyMutation(source map[string]interface{}) map[string]interface{} {
 		destination[key] = value
 	}
 	return destination
+}
+
+func getJSONSchemaPrefix(kind string) (prefix string) {
+	if kind == "CronJob" {
+		prefix = "/spec/jobTemplate/spec/template/spec"
+	} else if kind == "Pod" {
+		prefix = "/spec"
+	} else if (kind == "Deployment") || (kind == "Daemonset") ||
+		(kind == "Statefulset") || (kind == "Job") || (kind == "ReplicationController") {
+		prefix = "/spec/template/spec"
+	} else {
+		logrus.Warningf("Mutation for this this resource (%s) is not supported", kind)
+	}
+	return prefix
 }
