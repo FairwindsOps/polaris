@@ -35,21 +35,6 @@ func ApplyAllSchemaMutations(conf *config.Configuration, resourceProvider *kube.
 	return mutated, nil
 }
 
-func resolveCheck(conf *config.Configuration, checkID string, resource kube.GenericResource) (*config.SchemaCheck, error) {
-	check, ok := conf.CustomChecks[checkID]
-	if !ok {
-		check, ok = config.BuiltInChecks[checkID]
-	}
-	if !ok {
-		return nil, fmt.Errorf("Check %s not found", checkID)
-	}
-	checkPtr, err := check.TemplateForResource(resource.Resource.Object)
-	if err != nil {
-		return nil, err
-	}
-	return checkPtr, nil
-}
-
 // GetMutationsFromResults returns all mutations from results
 func GetMutationsFromResults(conf *config.Configuration, results []validator.Result) map[string][]map[string]interface{} {
 	allMutationsFromResults := make(map[string][]map[string]interface{})

@@ -43,7 +43,6 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&disallowConfigExemptions, "disallow-config-exemptions", "", false, "Disallow exemptions set within the configuration file.")
 	rootCmd.PersistentFlags().BoolVarP(&disallowAnnotationExemptions, "disallow-annotation-exemptions", "", false, "Disallow any exemption defined as a controller annotation.")
 	rootCmd.PersistentFlags().StringVarP(&logLevel, "log-level", "", logrus.InfoLevel.String(), "Logrus log level.")
-	rootCmd.PersistentFlags().BoolVarP(&fixChecks, "fix", "", false, "Fix yaml definition in infrastructure as code with mutations")
 	flag.Parse()
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 }
@@ -71,7 +70,6 @@ var rootCmd = &cobra.Command{
 		config.DisallowExemptions = disallowExemptions
 		config.DisallowConfigExemptions = disallowConfigExemptions
 		config.DisallowAnnotationExemptions = disallowAnnotationExemptions
-		config.FixChecks = fixChecks
 		config.KubeContext = kubeContext
 	},
 	Run: func(cmd *cobra.Command, args []string) {
