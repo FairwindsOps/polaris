@@ -9,3 +9,7 @@ schema:
   properties:
     imagePullPolicy:
       const: Always
+mutations:
+  - op: add
+    path: /imagePullPolicy
+    value: Always

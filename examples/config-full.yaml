@@ -26,6 +26,7 @@ checks:
   resourceLimits: warning
   imageRegistry: danger
 
+  
 exemptions:
   - controllerNames:
     - my-network-controller

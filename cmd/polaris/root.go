@@ -25,7 +25,7 @@ import (
 )
 
 var configPath string
-var disallowExemptions, disallowConfigExemptions, disallowAnnotationExemptions bool
+var disallowExemptions, disallowConfigExemptions, disallowAnnotationExemptions, fixChecks bool
 var logLevel string
 var auditPath string
 var displayName string

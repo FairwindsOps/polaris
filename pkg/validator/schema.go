@@ -3,9 +3,11 @@ package validator
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/qri-io/jsonschema"
+	"github.com/sirupsen/logrus"
 	"github.com/thoas/go-funk"
 	corev1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -239,6 +241,7 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 	}
 	var passes bool
 	var issues []jsonschema.ValError
+	var prefix string
 	if check.SchemaTarget != "" {
 		if check.SchemaTarget == config.TargetPod && check.Target == config.TargetContainer {
 			podCopy := *test.Resource.PodSpec
@@ -250,7 +253,15 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 		}
 	} else if check.Target == config.TargetPod {
 		passes, issues, err = check.CheckPod(test.Resource.PodSpec)
+		prefix = getJSONSchemaPrefix(test.Resource.Kind)
 	} else if check.Target == config.TargetContainer {
+		containerIndex := funk.IndexOf(test.Resource.PodSpec.Containers, func(value corev1.Container) bool {
+			return value.Name == test.Container.Name
+		})
+		prefix = getJSONSchemaPrefix(test.Resource.Kind)
+		if prefix != "" {
+			prefix += "/containers/" + strconv.Itoa(containerIndex)
+		}
 		passes, issues, err = check.CheckContainer(test.Container)
 	} else {
 		passes, issues, err = check.CheckObject(test.Resource.Resource.Object)
@@ -279,6 +290,16 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 		}
 	}
 	result := makeResult(conf, check, passes, issues)
+	if !passes {
+		if funk.Contains(conf.Mutations, checkID) {
+			mutations := funk.Map(check.Mutations, func(mutation map[string]interface{}) map[string]interface{} {
+				mutationCopy := deepCopyMutation(mutation)
+				mutationCopy["path"] = prefix + mutationCopy["path"].(string)
+				return mutationCopy
+			}).([]map[string]interface{})
+			result.Mutations = mutations
+		}
+	}
 	return &result, nil
 }
 
@@ -289,4 +310,26 @@ func getSortedKeys(m map[string]config.Severity) []string {
 	}
 	sort.Strings(keys)
 	return keys
+}
+
+func deepCopyMutation(source map[string]interface{}) map[string]interface{} {
+	destination := map[string]interface{}{}
+	for key, value := range source {
+		destination[key] = value
+	}
+	return destination
+}
+
+func getJSONSchemaPrefix(kind string) (prefix string) {
+	if kind == "CronJob" {
+		prefix = "/spec/jobTemplate/spec/template/spec"
+	} else if kind == "Pod" {
+		prefix = "/spec"
+	} else if (kind == "Deployment") || (kind == "Daemonset") ||
+		(kind == "Statefulset") || (kind == "Job") || (kind == "ReplicationController") {
+		prefix = "/spec/template/spec"
+	} else {
+		logrus.Warningf("Mutation for this this resource (%s) is not supported", kind)
+	}
+	return prefix
 }
