@@ -264,6 +264,7 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 		}
 		passes, issues, err = check.CheckContainer(test.Container)
 	} else {
+		prefix = "/spec"
 		passes, issues, err = check.CheckObject(test.Resource.Resource.Object)
 	}
 	if err != nil {
