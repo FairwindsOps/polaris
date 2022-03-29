@@ -252,4 +252,3 @@ func TestStringInSlice(t *testing.T) {
 	assert.Equal(t, expectedOutput, actual)
 	assert.NotEqual(t, true, actual)
 }
-
