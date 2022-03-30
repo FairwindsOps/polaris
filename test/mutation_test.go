@@ -19,13 +19,15 @@ checks:
   hostNetworkSet: danger
   hostPortSet: warning
   deploymentMissingReplicas: warning
+  priorityClassNotSet: ignore
+  runAsRootAllowed: danger
 `
 
 func TestMutations(t *testing.T) {
 	c, err := config.Parse([]byte(configYaml))
 	assert.NoError(t, err)
 	assert.Len(t, c.Mutations, 0)
-	mutations := []string{"hostIPCSet", "pullPolicyNotAlways", "hostPIDSet", "hostNetworkSet", "deploymentMissingReplicas"}
+	mutations := []string{"hostIPCSet", "pullPolicyNotAlways", "hostPIDSet", "hostNetworkSet", "deploymentMissingReplicas", "runAsRootAllowed"}
 
 	for _, mutationStr := range mutations {
 		for _, tc := range failureTestCasesMap[mutationStr] {
