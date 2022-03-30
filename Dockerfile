@@ -1,4 +1,4 @@
-FROM golang:1.16 AS build-env
+FROM golang:1.17 AS build-env
 WORKDIR /go/src/github.com/fairwindsops/polaris/
 
 ENV GO111MODULE=on
@@ -15,7 +15,7 @@ RUN go get -u github.com/gobuffalo/packr/v2/packr2
 COPY . .
 RUN packr2 build -a -o polaris *.go
 
-FROM alpine:3.14
+FROM alpine:3.15.2
 WORKDIR /usr/local/bin
 RUN apk --no-cache add ca-certificates
 
