@@ -24,6 +24,8 @@ type testCase struct {
 	failure   bool
 }
 
+var successResourceMap = map[string]*kube.ResourceProvider{}
+
 func init() {
 	_, baseDir, _, _ := runtime.Caller(0)
 	baseDir = filepath.Dir(baseDir) + "/checks"
@@ -49,6 +51,10 @@ func init() {
 				resources: resources,
 				failure:   strings.Contains(tc.Name(), "failure"),
 			})
+			if !strings.Contains(tc.Name(), "failure") {
+				key := fmt.Sprintf("%s/%s", check, tc.Name())
+				successResourceMap[key] = resources
+			}
 		}
 	}
 }
