@@ -27,5 +27,5 @@ schema:
                 const: ''
 mutations:
   - op: add
-    path: /resources/requests/memory
-    value: "512Mi"    
+    path: /resources/requests
+    value: {memory: "512Mi"}
