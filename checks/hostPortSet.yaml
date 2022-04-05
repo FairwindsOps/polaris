@@ -13,6 +13,3 @@ schema:
         properties:
           hostPort:
             const: 0
-mutations:
-  - op: remove
-    path: /ports/0/hostPort
