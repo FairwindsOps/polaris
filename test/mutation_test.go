@@ -25,13 +25,15 @@ checks:
   cpuLimitsMissing: warning
   memoryRequestsMissing: warning
   memoryLimitsMissing: warning
+  readinessProbeMissing: warning
+  livenessProbeMissing: warning
 `
 
 func TestMutations(t *testing.T) {
 	c, err := config.Parse([]byte(configYaml))
 	assert.NoError(t, err)
 	assert.Len(t, c.Mutations, 0)
-	mutations := []string{"hostIPCSet", "pullPolicyNotAlways", "hostPIDSet", "hostNetworkSet", "deploymentMissingReplicas", "runAsRootAllowed", "cpuRequestsMissing", "cpuLimitsMissing", "memoryRequestsMissing", "memoryLimitsMissing"}
+	mutations := []string{"hostIPCSet", "pullPolicyNotAlways", "hostPIDSet", "hostNetworkSet", "deploymentMissingReplicas", "runAsRootAllowed", "cpuRequestsMissing", "cpuLimitsMissing", "memoryRequestsMissing", "memoryLimitsMissing", "livenessProbeMissing", "readinessProbeMissing"}
 	for _, mutationStr := range mutations {
 		for _, tc := range failureTestCasesMap[mutationStr] {
 			newConfig := c
@@ -54,7 +56,8 @@ func TestMutations(t *testing.T) {
 				mutated, err := mutation.ApplyAllSchemaMutations(&c, tc.resources, resources[0], mutations)
 				assert.NoError(t, err)
 				expected := successResources.Resources[kind][0]
-				assert.Equal(t, expected.Resource.Object, mutated.Resource.Object)
+				// use fmt.sprint incase type casting issues for int and float.
+				assert.EqualValues(t, fmt.Sprint(expected.Resource.Object), fmt.Sprint(mutated.Resource.Object))
 			}
 		}
 	}
