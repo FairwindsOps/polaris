@@ -88,3 +88,4 @@ customChecks:
           not:
             pattern: ^quay.io
 
+namespce: test-ns
