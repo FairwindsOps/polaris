@@ -21,14 +21,17 @@ checks:
   deploymentMissingReplicas: warning
   priorityClassNotSet: ignore
   runAsRootAllowed: danger
+  cpuRequestsMissing: warning
+  cpuLimitsMissing: warning
+  memoryRequestsMissing: warning
+  memoryLimitsMissing: warning
 `
 
 func TestMutations(t *testing.T) {
 	c, err := config.Parse([]byte(configYaml))
 	assert.NoError(t, err)
 	assert.Len(t, c.Mutations, 0)
-	mutations := []string{"hostIPCSet", "pullPolicyNotAlways", "hostPIDSet", "hostNetworkSet", "deploymentMissingReplicas", "runAsRootAllowed"}
-
+	mutations := []string{"hostIPCSet", "pullPolicyNotAlways", "hostPIDSet", "hostNetworkSet", "deploymentMissingReplicas", "runAsRootAllowed", "cpuRequestsMissing", "cpuLimitsMissing", "memoryRequestsMissing", "memoryLimitsMissing"}
 	for _, mutationStr := range mutations {
 		for _, tc := range failureTestCasesMap[mutationStr] {
 			newConfig := c
