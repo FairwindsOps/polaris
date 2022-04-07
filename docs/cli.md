@@ -38,6 +38,7 @@ webhook
 
 # audit flags
     --audit-path string               If specified, audits one or more YAML files instead of a cluster.
+    --checks stringArray              Optional flag to specify specific checks to check
     --color                           Whether to use color in pretty format. (default true)
     --display-name string             An optional identifier for the audit.
 -f, --format string                   Output format for results - json, yaml, pretty, or score. (default "json")

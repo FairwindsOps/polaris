@@ -24,6 +24,7 @@ import (
 	"os"
 	"os/exec"
 
+	cfg "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
 	"github.com/fairwindsops/polaris/pkg/validator"
 	"github.com/sirupsen/logrus"
@@ -41,7 +42,7 @@ var resourceToAudit string
 var useColor bool
 var helmChart string
 var helmValues string
-var checks string
+var checks []string
 
 func init() {
 	rootCmd.AddCommand(auditCmd)
@@ -57,7 +58,7 @@ func init() {
 	auditCmd.PersistentFlags().StringVar(&resourceToAudit, "resource", "", "Audit a specific resource, in the format namespace/kind/version/name, e.g. nginx-ingress/Deployment.apps/v1/default-backend.")
 	auditCmd.PersistentFlags().StringVar(&helmChart, "helm-chart", "", "Will fill out Helm template")
 	auditCmd.PersistentFlags().StringVar(&helmValues, "helm-values", "", "Optional flag to add helm values")
-	auditCmd.PersistentFlags().StringVar(&checks, "checks", "", "Optional flag to specify specific checks to check")
+	auditCmd.PersistentFlags().StringSliceVar(&checks, "checks", []string{}, "Optional flag to specify specific checks to check")
 }
 
 var auditCmd = &cobra.Command{
@@ -67,6 +68,17 @@ var auditCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		if displayName != "" {
 			config.DisplayName = displayName
+		}
+		if len(checks) > 0 {
+			targetChecks := make(map[string]bool)
+			for _, check := range checks {
+				targetChecks[check] = true
+			}
+			for key := range config.Checks {
+				if isTarget := targetChecks[key]; !isTarget {
+					config.Checks[key] = cfg.SeverityIgnore
+				}
+			}
 		}
 		if helmChart != "" {
 			var err error
