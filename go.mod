@@ -1,6 +1,6 @@
 module github.com/fairwindsops/polaris
 
-go 1.17
+go 1.18
 
 require (
 	github.com/evanphx/json-patch/v5 v5.6.0
