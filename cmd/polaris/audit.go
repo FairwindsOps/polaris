@@ -32,17 +32,20 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-var setExitCode bool
-var onlyShowFailedTests bool
-var minScore int
-var auditOutputURL string
-var auditOutputFile string
-var auditOutputFormat string
-var resourceToAudit string
-var useColor bool
-var helmChart string
-var helmValues string
-var checks []string
+var (
+	setExitCode         bool
+	onlyShowFailedTests bool
+	minScore            int
+	auditOutputURL      string
+	auditOutputFile     string
+	auditOutputFormat   string
+	resourceToAudit     string
+	useColor            bool
+	helmChart           string
+	helmValues          string
+	checks              []string
+	auditNamespace      string
+)
 
 func init() {
 	rootCmd.AddCommand(auditCmd)
@@ -59,6 +62,7 @@ func init() {
 	auditCmd.PersistentFlags().StringVar(&helmChart, "helm-chart", "", "Will fill out Helm template")
 	auditCmd.PersistentFlags().StringVar(&helmValues, "helm-values", "", "Optional flag to add helm values")
 	auditCmd.PersistentFlags().StringSliceVar(&checks, "checks", []string{}, "Optional flag to specify specific checks to check")
+	auditCmd.PersistentFlags().StringVar(&auditNamespace, "namespace", "", "Namespace to audit. Only applies to in-cluster audits")
 }
 
 var auditCmd = &cobra.Command{
@@ -79,6 +83,15 @@ var auditCmd = &cobra.Command{
 					config.Checks[key] = cfg.SeverityIgnore
 				}
 			}
+		}
+		if auditNamespace != "" {
+			if helmChart != "" {
+				logrus.Warn("--namespace and --helm-chart are mutually exclusive. --namespace will be ignored.")
+			}
+			if auditPath != "" {
+				logrus.Warn("--namespace and --audit-path are mutually exclusive. --namespace will be ignored.")
+			}
+			config.Namespace = auditNamespace
 		}
 		if helmChart != "" {
 			var err error
