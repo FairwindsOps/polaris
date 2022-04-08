@@ -28,4 +28,7 @@ schema:
 mutations:
   - op: add
     path: /resources/limits
-    value: {memory: "512Mi"}
+    value: {}
+  - op: add
+    path: /resources/limits/memory
+    value: "512Mi"

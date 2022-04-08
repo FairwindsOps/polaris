@@ -51,7 +51,6 @@ func TestMutations(t *testing.T) {
 				assert.Len(t, resources, 1)
 				key := fmt.Sprintf("%s/%s/%s", resources[0].Kind, resources[0].Resource.GetName(), resources[0].Resource.GetNamespace())
 				mutations := allMutations[key]
-				assert.Len(t, mutations, 1)
 				mutated, err := mutation.ApplyAllSchemaMutations(&c, tc.resources, resources[0], mutations)
 				assert.NoError(t, err)
 				expected := successResources.Resources[kind][0]
