@@ -25,3 +25,10 @@ schema:
               type: string
               not:
                 const: ''
+mutations:
+  - op: add
+    path: /resources/limits
+    value: {}
+  - op: add
+    path: /resources/limits/memory
+    value: "512Mi"

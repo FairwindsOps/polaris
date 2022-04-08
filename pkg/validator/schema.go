@@ -261,6 +261,13 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 			podCopy := *test.Resource.PodSpec
 			podCopy.InitContainers = []corev1.Container{}
 			podCopy.Containers = []corev1.Container{*test.Container}
+			containerIndex := funk.IndexOf(test.Resource.PodSpec.Containers, func(value corev1.Container) bool {
+				return value.Name == test.Container.Name
+			})
+			prefix = getJSONSchemaPrefix(test.Resource.Kind)
+			if prefix != "" {
+				prefix += "/containers/" + strconv.Itoa(containerIndex)
+			}
 			passes, issues, err = check.CheckPod(&podCopy)
 		} else {
 			return nil, fmt.Errorf("Unknown combination of target (%s) and schema target (%s)", check.Target, check.SchemaTarget)
