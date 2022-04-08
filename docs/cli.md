@@ -45,6 +45,7 @@ webhook
     --helm-chart string               Will fill out Helm template
     --helm-values string              Optional flag to add helm values
 -h, --help                            help for audit
+    --namespace string                Namespace to audit. Only applies to in-cluster audits
     --only-show-failed-tests          If specified, audit output will only show failed tests.
     --output-file string              Destination file for audit results.
     --output-url string               Destination URL to send audit results.
