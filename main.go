@@ -19,9 +19,10 @@ import (
 )
 
 const (
-	// version and commit are set during build
+	// Version is set during build
 	Version = "development"
-	Commit  = ""
+	// Commit is set during build
+	Commit = ""
 )
 
 func main() {
