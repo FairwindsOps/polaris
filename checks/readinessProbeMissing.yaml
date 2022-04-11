@@ -19,3 +19,7 @@ schema:
       type: object
       not:
         const: null
+mutations:
+  - op: add
+    path: /readinessProbe
+    value: {"exec": { "command": [ "cat", "/tmp/healthy" ] }, "initialDelaySeconds": 5, "periodSeconds": 5 }

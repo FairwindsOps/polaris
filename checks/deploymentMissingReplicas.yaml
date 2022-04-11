@@ -19,3 +19,7 @@ schema:
         replicas:
           type: integer
           minimum: 2
+mutations:
+  - op: add
+    path: /spec/replicas
+    value: 3

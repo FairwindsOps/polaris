@@ -28,6 +28,7 @@ checks:
   hostPortSet: warning
   tlsSettingsMissing: warning
 
+
 exemptions:
   - namespace: kube-system
     controllerNames:
@@ -201,3 +202,5 @@ exemptions:
       - kube-hunter
     rules:
       - runAsRootAllowed
+
+namespace: test-ns

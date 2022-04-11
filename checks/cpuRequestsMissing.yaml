@@ -25,3 +25,7 @@ schema:
               type: string
               not:
                 const: ''
+mutations:
+  - op: add
+    path: /resources/requests/cpu
+    value: 100m

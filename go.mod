@@ -3,6 +3,8 @@ module github.com/fairwindsops/polaris
 go 1.15
 
 require (
+	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
+	github.com/evanphx/json-patch/v5 v5.6.0
 	github.com/fatih/color v1.13.0
 	github.com/gobuffalo/packr/v2 v2.8.1
 	github.com/google/gofuzz v1.2.0 // indirect
@@ -16,6 +18,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
 	github.com/thoas/go-funk v0.9.1
+	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	k8s.io/api v0.22.2
 	k8s.io/apimachinery v0.22.2

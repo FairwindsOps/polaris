@@ -1,3 +1,17 @@
+// Copyright 2022 FairwindsOps, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package test
 
 import (
@@ -24,6 +38,9 @@ type testCase struct {
 	failure   bool
 }
 
+var successResourceMap = map[string]*kube.ResourceProvider{}
+var failureTestCasesMap = map[string][]testCase{}
+
 func init() {
 	_, baseDir, _, _ := runtime.Caller(0)
 	baseDir = filepath.Dir(baseDir) + "/checks"
@@ -43,12 +60,25 @@ func init() {
 			if err != nil {
 				panic(err)
 			}
-			testCases = append(testCases, testCase{
+			testcase := testCase{
 				filename:  tc.Name(),
 				check:     check,
 				resources: resources,
 				failure:   strings.Contains(tc.Name(), "failure"),
-			})
+			}
+			testCases = append(testCases, testcase)
+
+			if strings.Contains(tc.Name(), "success") {
+				key := fmt.Sprintf("%s/%s", check, tc.Name())
+				successResourceMap[key] = resources
+			} else {
+				testCases, ok := failureTestCasesMap[check]
+				if !ok {
+					testCases = []testCase{}
+				}
+				testCases = append(testCases, testcase)
+				failureTestCasesMap[check] = testCases
+			}
 		}
 	}
 }

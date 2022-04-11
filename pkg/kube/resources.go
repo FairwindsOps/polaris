@@ -1,3 +1,17 @@
+// Copyright 2022 FairwindsOps, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package kube
 
 import (
@@ -243,19 +257,38 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		logrus.Errorf("Error fetching Cluster API version: %v", err)
 		return nil, err
 	}
-	provider := newResourceProvider(serverVersion.Major+"."+serverVersion.Minor, "Cluster", clusterName)
+
+	sourceType := "Cluster"
+	if c.Namespace != "" {
+		logrus.Debug("namespace is specififed in config, setting source type to ClusterNamespace")
+		sourceType = "ClusterNamespace"
+	}
+	provider := newResourceProvider(serverVersion.Major+"."+serverVersion.Minor, sourceType, clusterName)
 
 	nodes, err := kube.CoreV1().Nodes().List(ctx, listOpts)
 	if err != nil {
 		logrus.Errorf("Error fetching Nodes: %v", err)
 		return nil, err
 	}
-	namespaces, err := kube.CoreV1().Namespaces().List(ctx, listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching Namespaces: %v", err)
-		return nil, err
+
+	var namespaces *corev1.NamespaceList
+	if c.Namespace != "" {
+		ns, err := kube.CoreV1().Namespaces().Get(ctx, c.Namespace, metav1.GetOptions{})
+		if err != nil {
+			return nil, err
+		}
+		namespaces = &corev1.NamespaceList{
+			Items: []corev1.Namespace{*ns},
+		}
+	} else {
+		nsList, err := kube.CoreV1().Namespaces().List(ctx, listOpts)
+		if err != nil {
+			logrus.Errorf("Error fetching Namespaces: %v", err)
+			return nil, err
+		}
+		namespaces = nsList
 	}
-	pods, err := kube.CoreV1().Pods("").List(ctx, listOpts)
+	pods, err := kube.CoreV1().Pods(c.Namespace).List(ctx, listOpts)
 	if err != nil {
 		logrus.Errorf("Error fetching Pods: %v", err)
 		return nil, err
@@ -291,6 +324,7 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		}
 	}
 
+	var kubernetesResources []GenericResource
 	for _, kind := range additionalKinds {
 		groupKind := parseGroupKind(maybeTransformKindIntoGroupKind(string(kind)))
 		mapping, err := (restMapper).RESTMapping(groupKind)
@@ -299,7 +333,7 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 			return nil, err
 		}
 
-		objects, err := (*dynamic).Resource(mapping.Resource).Namespace("").List(ctx, metav1.ListOptions{})
+		objects, err := (*dynamic).Resource(mapping.Resource).Namespace(c.Namespace).List(ctx, metav1.ListOptions{})
 		if err != nil {
 			logrus.Warnf("Error retrieving parent object API %s and Kind %s because of error: %v", mapping.Resource.Version, mapping.Resource.Resource, err)
 			return nil, err
@@ -309,7 +343,7 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 			if err != nil {
 				return nil, err
 			}
-			provider.Resources.addResource(res)
+			kubernetesResources = append(kubernetesResources, res)
 		}
 	}
 
@@ -320,9 +354,12 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		logrus.Errorf("Error loading controllers from pods: %v", err)
 		return nil, err
 	}
+	// resources loaded from custom checks can also contain controllers and thus would be added twice to the provider
+	kubernetesResources = deduplicateControllers(append(kubernetesResources, controllers...))
+
 	provider.Nodes = nodes.Items
 	provider.Namespaces = namespaces.Items
-	provider.Resources.addResources(controllers)
+	provider.Resources.addResources(kubernetesResources)
 	return &provider, nil
 }
 
@@ -345,14 +382,14 @@ func LoadControllers(ctx context.Context, pods []corev1.Pod, dynamicClientPointe
 		}
 		interfaces = append(interfaces, workload)
 	}
-	return deduplicateControllers(interfaces), nil
+	return interfaces, nil
 }
 
 // Because the controllers with an Owner take on the name of the Owner, this eliminates any duplicates.
 // In cases like CronJobs older children can hang around, so this takes the most recent.
-func deduplicateControllers(inputControllers []GenericResource) []GenericResource {
+func deduplicateControllers(inputResources []GenericResource) []GenericResource {
 	controllerMap := make(map[string]GenericResource)
-	for _, controller := range inputControllers {
+	for _, controller := range inputResources {
 		key := controller.ObjectMeta.GetNamespace() + "/" + controller.Kind + "/" + controller.ObjectMeta.GetName()
 		oldController, ok := controllerMap[key]
 		if !ok || controller.ObjectMeta.GetCreationTimestamp().Time.After(oldController.ObjectMeta.GetCreationTimestamp().Time) {
