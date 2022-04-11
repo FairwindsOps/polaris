@@ -25,11 +25,6 @@ If you don't use cert-manager, you'll need to:
 * Create a TLS secret in your cluster with a valid certificate that uses that CA
 * Pass the name of that secret with the webhook.secretName parameter.
 
-### kubectl
-```bash
-kubectl apply -f https://github.com/fairwindsops/polaris/releases/latest/download/webhook.yaml
-```
-
 ### Helm
 ```bash
 helm repo add fairwinds-stable https://charts.fairwinds.com/stable
