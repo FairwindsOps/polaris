@@ -19,13 +19,13 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"runtime"
 
 	"github.com/fairwindsops/polaris/pkg/kube"
 	"github.com/fairwindsops/polaris/pkg/mutation"
 	"github.com/fairwindsops/polaris/pkg/validator"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/yaml"
 )
 
 var filesPath string
@@ -43,35 +43,28 @@ var fixCommand = &cobra.Command{
 		logrus.Debug("Setting up controller manager")
 
 		if filesPath == "" {
-			_, filesPath, _, _ = runtime.Caller(0)
+			logrus.Error("Please specify a sub-command.")
+			err := cmd.Help()
+			panic(err)
 		}
 
-		baseDir := filepath.Dir(filesPath)
-		dirs, err := ioutil.ReadDir(baseDir)
+		baseDir := filesPath + "/"
+		yamlFiles, err := getYamlFiles(baseDir)
 		if err != nil {
 			panic(err)
 		}
 
-		for _, dir := range dirs {
-			check := dir.Name()
-			checkDir := baseDir + "/" + check
-			caseFiles, err := ioutil.ReadDir(checkDir)
+		for _, fullFilePath := range yamlFiles {
+			kubeResources, err := kube.CreateResourceProviderFromPath(fullFilePath)
 			if err != nil {
 				panic(err)
 			}
-
-			for _, caseFile := range caseFiles {
-				fullFilePath := checkDir + "/" + caseFile.Name()
-				kubeResources, err := kube.CreateResourceProviderFromPath(fullFilePath)
-				if err != nil {
-					panic(err)
-				}
-				results, err := validator.ApplyAllSchemaChecksToResourceProvider(&config, kubeResources)
-				if err != nil {
-					panic(err)
-				}
-				allMutations := mutation.GetMutationsFromResults(&config, results)
-
+			results, err := validator.ApplyAllSchemaChecksToResourceProvider(&config, kubeResources)
+			if err != nil {
+				panic(err)
+			}
+			allMutations := mutation.GetMutationsFromResults(results)
+			if len(allMutations) > 0 {
 				for _, resources := range kubeResources.Resources {
 					key := fmt.Sprintf("%s/%s/%s", resources[0].Kind, resources[0].Resource.GetName(), resources[0].Resource.GetNamespace())
 					mutations := allMutations[key]
@@ -79,7 +72,11 @@ var fixCommand = &cobra.Command{
 					if err != nil {
 						panic(err)
 					}
-					err = ioutil.WriteFile(fullFilePath, mutated.OriginalObjectJSON, 0644)
+					yamlContent, err := yaml.JSONToYAML(mutated.OriginalObjectJSON)
+					if err != nil {
+						panic(err)
+					}
+					err = ioutil.WriteFile(fullFilePath, yamlContent, 0644)
 					if err != nil {
 						logrus.Errorf("Error writing output to file: %v", err)
 						os.Exit(1)
@@ -89,4 +86,18 @@ var fixCommand = &cobra.Command{
 		}
 
 	},
+}
+
+func getYamlFiles(rootpath string) ([]string, error) {
+	var list []string
+	err := filepath.Walk(rootpath, func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			return nil
+		}
+		if filepath.Ext(path) == ".yaml" {
+			list = append(list, path)
+		}
+		return nil
+	})
+	return list, err
 }

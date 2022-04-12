@@ -45,7 +45,7 @@ func TestMutations(t *testing.T) {
 			results, err := validator.ApplyAllSchemaChecksToResourceProvider(&newConfig, tc.resources)
 			assert.NoError(t, err)
 			assert.Len(t, results, 1)
-			allMutations := mutation.GetMutationsFromResults(&c, results)
+			allMutations := mutation.GetMutationsFromResults(results)
 			assert.Len(t, allMutations, 1)
 			for kind, resources := range tc.resources.Resources {
 				assert.Len(t, resources, 1)

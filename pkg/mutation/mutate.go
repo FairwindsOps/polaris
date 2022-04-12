@@ -36,7 +36,7 @@ func ApplyAllSchemaMutations(conf *config.Configuration, resourceProvider *kube.
 }
 
 // GetMutationsFromResults returns all mutations from results
-func GetMutationsFromResults(conf *config.Configuration, results []validator.Result) map[string][]map[string]interface{} {
+func GetMutationsFromResults(results []validator.Result) map[string][]map[string]interface{} {
 	allMutationsFromResults := make(map[string][]map[string]interface{})
 	for _, result := range results {
 		key := fmt.Sprintf("%s/%s/%s", result.Kind, result.Name, result.Namespace)
