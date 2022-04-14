@@ -49,6 +49,12 @@ var HandledTargets = []TargetKind{
 	TargetPod,
 }
 
+// MutationComment is the comments added to a mutated file
+type MutationComment struct {
+	Find    string `yaml:"find" json:"find"`
+	Comment string `yaml:"comment" json:"comment"`
+}
+
 // SchemaCheck is a Polaris check that runs using JSON Schema
 type SchemaCheck struct {
 	ID                      string                            `yaml:"id" json:"id"`
@@ -66,6 +72,7 @@ type SchemaCheck struct {
 	AdditionalSchemaStrings map[string]string                 `yaml:"additionalSchemaStrings" json:"additionalSchemaStrings"`
 	AdditionalValidators    map[string]jsonschema.RootSchema  `yaml:"-" json:"-"`
 	Mutations               []map[string]interface{}          `yaml:"mutations" json:"mutations"`
+	Comments                []MutationComment                 `yaml:"comments" json:"comments"`
 }
 
 type resourceMinimum string

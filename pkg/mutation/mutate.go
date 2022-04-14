@@ -35,9 +35,10 @@ func ApplyAllSchemaMutations(conf *config.Configuration, resourceProvider *kube.
 	return mutated, nil
 }
 
-// GetMutationsFromResults returns all mutations from results
-func GetMutationsFromResults(results []validator.Result) map[string][]map[string]interface{} {
+// GetMutationsAndCommentsFromResults returns all mutations from results
+func GetMutationsAndCommentsFromResults(results []validator.Result) ([]config.MutationComment, map[string][]map[string]interface{}) {
 	allMutationsFromResults := make(map[string][]map[string]interface{})
+	comments := []config.MutationComment{}
 	for _, result := range results {
 		key := fmt.Sprintf("%s/%s/%s", result.Kind, result.Name, result.Namespace)
 
@@ -49,6 +50,9 @@ func GetMutationsFromResults(results []validator.Result) map[string][]map[string
 				}
 				allMutationsFromResults[key] = append(mutations, resultMessage.Mutations...)
 			}
+			if len(resultMessage.Comments) > 0 {
+				comments = append(comments, resultMessage.Comments...)
+			}
 		}
 
 		for _, resultMessage := range result.PodResult.Results {
@@ -58,6 +62,9 @@ func GetMutationsFromResults(results []validator.Result) map[string][]map[string
 					mutations = make([]map[string]interface{}, 0)
 				}
 				allMutationsFromResults[key] = append(mutations, resultMessage.Mutations...)
+			}
+			if len(resultMessage.Comments) > 0 {
+				comments = append(comments, resultMessage.Comments...)
 			}
 		}
 
@@ -70,9 +77,12 @@ func GetMutationsFromResults(results []validator.Result) map[string][]map[string
 					}
 					allMutationsFromResults[key] = append(mutations, resultMessage.Mutations...)
 				}
+				if len(resultMessage.Comments) > 0 {
+					comments = append(comments, resultMessage.Comments...)
+				}
 			}
 		}
 
 	}
-	return allMutationsFromResults
+	return comments, allMutationsFromResults
 }
