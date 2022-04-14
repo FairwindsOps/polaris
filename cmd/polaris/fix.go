@@ -15,20 +15,16 @@
 package cmd
 
 import (
-	"bufio"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 
-	schemaConfing "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
 	"github.com/fairwindsops/polaris/pkg/mutation"
 	"github.com/fairwindsops/polaris/pkg/validator"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/thoas/go-funk"
 	"sigs.k8s.io/yaml"
 )
 
@@ -80,7 +76,8 @@ var fixCommand = &cobra.Command{
 					if err != nil {
 						panic(err)
 					}
-					err = updateMutatedFile(fullFilePath, string(yamlContent), comments)
+					byteContent := mutation.UpdateMutatedContentWithComments(fullFilePath, string(yamlContent), comments)
+					err = ioutil.WriteFile(fullFilePath, byteContent, 0644)
 					if err != nil {
 						logrus.Errorf("Error writing output to file: %v", err)
 						os.Exit(1)
@@ -104,27 +101,4 @@ func getYamlFiles(rootpath string) ([]string, error) {
 		return nil
 	})
 	return list, err
-}
-
-func updateMutatedFile(fullFilePath string, yamlContent string, comments []schemaConfing.MutationComment) error {
-	var lines []string
-	scanner := bufio.NewScanner(strings.NewReader(yamlContent))
-	scanner.Split(bufio.ScanLines)
-	for scanner.Scan() {
-		line := scanner.Text()
-		lines = append(lines, line)
-	}
-	commentMap := funk.Map(comments, func(c schemaConfing.MutationComment) (string, string) {
-		return c.Find, c.Comment
-	}).(map[string]string)
-	fileContent := ""
-	for _, line := range lines {
-		comment, ok := commentMap[strings.TrimSpace(line)]
-		if ok {
-			line += (" #" + comment)
-		}
-		fileContent += line
-		fileContent += "\n"
-	}
-	return ioutil.WriteFile(fullFilePath, []byte(fileContent), 0644)
 }

@@ -1,13 +1,16 @@
 package mutation
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	jsonpatch "github.com/evanphx/json-patch/v5"
 	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
 	"github.com/fairwindsops/polaris/pkg/validator"
+	"github.com/thoas/go-funk"
 )
 
 // ApplyAllSchemaMutations applies available mutation to a single resource
@@ -85,4 +88,27 @@ func GetMutationsAndCommentsFromResults(results []validator.Result) ([]config.Mu
 
 	}
 	return comments, allMutationsFromResults
+}
+
+func UpdateMutatedContentWithComments(fullFilePath string, yamlContent string, comments []config.MutationComment) []byte {
+	var lines []string
+	scanner := bufio.NewScanner(strings.NewReader(yamlContent))
+	scanner.Split(bufio.ScanLines)
+	for scanner.Scan() {
+		line := scanner.Text()
+		lines = append(lines, line)
+	}
+	commentMap := funk.Map(comments, func(c config.MutationComment) (string, string) {
+		return c.Find, c.Comment
+	}).(map[string]string)
+	fileContent := ""
+	for _, line := range lines {
+		comment, ok := commentMap[strings.TrimSpace(line)]
+		if ok {
+			line += (" #" + comment)
+		}
+		fileContent += line
+		fileContent += "\n"
+	}
+	return []byte(fileContent)
 }

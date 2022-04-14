@@ -11,4 +11,4 @@ spec:
     resources: 
       requests: 
         memory: 128Mi
-        cpu: 100m
+        cpu: 100m #TODO: Set this to the amount of CPU you want to reserve for your workload
