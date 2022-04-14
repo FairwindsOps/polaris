@@ -121,7 +121,7 @@ func updateMutatedFile(fullFilePath string, yamlContent string, comments []schem
 	for _, line := range lines {
 		comment, ok := commentMap[line]
 		if ok {
-			line += (" " + comment)
+			line += (" #" + comment)
 		}
 		fileContent += line
 		fileContent += "\n"
