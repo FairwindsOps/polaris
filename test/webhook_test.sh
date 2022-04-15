@@ -88,7 +88,11 @@ kubectl create ns tests
 kubectl apply -n scale-test -f ./test/webhook_cases/failing_test.deployment.yaml
 
 # Install the webhook
-kubectl apply -n polaris -f ./deploy/webhook-test.yaml
+helm repo add fairwinds-stable https://charts.fairwinds.com/stable
+helm install polaris fairwinds-stable/polaris --namespace polaris \
+  --set dashboard.enable=false \
+  --set webhook.enable=true \
+  --set image.tag=$CI_SHA1
 
 # wait for the webhook to come online
 check_webhook_is_ready
