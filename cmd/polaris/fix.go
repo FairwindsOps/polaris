@@ -76,7 +76,7 @@ var fixCommand = &cobra.Command{
 					if err != nil {
 						panic(err)
 					}
-					byteContent := mutation.UpdateMutatedContentWithComments(fullFilePath, string(yamlContent), comments)
+					byteContent := mutation.UpdateMutatedContentWithComments(string(yamlContent), comments)
 					err = ioutil.WriteFile(fullFilePath, byteContent, 0644)
 					if err != nil {
 						logrus.Errorf("Error writing output to file: %v", err)
