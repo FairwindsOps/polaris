@@ -90,7 +90,7 @@ func GetMutationsAndCommentsFromResults(results []validator.Result) ([]config.Mu
 	return comments, allMutationsFromResults
 }
 
-func UpdateMutatedContentWithComments(fullFilePath string, yamlContent string, comments []config.MutationComment) []byte {
+func UpdateMutatedContentWithComments(yamlContent string, comments []config.MutationComment) []byte {
 	var lines []string
 	scanner := bufio.NewScanner(strings.NewReader(yamlContent))
 	scanner.Split(bufio.ScanLines)
