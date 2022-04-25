@@ -70,13 +70,6 @@ function grab_logs() {
     kubectl -n polaris logs -l app=polaris
 }
 
-#sed is replacing the polaris version with this commit sha so we are testing exactly this verison.
-if [ -z "${POLARIS_IMAGE}" ]; then
-  POLARIS_IMAGE="quay.io/fairwinds/polaris:$CIRCLE_SHA1"
-fi
-echo "using image $POLARIS_IMAGE"
-sed -E "s|'(quay.io/fairwinds/polaris:).+'|'${POLARIS_IMAGE}'|" ./deploy/webhook.yaml > ./deploy/webhook-test.yaml
-
 clean_up || true
 
 echo -e "Setting up..."
