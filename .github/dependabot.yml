@@ -1,3 +1,4 @@
+## DO NOT EDIT - Managed by Terraform
 version: 2
 updates:
   - package-ecosystem: "docker"
@@ -14,11 +15,6 @@ updates:
       - dependency-name: "*"
 
   - package-ecosystem: "gomod"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-
-  - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
