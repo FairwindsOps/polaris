@@ -40,6 +40,12 @@ type GenericResource struct {
 
 // NewGenericResourceFromUnstructured creates a workload from an unstructured.Unstructured
 func NewGenericResourceFromUnstructured(unst unstructured.Unstructured) (GenericResource, error) {
+	// if no creation time remove creation time
+	if unst.GetCreationTimestamp().Time.IsZero() {
+		unstructured.RemoveNestedField(unst.Object, "metadata", "creationTimestamp")
+		unstructured.RemoveNestedField(unst.Object, "status")
+	}
+
 	workload := GenericResource{
 		Kind:     unst.GetKind(),
 		Resource: unst,
@@ -130,15 +136,15 @@ func ResolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod
 
 func isFinalKind(kind string) bool {
 	switch kind {
-		case
-			"Deployment",
-			"CronJob",
-			"StatefulSet",
-			"DaemonSet":
-			return true
-		}
-	return false
+	case
+		"Deployment",
+		"CronJob",
+		"StatefulSet",
+		"DaemonSet":
+		return true
 	}
+	return false
+}
 
 func resolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) (GenericResource, error) {
 	podWorkload, err := NewGenericResourceFromPod(podResource, nil)
