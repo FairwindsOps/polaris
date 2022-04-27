@@ -91,7 +91,7 @@ func GetMutationsAndCommentsFromResults(results []validator.Result) ([]config.Mu
 }
 
 // UpdateMutatedContentWithComments Updates mutated object with comments
-func UpdateMutatedContentWithComments(yamlContent string, comments []config.MutationComment) []byte {
+func UpdateMutatedContentWithComments(yamlContent string, comments []config.MutationComment) string {
 	var lines []string
 	scanner := bufio.NewScanner(strings.NewReader(yamlContent))
 	scanner.Split(bufio.ScanLines)
@@ -111,5 +111,5 @@ func UpdateMutatedContentWithComments(yamlContent string, comments []config.Muta
 		fileContent += line
 		fileContent += "\n"
 	}
-	return []byte(fileContent)
+	return fileContent
 }

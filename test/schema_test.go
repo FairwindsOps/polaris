@@ -17,6 +17,7 @@ package test
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -38,7 +39,7 @@ type testCase struct {
 	failure   bool
 }
 
-var successResourceMap = map[string]*kube.ResourceProvider{}
+var successResourceMap = map[string]string{}
 var failureTestCasesMap = map[string][]testCase{}
 
 func init() {
@@ -69,8 +70,12 @@ func init() {
 			testCases = append(testCases, testcase)
 
 			if strings.Contains(tc.Name(), "success") {
+				yamlContent, err := os.ReadFile(checkDir + "/" + tc.Name())
+				if err != nil {
+					panic(err)
+				}
 				key := fmt.Sprintf("%s/%s", check, tc.Name())
-				successResourceMap[key] = resources
+				successResourceMap[key] = string(yamlContent)
 			} else {
 				testCases, ok := failureTestCasesMap[check]
 				if !ok {

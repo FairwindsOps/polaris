@@ -28,7 +28,9 @@ checks:
   hostPortSet: warning
   tlsSettingsMissing: warning
 
-
+mutations:
+ - readinessProbeMissing
+ 
 exemptions:
   - namespace: kube-system
     controllerNames:

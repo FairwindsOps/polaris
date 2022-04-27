@@ -30,5 +30,5 @@ mutations:
     path: /resources/requests/cpu
     value: 100m
 comments:
-  - find: "requests: 100m"
+  - find: "cpu: 100m"
     comment: "TODO: Set this to the amount of CPU you want to reserve for your workload"
