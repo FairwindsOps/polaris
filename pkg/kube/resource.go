@@ -38,6 +38,7 @@ type GenericResource struct {
 	OriginalObjectJSON []byte
 }
 
+// NewGenericResourceFromUnstructured creates a workload from an unstructured.Unstructured
 func NewGenericResourceFromUnstructured(unst unstructured.Unstructured, podSpecMap interface{}) (GenericResource, error) {
 	if unst.GetCreationTimestamp().Time.IsZero() {
 		unstructured.RemoveNestedField(unst.Object, "metadata", "creationTimestamp")
