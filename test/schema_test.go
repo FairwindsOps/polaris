@@ -39,7 +39,7 @@ type testCase struct {
 	failure   bool
 }
 
-var successResourceMap = map[string]string{}
+var successYamlContentMap = map[string]string{}
 var failureTestCasesMap = map[string][]testCase{}
 
 func init() {
@@ -75,7 +75,7 @@ func init() {
 					panic(err)
 				}
 				key := fmt.Sprintf("%s/%s", check, tc.Name())
-				successResourceMap[key] = string(yamlContent)
+				successYamlContentMap[key] = string(yamlContent)
 			} else {
 				testCases, ok := failureTestCasesMap[check]
 				if !ok {

@@ -38,7 +38,7 @@ func TestMutations(t *testing.T) {
 		for _, tc := range failureTestCasesMap[mutationStr] {
 			newConfig := c
 			key := fmt.Sprintf("%s/%s", tc.check, strings.ReplaceAll(tc.filename, "failure", "success"))
-			successYamlContent, ok := successResourceMap[key]
+			successYamlContent, ok := successYamlContentMap[key]
 			assert.True(t, ok)
 			assert.Len(t, tc.resources.Resources, 1)
 			newConfig.Mutations = []string{mutationStr}

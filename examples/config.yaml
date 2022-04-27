@@ -201,5 +201,3 @@ exemptions:
       - kube-hunter
     rules:
       - runAsRootAllowed
-
-namespace: test-ns
