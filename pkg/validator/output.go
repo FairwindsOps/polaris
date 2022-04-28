@@ -79,6 +79,7 @@ type ResultMessage struct {
 	Severity  config.Severity
 	Category  string
 	Mutations []map[string]interface{}
+	Comments  []config.MutationComment
 }
 
 // ResultSet contiains the results for a set of checks
