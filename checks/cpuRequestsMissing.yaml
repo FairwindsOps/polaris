@@ -27,5 +27,11 @@ schema:
                 const: ''
 mutations:
   - op: add
+    path: /resources/requests
+    value: {}
+  - op: add
     path: /resources/requests/cpu
     value: 100m
+comments:
+  - find: "cpu: 100m"
+    comment: "TODO: Set this to the amount of CPU you want to reserve for your workload"

@@ -1,13 +1,16 @@
 package mutation
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	jsonpatch "github.com/evanphx/json-patch/v5"
 	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
 	"github.com/fairwindsops/polaris/pkg/validator"
+	"github.com/thoas/go-funk"
 )
 
 // ApplyAllSchemaMutations applies available mutation to a single resource
@@ -35,9 +38,10 @@ func ApplyAllSchemaMutations(conf *config.Configuration, resourceProvider *kube.
 	return mutated, nil
 }
 
-// GetMutationsFromResults returns all mutations from results
-func GetMutationsFromResults(conf *config.Configuration, results []validator.Result) map[string][]map[string]interface{} {
+// GetMutationsAndCommentsFromResults returns all mutations from results
+func GetMutationsAndCommentsFromResults(results []validator.Result) ([]config.MutationComment, map[string][]map[string]interface{}) {
 	allMutationsFromResults := make(map[string][]map[string]interface{})
+	comments := []config.MutationComment{}
 	for _, result := range results {
 		key := fmt.Sprintf("%s/%s/%s", result.Kind, result.Name, result.Namespace)
 
@@ -49,6 +53,9 @@ func GetMutationsFromResults(conf *config.Configuration, results []validator.Res
 				}
 				allMutationsFromResults[key] = append(mutations, resultMessage.Mutations...)
 			}
+			if len(resultMessage.Comments) > 0 {
+				comments = append(comments, resultMessage.Comments...)
+			}
 		}
 
 		for _, resultMessage := range result.PodResult.Results {
@@ -58,6 +65,9 @@ func GetMutationsFromResults(conf *config.Configuration, results []validator.Res
 					mutations = make([]map[string]interface{}, 0)
 				}
 				allMutationsFromResults[key] = append(mutations, resultMessage.Mutations...)
+			}
+			if len(resultMessage.Comments) > 0 {
+				comments = append(comments, resultMessage.Comments...)
 			}
 		}
 
@@ -70,9 +80,36 @@ func GetMutationsFromResults(conf *config.Configuration, results []validator.Res
 					}
 					allMutationsFromResults[key] = append(mutations, resultMessage.Mutations...)
 				}
+				if len(resultMessage.Comments) > 0 {
+					comments = append(comments, resultMessage.Comments...)
+				}
 			}
 		}
 
 	}
-	return allMutationsFromResults
+	return comments, allMutationsFromResults
+}
+
+// UpdateMutatedContentWithComments Updates mutated object with comments
+func UpdateMutatedContentWithComments(yamlContent string, comments []config.MutationComment) string {
+	var lines []string
+	scanner := bufio.NewScanner(strings.NewReader(yamlContent))
+	scanner.Split(bufio.ScanLines)
+	for scanner.Scan() {
+		line := scanner.Text()
+		lines = append(lines, line)
+	}
+	commentMap := funk.Map(comments, func(c config.MutationComment) (string, string) {
+		return c.Find, c.Comment
+	}).(map[string]string)
+	fileContent := ""
+	for _, line := range lines {
+		comment, ok := commentMap[strings.TrimSpace(line)]
+		if ok {
+			line += (" #" + comment)
+		}
+		fileContent += line
+		fileContent += "\n"
+	}
+	return fileContent
 }

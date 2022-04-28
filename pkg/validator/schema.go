@@ -319,6 +319,7 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 				return mutationCopy
 			}).([]map[string]interface{})
 			result.Mutations = mutations
+			result.Comments = check.Comments
 		}
 	}
 	return &result, nil
