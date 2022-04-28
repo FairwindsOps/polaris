@@ -27,10 +27,6 @@ checks:
   hostNetworkSet: danger
   hostPortSet: warning
   tlsSettingsMissing: warning
-
-mutations:
- - cpuRequestsMissing
- - cpuLimitsMissing
  
 exemptions:
   - namespace: kube-system
