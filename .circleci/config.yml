@@ -21,6 +21,7 @@ references:
         echo 'export GOPROXY=https://proxy.golang.org' >> ${BASH_ENV}
         echo 'export GO111MODULE=on' >> ${BASH_ENV}
         echo 'export GOFLAGS=-mod=mod' >> ${BASH_ENV}
+        echo 'export GORELEASER_CURRENT_TAG="${CIRCLE_TAG}"' >> $BASH_ENV
 
   install_k8s: &install_k8s
     run:
@@ -101,15 +102,6 @@ references:
         docker login quay.io -u="${fairwinds_quay_user}" -p="${fairwinds_quay_token}"
         docker-push -f .circleci/build.config
 
-  release_deploy_configs: &release_deploy_configs
-    run:
-      name: Release deploy configs
-      command: |
-        upload_url=$(curl --silent https://api.github.com/repos/FairwindsOps/polaris/releases/latest | grep upload_url)
-        upload_url=$(echo $upload_url | sed -e 's/.*\(https.*\){.*$/\1/')
-        curl -X POST "$upload_url?name=dashboard.yaml" --data-binary "@./deploy/dashboard.yaml" -H "Authorization: Bearer $GITHUB_TOKEN" -H "Content-Type: application/x-yaml"
-        curl -X POST "$upload_url?name=webhook.yaml" --data-binary "@./deploy/webhook.yaml" -H "Authorization: Bearer $GITHUB_TOKEN" -H "Content-Type: application/x-yaml"
-
   enable_experimental_features: &enable_experimental_docker_features
     run:
       name: enable experimental features
@@ -169,7 +161,6 @@ jobs:
       - run: go list ./... | grep -v vendor | xargs golint -set_exit_status
       - run: go list ./... | grep -v vendor | xargs go vet
       - run: go test ./... -coverprofile=coverage.txt -covermode=count
-      - run: go run main.go audit --audit-path ./deploy --set-exit-code-below-score 100 --set-exit-code-on-danger
       - *test_binary_dashboard
 
   insights:
@@ -178,11 +169,6 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - run:
-          name: Adjust configs for latest image
-          command: |
-            sed -r "s|'(quay.io/fairwinds/polaris:).+'|'\1${CIRCLE_SHA1}'|" ./deploy/webhook.yaml > ./deploy/dashboard.yaml
-            sed -r "s|'(quay.io/fairwinds/polaris:).+'|'\1${CIRCLE_SHA1}'|" ./deploy/dashboard.yaml > ./deploy/webhook.yaml
       - run:
           name: Insights CI
           command: curl -L https://insights.fairwinds.com/v0/insights-ci.sh | bash
@@ -209,7 +195,6 @@ jobs:
       - run: packr2
       - run: echo 'export GORELEASER_CURRENT_TAG="${CIRCLE_TAG}"' >> $BASH_ENV
       - run: goreleaser
-      - *release_deploy_configs
 
   release_images:
     working_directory: /go/src/github.com/fairwindsops/polaris/

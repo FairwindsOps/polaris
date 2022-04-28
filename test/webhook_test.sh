@@ -70,13 +70,6 @@ function grab_logs() {
     kubectl -n polaris logs -l app=polaris
 }
 
-#sed is replacing the polaris version with this commit sha so we are testing exactly this verison.
-if [ -z "${POLARIS_IMAGE}" ]; then
-  POLARIS_IMAGE="quay.io/fairwinds/polaris:$CIRCLE_SHA1"
-fi
-echo "using image $POLARIS_IMAGE"
-sed -E "s|'(quay.io/fairwinds/polaris:).+'|'${POLARIS_IMAGE}'|" ./deploy/webhook.yaml > ./deploy/webhook-test.yaml
-
 clean_up || true
 
 echo -e "Setting up..."
@@ -88,7 +81,11 @@ kubectl create ns tests
 kubectl apply -n scale-test -f ./test/webhook_cases/failing_test.deployment.yaml
 
 # Install the webhook
-kubectl apply -n polaris -f ./deploy/webhook-test.yaml
+helm repo add fairwinds-stable https://charts.fairwinds.com/stable
+helm install polaris fairwinds-stable/polaris --namespace polaris --create-namespace \
+  --set dashboard.enable=false \
+  --set webhook.enable=true \
+  --set image.tag=$CI_SHA1
 
 # wait for the webhook to come online
 check_webhook_is_ready
