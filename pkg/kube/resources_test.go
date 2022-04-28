@@ -97,15 +97,6 @@ func TestAddResourcesFromReader(t *testing.T) {
 
 func TestGetResourceFromAPI(t *testing.T) {
 	k8s, dynamicInterface := test.SetupTestAPI(test.GetMockControllers("test")...)
-	resources, err := CreateResourceProviderFromAPI(context.Background(), k8s, "test", &dynamicInterface, conf.Configuration{})
-	assert.Equal(t, nil, err, "Error should be nil")
-
-	assert.Equal(t, "Cluster", resources.SourceType, "Should have type Path")
-	assert.Equal(t, "test", resources.SourceName, "Should have source name")
-	assert.IsType(t, time.Now(), resources.CreationTime, "Creation time should be set")
-
-	assert.Equal(t, 0, len(resources.Nodes), "Should not have any nodes")
-	assert.Equal(t, 5, len(resources.Resources), "Should have 5 controllers")
 
 	expectedNames := map[string]bool{
 		"deploy":      false,
@@ -114,12 +105,68 @@ func TestGetResourceFromAPI(t *testing.T) {
 		"statefulset": false,
 		"daemonset":   false,
 	}
-	for _, controllers := range resources.Resources {
-		for _, ctrl := range controllers {
-			expectedNames[ctrl.ObjectMeta.GetName()] = true
-		}
+
+	tests := []struct {
+		name        string
+		config      conf.Configuration
+		want        *ResourceProvider
+		wantErr     bool
+		clusterName string
+	}{
+		{
+			name:        "standard",
+			config:      conf.Configuration{},
+			clusterName: "test1",
+			want: &ResourceProvider{
+				SourceType:   "Cluster",
+				SourceName:   "test1",
+				CreationTime: time.Now(),
+			},
+		},
+		{
+			name: "namespaced",
+			config: conf.Configuration{
+				Namespace: "test",
+			},
+			clusterName: "test2",
+			want: &ResourceProvider{
+				SourceType:   "ClusterNamespace",
+				SourceName:   "test2",
+				CreationTime: time.Now(),
+			},
+		},
+		{
+			name: "namespace does not exist",
+			config: conf.Configuration{
+				Namespace: "test3",
+			},
+			clusterName: "test3",
+			wantErr:     true,
+		},
 	}
-	for name, val := range expectedNames {
-		assert.Equal(t, true, val, name)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			resources, err := CreateResourceProviderFromAPI(context.Background(), k8s, tt.clusterName, &dynamicInterface, tt.config)
+
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.want.SourceType, resources.SourceType)
+				assert.Equal(t, tt.want.SourceName, resources.SourceName)
+				assert.IsType(t, tt.want.CreationTime, resources.CreationTime)
+				assert.Equal(t, 0, len(resources.Nodes), "Should not have any nodes")
+				assert.Equal(t, 5, len(resources.Resources), "Should have 5 controllers")
+
+				for _, controllers := range resources.Resources {
+					for _, ctrl := range controllers {
+						expectedNames[ctrl.ObjectMeta.GetName()] = true
+					}
+				}
+				for name, val := range expectedNames {
+					assert.Equal(t, true, val, name)
+				}
+			}
+		})
 	}
 }

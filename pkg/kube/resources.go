@@ -182,7 +182,7 @@ func CreateResourceProviderFromResource(ctx context.Context, workload string) (*
 		logrus.Errorf("Could not find workload %s: %v", workload, err)
 		return nil, err
 	}
-	workloadObj, err := NewGenericResourceFromUnstructured(*obj)
+	workloadObj, err := NewGenericResourceFromUnstructured(*obj, nil)
 	if err != nil {
 		logrus.Errorf("Could not parse workload %s: %v", workload, err)
 		return nil, err
@@ -225,6 +225,13 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 	return &resources, nil
 }
 
+// CreateResourceProviderFromYaml returns a new ResourceProvider using the yaml
+func CreateResourceProviderFromYaml(yamlContent string) *ResourceProvider {
+	resources := newResourceProvider("unknown", "Content", "unknown")
+	resources.addResourcesFromYaml(string(yamlContent))
+	return &resources
+}
+
 // CreateResourceProviderFromCluster creates a new ResourceProvider using live data from a cluster
 func CreateResourceProviderFromCluster(ctx context.Context, c conf.Configuration) (*ResourceProvider, error) {
 	kubeConf, configError := config.GetConfigWithContext(c.KubeContext)
@@ -253,19 +260,38 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		logrus.Errorf("Error fetching Cluster API version: %v", err)
 		return nil, err
 	}
-	provider := newResourceProvider(serverVersion.Major+"."+serverVersion.Minor, "Cluster", clusterName)
+
+	sourceType := "Cluster"
+	if c.Namespace != "" {
+		logrus.Debug("namespace is specififed in config, setting source type to ClusterNamespace")
+		sourceType = "ClusterNamespace"
+	}
+	provider := newResourceProvider(serverVersion.Major+"."+serverVersion.Minor, sourceType, clusterName)
 
 	nodes, err := kube.CoreV1().Nodes().List(ctx, listOpts)
 	if err != nil {
 		logrus.Errorf("Error fetching Nodes: %v", err)
 		return nil, err
 	}
-	namespaces, err := kube.CoreV1().Namespaces().List(ctx, listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching Namespaces: %v", err)
-		return nil, err
+
+	var namespaces *corev1.NamespaceList
+	if c.Namespace != "" {
+		ns, err := kube.CoreV1().Namespaces().Get(ctx, c.Namespace, metav1.GetOptions{})
+		if err != nil {
+			return nil, err
+		}
+		namespaces = &corev1.NamespaceList{
+			Items: []corev1.Namespace{*ns},
+		}
+	} else {
+		nsList, err := kube.CoreV1().Namespaces().List(ctx, listOpts)
+		if err != nil {
+			logrus.Errorf("Error fetching Namespaces: %v", err)
+			return nil, err
+		}
+		namespaces = nsList
 	}
-	pods, err := kube.CoreV1().Pods("").List(ctx, listOpts)
+	pods, err := kube.CoreV1().Pods(c.Namespace).List(ctx, listOpts)
 	if err != nil {
 		logrus.Errorf("Error fetching Pods: %v", err)
 		return nil, err
@@ -310,13 +336,13 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 			return nil, err
 		}
 
-		objects, err := (*dynamic).Resource(mapping.Resource).Namespace("").List(ctx, metav1.ListOptions{})
+		objects, err := (*dynamic).Resource(mapping.Resource).Namespace(c.Namespace).List(ctx, metav1.ListOptions{})
 		if err != nil {
 			logrus.Warnf("Error retrieving parent object API %s and Kind %s because of error: %v", mapping.Resource.Version, mapping.Resource.Resource, err)
 			return nil, err
 		}
 		for _, obj := range objects.Items {
-			res, err := NewGenericResourceFromUnstructured(obj)
+			res, err := NewGenericResourceFromUnstructured(obj, nil)
 			if err != nil {
 				return nil, err
 			}

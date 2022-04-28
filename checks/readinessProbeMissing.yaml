@@ -19,3 +19,10 @@ schema:
       type: object
       not:
         const: null
+mutations:
+  - op: add
+    path: /readinessProbe
+    value: {"exec": { "command": [ "cat", "/tmp/healthy" ] }, "initialDelaySeconds": 5, "periodSeconds": 5 }
+comments:
+  - find: "readinessProbe:"
+    comment: "TODO: Change livenessProbe setting to reflect your health endpoints"

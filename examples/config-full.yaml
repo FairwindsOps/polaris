@@ -87,4 +87,3 @@ customChecks:
           type: string
           not:
             pattern: ^quay.io
-
