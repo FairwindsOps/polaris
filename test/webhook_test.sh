@@ -82,7 +82,7 @@ kubectl apply -n scale-test -f ./test/webhook_cases/failing_test.deployment.yaml
 
 # Install the webhook
 helm repo add fairwinds-stable https://charts.fairwinds.com/stable
-helm install polaris fairwinds-stable/polaris --namespace polaris \
+helm install polaris fairwinds-stable/polaris --namespace polaris --create-namespace \
   --set dashboard.enable=false \
   --set webhook.enable=true \
   --set image.tag=$CI_SHA1
