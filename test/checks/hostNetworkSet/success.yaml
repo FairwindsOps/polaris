@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Pod
 metadata:
+  name: nginx
   labels:
     app.kubernetes.io/name: nginx
-  name: nginx
 spec:
+  hostNetwork: false
   containers:
-  - image: nginx
-    name: nginx
-    resources: {}
+  - name: nginx 
+    image: nginx

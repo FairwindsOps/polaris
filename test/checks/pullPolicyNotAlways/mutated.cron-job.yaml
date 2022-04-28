@@ -3,17 +3,17 @@ kind: CronJob
 metadata:
   name: hello
 spec:
-  schedule: "* * * * *"
   jobTemplate:
     spec:
       template:
         spec:
           containers:
-          - name: hello
-            image: busybox
-            imagePullPolicy: Always
-            command:
+          - command:
             - /bin/sh
             - -c
             - date; echo Hello from the Kubernetes cluster
+            image: busybox
+            imagePullPolicy: Always
+            name: hello
           restartPolicy: OnFailure
+  schedule: '* * * * *'

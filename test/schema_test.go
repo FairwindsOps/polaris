@@ -39,7 +39,7 @@ type testCase struct {
 	failure   bool
 }
 
-var successYamlContentMap = map[string]string{}
+var mutatedYamlContentMap = map[string]string{}
 var failureTestCasesMap = map[string][]testCase{}
 
 func init() {
@@ -61,28 +61,31 @@ func init() {
 			if err != nil {
 				panic(err)
 			}
-			testcase := testCase{
-				filename:  tc.Name(),
-				check:     check,
-				resources: resources,
-				failure:   strings.Contains(tc.Name(), "failure"),
-			}
-			testCases = append(testCases, testcase)
 
-			if strings.Contains(tc.Name(), "success") {
+			if strings.Contains(tc.Name(), "mutated") {
 				yamlContent, err := os.ReadFile(checkDir + "/" + tc.Name())
 				if err != nil {
 					panic(err)
 				}
 				key := fmt.Sprintf("%s/%s", check, tc.Name())
-				successYamlContentMap[key] = string(yamlContent)
+				mutatedYamlContentMap[key] = string(yamlContent)
 			} else {
-				testCases, ok := failureTestCasesMap[check]
-				if !ok {
-					testCases = []testCase{}
+				testcase := testCase{
+					filename:  tc.Name(),
+					check:     check,
+					resources: resources,
+					failure:   strings.Contains(tc.Name(), "failure"),
 				}
 				testCases = append(testCases, testcase)
-				failureTestCasesMap[check] = testCases
+
+				if strings.Contains(tc.Name(), "mutated") {
+					testCases, ok := failureTestCasesMap[check]
+					if !ok {
+						testCases = []testCase{}
+					}
+					testCases = append(testCases, testcase)
+					failureTestCasesMap[check] = testCases
+				}
 			}
 		}
 	}

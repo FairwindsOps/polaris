@@ -37,8 +37,8 @@ func TestMutations(t *testing.T) {
 	for _, mutationStr := range mutations {
 		for _, tc := range failureTestCasesMap[mutationStr] {
 			newConfig := c
-			key := fmt.Sprintf("%s/%s", tc.check, strings.ReplaceAll(tc.filename, "failure", "success"))
-			successYamlContent, ok := successYamlContentMap[key]
+			key := fmt.Sprintf("%s/%s", tc.check, strings.ReplaceAll(tc.filename, "failure", "mutated"))
+			mutatedYamlContent, ok := mutatedYamlContentMap[key]
 			assert.True(t, ok)
 			assert.Len(t, tc.resources.Resources, 1)
 			newConfig.Mutations = []string{mutationStr}
@@ -56,7 +56,7 @@ func TestMutations(t *testing.T) {
 				yamlContent, err := yaml.JSONToYAML(mutated.OriginalObjectJSON)
 				assert.NoError(t, err)
 				contentStr := mutation.UpdateMutatedContentWithComments(string(yamlContent), comments)
-				assert.EqualValues(t, successYamlContent, contentStr)
+				assert.EqualValues(t, mutatedYamlContent, contentStr)
 			}
 		}
 	}
