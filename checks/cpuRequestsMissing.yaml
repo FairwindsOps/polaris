@@ -27,6 +27,9 @@ schema:
                 const: ''
 mutations:
   - op: add
+    path: /resources/requests
+    value: {}
+  - op: add
     path: /resources/requests/cpu
     value: 100m
 comments:

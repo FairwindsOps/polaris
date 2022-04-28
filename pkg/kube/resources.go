@@ -225,6 +225,13 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 	return &resources, nil
 }
 
+// CreateResourceProviderFromYaml returns a new ResourceProvider using the yaml
+func CreateResourceProviderFromYaml(yamlContent string) *ResourceProvider {
+	resources := newResourceProvider("unknown", "Content", "unknown")
+	resources.addResourcesFromYaml(string(yamlContent))
+	return &resources
+}
+
 // CreateResourceProviderFromCluster creates a new ResourceProvider using live data from a cluster
 func CreateResourceProviderFromCluster(ctx context.Context, c conf.Configuration) (*ResourceProvider, error) {
 	kubeConf, configError := config.GetConfigWithContext(c.KubeContext)

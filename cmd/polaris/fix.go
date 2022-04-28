@@ -15,7 +15,10 @@
 package cmd
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -25,6 +28,7 @@ import (
 	"github.com/fairwindsops/polaris/pkg/validator"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	yamlV3 "gopkg.in/yaml.v3"
 	"sigs.k8s.io/yaml"
 )
 
@@ -53,35 +57,73 @@ var fixCommand = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
-
+		var contentStr string
+		isFirstResource := true
 		for _, fullFilePath := range yamlFiles {
-			kubeResources, err := kube.CreateResourceProviderFromPath(fullFilePath)
+
+			yamlFile, err := ioutil.ReadFile(fullFilePath)
 			if err != nil {
 				panic(err)
 			}
-			results, err := validator.ApplyAllSchemaChecksToResourceProvider(&config, kubeResources)
-			if err != nil {
-				panic(err)
+
+			dec := yamlV3.NewDecoder(bytes.NewReader(yamlFile))
+
+			for {
+				data := map[string]interface{}{}
+				err := dec.Decode(&data)
+				// check it was parsed
+				if data == nil {
+					continue
+				}
+				// break the loop in case of EOF
+				if errors.Is(err, io.EOF) {
+					break
+				}
+				if err != nil {
+					panic(err)
+				}
+				yamlContent, err := yamlV3.Marshal(data)
+				if err != nil {
+					panic(err)
+				}
+				kubeResources := kube.CreateResourceProviderFromYaml(string(yamlContent))
+				results, err := validator.ApplyAllSchemaChecksToResourceProvider(&config, kubeResources)
+				if err != nil {
+					panic(err)
+				}
+				comments, allMutations := mutation.GetMutationsAndCommentsFromResults(results)
+				updatedYamlContent := string(yamlContent)
+				if len(allMutations) > 0 {
+					for _, resources := range kubeResources.Resources {
+						key := fmt.Sprintf("%s/%s/%s", resources[0].Kind, resources[0].Resource.GetName(), resources[0].Resource.GetNamespace())
+						mutations := allMutations[key]
+						mutated, err := mutation.ApplyAllSchemaMutations(&config, kubeResources, resources[0], mutations)
+						if err != nil {
+							panic(err)
+						}
+						mutatedYamlContent, err := yaml.JSONToYAML(mutated.OriginalObjectJSON)
+						if err != nil {
+							panic(err)
+						}
+						updatedYamlContent = mutation.UpdateMutatedContentWithComments(string(mutatedYamlContent), comments)
+					}
+				}
+				if isFirstResource {
+					contentStr = updatedYamlContent
+					isFirstResource = false
+				} else {
+					contentStr += "\n"
+					contentStr += "---"
+					contentStr += "\n"
+					contentStr += updatedYamlContent
+				}
 			}
-			comments, allMutations := mutation.GetMutationsAndCommentsFromResults(results)
-			if len(allMutations) > 0 {
-				for _, resources := range kubeResources.Resources {
-					key := fmt.Sprintf("%s/%s/%s", resources[0].Kind, resources[0].Resource.GetName(), resources[0].Resource.GetNamespace())
-					mutations := allMutations[key]
-					mutated, err := mutation.ApplyAllSchemaMutations(&config, kubeResources, resources[0], mutations)
-					if err != nil {
-						panic(err)
-					}
-					yamlContent, err := yaml.JSONToYAML(mutated.OriginalObjectJSON)
-					if err != nil {
-						panic(err)
-					}
-					contentStr := mutation.UpdateMutatedContentWithComments(string(yamlContent), comments)
-					err = ioutil.WriteFile(fullFilePath, []byte(contentStr), 0644)
-					if err != nil {
-						logrus.Errorf("Error writing output to file: %v", err)
-						os.Exit(1)
-					}
+
+			if contentStr != "" {
+				err = ioutil.WriteFile(fullFilePath, []byte(contentStr), 0644)
+				if err != nil {
+					logrus.Errorf("Error writing output to file: %v", err)
+					os.Exit(1)
 				}
 			}
 		}
