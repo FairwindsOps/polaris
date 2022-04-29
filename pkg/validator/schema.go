@@ -314,9 +314,9 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 	result := makeResult(conf, check, passes, issues)
 	if !passes {
 		if funk.Contains(conf.Mutations, checkID) {
-			mutations := funk.Map(check.Mutations, func(mutation map[string]interface{}) map[string]interface{} {
+			mutations := funk.Map(check.Mutations, func(mutation jsonpatch.Operation) jsonpatch.Operation {
 				mutationCopy := deepCopyMutation(mutation)
-				mutationCopy["path"] = prefix + mutationCopy["path"].(string)
+				mutationCopy.Path = prefix + mutationCopy.Path
 				return mutationCopy
 			}).([]jsonpatch.Operation)
 			result.Mutations = mutations
@@ -335,10 +335,11 @@ func getSortedKeys(m map[string]config.Severity) []string {
 	return keys
 }
 
-func deepCopyMutation(source map[string]interface{}) map[string]interface{} {
-	destination := map[string]interface{}{}
-	for key, value := range source {
-		destination[key] = value
+func deepCopyMutation(source jsonpatch.Operation) jsonpatch.Operation {
+	destination := jsonpatch.Operation{
+		Operation: source.Operation,
+		Path:      source.Path,
+		Value:     source.Value,
 	}
 	return destination
 }
