@@ -59,5 +59,8 @@ func (m *Mutator) Handle(ctx context.Context, req admission.Request) admission.R
 	if err != nil {
 		return admission.Errored(403, err)
 	}
+	if patches == nil {
+		return admission.Allowed("Allowed")
+	}
 	return admission.Patched("", patches...)
 }
