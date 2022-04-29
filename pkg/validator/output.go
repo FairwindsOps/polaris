@@ -20,6 +20,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/thoas/go-funk"
+	"gomodules.xyz/jsonpatch/v2"
 
 	"github.com/fairwindsops/polaris/pkg/config"
 )
@@ -78,7 +79,7 @@ type ResultMessage struct {
 	Success   bool
 	Severity  config.Severity
 	Category  string
-	Mutations []map[string]interface{}
+	Mutations []jsonpatch.Operation
 	Comments  []config.MutationComment
 }
 

@@ -23,6 +23,7 @@ import (
 	"github.com/qri-io/jsonschema"
 	"github.com/sirupsen/logrus"
 	"github.com/thoas/go-funk"
+	"gomodules.xyz/jsonpatch/v2"
 	corev1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -317,7 +318,7 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 				mutationCopy := deepCopyMutation(mutation)
 				mutationCopy["path"] = prefix + mutationCopy["path"].(string)
 				return mutationCopy
-			}).([]map[string]interface{})
+			}).([]jsonpatch.Operation)
 			result.Mutations = mutations
 			result.Comments = check.Comments
 		}

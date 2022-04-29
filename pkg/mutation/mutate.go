@@ -6,15 +6,16 @@ import (
 	"fmt"
 	"strings"
 
-	jsonpatch "github.com/evanphx/json-patch/v5"
+	jsonpatchV5 "github.com/evanphx/json-patch/v5"
 	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
 	"github.com/fairwindsops/polaris/pkg/validator"
 	"github.com/thoas/go-funk"
+	"gomodules.xyz/jsonpatch/v2"
 )
 
 // ApplyAllSchemaMutations applies available mutation to a single resource
-func ApplyAllSchemaMutations(conf *config.Configuration, resourceProvider *kube.ResourceProvider, resource kube.GenericResource, mutations []map[string]interface{}) (kube.GenericResource, error) {
+func ApplyAllSchemaMutations(conf *config.Configuration, resourceProvider *kube.ResourceProvider, resource kube.GenericResource, mutations []jsonpatch.Operation) (kube.GenericResource, error) {
 	resByte := resource.OriginalObjectJSON
 	var jsonByte []byte
 	mutationByte, err := json.Marshal(mutations)
@@ -22,7 +23,7 @@ func ApplyAllSchemaMutations(conf *config.Configuration, resourceProvider *kube.
 		return resource, err
 	}
 
-	patch, err := jsonpatch.DecodePatch(mutationByte)
+	patch, err := jsonpatchV5.DecodePatch(mutationByte)
 	if err != nil {
 		return resource, err
 	}
@@ -39,55 +40,54 @@ func ApplyAllSchemaMutations(conf *config.Configuration, resourceProvider *kube.
 }
 
 // GetMutationsAndCommentsFromResults returns all mutations from results
-func GetMutationsAndCommentsFromResults(results []validator.Result) ([]config.MutationComment, map[string][]map[string]interface{}) {
-	allMutationsFromResults := make(map[string][]map[string]interface{})
+func GetMutationsAndCommentsFromResults(results []validator.Result) ([]config.MutationComment, map[string][]jsonpatch.Operation) {
+	allMutationsFromResults := make(map[string][]jsonpatch.Operation)
 	comments := []config.MutationComment{}
 	for _, result := range results {
 		key := fmt.Sprintf("%s/%s/%s", result.Kind, result.Name, result.Namespace)
 
-		for _, resultMessage := range result.Results {
-			if len(resultMessage.Mutations) > 0 {
-				mutations, ok := allMutationsFromResults[key]
-				if !ok {
-					mutations = make([]map[string]interface{}, 0)
-				}
-				allMutationsFromResults[key] = append(mutations, resultMessage.Mutations...)
-			}
-			if len(resultMessage.Comments) > 0 {
-				comments = append(comments, resultMessage.Comments...)
-			}
-		}
-
-		for _, resultMessage := range result.PodResult.Results {
-			if len(resultMessage.Mutations) > 0 {
-				mutations, ok := allMutationsFromResults[key]
-				if !ok {
-					mutations = make([]map[string]interface{}, 0)
-				}
-				allMutationsFromResults[key] = append(mutations, resultMessage.Mutations...)
-			}
-			if len(resultMessage.Comments) > 0 {
-				comments = append(comments, resultMessage.Comments...)
-			}
-		}
-
-		for _, containerResult := range result.PodResult.ContainerResults {
-			for _, resultMessage := range containerResult.Results {
-				if len(resultMessage.Mutations) > 0 {
-					mutations, ok := allMutationsFromResults[key]
-					if !ok {
-						mutations = make([]map[string]interface{}, 0)
-					}
-					allMutationsFromResults[key] = append(mutations, resultMessage.Mutations...)
-				}
-				if len(resultMessage.Comments) > 0 {
-					comments = append(comments, resultMessage.Comments...)
-				}
-			}
-		}
+		mutations, resultsComments := GetMutationsAndCommentsFromResult(&result)
+		allMutationsFromResults[key] = mutations
+		comments = append(comments, resultsComments...)
 
 	}
 	return comments, allMutationsFromResults
+}
+
+// GetMutationsAndCommentsFromResult returns all mutations from single result
+func GetMutationsAndCommentsFromResult(result *validator.Result) ([]jsonpatch.Operation, []config.MutationComment) {
+	mutations := []jsonpatch.Operation{}
+	comments := []config.MutationComment{}
+	for _, resultMessage := range result.Results {
+		if len(resultMessage.Mutations) > 0 {
+			mutations = append(mutations, resultMessage.Mutations...)
+		}
+		if len(resultMessage.Comments) > 0 {
+			comments = append(comments, resultMessage.Comments...)
+		}
+	}
+
+	for _, resultMessage := range result.PodResult.Results {
+		if len(resultMessage.Mutations) > 0 {
+			mutations = append(mutations, resultMessage.Mutations...)
+		}
+		if len(resultMessage.Comments) > 0 {
+			comments = append(comments, resultMessage.Comments...)
+		}
+	}
+
+	for _, containerResult := range result.PodResult.ContainerResults {
+		for _, resultMessage := range containerResult.Results {
+			if len(resultMessage.Mutations) > 0 {
+				mutations = append(mutations, resultMessage.Mutations...)
+			}
+			if len(resultMessage.Comments) > 0 {
+				comments = append(comments, resultMessage.Comments...)
+			}
+		}
+	}
+
+	return mutations, comments
 }
 
 // UpdateMutatedContentWithComments Updates mutated object with comments
