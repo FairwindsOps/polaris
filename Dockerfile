@@ -10,7 +10,7 @@ ENV GOARCH=amd64
 COPY go.mod .
 COPY go.sum .
 RUN go mod download
-RUN go get -u github.com/gobuffalo/packr/v2/packr2
+RUN go install github.com/gobuffalo/packr/v2@latest
 
 COPY . .
 RUN packr2 build -a -o polaris *.go
