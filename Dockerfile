@@ -1,4 +1,4 @@
-FROM golang:1.18.0 AS build-env
+FROM golang:1.18.1 AS build-env
 WORKDIR /go/src/github.com/fairwindsops/polaris/
 
 ENV GO111MODULE=on
@@ -10,7 +10,7 @@ ENV GOARCH=amd64
 COPY go.mod .
 COPY go.sum .
 RUN go mod download
-RUN go install github.com/gobuffalo/packr/v2@latest
+RUN go install github.com/gobuffalo/packr/v2@v2.8.3
 
 COPY . .
 RUN packr2 build -a -o polaris *.go
