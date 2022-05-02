@@ -261,6 +261,13 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 			podCopy := *test.Resource.PodSpec
 			podCopy.InitContainers = []corev1.Container{}
 			podCopy.Containers = []corev1.Container{*test.Container}
+			containerIndex := funk.IndexOf(test.Resource.PodSpec.Containers, func(value corev1.Container) bool {
+				return value.Name == test.Container.Name
+			})
+			prefix = getJSONSchemaPrefix(test.Resource.Kind)
+			if prefix != "" {
+				prefix += "/containers/" + strconv.Itoa(containerIndex)
+			}
 			passes, issues, err = check.CheckPod(&podCopy)
 		} else {
 			return nil, fmt.Errorf("Unknown combination of target (%s) and schema target (%s)", check.Target, check.SchemaTarget)
@@ -312,6 +319,7 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 				return mutationCopy
 			}).([]map[string]interface{})
 			result.Mutations = mutations
+			result.Comments = check.Comments
 		}
 	}
 	return &result, nil
@@ -339,8 +347,8 @@ func getJSONSchemaPrefix(kind string) (prefix string) {
 		prefix = "/spec/jobTemplate/spec/template/spec"
 	} else if kind == "Pod" {
 		prefix = "/spec"
-	} else if (kind == "Deployment") || (kind == "Daemonset") ||
-		(kind == "Statefulset") || (kind == "Job") || (kind == "ReplicationController") {
+	} else if (kind == "Deployment") || (kind == "DaemonSet") ||
+		(kind == "StatefulSet") || (kind == "Job") || (kind == "ReplicationController") {
 		prefix = "/spec/template/spec"
 	} else {
 		logrus.Warningf("Mutation for this this resource (%s) is not supported", kind)

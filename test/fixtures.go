@@ -102,7 +102,10 @@ func MockController(apiVersion, kind, namespace, name string, spec map[string]in
 	if err != nil {
 		panic(err)
 	}
-	json.Unmarshal(b, &dest)
+	err = json.Unmarshal(b, &dest)
+	if err != nil {
+		panic(err)
+	}
 	return pod
 }
 
@@ -172,6 +175,15 @@ func MockReplicationController(namespace, name string) (corev1.ReplicationContro
 	return rc, pod
 }
 
+// MockNamespace returns a namespace object.
+func MockNamespace(name string) corev1.Namespace {
+	return corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+	}
+}
+
 // SetupTestAPI creates a test kube API struct.
 func SetupTestAPI(objects ...runtime.Object) (kubernetes.Interface, dynamic.Interface) {
 	scheme := runtime.NewScheme()
@@ -235,12 +247,19 @@ func SetupTestAPI(objects ...runtime.Object) (kubernetes.Interface, dynamic.Inte
 				{Name: "poddisruptionbudgets", Namespaced: true, Kind: "PodDisruptionBudget", Version: "v1"},
 			},
 		},
+		{
+			GroupVersion: "core/v1",
+			APIResources: []metav1.APIResource{
+				{Name: "namespaces", Namespaced: false, Kind: "Namespace"},
+			},
+		},
 	}
 	return k, dynamicClient
 }
 
 // GetMockControllers returns mocked controllers for 5 major controller types
 func GetMockControllers(namespace string) []runtime.Object {
+	ns := MockNamespace(namespace)
 	deploy, deployPod := MockDeploy(namespace, "deploy")
 	statefulset, statefulsetPod := MockStatefulSet(namespace, "statefulset")
 	daemonset, daemonsetPod := MockDaemonSet(namespace, "daemonset")
@@ -252,5 +271,6 @@ func GetMockControllers(namespace string) []runtime.Object {
 		&statefulset, &statefulsetPod,
 		&cronjob, &cronjobPod,
 		&job, &jobPod,
+		&ns,
 	}
 }
