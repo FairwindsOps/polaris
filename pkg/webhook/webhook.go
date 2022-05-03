@@ -47,19 +47,23 @@ func (v *Validator) InjectDecoder(d *admission.Decoder) error {
 
 var _ admission.Handler = &Validator{}
 
-// NewWebhook creates a validating admission webhook for the apiType.
-func NewWebhook(mgr manager.Manager, validator Validator) {
+// NewValidateWebhook creates a validating admission webhook for the apiType.
+func NewValidateWebhook(mgr manager.Manager, validator Validator) {
 	path := "/validate"
 
 	mgr.GetWebhookServer().Register(path, &webhook.Admission{Handler: &validator})
 }
 
 func (v *Validator) handleInternal(req admission.Request) (*validator.Result, error) {
+	return getValidateResults(req.AdmissionRequest.Kind.Kind, v.decoder, req, v.Config)
+}
+
+func getValidateResults(kind string, decoder *admission.Decoder, req admission.Request, config config.Configuration) (*validator.Result, error) {
 	var controller kube.GenericResource
 	var err error
-	if req.AdmissionRequest.Kind.Kind == "Pod" {
+	if kind == "Pod" {
 		pod := corev1.Pod{}
-		err := v.decoder.Decode(req, &pod)
+		err := decoder.Decode(req, &pod)
 		if err != nil {
 			return nil, err
 		}
@@ -75,7 +79,7 @@ func (v *Validator) handleInternal(req admission.Request) (*validator.Result, er
 		return nil, err
 	}
 	// TODO: consider enabling multi-resource checks
-	controllerResult, err := validator.ApplyAllSchemaChecks(&v.Config, nil, controller)
+	controllerResult, err := validator.ApplyAllSchemaChecks(&config, nil, controller)
 	if err != nil {
 		return nil, err
 	}
