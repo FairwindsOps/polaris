@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/fairwindsops/polaris/pkg/kube"
 	"github.com/fairwindsops/polaris/pkg/mutation"
@@ -51,11 +52,26 @@ var fixCommand = &cobra.Command{
 			err := cmd.Help()
 			panic(err)
 		}
-
-		baseDir := filesPath + "/"
-		yamlFiles, err := getYamlFiles(baseDir)
+		var yamlFiles []string
+		fileInfo, err := os.Stat(filesPath)
 		if err != nil {
 			panic(err)
+		}
+		if fileInfo.IsDir() {
+			baseDir := filesPath
+			if !strings.HasSuffix(filesPath, "/") {
+				baseDir = baseDir + "/"
+			}
+			yamlFiles, err = getYamlFiles(baseDir)
+			if err != nil {
+				panic(err)
+			}
+		} else {
+			if strings.HasSuffix(filesPath, ".yaml") || strings.HasSuffix(filesPath, ".yml") {
+				yamlFiles = append(yamlFiles, filesPath)
+			} else {
+				logrus.Error("Fix command only works with yaml/yml files")
+			}
 		}
 		var contentStr string
 		isFirstResource := true
@@ -137,7 +153,7 @@ func getYamlFiles(rootpath string) ([]string, error) {
 		if info.IsDir() {
 			return nil
 		}
-		if filepath.Ext(path) == ".yaml" {
+		if filepath.Ext(path) == ".yaml" || filepath.Ext(path) == ".yml" {
 			list = append(list, path)
 		}
 		return nil
