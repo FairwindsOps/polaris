@@ -67,11 +67,7 @@ var fixCommand = &cobra.Command{
 				panic(err)
 			}
 		} else {
-			if strings.HasSuffix(filesPath, ".yaml") || strings.HasSuffix(filesPath, ".yml") {
-				yamlFiles = append(yamlFiles, filesPath)
-			} else {
-				logrus.Error("Fix command only works with yaml/yml files")
-			}
+			yamlFiles = append(yamlFiles, filesPath)
 		}
 		var contentStr string
 		isFirstResource := true
