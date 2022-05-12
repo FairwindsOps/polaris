@@ -77,7 +77,8 @@ var fixCommand = &cobra.Command{
 
 			yamlFile, err := ioutil.ReadFile(fullFilePath)
 			if err != nil {
-				panic(err)
+				logrus.Errorf("Error reading file with file path %s: %v", fullFilePath, err)
+				os.Exit(1)
 			}
 
 			dec := yamlV3.NewDecoder(bytes.NewReader(yamlFile))
@@ -94,16 +95,19 @@ var fixCommand = &cobra.Command{
 					break
 				}
 				if err != nil {
-					panic(err)
+					logrus.Errorf("Error decoding data for file with file path %s: %v", fullFilePath, err)
+					os.Exit(1)
 				}
 				yamlContent, err := yamlV3.Marshal(data)
 				if err != nil {
-					panic(err)
+					logrus.Errorf("Error marshalling %s: %v", fullFilePath, err)
+					os.Exit(1)
 				}
 				kubeResources := kube.CreateResourceProviderFromYaml(string(yamlContent))
 				results, err := validator.ApplyAllSchemaChecksToResourceProvider(&config, kubeResources)
 				if err != nil {
-					panic(err)
+					logrus.Errorf("Error applying schema check to the resources %s: %v", fullFilePath, err)
+					os.Exit(1)
 				}
 				comments, allMutations := mutation.GetMutationsAndCommentsFromResults(results)
 				updatedYamlContent := string(yamlContent)
@@ -113,11 +117,13 @@ var fixCommand = &cobra.Command{
 						mutations := allMutations[key]
 						mutated, err := mutation.ApplyAllSchemaMutations(&config, kubeResources, resources[0], mutations)
 						if err != nil {
-							panic(err)
+							logrus.Errorf("Error applying schema mutations to the resources: %v", err)
+							os.Exit(1)
 						}
 						mutatedYamlContent, err := yaml.JSONToYAML(mutated.OriginalObjectJSON)
 						if err != nil {
-							panic(err)
+							logrus.Errorf("Error converting JSON to Yaml : %v", err)
+							os.Exit(1)
 						}
 						updatedYamlContent = mutation.UpdateMutatedContentWithComments(string(mutatedYamlContent), comments)
 					}
