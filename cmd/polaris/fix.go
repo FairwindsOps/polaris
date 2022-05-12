@@ -48,14 +48,15 @@ var fixCommand = &cobra.Command{
 		logrus.Debug("Setting up controller manager")
 
 		if filesPath == "" {
-			logrus.Error("Please specify a sub-command.")
-			err := cmd.Help()
-			panic(err)
+			logrus.Error("Please specify a file-path flag")
+			cmd.Help()
+			os.Exit(1)
 		}
 		var yamlFiles []string
 		fileInfo, err := os.Stat(filesPath)
 		if err != nil {
-			panic(err)
+			logrus.Error(err)
+			os.Exit(1)
 		}
 		if fileInfo.IsDir() {
 			baseDir := filesPath
@@ -64,7 +65,8 @@ var fixCommand = &cobra.Command{
 			}
 			yamlFiles, err = getYamlFiles(baseDir)
 			if err != nil {
-				panic(err)
+				logrus.Error(err)
+				os.Exit(1)
 			}
 		} else {
 			yamlFiles = append(yamlFiles, filesPath)
