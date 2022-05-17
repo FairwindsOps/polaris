@@ -77,8 +77,7 @@ var fixCommand = &cobra.Command{
 
 			yamlFile, err := ioutil.ReadFile(fullFilePath)
 			if err != nil {
-				logrus.Errorf("Error reading file with file path %s: %v", fullFilePath, err)
-				os.Exit(1)
+				logrus.Fatalf("Error reading file with file path %s: %v", fullFilePath, err)
 			}
 
 			dec := yamlV3.NewDecoder(bytes.NewReader(yamlFile))
@@ -95,19 +94,16 @@ var fixCommand = &cobra.Command{
 					break
 				}
 				if err != nil {
-					logrus.Errorf("Error decoding data for file with file path %s: %v", fullFilePath, err)
-					os.Exit(1)
+					logrus.Fatalf("Error decoding data for file with file path %s: %v", fullFilePath, err)
 				}
 				yamlContent, err := yamlV3.Marshal(data)
 				if err != nil {
-					logrus.Errorf("Error marshalling %s: %v", fullFilePath, err)
-					os.Exit(1)
+					logrus.Fatalf("Error marshalling %s: %v", fullFilePath, err)
 				}
 				kubeResources := kube.CreateResourceProviderFromYaml(string(yamlContent))
 				results, err := validator.ApplyAllSchemaChecksToResourceProvider(&config, kubeResources)
 				if err != nil {
-					logrus.Errorf("Error applying schema check to the resources %s: %v", fullFilePath, err)
-					os.Exit(1)
+					logrus.Fatalf("Error applying schema check to the resources %s: %v", fullFilePath, err)
 				}
 				comments, allMutations := mutation.GetMutationsAndCommentsFromResults(results)
 				updatedYamlContent := string(yamlContent)
@@ -142,8 +138,7 @@ var fixCommand = &cobra.Command{
 			if contentStr != "" {
 				err = ioutil.WriteFile(fullFilePath, []byte(contentStr), 0644)
 				if err != nil {
-					logrus.Errorf("Error writing output to file: %v", err)
-					os.Exit(1)
+					logrus.Fatalf("Error writing output to file: %v", err)
 				}
 			}
 		}

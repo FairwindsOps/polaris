@@ -55,10 +55,11 @@ func NewValidateWebhook(mgr manager.Manager, validator Validator) {
 }
 
 func (v *Validator) handleInternal(req admission.Request) (*validator.Result, error) {
-	return getValidateResults(req.AdmissionRequest.Kind.Kind, v.decoder, req, v.Config)
+	return GetValidateResults(req.AdmissionRequest.Kind.Kind, v.decoder, req, v.Config)
 }
 
-func getValidateResults(kind string, decoder *admission.Decoder, req admission.Request, config config.Configuration) (*validator.Result, error) {
+// GetValidateResults returns the validated results.
+func GetValidateResults(kind string, decoder *admission.Decoder, req admission.Request, config config.Configuration) (*validator.Result, error) {
 	var controller kube.GenericResource
 	var err error
 	if kind == "Pod" {
