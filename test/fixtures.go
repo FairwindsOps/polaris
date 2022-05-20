@@ -60,6 +60,9 @@ func MockContainer(name string) corev1.Container {
 func MockPod() corev1.Pod {
 	c1 := MockContainer("test")
 	p := corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
 				c1,
