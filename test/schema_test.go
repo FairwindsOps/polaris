@@ -68,6 +68,10 @@ func init() {
 			configString += "\ncustomChecks:\n  " + check + ":\n"
 			configString += strings.Join(lines, "\n")
 		}
+		c, err := config.Parse([]byte(configString))
+		if err != nil {
+			panic(err)
+		}
 		for _, tc := range cases {
 			if tc.Name() == "check.yaml" {
 				continue
@@ -90,6 +94,7 @@ func init() {
 					check:     check,
 					resources: resources,
 					failure:   strings.Contains(tc.Name(), "failure"),
+					config:    c,
 				}
 				testCases = append(testCases, testcase)
 
@@ -108,7 +113,6 @@ func init() {
 
 func TestChecks(t *testing.T) {
 	for _, tc := range testCases {
-		fmt.Printf("\n\nTEST: %s\n", tc.check)
 		results, err := validator.ApplyAllSchemaChecksToResourceProvider(&tc.config, tc.resources)
 		if err != nil {
 			panic(err)
