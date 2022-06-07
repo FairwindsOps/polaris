@@ -1,4 +1,4 @@
-<div align="center" class="no-border">
+ <div align="center" class="no-border">
   <img src="https://polaris.docs.fairwinds.com/img/polaris-logo.png" alt="Polaris Logo">
   <br>
   <h3>Best Practices for Kubernetes Workload Configuration</h3>
