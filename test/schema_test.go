@@ -1,8 +1,23 @@
+// Copyright 2022 FairwindsOps, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package test
 
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -24,6 +39,9 @@ type testCase struct {
 	failure   bool
 	config    config.Configuration
 }
+
+var mutatedYamlContentMap = map[string]string{}
+var failureTestCasesMap = map[string][]testCase{}
 
 func init() {
 	_, baseDir, _, _ := runtime.Caller(0)
@@ -50,7 +68,6 @@ func init() {
 			configString += "\ncustomChecks:\n  " + check + ":\n"
 			configString += strings.Join(lines, "\n")
 		}
-		fmt.Println("string\n", configString)
 		for _, tc := range cases {
 			if tc.Name() == "check.yaml" {
 				continue
@@ -59,17 +76,32 @@ func init() {
 			if err != nil {
 				panic(err)
 			}
-			c, err := config.Parse([]byte(configString))
-			if err != nil {
-				panic(err)
+
+			if strings.Contains(tc.Name(), "mutated") {
+				yamlContent, err := os.ReadFile(checkDir + "/" + tc.Name())
+				if err != nil {
+					panic(err)
+				}
+				key := fmt.Sprintf("%s/%s", check, tc.Name())
+				mutatedYamlContentMap[key] = string(yamlContent)
+			} else {
+				testcase := testCase{
+					filename:  tc.Name(),
+					check:     check,
+					resources: resources,
+					failure:   strings.Contains(tc.Name(), "failure"),
+				}
+				testCases = append(testCases, testcase)
+
+				if strings.Contains(tc.Name(), "mutated") {
+					testCases, ok := failureTestCasesMap[check]
+					if !ok {
+						testCases = []testCase{}
+					}
+					testCases = append(testCases, testcase)
+					failureTestCasesMap[check] = testCases
+				}
 			}
-			testCases = append(testCases, testCase{
-				filename:  tc.Name(),
-				check:     check,
-				resources: resources,
-				failure:   strings.Contains(tc.Name(), "failure"),
-				config:    c,
-			})
 		}
 	}
 }

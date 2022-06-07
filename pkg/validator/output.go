@@ -20,6 +20,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/thoas/go-funk"
+	"gomodules.xyz/jsonpatch/v2"
 
 	"github.com/fairwindsops/polaris/pkg/config"
 )
@@ -72,12 +73,14 @@ type ClusterInfo struct {
 
 // ResultMessage is the result of a given check
 type ResultMessage struct {
-	ID       string
-	Message  string
-	Details  []string
-	Success  bool
-	Severity config.Severity
-	Category string
+	ID        string
+	Message   string
+	Details   []string
+	Success   bool
+	Severity  config.Severity
+	Category  string
+	Mutations []jsonpatch.Operation
+	Comments  []config.MutationComment
 }
 
 // ResultSet contiains the results for a set of checks

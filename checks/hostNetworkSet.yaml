@@ -9,3 +9,6 @@ schema:
     hostNetwork:
       not:
         const: true
+mutations:
+  - op: remove
+    path: /hostNetwork

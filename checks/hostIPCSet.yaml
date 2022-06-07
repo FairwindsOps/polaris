@@ -9,3 +9,6 @@ schema:
     hostIPC:
       not:
         const: true
+mutations:
+  - op: remove
+    path: /hostIPC

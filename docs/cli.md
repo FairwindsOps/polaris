@@ -38,12 +38,14 @@ webhook
 
 # audit flags
     --audit-path string               If specified, audits one or more YAML files instead of a cluster.
+    --checks stringArray              Optional flag to specify specific checks to check
     --color                           Whether to use color in pretty format. (default true)
     --display-name string             An optional identifier for the audit.
 -f, --format string                   Output format for results - json, yaml, pretty, or score. (default "json")
     --helm-chart string               Will fill out Helm template
     --helm-values string              Optional flag to add helm values
 -h, --help                            help for audit
+    --namespace string                Namespace to audit. Only applies to in-cluster audits
     --only-show-failed-tests          If specified, audit output will only show failed tests.
     --output-file string              Destination file for audit results.
     --output-url string               Destination URL to send audit results.

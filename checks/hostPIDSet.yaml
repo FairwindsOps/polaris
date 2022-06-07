@@ -9,3 +9,6 @@ schema:
     hostPID:
       not:
         const: true
+mutations:
+  - op: remove
+    path: /hostPID

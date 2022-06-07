@@ -8,6 +8,8 @@ changelog:
     - '^test:'
 builds:
   - id: polaris
+    ldflags:
+      - -X main.Version={{.Version}} -X main.Commit={{.Commit}} -s -w
     env:
       - CGO_ENABLED=0
       - GO111MODULE=on

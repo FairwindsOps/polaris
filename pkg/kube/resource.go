@@ -1,3 +1,17 @@
+// Copyright 2022 FairwindsOps, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package kube
 
 import (
@@ -25,12 +39,15 @@ type GenericResource struct {
 }
 
 // NewGenericResourceFromUnstructured creates a workload from an unstructured.Unstructured
-func NewGenericResourceFromUnstructured(unst unstructured.Unstructured) (GenericResource, error) {
+func NewGenericResourceFromUnstructured(unst unstructured.Unstructured, podSpecMap interface{}) (GenericResource, error) {
+	if unst.GetCreationTimestamp().Time.IsZero() {
+		unstructured.RemoveNestedField(unst.Object, "metadata", "creationTimestamp")
+		unstructured.RemoveNestedField(unst.Object, "status")
+	}
 	workload := GenericResource{
 		Kind:     unst.GetKind(),
 		Resource: unst,
 	}
-
 	objMeta, err := meta.Accessor(&unst)
 	if err != nil {
 		return workload, err
@@ -47,7 +64,9 @@ func NewGenericResourceFromUnstructured(unst unstructured.Unstructured) (Generic
 	if err != nil {
 		return workload, err
 	}
-	podSpecMap := GetPodSpec(m)
+	if podSpecMap == nil {
+		podSpecMap = GetPodSpec(m)
+	}
 	if podSpecMap != nil {
 		b, err = json.Marshal(podSpecMap)
 		if err != nil {
@@ -99,7 +118,7 @@ func NewGenericResourceFromBytes(contentBytes []byte) (GenericResource, error) {
 	if err != nil {
 		return GenericResource{}, err
 	}
-	return NewGenericResourceFromUnstructured(unst)
+	return NewGenericResourceFromUnstructured(unst, nil)
 }
 
 // ResolveControllerFromPod builds a new workload for a given Pod
@@ -114,18 +133,6 @@ func ResolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod
 	return workload, err
 }
 
-func isFinalKind(kind string) bool {
-	switch kind {
-		case
-			"Deployment",
-			"CronJob",
-			"StatefulSet",
-			"DaemonSet":
-			return true
-		}
-	return false
-	}
-
 func resolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) (GenericResource, error) {
 	podWorkload, err := NewGenericResourceFromPod(podResource, nil)
 	if err != nil {
@@ -133,6 +140,8 @@ func resolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod
 	}
 	topKind := "Pod"
 	topMeta := podWorkload.ObjectMeta
+	var topPodSpec interface{}
+	topPodSpec = podWorkload.Resource.Object
 	owners := podResource.ObjectMeta.GetOwnerReferences()
 	lastKey := ""
 	for len(owners) > 0 {
@@ -165,16 +174,17 @@ func resolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod
 			logrus.Warnf("Error retrieving parent metadata %s of API %s and Kind %s because of error: %v ", firstOwner.Name, firstOwner.APIVersion, firstOwner.Kind, err)
 			return GenericResource{}, err
 		}
+		podSpec := GetPodSpec(abstractObject.Object)
+		if podSpec != nil {
+			topPodSpec = podSpec
+		}
 		topMeta = objMeta
 		owners = abstractObject.GetOwnerReferences()
-		if isFinalKind(topKind) {
-			break
-		}
 	}
 
 	if lastKey != "" {
 		unst := objectCache[lastKey]
-		return NewGenericResourceFromUnstructured(unst)
+		return NewGenericResourceFromUnstructured(unst, topPodSpec)
 	}
 	workload, err := NewGenericResourceFromPod(podResource, podResource)
 	if err != nil {

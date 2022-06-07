@@ -50,3 +50,7 @@ schema:
           properties:
             securityContext:
               $ref: "#/definitions/goodSecurityContext"
+mutations:
+  - op: replace
+    path: /securityContext/runAsNonRoot
+    value: true

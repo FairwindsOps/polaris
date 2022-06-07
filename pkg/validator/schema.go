@@ -1,13 +1,30 @@
+// Copyright 2022 FairwindsOps, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package validator
 
 import (
 	"errors"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/qri-io/jsonschema"
+	"github.com/sirupsen/logrus"
 	"github.com/thoas/go-funk"
+	"gomodules.xyz/jsonpatch/v2"
 	corev1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -138,7 +155,6 @@ func applyNonControllerSchemaChecks(conf *config.Configuration, resourceProvider
 }
 
 func applyControllerSchemaChecks(conf *config.Configuration, resourceProvider *kube.ResourceProvider, resource kube.GenericResource) (Result, error) {
-	fmt.Println("apply controller")
 	finalResult := Result{
 		Kind:      resource.Kind,
 		Name:      resource.ObjectMeta.GetName(),
@@ -198,7 +214,6 @@ func applyControllerSchemaChecks(conf *config.Configuration, resourceProvider *k
 }
 
 func applyTopLevelSchemaChecks(conf *config.Configuration, resources *kube.ResourceProvider, res kube.GenericResource, isController bool) (ResultSet, error) {
-	fmt.Println("apply top", isController)
 	test := schemaTestCase{
 		ResourceProvider: resources,
 		Resource:         res,
@@ -253,18 +268,34 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 	}
 	var passes bool
 	var issues []jsonschema.ValError
+	var prefix string
 	if check.SchemaTarget != "" {
 		if check.SchemaTarget == config.TargetPodSpec && check.Target == config.TargetContainer {
 			podCopy := *test.Resource.PodSpec
 			podCopy.InitContainers = []corev1.Container{}
 			podCopy.Containers = []corev1.Container{*test.Container}
+			containerIndex := funk.IndexOf(test.Resource.PodSpec.Containers, func(value corev1.Container) bool {
+				return value.Name == test.Container.Name
+			})
+			prefix = getJSONSchemaPrefix(test.Resource.Kind)
+			if prefix != "" {
+				prefix += "/containers/" + strconv.Itoa(containerIndex)
+			}
 			passes, issues, err = check.CheckPodSpec(&podCopy)
 		} else {
 			return nil, fmt.Errorf("Unknown combination of target (%s) and schema target (%s)", check.Target, check.SchemaTarget)
 		}
 	} else if check.Target == config.TargetPodSpec {
 		passes, issues, err = check.CheckPodSpec(test.Resource.PodSpec)
+		prefix = getJSONSchemaPrefix(test.Resource.Kind)
 	} else if check.Target == config.TargetContainer {
+		containerIndex := funk.IndexOf(test.Resource.PodSpec.Containers, func(value corev1.Container) bool {
+			return value.Name == test.Container.Name
+		})
+		prefix = getJSONSchemaPrefix(test.Resource.Kind)
+		if prefix != "" {
+			prefix += "/containers/" + strconv.Itoa(containerIndex)
+		}
 		passes, issues, err = check.CheckContainer(test.Container)
 	} else {
 		passes, issues, err = check.CheckObject(test.Resource.Resource.Object)
@@ -293,6 +324,17 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 		}
 	}
 	result := makeResult(conf, check, passes, issues)
+	if !passes {
+		if funk.Contains(conf.Mutations, checkID) {
+			mutations := funk.Map(check.Mutations, func(mutation jsonpatch.Operation) jsonpatch.Operation {
+				mutationCopy := deepCopyMutation(mutation)
+				mutationCopy.Path = prefix + mutationCopy.Path
+				return mutationCopy
+			}).([]jsonpatch.Operation)
+			result.Mutations = mutations
+			result.Comments = check.Comments
+		}
+	}
 	return &result, nil
 }
 
@@ -303,4 +345,27 @@ func getSortedKeys(m map[string]config.Severity) []string {
 	}
 	sort.Strings(keys)
 	return keys
+}
+
+func deepCopyMutation(source jsonpatch.Operation) jsonpatch.Operation {
+	destination := jsonpatch.Operation{
+		Operation: source.Operation,
+		Path:      source.Path,
+		Value:     source.Value,
+	}
+	return destination
+}
+
+func getJSONSchemaPrefix(kind string) (prefix string) {
+	if kind == "CronJob" {
+		prefix = "/spec/jobTemplate/spec/template/spec"
+	} else if kind == "Pod" {
+		prefix = "/spec"
+	} else if (kind == "Deployment") || (kind == "DaemonSet") ||
+		(kind == "StatefulSet") || (kind == "Job") || (kind == "ReplicationController") {
+		prefix = "/spec/template/spec"
+	} else {
+		logrus.Warningf("Mutation for this this resource (%s) is not supported", kind)
+	}
+	return prefix
 }
