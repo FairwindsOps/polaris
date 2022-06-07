@@ -15,6 +15,7 @@
 package validator
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strconv"
@@ -165,6 +166,17 @@ func applyControllerSchemaChecks(conf *config.Configuration, resourceProvider *k
 	}
 	finalResult.Results = resultSet
 
+	nonControllerResults, err := applyTopLevelSchemaChecks(conf, resourceProvider, resource, false)
+	if err != nil {
+		return finalResult, err
+	}
+	for key, val := range nonControllerResults {
+		if _, ok := finalResult.Results[key]; ok {
+			return finalResult, errors.New("Duplicate finding for check " + key)
+		}
+		finalResult.Results[key] = val
+	}
+
 	podRS, err := applyPodSchemaChecks(conf, resourceProvider, resource)
 	if err != nil {
 		return finalResult, err
@@ -214,7 +226,7 @@ func applyTopLevelSchemaChecks(conf *config.Configuration, resources *kube.Resou
 
 func applyPodSchemaChecks(conf *config.Configuration, resources *kube.ResourceProvider, controller kube.GenericResource) (ResultSet, error) {
 	test := schemaTestCase{
-		Target:           config.TargetPod,
+		Target:           config.TargetPodSpec,
 		ResourceProvider: resources,
 		Resource:         controller,
 	}
@@ -258,7 +270,7 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 	var issues []jsonschema.ValError
 	var prefix string
 	if check.SchemaTarget != "" {
-		if check.SchemaTarget == config.TargetPod && check.Target == config.TargetContainer {
+		if check.SchemaTarget == config.TargetPodSpec && check.Target == config.TargetContainer {
 			podCopy := *test.Resource.PodSpec
 			podCopy.InitContainers = []corev1.Container{}
 			podCopy.Containers = []corev1.Container{*test.Container}
@@ -269,12 +281,12 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 			if prefix != "" {
 				prefix += "/containers/" + strconv.Itoa(containerIndex)
 			}
-			passes, issues, err = check.CheckPod(&podCopy)
+			passes, issues, err = check.CheckPodSpec(&podCopy)
 		} else {
 			return nil, fmt.Errorf("Unknown combination of target (%s) and schema target (%s)", check.Target, check.SchemaTarget)
 		}
-	} else if check.Target == config.TargetPod {
-		passes, issues, err = check.CheckPod(test.Resource.PodSpec)
+	} else if check.Target == config.TargetPodSpec {
+		passes, issues, err = check.CheckPodSpec(test.Resource.PodSpec)
 		prefix = getJSONSchemaPrefix(test.Resource.Kind)
 	} else if check.Target == config.TargetContainer {
 		containerIndex := funk.IndexOf(test.Resource.PodSpec.Containers, func(value corev1.Container) bool {
