@@ -430,7 +430,11 @@ func (resources *ResourceProvider) addResourcesFromYaml(contents string) error {
 		if strings.TrimSpace(spec) == "" {
 			continue
 		}
-		return resources.addResourceFromString(spec)
+		err := resources.addResourceFromString(spec)
+		if err != nil {
+			logrus.Errorf("Error parsing YAML: (%v)", err)
+			return err
+		}
 	}
 	return nil
 }
