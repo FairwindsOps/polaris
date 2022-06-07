@@ -63,7 +63,8 @@ var webhookCmd = &cobra.Command{
 
 		// Iterate all the configurations supported controllers to scan and register them for webhooks
 		// Should only register controllers that are configured to be scanned
-		fwebhook.NewWebhook(mgr, fwebhook.Validator{Config: config, Client: mgr.GetClient()})
+		fwebhook.NewValidateWebhook(mgr, fwebhook.Validator{Config: config, Client: mgr.GetClient()})
+		fwebhook.NewMutateWebhook(mgr, fwebhook.Mutator{Config: config, Client: mgr.GetClient()})
 
 		logrus.Infof("Polaris webhook server listening on port %d", webhookPort)
 		if err := mgr.Start(signals.SetupSignalHandler()); err != nil {

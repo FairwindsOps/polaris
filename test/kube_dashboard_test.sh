@@ -1,8 +1,3 @@
-sed -ri "s|'(quay.io/fairwinds/polaris:).+'|'\1${CIRCLE_SHA1}'|" ./deploy/dashboard.yaml
-# TODO: remove this after 1.0 is released
-sed -i "s/--dashboard/dashboard/" ./deploy/dashboard.yaml
-
-
 function check_dashboard_is_ready() {
     local timeout_epoch
     timeout_epoch=$(date -d "+2 minutes" +%s)
@@ -25,7 +20,9 @@ function check_timeout() {
     fi
 }
 
-kubectl apply -f ./deploy/dashboard.yaml &>/dev/null
+helm repo add fairwinds-stable https://charts.fairwinds.com/stable
+helm install polaris fairwinds-stable/polaris --namespace polaris --create-namespace \
+  --set image.tag=$CI_SHA1
 
 check_dashboard_is_ready
 

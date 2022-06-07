@@ -17,6 +17,7 @@ package test
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -38,7 +39,8 @@ type testCase struct {
 	failure   bool
 }
 
-var successResourceMap = map[string]*kube.ResourceProvider{}
+var mutatedYamlContentMap = map[string]string{}
+var failureTestCasesMap = map[string][]testCase{}
 
 func init() {
 	_, baseDir, _, _ := runtime.Caller(0)
@@ -59,15 +61,31 @@ func init() {
 			if err != nil {
 				panic(err)
 			}
-			testCases = append(testCases, testCase{
-				filename:  tc.Name(),
-				check:     check,
-				resources: resources,
-				failure:   strings.Contains(tc.Name(), "failure"),
-			})
-			if !strings.Contains(tc.Name(), "failure") {
+
+			if strings.Contains(tc.Name(), "mutated") {
+				yamlContent, err := os.ReadFile(checkDir + "/" + tc.Name())
+				if err != nil {
+					panic(err)
+				}
 				key := fmt.Sprintf("%s/%s", check, tc.Name())
-				successResourceMap[key] = resources
+				mutatedYamlContentMap[key] = string(yamlContent)
+			} else {
+				testcase := testCase{
+					filename:  tc.Name(),
+					check:     check,
+					resources: resources,
+					failure:   strings.Contains(tc.Name(), "failure"),
+				}
+				testCases = append(testCases, testcase)
+
+				if strings.Contains(tc.Name(), "mutated") {
+					testCases, ok := failureTestCasesMap[check]
+					if !ok {
+						testCases = []testCase{}
+					}
+					testCases = append(testCases, testcase)
+					failureTestCasesMap[check] = testCases
+				}
 			}
 		}
 	}

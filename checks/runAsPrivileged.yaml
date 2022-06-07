@@ -22,3 +22,7 @@ schema:
         properties:
           securityContext:
             $ref: "#/definitions/notBadSecurityContext"
+mutations:
+  - op: add
+    path: /securityContext/privileged
+    value: false

@@ -19,8 +19,10 @@ import (
 )
 
 const (
-	// Version represents the current release version of Polaris
-	Version = "5.1.0"
+	// Version is set during build
+	Version = "development"
+	// Commit is set during build
+	Commit = ""
 )
 
 func main() {
