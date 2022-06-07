@@ -32,20 +32,20 @@ references:
         sudo apt-get install -yqq jq git
 
         echo "Installing KIND"
-        curl -sLO https://github.com/kubernetes-sigs/kind/releases/download/v0.8.1/kind-linux-amd64
+        curl -sLO https://github.com/kubernetes-sigs/kind/releases/download/v0.14.0/kind-linux-amd64
         chmod 0755 kind-linux-amd64
         sudo mv kind-linux-amd64 /usr/local/bin/kind
         kind version
 
         echo "Installing Kubectl"
-        curl -sLO https://storage.googleapis.com/kubernetes-release/release/v1.18.6/bin/linux/amd64/kubectl
+        curl -sLO https://storage.googleapis.com/kubernetes-release/release/v1.21.12/bin/linux/amd64/kubectl
         chmod 0755 kubectl
         sudo mv kubectl /usr/local/bin/
         kubectl version --client
 
 
         echo "Creating Kubernetes Cluster with Kind"
-        kind create cluster --wait=90s --image kindest/node:v1.15.11
+        kind create cluster --wait=90s --image kindest/node:v1.21.12
         docker ps -a
 
         kubectl version
