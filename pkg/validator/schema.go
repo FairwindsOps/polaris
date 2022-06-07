@@ -23,6 +23,7 @@ import (
 	"github.com/qri-io/jsonschema"
 	"github.com/sirupsen/logrus"
 	"github.com/thoas/go-funk"
+	"gomodules.xyz/jsonpatch/v2"
 	corev1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -313,12 +314,13 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 	result := makeResult(conf, check, passes, issues)
 	if !passes {
 		if funk.Contains(conf.Mutations, checkID) {
-			mutations := funk.Map(check.Mutations, func(mutation map[string]interface{}) map[string]interface{} {
+			mutations := funk.Map(check.Mutations, func(mutation jsonpatch.Operation) jsonpatch.Operation {
 				mutationCopy := deepCopyMutation(mutation)
-				mutationCopy["path"] = prefix + mutationCopy["path"].(string)
+				mutationCopy.Path = prefix + mutationCopy.Path
 				return mutationCopy
-			}).([]map[string]interface{})
+			}).([]jsonpatch.Operation)
 			result.Mutations = mutations
+			result.Comments = check.Comments
 		}
 	}
 	return &result, nil
@@ -333,10 +335,11 @@ func getSortedKeys(m map[string]config.Severity) []string {
 	return keys
 }
 
-func deepCopyMutation(source map[string]interface{}) map[string]interface{} {
-	destination := map[string]interface{}{}
-	for key, value := range source {
-		destination[key] = value
+func deepCopyMutation(source jsonpatch.Operation) jsonpatch.Operation {
+	destination := jsonpatch.Operation{
+		Operation: source.Operation,
+		Path:      source.Path,
+		Value:     source.Value,
 	}
 	return destination
 }
@@ -346,8 +349,8 @@ func getJSONSchemaPrefix(kind string) (prefix string) {
 		prefix = "/spec/jobTemplate/spec/template/spec"
 	} else if kind == "Pod" {
 		prefix = "/spec"
-	} else if (kind == "Deployment") || (kind == "Daemonset") ||
-		(kind == "Statefulset") || (kind == "Job") || (kind == "ReplicationController") {
+	} else if (kind == "Deployment") || (kind == "DaemonSet") ||
+		(kind == "StatefulSet") || (kind == "Job") || (kind == "ReplicationController") {
 		prefix = "/spec/template/spec"
 	} else {
 		logrus.Warningf("Mutation for this this resource (%s) is not supported", kind)
