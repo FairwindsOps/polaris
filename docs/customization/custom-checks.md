@@ -43,8 +43,8 @@ check ID. Note that you'll also have to set its severity in the `checks` section
 * `category` - one of `Security`, `Efficiency`, or `Reliability`
 * `target` - specifies the type of resource to check. This can be:
   * a group and kind, e.g. `apps/Deployment` or `networking.k8s.io/Ingress`
-  * `Controller`, to check _any_ resource that contains a pod spec (e.g. Deployments, CronJobs, StatefulSets), as well as naked Pods
-  * `Pod`, same as `Controller`, but the schema applies to the Pod spec rather than the top-level controller
+  * `Controller`, to check _any_ resource that creates Pods (e.g. Deployments, CronJobs, StatefulSets), as well as naked Pods
+  * `PodSpec`, same as `Controller`, but the schema applies to the Pod spec rather than the top-level controller
   * `Container` same as `Controller`, but the schema applies to all Container specs rather than the top-level controller
 * `controllers` - if `target` is `Controller`, `Pod` or `Container`, you can use this to change which types of controllers are checked
 * `controllers.include` - _only_ check these controllers
