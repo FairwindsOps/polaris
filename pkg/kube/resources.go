@@ -215,7 +215,11 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 			logrus.Errorf("Error reading file: %v", path)
 			return err
 		}
-		return resources.addResourcesFromYaml(string(contents))
+		err = resources.addResourcesFromYaml(string(contents))
+		if err != nil {
+			logrus.Warnf("Skipping %s: cannot add resource from YAML: %v", path, err)
+		}
+		return nil
 	}
 
 	err := filepath.Walk(directory, visitFile)
@@ -443,7 +447,6 @@ func (resources *ResourceProvider) addResourceFromString(contents string) error 
 	decoder = k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(contentBytes), 1000)
 
 	if err != nil {
-		logrus.Errorf("Invalid YAML: %s", string(contents))
 		return err
 	}
 	if resource.Kind == "Namespace" {
