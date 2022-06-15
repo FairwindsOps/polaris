@@ -44,7 +44,7 @@ func NewMutateWebhook(mgr manager.Manager, mutator Mutator) {
 }
 
 func (m *Mutator) mutate(req admission.Request) ([]jsonpatch.Operation, error) {
-	results, err := getValidateResults(req.AdmissionRequest.Kind.Kind, m.decoder, req, m.Config)
+	results, err := GetValidatedResults(req.AdmissionRequest.Kind.Kind, m.decoder, req, m.Config)
 	if err != nil {
 		return nil, err
 	}
