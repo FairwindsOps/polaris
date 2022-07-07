@@ -33,9 +33,11 @@ func TestMutations(t *testing.T) {
 	c, err := config.Parse([]byte(configYaml))
 	assert.NoError(t, err)
 	assert.Len(t, c.Mutations, 0)
-	mutations := []string{"hostIPCSet", "pullPolicyNotAlways", "hostPIDSet", "hostNetworkSet", "deploymentMissingReplicas", "runAsRootAllowed", "cpuRequestsMissing", "cpuLimitsMissing", "memoryRequestsMissing", "memoryLimitsMissing", "livenessProbeMissing", "readinessProbeMissing"}
-	for _, mutationStr := range mutations {
-		for _, tc := range failureTestCasesMap[mutationStr] {
+	for mutationStr := range mutationTestCasesMap {
+		if len(mutationTestCasesMap[mutationStr]) == 0 {
+			panic("No test cases found for " + mutationStr)
+		}
+		for _, tc := range mutationTestCasesMap[mutationStr] {
 			newConfig := c
 			key := fmt.Sprintf("%s/%s", tc.check, strings.ReplaceAll(tc.filename, "failure", "mutated"))
 			mutatedYamlContent, ok := mutatedYamlContentMap[key]
@@ -56,7 +58,7 @@ func TestMutations(t *testing.T) {
 				yamlContent, err := yaml.JSONToYAML(mutated.OriginalObjectJSON)
 				assert.NoError(t, err)
 				contentStr := mutation.UpdateMutatedContentWithComments(string(yamlContent), comments)
-				assert.EqualValues(t, mutatedYamlContent, contentStr)
+				assert.EqualValues(t, mutatedYamlContent, contentStr, "Mutation test case for " + tc.check + "/" + tc.filename + " failed")
 			}
 		}
 	}

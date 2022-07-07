@@ -41,7 +41,7 @@ type testCase struct {
 }
 
 var mutatedYamlContentMap = map[string]string{}
-var failureTestCasesMap = map[string][]testCase{}
+var mutationTestCasesMap = map[string][]testCase{}
 
 func init() {
 	_, baseDir, _, _ := runtime.Caller(0)
@@ -76,9 +76,17 @@ func init() {
 			if tc.Name() == "check.yaml" {
 				continue
 			}
+
 			resources, err := kube.CreateResourceProviderFromPath(checkDir + "/" + tc.Name())
 			if err != nil {
 				panic(err)
+			}
+			testcase := testCase{
+				filename:  tc.Name(),
+				check:     check,
+				resources: resources,
+				failure:   strings.Contains(tc.Name(), "failure"),
+				config:    c,
 			}
 
 			if strings.Contains(tc.Name(), "mutated") {
@@ -88,24 +96,14 @@ func init() {
 				}
 				key := fmt.Sprintf("%s/%s", check, tc.Name())
 				mutatedYamlContentMap[key] = string(yamlContent)
-			} else {
-				testcase := testCase{
-					filename:  tc.Name(),
-					check:     check,
-					resources: resources,
-					failure:   strings.Contains(tc.Name(), "failure"),
-					config:    c,
+				testCases, ok := mutationTestCasesMap[check]
+				if !ok {
+					testCases = []testCase{}
 				}
 				testCases = append(testCases, testcase)
-
-				if strings.Contains(tc.Name(), "mutated") {
-					testCases, ok := failureTestCasesMap[check]
-					if !ok {
-						testCases = []testCase{}
-					}
-					testCases = append(testCases, testcase)
-					failureTestCasesMap[check] = testCases
-				}
+				mutationTestCasesMap[check] = testCases
+			} else {
+				testCases = append(testCases, testcase)
 			}
 		}
 	}
