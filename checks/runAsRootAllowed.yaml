@@ -51,6 +51,6 @@ schema:
             securityContext:
               $ref: "#/definitions/goodSecurityContext"
 mutations:
-  - op: replace
+  - op: add
     path: /securityContext/runAsNonRoot
     value: true

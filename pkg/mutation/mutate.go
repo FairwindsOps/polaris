@@ -27,7 +27,10 @@ func ApplyAllSchemaMutations(conf *config.Configuration, resourceProvider *kube.
 	if err != nil {
 		return resource, err
 	}
-	jsonByte, err = patch.Apply(resByte)
+	jsonByte, err = patch.ApplyWithOptions(resByte, &jsonpatchV5.ApplyOptions{
+		AllowMissingPathOnRemove: true,
+		EnsurePathExistsOnAdd: true,
+	})
 	if err != nil {
 		return resource, err
 	}
