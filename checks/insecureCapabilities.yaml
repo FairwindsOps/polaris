@@ -54,3 +54,10 @@ schema:
                     pattern: '^(?i)KILL$'
                 - contains:
                     pattern: '^(?i)AUDIT_WRITE$'
+mutations:
+  - op: remove
+    path: /securityContext/capabilities
+    value: true
+  - op: add
+    path: /securityContext/capabilities
+    value: {"drop": ["ALL"]}
