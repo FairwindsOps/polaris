@@ -16,5 +16,5 @@ curl -LJ -o $TARGET_FILE $POLARIS_URL
 mkdir polaris
 tar -xzf $TARGET_FILE -C polaris
 rm $TARGET_FILE
-echo "polaris" >> $GITHUB_PATH
+echo "$(pwd)/polaris/polaris" >> $GITHUB_PATH
 echo "::set-output name=version::$INPUT_VERSION"
