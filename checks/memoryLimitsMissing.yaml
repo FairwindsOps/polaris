@@ -27,11 +27,8 @@ schema:
                 const: ''
 mutations:
   - op: add
-    path: /resources/limits
-    value: {}
-  - op: add
     path: /resources/limits/memory
     value: "512Mi"
 comments:
   - find: "memory: 512Mi"
-    comment: "TODO: Set this to the amount of Memory you want to reserve for your workload"
+    comment: "TODO: Set this to the maximum amount of memory you want your workload to use"
