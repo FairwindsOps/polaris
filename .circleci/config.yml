@@ -257,7 +257,6 @@ workflows:
           repository: polaris
           filters:
             branches:
-              #ignore: /.*/
-              only: "sudermanjr/oss-docs"
+              ignore: /.*/
             tags:
               ignore: /^teting-.*/
