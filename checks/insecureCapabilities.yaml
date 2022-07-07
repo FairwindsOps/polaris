@@ -57,7 +57,6 @@ schema:
 mutations:
   - op: remove
     path: /securityContext/capabilities
-    value: true
   - op: add
     path: /securityContext/capabilities
     value: {"drop": ["ALL"]}
