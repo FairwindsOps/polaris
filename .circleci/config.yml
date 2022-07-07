@@ -254,7 +254,7 @@ workflows:
             tags:
               ignore: /^testing-.*/
       - oss-docs/publish-docs:
-          repository: pluto
+          repository: polaris
           filters:
             branches:
               #ignore: /.*/
