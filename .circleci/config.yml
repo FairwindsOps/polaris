@@ -259,4 +259,4 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              ignore: /^teting-.*/
+              ignore: /^testing-.*/
