@@ -29,4 +29,3 @@ schema:
 mutations:
   - op: remove
     path: /securityContext/capabilities
-    value: true
