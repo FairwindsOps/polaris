@@ -81,6 +81,9 @@ func resolveCheck(conf *config.Configuration, checkID string, test schemaTestCas
 // CheckSchema.TemplateForResource().
 func getTemplateInput(test schemaTestCase) (map[string]interface{}, error) {
 	templateInput := test.Resource.Resource.Object
+	if templateInput == nil {
+		return nil, nil
+	}
 	templateInput["Polaris"] = make(map[string]interface{})
 	if test.Target == config.TargetPodSpec {
 		podSpecMap, err := kube.SerializePod(test.Resource.PodSpec)
