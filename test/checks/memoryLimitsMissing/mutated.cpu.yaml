@@ -10,4 +10,5 @@ spec:
     name: nginx
     resources:
       limits:
+        cpu: 100m
         memory: 512Mi #TODO: Set this to the maximum amount of memory you want your workload to use
