@@ -29,11 +29,13 @@ import (
 
 var webhookPort int
 var disableWebhookConfigInstaller bool
+var enableMutations bool
 
 func init() {
 	rootCmd.AddCommand(webhookCmd)
 	webhookCmd.PersistentFlags().IntVarP(&webhookPort, "port", "p", 9876, "Port for the dashboard webserver.")
-	webhookCmd.PersistentFlags().BoolVar(&disableWebhookConfigInstaller, "disable-webhook-config-installer", false, "disable the installer in the webhook server, so it won't install webhook configuration resources during bootstrapping.")
+	webhookCmd.PersistentFlags().BoolVar(&disableWebhookConfigInstaller, "disable-webhook-config-installer", false, "Disable the installer in the webhook server, so it won't install webhook configuration resources during bootstrapping.")
+	webhookCmd.PersistentFlags().BoolVar(&enableMutations, "mutate", "m", false, "Enable the mutating webhook")
 }
 
 var webhookCmd = &cobra.Command{
@@ -61,11 +63,10 @@ var webhookCmd = &cobra.Command{
 		server.CertName = "tls.crt"
 		server.KeyName = "tls.key"
 
-		// Iterate all the configurations supported controllers to scan and register them for webhooks
-		// Should only register controllers that are configured to be scanned
 		fwebhook.NewValidateWebhook(mgr, fwebhook.Validator{Config: config, Client: mgr.GetClient()})
-		fwebhook.NewMutateWebhook(mgr, fwebhook.Mutator{Config: config, Client: mgr.GetClient()})
-
+		if enableMutations {
+			fwebhook.NewMutateWebhook(mgr, fwebhook.Mutator{Config: config, Client: mgr.GetClient()})
+		}
 		logrus.Infof("Polaris webhook server listening on port %d", webhookPort)
 		if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
 			logrus.Errorf("Error starting manager: %v", err)
