@@ -38,7 +38,7 @@ you can run `helm template` to generate a manifest that Polaris can check.
 ## Fixing Issues
 Polaris can automatically fix many of the issues it finds. For example, you can run
 ```bash
-polaris fix --audit-path ./deploy/ --checks=all
+polaris fix --files-path ./deploy/ --checks=all
 ```
 
 to fix any issues inside the `deploy` directory. Polaris may leave
