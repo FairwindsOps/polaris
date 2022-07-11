@@ -5,6 +5,18 @@ meta:
     content: "Fairwinds Polaris | Changelog"
 
 ---
+## 7.0.1
+* Documentation updates
+
+## 7.0.0
+* Better support for `polaris fix`
+* `target: Pod` is now `target: PodSpec` (to differentiate naked Pods from Controllers)
+
+## 6.0.0
+* Preliminary support for `polaris fix` command
+* Changes to how Pod owners are determined
+* Removed YAML manifests from the `deploy/` directory - Helm is now the default install mechanism
+
 ## 5.1.0
 * Support `--context` flag for kubecontext
 * Treat core Kubernetes controllers (`Deployments`, `StatefulSets`, `DaemonSets`, `CronJobs`) as top-level objects, instead of following owner refs
