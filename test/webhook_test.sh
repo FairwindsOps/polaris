@@ -123,6 +123,7 @@ for filename in test/webhook_cases/failing_test.*.yaml; do
     kubectl delete -n tests -f $filename || true
 done
 
+echo "Checking ability to scale"
 kubectl -n scale-test scale deployment nginx-deployment --replicas=2
 sleep 5
 kubectl get po -n scale-test
@@ -133,8 +134,11 @@ if [ $pod_count != 2 ]; then
 fi
 
 if [ -z $SKIP_FINAL_CLEANUP ]; then
+  echo "Doing final cleanup..."
   clean_up
 fi
+
+echo "Done with tests"
 
 #Verify that all the tests passed.
 if [ $ALL_TESTS_PASSED -eq 1 ]; then
