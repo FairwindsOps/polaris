@@ -42,8 +42,7 @@ var (
 func init() {
 	rootCmd.AddCommand(fixCommand)
 	fixCommand.PersistentFlags().StringVar(&filesPath, "files-path", "", "mutate and fix one or more YAML files in a specified folder")
-	fixCommand.PersistentFlags().StringSliceVar(&checksToFix, "checks", []string{}, "Optional flag to specify specific checks to fix")
-	fixCommand.PersistentFlags().BoolVar(&fixAll, "fix-all-checks", false, "Set an option to check all available checks")
+	fixCommand.PersistentFlags().StringSliceVar(&checksToFix, "checks", []string{}, "Optional flag to specify specific checks to fix and  checks=all applies fix to all defined checks mutations")
 }
 
 var fixCommand = &cobra.Command{
@@ -81,15 +80,15 @@ var fixCommand = &cobra.Command{
 		isFirstResource := true
 
 		if len(checksToFix) > 0 {
-			config.Mutations = checksToFix
-		}
-
-		if fixAll {
-			allchecks := []string{}
-			for key := range config.Checks {
-				allchecks = append(allchecks, key)
+			if len(checksToFix) == 1 && checksToFix[0] == "all" {
+				allchecks := []string{}
+				for key := range config.Checks {
+					allchecks = append(allchecks, key)
+				}
+				config.Mutations = allchecks
+			} else {
+				config.Mutations = checksToFix
 			}
-			config.Mutations = allchecks
 		}
 
 		for _, fullFilePath := range yamlFiles {
