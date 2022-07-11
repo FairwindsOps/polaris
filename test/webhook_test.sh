@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-# Testing to ensure that the webhook starts up, allows a correct deployment to pass,
-# and prevents a incorrectly formatted deployment.
+echo "Testing to ensure that the webhook starts up, allows a correct deployment to pass, and prevents a incorrectly formatted deployment."
+
 BLUE='\033[0;34m'
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -57,9 +57,11 @@ function clean_up() {
         # || true to avoid issues when we cannot delete
         kubectl delete -f $filename ||true
     done
-    # Uninstall webhook and webhook config
-    kubectl delete validatingwebhookconfigurations polaris-webhook --wait=false
-    kubectl -n polaris delete deploy -l app=polaris --wait=false
+    echo "Uninstalling webhook and webhook config"
+    kubectl delete validatingwebhookconfigurations polaris-webhook --wait=false || true
+    kubectl delete validatingwebhookconfigurations polaris-validate-webhook --wait=false || true
+    kubectl delete validatingwebhookconfigurations polaris-mutate-webhook --wait=false || true
+    kubectl -n polaris delete deploy -l app=polaris --wait=false || true
     echo -e "\n\nDone cleaning up\n\n"
 }
 
@@ -77,26 +79,26 @@ kubectl create ns scale-test
 kubectl create ns polaris
 kubectl create ns tests
 
-# Install a bad deployment
+echo "Installing a bad deployment"
 kubectl apply -n scale-test -f ./test/webhook_cases/failing_test.deployment.yaml
 
-# Install the webhook
+echo "Installing the webhook"
 helm repo add fairwinds-stable https://charts.fairwinds.com/stable
 helm install polaris fairwinds-stable/polaris --namespace polaris --create-namespace \
   --set dashboard.enable=false \
   --set webhook.enable=true \
   --set image.tag=$CI_SHA1
 
-# wait for the webhook to come online
+echo "Waiting for the webhook to come online"
 check_webhook_is_ready
 sleep 5
 
 kubectl logs -n polaris $(kubectl get po -oname -n polaris | grep webhook) --follow &
 
-# Webhook started, setting all tests as passed initially.
+echo "Webhook started"
 ALL_TESTS_PASSED=1
 
-# Run tests against correctly configured objects
+echo "Running tests against correctly configured objects"
 for filename in test/webhook_cases/passing_test.*.yaml; do
     echo -e "\n\n"
     echo -e "${BLUE}TEST CASE: $filename${NC}"
@@ -109,7 +111,7 @@ for filename in test/webhook_cases/passing_test.*.yaml; do
     kubectl delete -n tests -f $filename || true
 done
 
-# Run tests against incorrectly configured objects
+echo "Running tests against incorrectly configured objects"
 for filename in test/webhook_cases/failing_test.*.yaml; do
     echo -e "\n\n"
     echo -e "${BLUE}TEST CASE: $filename${NC}"
@@ -123,6 +125,7 @@ for filename in test/webhook_cases/failing_test.*.yaml; do
     kubectl delete -n tests -f $filename || true
 done
 
+echo "Checking ability to scale"
 kubectl -n scale-test scale deployment nginx-deployment --replicas=2
 sleep 5
 kubectl get po -n scale-test
@@ -133,8 +136,11 @@ if [ $pod_count != 2 ]; then
 fi
 
 if [ -z $SKIP_FINAL_CLEANUP ]; then
+  echo "Doing final cleanup..."
   clean_up
 fi
+
+echo "Done with tests"
 
 #Verify that all the tests passed.
 if [ $ALL_TESTS_PASSED -eq 1 ]; then
