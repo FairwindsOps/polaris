@@ -8,7 +8,6 @@ spec:
   containers:
   - name: nginx
     image: nginx
-    securityContext:
-      capabilities:
-        add:
-        - NET_ADMIN
+    resources:
+      limits:
+        cpu: 100m

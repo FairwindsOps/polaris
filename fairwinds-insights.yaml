@@ -1,5 +1,5 @@
 options:
-  organization: fairwinds-opensource
+  organization: fairwinds-production
   baseBranch: master
 
 images:
