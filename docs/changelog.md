@@ -5,6 +5,8 @@ meta:
     content: "Fairwinds Polaris | Changelog"
 
 ---
+## 7.0.1
+* Documentation updates
 
 ## 7.0.0
 * Better support for `polaris fix`
