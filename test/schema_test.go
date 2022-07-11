@@ -44,6 +44,7 @@ var mutatedYamlContentMap = map[string]string{}
 var mutationTestCasesMap = map[string][]testCase{}
 
 func init() {
+	checkToTest := os.Getenv("POLARIS_CHECK_TEST")
 	_, baseDir, _, _ := runtime.Caller(0)
 	baseDir = filepath.Dir(baseDir) + "/checks"
 	dirs, err := ioutil.ReadDir(baseDir)
@@ -52,6 +53,9 @@ func init() {
 	}
 	for _, dir := range dirs {
 		check := dir.Name()
+		if checkToTest != "" && checkToTest != check {
+			continue
+		}
 		checkDir := baseDir + "/" + check
 		cases, err := ioutil.ReadDir(checkDir)
 		if err != nil {
@@ -76,8 +80,9 @@ func init() {
 			if tc.Name() == "check.yaml" {
 				continue
 			}
+			resourceFilename := strings.Replace(tc.Name(), "mutated", "failure", -1)
 
-			resources, err := kube.CreateResourceProviderFromPath(checkDir + "/" + tc.Name())
+			resources, err := kube.CreateResourceProviderFromPath(checkDir + "/" + resourceFilename)
 			if err != nil {
 				panic(err)
 			}
@@ -85,7 +90,7 @@ func init() {
 				filename:  tc.Name(),
 				check:     check,
 				resources: resources,
-				failure:   strings.Contains(tc.Name(), "failure"),
+				failure:   strings.Contains(resourceFilename, "failure"),
 				config:    c,
 			}
 
