@@ -325,7 +325,7 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 	}
 	result := makeResult(conf, check, passes, issues)
 	if !passes {
-		if funk.Contains(conf.Mutations, checkID) {
+		if funk.Contains(conf.Mutations, checkID) && len(check.Mutations) > 0 {
 			mutations := funk.Map(check.Mutations, func(mutation jsonpatch.Operation) jsonpatch.Operation {
 				mutationCopy := deepCopyMutation(mutation)
 				mutationCopy.Path = prefix + mutationCopy.Path
