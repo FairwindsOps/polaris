@@ -43,6 +43,8 @@ func TestMutations(t *testing.T) {
 			mutatedYamlContent, ok := mutatedYamlContentMap[key]
 			assert.True(t, ok)
 			assert.Len(t, tc.resources.Resources, 1)
+			newConfig.Checks = map[string]config.Severity{}
+			newConfig.Checks[mutationStr] = config.SeverityDanger
 			newConfig.Mutations = []string{mutationStr}
 			results, err := validator.ApplyAllSchemaChecksToResourceProvider(&newConfig, tc.resources)
 			assert.NoError(t, err)
