@@ -288,6 +288,9 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 	} else if check.Target == config.TargetPodSpec {
 		passes, issues, err = check.CheckPodSpec(test.Resource.PodSpec)
 		prefix = getJSONSchemaPrefix(test.Resource.Kind)
+	} else if check.Target == config.TargetPodTemplate {
+		passes, issues, err = check.CheckPodTemplate(test.Resource.PodTemplate)
+		prefix = getJSONSchemaPrefix(test.Resource.Kind)
 	} else if check.Target == config.TargetContainer {
 		containerIndex := funk.IndexOf(test.Resource.PodSpec.Containers, func(value corev1.Container) bool {
 			return value.Name == test.Container.Name

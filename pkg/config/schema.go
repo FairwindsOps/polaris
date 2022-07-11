@@ -41,6 +41,8 @@ const (
 	TargetContainer TargetKind = "Container"
 	// TargetPodSpec points to the pod spec
 	TargetPodSpec TargetKind = "PodSpec"
+	// TargetPodTemplate points to the pod template
+	TargetPodTemplate TargetKind = "PodTemplate"
 )
 
 // HandledTargets is a list of target names that are explicitly handled
@@ -48,6 +50,7 @@ var HandledTargets = []TargetKind{
 	TargetController,
 	TargetContainer,
 	TargetPodSpec,
+	TargetPodTemplate,
 }
 
 // MutationComment is the comments added to a mutated file
@@ -256,6 +259,11 @@ func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, err
 // CheckPodSpec checks a pod spec against the schema
 func (check SchemaCheck) CheckPodSpec(pod *corev1.PodSpec) (bool, []jsonschema.ValError, error) {
 	return check.CheckObject(pod)
+}
+
+// CheckPodTemplate checks a pod target against the schema
+func (check SchemaCheck) CheckPodTemplate(podTemplate interface{}) (bool, []jsonschema.ValError, error) {
+	return check.CheckObject(podTemplate)
 }
 
 // CheckController checks a controler's spec against the schema
