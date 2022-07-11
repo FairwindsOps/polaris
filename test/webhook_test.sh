@@ -57,9 +57,9 @@ function clean_up() {
         # || true to avoid issues when we cannot delete
         kubectl delete -f $filename ||true
     done
-    echo "Uninstall webhook and webhook config"
-    kubectl delete validatingwebhookconfigurations polaris-webhook --wait=false
-    kubectl -n polaris delete deploy -l app=polaris --wait=false
+    echo "Uninstalling webhook and webhook config"
+    kubectl delete validatingwebhookconfigurations polaris-webhook --wait=false || true
+    kubectl -n polaris delete deploy -l app=polaris --wait=false || true
     echo -e "\n\nDone cleaning up\n\n"
 }
 
