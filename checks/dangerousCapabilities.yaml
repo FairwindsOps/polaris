@@ -24,3 +24,8 @@ schema:
                 - not:
                     contains:
                       pattern: '^(?i)NET_ADMIN$'
+
+
+mutations:
+  - op: remove
+    path: /securityContext/capabilities

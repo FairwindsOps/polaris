@@ -46,7 +46,7 @@ check ID. Note that you'll also have to set its severity in the `checks` section
   * `Controller`, to check _any_ resource that creates Pods (e.g. Deployments, CronJobs, StatefulSets), as well as naked Pods
   * `PodSpec`, same as `Controller`, but the schema applies to the Pod spec rather than the top-level controller
   * `Container` same as `Controller`, but the schema applies to all Container specs rather than the top-level controller
-* `controllers` - if `target` is `Controller`, `Pod` or `Container`, you can use this to change which types of controllers are checked
+* `controllers` - if `target` is `Controller`, `PodSpec` or `Container`, you can use this to change which types of controllers are checked
 * `controllers.include` - _only_ check these controllers
 * `controllers.exclude` - check all controllers except these
 * `containers` - if `target` is `Container`, you can use this to decide if `initContainers`, `containers`, or both should be checked

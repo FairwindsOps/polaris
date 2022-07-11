@@ -33,11 +33,16 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-var filesPath string
+var (
+	filesPath   string
+	checksToFix []string
+	fixAll      bool
+)
 
 func init() {
 	rootCmd.AddCommand(fixCommand)
 	fixCommand.PersistentFlags().StringVar(&filesPath, "files-path", "", "mutate and fix one or more YAML files in a specified folder")
+	fixCommand.PersistentFlags().StringSliceVar(&checksToFix, "checks", []string{}, "Optional flag to specify specific checks to fix eg. checks=hostIPCSet,hostPIDSet and checks=all applies fix to all defined checks mutations")
 }
 
 var fixCommand = &cobra.Command{
@@ -73,6 +78,19 @@ var fixCommand = &cobra.Command{
 		}
 		var contentStr string
 		isFirstResource := true
+
+		if len(checksToFix) > 0 {
+			if len(checksToFix) == 1 && checksToFix[0] == "all" {
+				allchecks := []string{}
+				for key := range config.Checks {
+					allchecks = append(allchecks, key)
+				}
+				config.Mutations = allchecks
+			} else {
+				config.Mutations = checksToFix
+			}
+		}
+
 		for _, fullFilePath := range yamlFiles {
 
 			yamlFile, err := ioutil.ReadFile(fullFilePath)

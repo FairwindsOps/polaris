@@ -41,9 +41,10 @@ type testCase struct {
 }
 
 var mutatedYamlContentMap = map[string]string{}
-var failureTestCasesMap = map[string][]testCase{}
+var mutationTestCasesMap = map[string][]testCase{}
 
 func init() {
+	checkToTest := os.Getenv("POLARIS_CHECK_TEST")
 	_, baseDir, _, _ := runtime.Caller(0)
 	baseDir = filepath.Dir(baseDir) + "/checks"
 	dirs, err := ioutil.ReadDir(baseDir)
@@ -52,6 +53,9 @@ func init() {
 	}
 	for _, dir := range dirs {
 		check := dir.Name()
+		if checkToTest != "" && checkToTest != check {
+			continue
+		}
 		checkDir := baseDir + "/" + check
 		cases, err := ioutil.ReadDir(checkDir)
 		if err != nil {
@@ -76,9 +80,18 @@ func init() {
 			if tc.Name() == "check.yaml" {
 				continue
 			}
-			resources, err := kube.CreateResourceProviderFromPath(checkDir + "/" + tc.Name())
+			resourceFilename := strings.Replace(tc.Name(), "mutated", "failure", -1)
+
+			resources, err := kube.CreateResourceProviderFromPath(checkDir + "/" + resourceFilename)
 			if err != nil {
 				panic(err)
+			}
+			testcase := testCase{
+				filename:  tc.Name(),
+				check:     check,
+				resources: resources,
+				failure:   strings.Contains(resourceFilename, "failure"),
+				config:    c,
 			}
 
 			if strings.Contains(tc.Name(), "mutated") {
@@ -88,24 +101,14 @@ func init() {
 				}
 				key := fmt.Sprintf("%s/%s", check, tc.Name())
 				mutatedYamlContentMap[key] = string(yamlContent)
-			} else {
-				testcase := testCase{
-					filename:  tc.Name(),
-					check:     check,
-					resources: resources,
-					failure:   strings.Contains(tc.Name(), "failure"),
-					config:    c,
+				testCases, ok := mutationTestCasesMap[check]
+				if !ok {
+					testCases = []testCase{}
 				}
 				testCases = append(testCases, testcase)
-
-				if strings.Contains(tc.Name(), "mutated") {
-					testCases, ok := failureTestCasesMap[check]
-					if !ok {
-						testCases = []testCase{}
-					}
-					testCases = append(testCases, testcase)
-					failureTestCasesMap[check] = testCases
-				}
+				mutationTestCasesMap[check] = testCases
+			} else {
+				testCases = append(testCases, testcase)
 			}
 		}
 	}
