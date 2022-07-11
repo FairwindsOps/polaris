@@ -42,7 +42,7 @@ var (
 func init() {
 	rootCmd.AddCommand(fixCommand)
 	fixCommand.PersistentFlags().StringVar(&filesPath, "files-path", "", "mutate and fix one or more YAML files in a specified folder")
-	fixCommand.PersistentFlags().StringSliceVar(&checksToFix, "checks", []string{}, "Optional flag to specify specific checks to fix and  checks=all applies fix to all defined checks mutations")
+	fixCommand.PersistentFlags().StringSliceVar(&checksToFix, "checks", []string{}, "Optional flag to specify specific checks to fix eg. checks=hostIPCSet,hostPIDSet and checks=all applies fix to all defined checks mutations")
 }
 
 var fixCommand = &cobra.Command{
