@@ -30,12 +30,14 @@ import (
 var webhookPort int
 var disableWebhookConfigInstaller bool
 var enableMutations bool
+var enableValidations bool
 
 func init() {
 	rootCmd.AddCommand(webhookCmd)
 	webhookCmd.PersistentFlags().IntVarP(&webhookPort, "port", "p", 9876, "Port for the dashboard webserver.")
 	webhookCmd.PersistentFlags().BoolVar(&disableWebhookConfigInstaller, "disable-webhook-config-installer", false, "Disable the installer in the webhook server, so it won't install webhook configuration resources during bootstrapping.")
-	webhookCmd.PersistentFlags().BoolVar(&enableMutations, "mutate", "m", false, "Enable the mutating webhook")
+	webhookCmd.PersistentFlags().BoolVar(&enableValidations, "validate", true, "Enable the validating webhook to reject workloads with issues")
+	webhookCmd.PersistentFlags().BoolVar(&enableMutations, "mutate", false, "Enable the mutating webhook to modify workloads with issues")
 }
 
 var webhookCmd = &cobra.Command{
@@ -63,7 +65,14 @@ var webhookCmd = &cobra.Command{
 		server.CertName = "tls.crt"
 		server.KeyName = "tls.key"
 
-		fwebhook.NewValidateWebhook(mgr, fwebhook.Validator{Config: config, Client: mgr.GetClient()})
+		if !enableMutations && !enableValidations {
+			logrus.Errorf("One of --mutate or --validate must be set to true")
+			os.Exit(1)
+		}
+
+		if enableValidations {
+			fwebhook.NewValidateWebhook(mgr, fwebhook.Validator{Config: config, Client: mgr.GetClient()})
+		}
 		if enableMutations {
 			fwebhook.NewMutateWebhook(mgr, fwebhook.Mutator{Config: config, Client: mgr.GetClient()})
 		}
