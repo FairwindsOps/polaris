@@ -2,6 +2,7 @@ version: 2.1
 
 orbs:
   rok8s: fairwinds/rok8s-scripts@11
+  oss-docs: fairwinds/oss-docs@0
 
 executors:
   vm:
@@ -205,48 +206,6 @@ jobs:
       - setup_remote_docker
       - *set_environment_variables
       - *docker_build_and_push
-  publish_docs:
-    docker:
-      - image: cimg/node:15.5.1
-    steps:
-      - checkout
-      - run:
-          name: Build Docs Site
-          command: |
-            set -e
-            cd ./docs
-            npm install
-            npm run check-links
-            npm run build
-      - run:
-          name: Install Tools
-          command: |
-            cd /tmp
-            echo "Installing AWS CLI"
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install
-
-            echo "Installing Hashicorp Vault"
-            curl -LO https://releases.hashicorp.com/vault/1.9.3/vault_1.9.3_linux_amd64.zip
-            unzip vault_1.9.3_linux_amd64.zip
-            sudo mv vault /usr/bin/vault
-            sudo chmod +x /usr/bin/vault
-            vault --version
-
-            echo "Installing yq"
-            curl -LO https://github.com/mikefarah/yq/releases/download/v4.16.2/yq_linux_amd64.tar.gz
-            tar -zxvf yq_linux_amd64.tar.gz
-            sudo mv yq_linux_amd64 /usr/bin/yq
-            sudo chmod +x /usr/bin/yq
-            yq --version
-      - rok8s/get_vault_env:
-          vault_path: repo/polaris/env
-      - run:
-          name: Publish Docs Site to S3
-          command: |
-            cd ./dist
-            aws s3 sync ./ s3://polaris.docs.fairwinds.com --delete
 workflows:
   version: 2
 
@@ -294,7 +253,8 @@ workflows:
               ignore: /.*/
             tags:
               ignore: /^testing-.*/
-      - publish_docs:
+      - oss-docs/publish-docs:
+          repository: polaris
           filters:
             branches:
               ignore: /.*/
