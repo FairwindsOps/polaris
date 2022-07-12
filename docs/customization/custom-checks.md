@@ -134,6 +134,8 @@ schema:
               const: "{{ .metadata.name }}"
 ```
 
+Note that the object available via the template is the full object, and not the object implied by the `target`. A check that specifies `target: PodSpec` can directly access the pod specification via the built-in template variable `.Polaris.PodSpec`.
+
 You can also use the full [Go template syntax](https://golang.org/pkg/text/template/), though
 you may need to specify your schema as a string in order to use concepts like `range`. E.g.
 this check ensures that at least one of the object's labels is present in `matchLabels`:
