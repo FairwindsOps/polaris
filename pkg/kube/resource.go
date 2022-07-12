@@ -110,6 +110,7 @@ func NewGenericResourceFromPod(podResource kubeAPICoreV1.Pod, originalObject int
 		}
 		workload.ObjectMeta = objMeta
 	}
+	workload.PodTemplate = GetPodTemplate(workload.Resource.Object)
 	return workload, nil
 }
 

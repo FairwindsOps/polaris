@@ -93,6 +93,12 @@ func getTemplateInput(test schemaTestCase) (map[string]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
+		if podTemplateMap, ok := test.Resource.PodTemplate.(map[string]interface{}); ok {
+			err := unstructured.SetNestedMap(templateInput, podTemplateMap, "Polaris", "PodTemplate")
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 	return templateInput, nil
 }

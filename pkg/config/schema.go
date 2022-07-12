@@ -261,7 +261,7 @@ func (check SchemaCheck) CheckPodSpec(pod *corev1.PodSpec) (bool, []jsonschema.V
 	return check.CheckObject(pod)
 }
 
-// CheckPodTemplate checks a pod target against the schema
+// CheckPodTemplate checks a pod template against the schema
 func (check SchemaCheck) CheckPodTemplate(podTemplate interface{}) (bool, []jsonschema.ValError, error) {
 	return check.CheckObject(podTemplate)
 }
@@ -312,7 +312,12 @@ func (check SchemaCheck) CheckAdditionalObjects(groupkind string, objects []inte
 // IsActionable decides if this check applies to a particular target
 func (check SchemaCheck) IsActionable(target TargetKind, kind string, isInit bool) bool {
 	if funk.Contains(HandledTargets, target) {
-		if check.Target != target {
+		if check.Target != TargetPodTemplate && check.Target != target {
+			return false
+		}
+		if check.Target == TargetPodTemplate && target != TargetPodSpec {
+			// A target=PodSpec and check.Target=PodTemplate is expected RE:
+			// ApplyPodSchemaChecks()
 			return false
 		}
 	} else if string(check.Target) != kind && !strings.HasSuffix(string(check.Target), "/"+kind) {
