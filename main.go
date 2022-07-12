@@ -18,7 +18,7 @@ import (
 	cmd "github.com/fairwindsops/polaris/cmd/polaris"
 )
 
-const (
+var (
 	// Version is set during build
 	Version = "development"
 	// Commit is set during build
