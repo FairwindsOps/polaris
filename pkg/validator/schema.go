@@ -85,7 +85,7 @@ func getTemplateInput(test schemaTestCase) (map[string]interface{}, error) {
 		return nil, nil
 	}
 	if test.Target == config.TargetPodSpec {
-		podSpecMap, err := kube.SerializePod(test.Resource.PodSpec)
+		podSpecMap, err := kube.SerializePodSpec(test.Resource.PodSpec)
 		if err != nil {
 			return nil, err
 		}

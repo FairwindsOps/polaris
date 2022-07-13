@@ -477,8 +477,22 @@ func (resources *ResourceProvider) addResourceFromString(contents string) error 
 	return err
 }
 
-// SerializePod converts a typed PodSpec into a map[string]interface{}
-func SerializePod(pod *corev1.PodSpec) (map[string]interface{}, error) {
+// SerializePodSpec converts a typed PodSpec into a map[string]interface{}
+func SerializePodSpec(pod *corev1.PodSpec) (map[string]interface{}, error) {
+	podJSON, err := json.Marshal(pod)
+	if err != nil {
+		return nil, err
+	}
+	podMap := make(map[string]interface{})
+	err = json.Unmarshal(podJSON, &podMap)
+	if err != nil {
+		return nil, err
+	}
+	return podMap, nil
+}
+
+// SerializePod converts a typed Pod into a map[string]interface{}
+func SerializePod(pod *corev1.Pod) (map[string]interface{}, error) {
 	podJSON, err := json.Marshal(pod)
 	if err != nil {
 		return nil, err

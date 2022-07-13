@@ -86,10 +86,15 @@ func NewGenericResourceFromUnstructured(unst unstructured.Unstructured, podSpecM
 
 // NewGenericResourceFromPod builds a new workload for a given Pod without looking at parents
 func NewGenericResourceFromPod(podResource kubeAPICoreV1.Pod, originalObject interface{}) (GenericResource, error) {
+	podMap, err := SerializePod(&podResource)
+	if err != nil {
+		return GenericResource{}, err
+	}
 	workload := GenericResource{
-		Kind:       "Pod",
-		PodSpec:    &podResource.Spec,
-		ObjectMeta: podResource.ObjectMeta.GetObjectMeta(),
+		Kind:        "Pod",
+		PodSpec:     &podResource.Spec,
+		PodTemplate: podMap,
+		ObjectMeta:  podResource.ObjectMeta.GetObjectMeta(),
 	}
 	if originalObject != nil {
 		bytes, err := json.Marshal(originalObject)
@@ -110,7 +115,6 @@ func NewGenericResourceFromPod(podResource kubeAPICoreV1.Pod, originalObject int
 		}
 		workload.ObjectMeta = objMeta
 	}
-	workload.PodTemplate = GetPodTemplate(workload.Resource.Object)
 	return workload, nil
 }
 
