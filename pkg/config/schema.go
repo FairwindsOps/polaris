@@ -312,12 +312,12 @@ func (check SchemaCheck) CheckAdditionalObjects(groupkind string, objects []inte
 // IsActionable decides if this check applies to a particular target
 func (check SchemaCheck) IsActionable(target TargetKind, kind string, isInit bool) bool {
 	if funk.Contains(HandledTargets, target) {
-		if check.Target != TargetPodTemplate && check.Target != target {
-			return false
+		if check.Target == TargetPodTemplate && target == TargetPodSpec {
+			// A target=PodSpec and check.Target=PodTemplate is expected
+			// because applyPodSchemaChecks() explicitly sets check.Target
+			return true
 		}
-		if check.Target == TargetPodTemplate && target != TargetPodSpec {
-			// A target=PodSpec and check.Target=PodTemplate is expected RE:
-			// ApplyPodSchemaChecks()
+		if check.Target != target {
 			return false
 		}
 	} else if string(check.Target) != kind && !strings.HasSuffix(string(check.Target), "/"+kind) {
