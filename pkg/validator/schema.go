@@ -85,13 +85,19 @@ func getTemplateInput(test schemaTestCase) (map[string]interface{}, error) {
 		return nil, nil
 	}
 	if test.Target == config.TargetPodSpec {
-		podSpecMap, err := kube.SerializePod(test.Resource.PodSpec)
+		podSpecMap, err := kube.SerializePodSpec(test.Resource.PodSpec)
 		if err != nil {
 			return nil, err
 		}
 		err = unstructured.SetNestedMap(templateInput, podSpecMap, "Polaris", "PodSpec")
 		if err != nil {
 			return nil, err
+		}
+		if podTemplateMap, ok := test.Resource.PodTemplate.(map[string]interface{}); ok {
+			err := unstructured.SetNestedMap(templateInput, podTemplateMap, "Polaris", "PodTemplate")
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 	return templateInput, nil
@@ -313,6 +319,9 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 		}
 	} else if check.Target == config.TargetPodSpec {
 		passes, issues, err = check.CheckPodSpec(test.Resource.PodSpec)
+		prefix = getJSONSchemaPrefix(test.Resource.Kind)
+	} else if check.Target == config.TargetPodTemplate {
+		passes, issues, err = check.CheckPodTemplate(test.Resource.PodTemplate)
 		prefix = getJSONSchemaPrefix(test.Resource.Kind)
 	} else if check.Target == config.TargetContainer {
 		containerIndex := funk.IndexOf(test.Resource.PodSpec.Containers, func(value corev1.Container) bool {
