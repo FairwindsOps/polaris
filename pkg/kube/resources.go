@@ -59,7 +59,12 @@ type resourceKindMap map[string][]GenericResource
 
 func (rkm resourceKindMap) addResource(r GenericResource) {
 	gvk := r.Resource.GroupVersionKind()
-	key := gvk.Group + "/" + gvk.Kind
+	var key string
+	if gvk.Group != "" {
+		key = gvk.Group + "/" + gvk.Kind
+	} else {
+		key = gvk.Kind
+	}
 	rkm[key] = append(rkm[key], r)
 }
 
