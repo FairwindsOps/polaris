@@ -41,6 +41,8 @@ const (
 	TargetContainer TargetKind = "Container"
 	// TargetPodSpec points to the pod spec
 	TargetPodSpec TargetKind = "PodSpec"
+	// TargetPodTemplate points to the pod template
+	TargetPodTemplate TargetKind = "PodTemplate"
 )
 
 // HandledTargets is a list of target names that are explicitly handled
@@ -48,6 +50,7 @@ var HandledTargets = []TargetKind{
 	TargetController,
 	TargetContainer,
 	TargetPodSpec,
+	TargetPodTemplate,
 }
 
 // MutationComment is the comments added to a mutated file
@@ -258,6 +261,11 @@ func (check SchemaCheck) CheckPodSpec(pod *corev1.PodSpec) (bool, []jsonschema.V
 	return check.CheckObject(pod)
 }
 
+// CheckPodTemplate checks a pod template against the schema
+func (check SchemaCheck) CheckPodTemplate(podTemplate interface{}) (bool, []jsonschema.ValError, error) {
+	return check.CheckObject(podTemplate)
+}
+
 // CheckController checks a controler's spec against the schema
 func (check SchemaCheck) CheckController(bytes []byte) (bool, []jsonschema.ValError, error) {
 	errs, err := check.Validator.ValidateBytes(bytes)
@@ -304,6 +312,11 @@ func (check SchemaCheck) CheckAdditionalObjects(groupkind string, objects []inte
 // IsActionable decides if this check applies to a particular target
 func (check SchemaCheck) IsActionable(target TargetKind, kind string, isInit bool) bool {
 	if funk.Contains(HandledTargets, target) {
+		if check.Target == TargetPodTemplate && target == TargetPodSpec {
+			// A target=PodSpec and check.Target=PodTemplate is expected
+			// because applyPodSchemaChecks() explicitly sets check.Target
+			return true
+		}
 		if check.Target != target {
 			return false
 		}

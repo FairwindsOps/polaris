@@ -17,6 +17,7 @@ package kube
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -58,7 +59,12 @@ type resourceKindMap map[string][]GenericResource
 
 func (rkm resourceKindMap) addResource(r GenericResource) {
 	gvk := r.Resource.GroupVersionKind()
-	key := gvk.Group + "/" + gvk.Kind
+	var key string
+	if gvk.Group != "" {
+		key = gvk.Group + "/" + gvk.Kind
+	} else {
+		key = gvk.Kind
+	}
 	rkm[key] = append(rkm[key], r)
 }
 
@@ -474,4 +480,32 @@ func (resources *ResourceProvider) addResourceFromString(contents string) error 
 		resources.Resources.addResource(newResource)
 	}
 	return err
+}
+
+// SerializePodSpec converts a typed PodSpec into a map[string]interface{}
+func SerializePodSpec(pod *corev1.PodSpec) (map[string]interface{}, error) {
+	podJSON, err := json.Marshal(pod)
+	if err != nil {
+		return nil, err
+	}
+	podMap := make(map[string]interface{})
+	err = json.Unmarshal(podJSON, &podMap)
+	if err != nil {
+		return nil, err
+	}
+	return podMap, nil
+}
+
+// SerializePod converts a typed Pod into a map[string]interface{}
+func SerializePod(pod *corev1.Pod) (map[string]interface{}, error) {
+	podJSON, err := json.Marshal(pod)
+	if err != nil {
+		return nil, err
+	}
+	podMap := make(map[string]interface{})
+	err = json.Unmarshal(podJSON, &podMap)
+	if err != nil {
+		return nil, err
+	}
+	return podMap, nil
 }
