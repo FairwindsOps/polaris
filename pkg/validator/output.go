@@ -53,7 +53,7 @@ type AuditData struct {
 	Score                uint
 }
 
-// RemoveSuccessfulResults removes all test that have passed
+// RemoveSuccessfulResults removes all tests that have passed
 func (res AuditData) RemoveSuccessfulResults() AuditData {
 	resCopy := res
 	resCopy.Results = []Result{}
