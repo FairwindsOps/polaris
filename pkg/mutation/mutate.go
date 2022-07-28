@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 
 	jsonpatchV5 "github.com/evanphx/json-patch/v5"
@@ -12,7 +13,91 @@ import (
 	"github.com/fairwindsops/polaris/pkg/validator"
 	"github.com/thoas/go-funk"
 	"gomodules.xyz/jsonpatch/v2"
+	"gopkg.in/yaml.v2"
 )
+
+var lineRegexp = regexp.MustCompile(`^(?P<indent>\s*)(?P<array>-\s+)?(?P<key>\S*):(?P<value>.*)$`)
+
+type pathKey struct {
+	key    string
+	indent int
+}
+
+type path []pathKey
+
+const arrayKey = "-"
+
+func (p path) getKey() string {
+	key := ""
+	for _, k := range p {
+		key += "/" + k.key
+	}
+	return key
+}
+
+func advancePath(p path, key string, indent int) path {
+	truncateTo := len(p)
+	for i := len(p) - 1; i >= 0; i-- {
+		if key == arrayKey {
+			if p[i].indent <= indent {
+				break
+			}
+		} else {
+			if p[i].indent < indent {
+				break
+			}
+		}
+		truncateTo = i
+	}
+	newPath := p[0:truncateTo]
+	newPath = append(newPath, pathKey{key, indent})
+	return newPath
+}
+
+// ApplyAllMutations applies available mutation to a single resource
+func ApplyAllMutations(manifest string, mutations []jsonpatch.Operation) (string, error) {
+	lines := strings.Split(manifest, "\n")
+	for _, mutation := range mutations {
+		newLines := []string{}
+		currentPath := path{}
+		for _, line := range lines {
+			matches := lineRegexp.FindStringSubmatch(line)
+			if matches == nil || len(matches) != 5 {
+				newLines = append(newLines, line)
+				continue
+			}
+			indent := matches[1]
+			array := matches[2]
+			key := matches[3]
+			value := matches[4]
+			indentSize := len(indent)
+
+			if len(array) > 0 {
+				currentPath = advancePath(currentPath, arrayKey, indentSize)
+				indentSize += len(array)
+			}
+			currentPath = advancePath(currentPath, key, indentSize)
+
+			pathKey := currentPath.getKey()
+			fmt.Println("path", pathKey)
+			if pathKey == mutation.Path {
+				fmt.Println("MATCH", key)
+				newValue, err := yaml.Marshal(mutation.Value)
+				if err != nil {
+					panic(err)
+				}
+				value = strings.TrimSpace(string(newValue))
+			}
+
+			newLine := indent + array + key + ": " + value
+			newLines = append(newLines, newLine)
+		}
+		lines = newLines
+	}
+	mutated := strings.Join(lines, "\n")
+
+	return mutated, nil
+}
 
 // ApplyAllSchemaMutations applies available mutation to a single resource
 func ApplyAllSchemaMutations(conf *config.Configuration, resourceProvider *kube.ResourceProvider, resource kube.GenericResource, mutations []jsonpatch.Operation) (kube.GenericResource, error) {
@@ -29,7 +114,7 @@ func ApplyAllSchemaMutations(conf *config.Configuration, resourceProvider *kube.
 	}
 	jsonByte, err = patch.ApplyWithOptions(resByte, &jsonpatchV5.ApplyOptions{
 		AllowMissingPathOnRemove: true,
-		EnsurePathExistsOnAdd: true,
+		EnsurePathExistsOnAdd:    true,
 	})
 	if err != nil {
 		return resource, err

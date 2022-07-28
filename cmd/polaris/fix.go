@@ -30,7 +30,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	yamlV3 "gopkg.in/yaml.v3"
-	"sigs.k8s.io/yaml"
 )
 
 var (
@@ -129,17 +128,12 @@ var fixCommand = &cobra.Command{
 					for _, resources := range kubeResources.Resources {
 						key := fmt.Sprintf("%s/%s/%s", resources[0].Kind, resources[0].Resource.GetName(), resources[0].Resource.GetNamespace())
 						mutations := allMutations[key]
-						mutated, err := mutation.ApplyAllSchemaMutations(&config, kubeResources, resources[0], mutations)
+						mutatedYamlContent, err := mutation.ApplyAllMutations(string(yamlFile), mutations)
 						if err != nil {
 							logrus.Errorf("Error applying schema mutations to the resources: %v", err)
 							os.Exit(1)
 						}
-						mutatedYamlContent, err := yaml.JSONToYAML(mutated.OriginalObjectJSON)
-						if err != nil {
-							logrus.Errorf("Error converting JSON to Yaml : %v", err)
-							os.Exit(1)
-						}
-						updatedYamlContent = mutation.UpdateMutatedContentWithComments(string(mutatedYamlContent), comments)
+						updatedYamlContent = mutation.UpdateMutatedContentWithComments(mutatedYamlContent, comments)
 					}
 				}
 				if isFirstResource {
