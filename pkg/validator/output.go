@@ -53,12 +53,21 @@ type AuditData struct {
 	Score                uint
 }
 
-// RemoveSuccessfulResults remove all test that have passed.
+// RemoveSuccessfulResults removes all tests that have passed
 func (res AuditData) RemoveSuccessfulResults() AuditData {
 	resCopy := res
-	resCopy.Results = funk.Map(res.Results, func(auditDataResult Result) Result {
+	resCopy.Results = []Result{}
+
+	filteredResults := funk.Map(res.Results, func(auditDataResult Result) Result {
 		return auditDataResult.removeSuccessfulResults()
 	}).([]Result)
+
+	for _, result := range filteredResults {
+		if result.isNotEmpty() {
+			resCopy.Results = append(resCopy.Results, result)
+		}
+	}
+
 	return resCopy
 }
 
@@ -85,6 +94,10 @@ type ResultMessage struct {
 
 // ResultSet contiains the results for a set of checks
 type ResultSet map[string]ResultMessage
+
+func (res ResultSet) isNotEmpty() bool {
+	return len(res) > 0
+}
 
 func (res ResultSet) removeSuccessfulResults() ResultSet {
 	newResults := ResultSet{}
@@ -116,6 +129,13 @@ func (res Result) removeSuccessfulResults() Result {
 	return resCopy
 }
 
+func (res Result) isNotEmpty() bool {
+	if res.PodResult != nil {
+		return res.PodResult.isNotEmpty()
+	}
+	return res.Results.isNotEmpty()
+}
+
 // PodResult provides a list of validation messages for each pod.
 type PodResult struct {
 	Name             string
@@ -132,6 +152,15 @@ func (res PodResult) removeSuccessfulResults() PodResult {
 	return resCopy
 }
 
+func (res PodResult) isNotEmpty() bool {
+	for _, cr := range res.ContainerResults {
+		if cr.isNotEmpty() {
+			return true
+		}
+	}
+	return res.Results.isNotEmpty()
+}
+
 // ContainerResult provides a list of validation messages for each container.
 type ContainerResult struct {
 	Name    string
@@ -142,6 +171,10 @@ func (res ContainerResult) removeSuccessfulResults() ContainerResult {
 	resCopy := res
 	resCopy.Results = res.Results.removeSuccessfulResults()
 	return resCopy
+}
+
+func (res ContainerResult) isNotEmpty() bool {
+	return res.Results.isNotEmpty()
 }
 
 func fillString(id string, l int) string {

@@ -45,3 +45,17 @@ output unless we are rejecting a workload altogether.
 This means that any checks with a severity of `warning` will still pass webhook validation,
 and the only evidence of that warning will either be in the Polaris dashboard or the
 Polaris webhook logs. This will change in a future version of Kubernetes.
+
+## Mutating Webhook
+By default, the Admission Controller is just pass/fail, but
+Polaris can also operate as a mutating webhook for many of the issues it checks for.
+This means Polaris will remediate the issue it finds, rather than rejecting
+the deployment.
+
+To enable the mutating webhook, add `--set webhook.mutate=true` to your
+Helm instlallation command.
+
+By default, the only mutation enabled is `pullPolicyNotAlways`. If you'd like to
+enable other mutations, you can set the `webhook.mutations` flag.
+
+

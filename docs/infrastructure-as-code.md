@@ -25,6 +25,32 @@ brew install FairwindsOps/tap/polaris
 polaris version
 ```
 
+## Checking Infrastructure as Code files
+You can audit Kubernetes YAML files by running:
+```bash
+polaris audit --audit-path ./deploy/ --format=pretty
+```
+This will print out any issues Polaris finds in your manifests.
+
+Polaris can only check raw YAML manifests. If you'd like to check a Helm template,
+you can run `helm template` to generate a manifest that Polaris can check.
+
+## Fixing Issues
+Polaris can automatically fix many of the issues it finds. For example, you can run
+```bash
+polaris fix --files-path ./deploy/ --checks=all
+```
+
+to fix any issues inside the `deploy` directory. Polaris may leave
+comments next to some changes (e.g. liveness and readiness probes) prompting
+the user to set them to something more appropriate given the context of their
+application.
+
+Note that not all issues can be automatically fixed.
+
+Currently only raw YAML manifests can be mutated. Helm charts etc.
+still need to be changed manually.
+
 ## Running in a CI pipeline
 
 ### Set minimum score for an exit code

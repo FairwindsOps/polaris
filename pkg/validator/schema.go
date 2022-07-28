@@ -27,6 +27,7 @@ import (
 	"gomodules.xyz/jsonpatch/v2"
 	corev1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
@@ -64,11 +65,42 @@ func resolveCheck(conf *config.Configuration, checkID string, test schemaTestCas
 	if !check.IsActionable(test.Target, test.Resource.Kind, test.IsInitContianer) {
 		return nil, nil
 	}
-	checkPtr, err := check.TemplateForResource(test.Resource.Resource.Object)
+	templateInput, err := getTemplateInput(test)
+	if err != nil {
+		return nil, err
+	}
+	checkPtr, err := check.TemplateForResource(templateInput)
 	if err != nil {
 		return nil, err
 	}
 	return checkPtr, nil
+}
+
+// getTemplateInput augments a schemaTestCase.Resource.Resource.Object with
+// Polaris built-in variables. The result can be used as input for
+// CheckSchema.TemplateForResource().
+func getTemplateInput(test schemaTestCase) (map[string]interface{}, error) {
+	templateInput := test.Resource.Resource.Object
+	if templateInput == nil {
+		return nil, nil
+	}
+	if test.Target == config.TargetPodSpec {
+		podSpecMap, err := kube.SerializePodSpec(test.Resource.PodSpec)
+		if err != nil {
+			return nil, err
+		}
+		err = unstructured.SetNestedMap(templateInput, podSpecMap, "Polaris", "PodSpec")
+		if err != nil {
+			return nil, err
+		}
+		if podTemplateMap, ok := test.Resource.PodTemplate.(map[string]interface{}); ok {
+			err := unstructured.SetNestedMap(templateInput, podTemplateMap, "Polaris", "PodTemplate")
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	return templateInput, nil
 }
 
 func makeResult(conf *config.Configuration, check *config.SchemaCheck, passes bool, issues []jsonschema.ValError) ResultMessage {
@@ -290,6 +322,9 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 	} else if check.Target == config.TargetPodSpec {
 		passes, issues, err = check.CheckPodSpec(test.Resource.PodSpec)
 		prefix = getJSONSchemaPrefix(test.Resource.Kind)
+	} else if check.Target == config.TargetPodTemplate {
+		passes, issues, err = check.CheckPodTemplate(test.Resource.PodTemplate)
+		prefix = getJSONSchemaPrefix(test.Resource.Kind)
 	} else if check.Target == config.TargetContainer {
 		containerIndex := funk.IndexOf(test.Resource.PodSpec.Containers, func(value corev1.Container) bool {
 			return value.Name == test.Container.Name
@@ -327,7 +362,7 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 	}
 	result := makeResult(conf, check, passes, issues)
 	if !passes {
-		if funk.Contains(conf.Mutations, checkID) {
+		if funk.Contains(conf.Mutations, checkID) && len(check.Mutations) > 0 {
 			mutations := funk.Map(check.Mutations, func(mutation jsonpatch.Operation) jsonpatch.Operation {
 				mutationCopy := deepCopyMutation(mutation)
 				mutationCopy.Path = prefix + mutationCopy.Path

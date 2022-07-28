@@ -35,6 +35,7 @@ type GenericResource struct {
 	ObjectMeta         kubeAPIMetaV1.Object
 	Resource           unstructured.Unstructured
 	PodSpec            *kubeAPICoreV1.PodSpec
+	PodTemplate        interface{}
 	OriginalObjectJSON []byte
 }
 
@@ -53,6 +54,7 @@ func NewGenericResourceFromUnstructured(unst unstructured.Unstructured, podSpecM
 		return workload, err
 	}
 	workload.ObjectMeta = objMeta
+	workload.PodTemplate = GetPodTemplate(unst.UnstructuredContent())
 
 	b, err := json.Marshal(&unst)
 	if err != nil {
@@ -84,10 +86,15 @@ func NewGenericResourceFromUnstructured(unst unstructured.Unstructured, podSpecM
 
 // NewGenericResourceFromPod builds a new workload for a given Pod without looking at parents
 func NewGenericResourceFromPod(podResource kubeAPICoreV1.Pod, originalObject interface{}) (GenericResource, error) {
+	podMap, err := SerializePod(&podResource)
+	if err != nil {
+		return GenericResource{}, err
+	}
 	workload := GenericResource{
-		Kind:       "Pod",
-		PodSpec:    &podResource.Spec,
-		ObjectMeta: podResource.ObjectMeta.GetObjectMeta(),
+		Kind:        "Pod",
+		PodSpec:     &podResource.Spec,
+		PodTemplate: podMap,
+		ObjectMeta:  podResource.ObjectMeta.GetObjectMeta(),
 	}
 	if originalObject != nil {
 		bytes, err := json.Marshal(originalObject)
@@ -234,6 +241,25 @@ func GetPodSpec(yaml map[string]interface{}) interface{} {
 	}
 	if _, ok := yaml["containers"]; ok {
 		return yaml
+	}
+	return nil
+}
+
+// GetPodTemplate looks inside arbitrary YAML for a Pod template, containing
+// fields `spec.containers`.
+// For example, it returns the `spec.template` level of a Kubernetes Deployment yaml.
+func GetPodTemplate(yaml map[string]interface{}) interface{} {
+	if yamlSpec, ok := yaml["spec"]; ok {
+		if yamlSpecMap, ok := yamlSpec.(map[string]interface{}); ok {
+			if _, ok := yamlSpecMap["containers"]; ok {
+				return yaml
+			}
+		}
+	}
+	for _, podSpecField := range podSpecFields {
+		if childYaml, ok := yaml[podSpecField]; ok {
+			return GetPodTemplate(childYaml.(map[string]interface{}))
+		}
 	}
 	return nil
 }

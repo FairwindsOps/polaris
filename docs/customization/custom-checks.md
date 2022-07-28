@@ -44,9 +44,10 @@ check ID. Note that you'll also have to set its severity in the `checks` section
 * `target` - specifies the type of resource to check. This can be:
   * a group and kind, e.g. `apps/Deployment` or `networking.k8s.io/Ingress`
   * `Controller`, to check _any_ resource that creates Pods (e.g. Deployments, CronJobs, StatefulSets), as well as naked Pods
+  * `PodTemplate`, same as `Controller`, but the schema applies to the Pod template rather than the top-level controller
   * `PodSpec`, same as `Controller`, but the schema applies to the Pod spec rather than the top-level controller
   * `Container` same as `Controller`, but the schema applies to all Container specs rather than the top-level controller
-* `controllers` - if `target` is `Controller`, `Pod` or `Container`, you can use this to change which types of controllers are checked
+* `controllers` - if `target` is `Controller`, `PodSpec` or `Container`, you can use this to change which types of controllers are checked
 * `controllers.include` - _only_ check these controllers
 * `controllers.exclude` - check all controllers except these
 * `containers` - if `target` is `Container`, you can use this to decide if `initContainers`, `containers`, or both should be checked
@@ -133,6 +134,10 @@ schema:
             app.kubernetes.io/name:
               const: "{{ .metadata.name }}"
 ```
+
+* The object available via the go template is the full object, and not limited by `target`.
+* A check of `target: PodSpec` can directly access the pod specification via the go template variable `.Polaris.PodSpec`.
+* A check of `target: PodTemplate` can directly access the pod template via the go template variable `.Polaris.PodTemplate`.
 
 You can also use the full [Go template syntax](https://golang.org/pkg/text/template/), though
 you may need to specify your schema as a string in order to use concepts like `range`. E.g.
