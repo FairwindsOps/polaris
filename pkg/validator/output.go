@@ -16,6 +16,7 @@ package validator
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/fatih/color"
@@ -244,7 +245,7 @@ func (res ResultSet) GetPrettyOutput() string {
 			}
 		}
 		if color.NoColor {
-			status = status[2:] // remove emoji
+			status = strings.Fields(status)[1] // remove emoji
 		}
 		str += fmt.Sprintf("%s%s %s\n", indent, checkColor.Sprint(fillString(msg.ID, minIDLength-len(indent))), status)
 		str += fmt.Sprintf("%s    %s - %s\n", indent, msg.Category, msg.Message)
