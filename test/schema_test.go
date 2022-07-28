@@ -37,12 +37,14 @@ type testCase struct {
 	filename  string
 	resources *kube.ResourceProvider
 	failure   bool
+	config    config.Configuration
 }
 
 var mutatedYamlContentMap = map[string]string{}
-var failureTestCasesMap = map[string][]testCase{}
+var mutationTestCasesMap = map[string][]testCase{}
 
 func init() {
+	checkToTest := os.Getenv("POLARIS_CHECK_TEST")
 	_, baseDir, _, _ := runtime.Caller(0)
 	baseDir = filepath.Dir(baseDir) + "/checks"
 	dirs, err := ioutil.ReadDir(baseDir)
@@ -51,15 +53,45 @@ func init() {
 	}
 	for _, dir := range dirs {
 		check := dir.Name()
+		if checkToTest != "" && checkToTest != check {
+			continue
+		}
 		checkDir := baseDir + "/" + check
 		cases, err := ioutil.ReadDir(checkDir)
 		if err != nil {
 			panic(err)
 		}
+		configString := "checks:\n  " + check + ": danger"
+		checkPath := checkDir + "/check.yaml"
+		customCheckContent, err := ioutil.ReadFile(checkPath)
+		if err == nil {
+			lines := strings.Split(string(customCheckContent), "\n")
+			for idx := range lines {
+				lines[idx] = "    " + lines[idx]
+			}
+			configString += "\ncustomChecks:\n  " + check + ":\n"
+			configString += strings.Join(lines, "\n")
+		}
+		c, err := config.Parse([]byte(configString))
+		if err != nil {
+			panic(err)
+		}
 		for _, tc := range cases {
-			resources, err := kube.CreateResourceProviderFromPath(checkDir + "/" + tc.Name())
+			if tc.Name() == "check.yaml" {
+				continue
+			}
+			resourceFilename := strings.Replace(tc.Name(), "mutated", "failure", -1)
+
+			resources, err := kube.CreateResourceProviderFromPath(checkDir + "/" + resourceFilename)
 			if err != nil {
 				panic(err)
+			}
+			testcase := testCase{
+				filename:  tc.Name(),
+				check:     check,
+				resources: resources,
+				failure:   strings.Contains(resourceFilename, "failure"),
+				config:    c,
 			}
 
 			if strings.Contains(tc.Name(), "mutated") {
@@ -69,23 +101,14 @@ func init() {
 				}
 				key := fmt.Sprintf("%s/%s", check, tc.Name())
 				mutatedYamlContentMap[key] = string(yamlContent)
-			} else {
-				testcase := testCase{
-					filename:  tc.Name(),
-					check:     check,
-					resources: resources,
-					failure:   strings.Contains(tc.Name(), "failure"),
+				testCases, ok := mutationTestCasesMap[check]
+				if !ok {
+					testCases = []testCase{}
 				}
 				testCases = append(testCases, testcase)
-
-				if strings.Contains(tc.Name(), "mutated") {
-					testCases, ok := failureTestCasesMap[check]
-					if !ok {
-						testCases = []testCase{}
-					}
-					testCases = append(testCases, testcase)
-					failureTestCasesMap[check] = testCases
-				}
+				mutationTestCasesMap[check] = testCases
+			} else {
+				testCases = append(testCases, testcase)
 			}
 		}
 	}
@@ -93,11 +116,7 @@ func init() {
 
 func TestChecks(t *testing.T) {
 	for _, tc := range testCases {
-		c, err := config.Parse([]byte("checks:\n  " + tc.check + ": danger"))
-		if err != nil {
-			panic(err)
-		}
-		results, err := validator.ApplyAllSchemaChecksToResourceProvider(&c, tc.resources)
+		results, err := validator.ApplyAllSchemaChecksToResourceProvider(&tc.config, tc.resources)
 		if err != nil {
 			panic(err)
 		}

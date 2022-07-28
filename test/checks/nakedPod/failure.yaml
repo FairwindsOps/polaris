@@ -3,12 +3,11 @@ kind: Pod
 metadata:
   name: nginx
   labels:
-    app.kubernetes.io/name: nginx
+    app.kubernetes.io/name: nginxIDONTMATCH
 spec:
   containers:
   - name: nginx
     image: nginx
-    securityContext:
-      capabilities:
-        add:
-        - NET_ADMIN
+    resources:
+      limits:
+        memory: "512Mi"

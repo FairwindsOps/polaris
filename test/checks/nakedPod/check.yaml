@@ -1,0 +1,17 @@
+successMessage: example FP success
+failureMessage: example FP fail
+target: Pod
+schema:
+  '$schema': http://json-schema.org/draft-07/schema
+  type: object
+  properties:
+    metadata:
+      type: object
+      required: ["labels"]
+      properties:
+        labels:
+          type: object
+          required: ["app.kubernetes.io/name"]
+          properties:
+            app.kubernetes.io/name:
+              const: "{{ .metadata.name }}"

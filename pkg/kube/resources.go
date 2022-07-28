@@ -17,6 +17,7 @@ package kube
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -58,7 +59,12 @@ type resourceKindMap map[string][]GenericResource
 
 func (rkm resourceKindMap) addResource(r GenericResource) {
 	gvk := r.Resource.GroupVersionKind()
-	key := gvk.Group + "/" + gvk.Kind
+	var key string
+	if gvk.Group != "" {
+		key = gvk.Group + "/" + gvk.Kind
+	} else {
+		key = gvk.Kind
+	}
 	rkm[key] = append(rkm[key], r)
 }
 
@@ -215,7 +221,11 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 			logrus.Errorf("Error reading file: %v", path)
 			return err
 		}
-		return resources.addResourcesFromYaml(string(contents))
+		err = resources.addResourcesFromYaml(string(contents))
+		if err != nil {
+			logrus.Warnf("Skipping %s: cannot add resource from YAML: %v", path, err)
+		}
+		return nil
 	}
 
 	err := filepath.Walk(directory, visitFile)
@@ -443,7 +453,6 @@ func (resources *ResourceProvider) addResourceFromString(contents string) error 
 	decoder = k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader(contentBytes), 1000)
 
 	if err != nil {
-		logrus.Errorf("Invalid YAML: %s", string(contents))
 		return err
 	}
 	if resource.Kind == "Namespace" {
@@ -471,4 +480,32 @@ func (resources *ResourceProvider) addResourceFromString(contents string) error 
 		resources.Resources.addResource(newResource)
 	}
 	return err
+}
+
+// SerializePodSpec converts a typed PodSpec into a map[string]interface{}
+func SerializePodSpec(pod *corev1.PodSpec) (map[string]interface{}, error) {
+	podJSON, err := json.Marshal(pod)
+	if err != nil {
+		return nil, err
+	}
+	podMap := make(map[string]interface{})
+	err = json.Unmarshal(podJSON, &podMap)
+	if err != nil {
+		return nil, err
+	}
+	return podMap, nil
+}
+
+// SerializePod converts a typed Pod into a map[string]interface{}
+func SerializePod(pod *corev1.Pod) (map[string]interface{}, error) {
+	podJSON, err := json.Marshal(pod)
+	if err != nil {
+		return nil, err
+	}
+	podMap := make(map[string]interface{})
+	err = json.Unmarshal(podJSON, &podMap)
+	if err != nil {
+		return nil, err
+	}
+	return podMap, nil
 }
