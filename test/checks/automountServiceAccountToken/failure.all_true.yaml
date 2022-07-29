@@ -1,0 +1,19 @@
+# This fails because automounting is true for both the pod and ServiceAccount.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+spec:
+  automountServiceAccountToken: true
+  serviceAccountName: test
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 80
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: test
+automountServiceAccountToken: true

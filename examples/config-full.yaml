@@ -12,8 +12,11 @@ checks:
   memoryRequestsMissing: warning
   memoryLimitsMissing: warning
   # security
+  automountServiceAccountToken: warning
   hostIPCSet: danger
   hostPIDSet: danger
+  linuxHardening: danger
+  missingNetworkPolicy: warning
   notReadOnlyRootFilesystem: warning
   privilegeEscalationAllowed: danger
   runAsRootAllowed: danger

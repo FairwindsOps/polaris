@@ -1,0 +1,18 @@
+# This succeeds because AppArmor annotations exist matching both container names.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+  annotations:
+    container.apparmor.security.beta.kubernetes.io/nginx: runtime/default
+    container.apparmor.security.beta.kubernetes.io/nginx2: runtime/default
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 80
+  - name: nginx2
+    image: nginx
+    ports:
+    - containerPort: 81

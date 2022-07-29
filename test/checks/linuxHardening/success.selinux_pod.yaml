@@ -1,0 +1,14 @@
+# This succeeds because seLinuxOptions is defined for the pod.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+spec:
+  securityContext:
+    seLinuxOptions:
+      level:   "s0:c123,c456"
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 80
