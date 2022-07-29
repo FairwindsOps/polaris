@@ -54,7 +54,10 @@ func NewGenericResourceFromUnstructured(unst unstructured.Unstructured, podSpecM
 		return workload, err
 	}
 	workload.ObjectMeta = objMeta
-	workload.PodTemplate = GetPodTemplate(unst.UnstructuredContent())
+	workload.PodTemplate, err = GetPodTemplate(unst.UnstructuredContent())
+	if err != nil {
+		return workload, err
+	}
 
 	b, err := json.Marshal(&unst)
 	if err != nil {
@@ -248,11 +251,23 @@ func GetPodSpec(yaml map[string]interface{}) interface{} {
 // GetPodTemplate looks inside arbitrary YAML for a Pod template, containing
 // fields `spec.containers`.
 // For example, it returns the `spec.template` level of a Kubernetes Deployment yaml.
-func GetPodTemplate(yaml map[string]interface{}) interface{} {
+func GetPodTemplate(yaml map[string]interface{}) (podTemplate interface{}, err error) {
 	if yamlSpec, ok := yaml["spec"]; ok {
 		if yamlSpecMap, ok := yamlSpec.(map[string]interface{}); ok {
 			if _, ok := yamlSpecMap["containers"]; ok {
-				return yaml
+				// This is a hack around unstructured.SetNestedField using DeepCopy which does
+				// not support the type int, and panics.
+				// Related: https://github.com/kubernetes/kubernetes/issues/62769
+				podTemplateJSON, err := json.Marshal(yaml)
+				if err != nil {
+					return nil, err
+				}
+				podTemplateMap := make(map[string]interface{})
+				err = json.Unmarshal(podTemplateJSON, &podTemplateMap)
+				if err != nil {
+					return nil, err
+				}
+				return podTemplateMap, nil
 			}
 		}
 	}
@@ -261,5 +276,5 @@ func GetPodTemplate(yaml map[string]interface{}) interface{} {
 			return GetPodTemplate(childYaml.(map[string]interface{}))
 		}
 	}
-	return nil
+	return nil, nil
 }
