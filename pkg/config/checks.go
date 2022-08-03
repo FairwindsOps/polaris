@@ -49,11 +49,13 @@ var (
 		"dangerousCapabilities",
 		"insecureCapabilities",
 		"priorityClassNotSet",
+		"sensitiveContainerEnvVar",
 		// Other checks
 		"tlsSettingsMissing",
 		"pdbDisruptionsIsZero",
 		"metadataAndNameMismatched",
 		"missingPodDisruptionBudget",
+		"sensitiveConfigmapContent",
 	}
 )
 

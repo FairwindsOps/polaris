@@ -199,6 +199,7 @@ func SetupTestAPI(objects ...runtime.Object) (kubernetes.Interface, dynamic.Inte
 			APIResources: []metav1.APIResource{
 				{Name: "pods", Namespaced: true, Kind: "Pod"},
 				{Name: "replicationcontrollers", Namespaced: true, Kind: "ReplicationController"},
+				{Name: "configmaps", Namespaced: true, Kind: "ConfigMap"},
 			},
 		},
 		{
