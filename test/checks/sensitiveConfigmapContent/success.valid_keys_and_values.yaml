@@ -1,0 +1,8 @@
+# This succeeds because no keys or values are invalid.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-config
+data:
+  message: This is a test
+  db_user: postgres

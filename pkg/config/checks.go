@@ -51,12 +51,14 @@ var (
 		"insecureCapabilities",
 		"priorityClassNotSet",
 		"linuxHardening",
+		"sensitiveContainerEnvVar",
 		// Other checks
 		"tlsSettingsMissing",
 		"pdbDisruptionsIsZero",
 		"metadataAndNameMismatched",
 		"missingPodDisruptionBudget",
 		"missingNetworkPolicy",
+		"sensitiveConfigmapContent",
 	}
 )
 

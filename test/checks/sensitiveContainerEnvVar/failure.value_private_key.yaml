@@ -1,0 +1,19 @@
+# This fails because an environment variable value contains a private key.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+spec:
+  containers:
+  - name: nginx
+    env:
+    - name: user_name
+      value: postgres
+    - name: the_good_stuff
+      value: |
+        ---BEGIN OPENSSH PRIVATE KEY---
+        xxxxx
+        ---END  OPENSSH PRIVATE KEY---
+    image: nginx
+    ports:
+    - containerPort: 80

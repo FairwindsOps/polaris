@@ -200,6 +200,7 @@ func SetupTestAPI(objects ...runtime.Object) (kubernetes.Interface, dynamic.Inte
 				{Name: "pods", Namespaced: true, Kind: "Pod"},
 				{Name: "replicationcontrollers", Namespaced: true, Kind: "ReplicationController"},
 				{Name: "serviceaccounts", Namespaced: true, Kind: "ServiceAccount"},
+				{Name: "configmaps", Namespaced: true, Kind: "ConfigMap"},
 			},
 		},
 		{

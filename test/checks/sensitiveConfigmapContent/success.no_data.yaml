@@ -1,0 +1,6 @@
+# This succeeds because no data nor keys nor values are defined.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-config
+  #data:

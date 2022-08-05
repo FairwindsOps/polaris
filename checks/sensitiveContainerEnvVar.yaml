@@ -1,0 +1,43 @@
+successMessage: The container does not set potentially sensitive environment variables
+failureMessage: The container sets potentially sensitive environment variables
+category: Security
+target: Container
+schemaString: |
+  '$schema': http://json-schema.org/draft-07/schema
+  type: object
+  properties:
+    env:
+      type: array
+      items:
+        type: object
+        required: ["name"]
+        properties:
+          name:
+            type: string
+            '$comment': These environment variable names will be disallowed.
+            allOf:
+              - not:
+                  pattern: '(?i)^AWS_SECRET_ACCESS_KEY$'
+              - not:
+                  pattern: '(?i)^GOOGLE_APPLICATION_CREDENTIALS$'
+              - not:
+                  pattern: '(?i)^AZURE_.+KEY$'
+              - not:
+                  pattern: '(?i)^OCI_CLI_KEY_CONTENT$'
+              - not:
+                  pattern: '(?i)password'
+              - not:
+                  pattern: '(?i)token'
+              - not:
+                  pattern: '(?i)bearer'
+              - not:
+                  pattern: '(?i)secret'
+                '$comment': This allows variable names not excluded above.
+              - pattern: '(?i).*'
+          value:
+            type: string
+            '$comment': These environment variable values will be disallowed.
+            allOf:
+            - not:
+                '$comment': THis matches variations like begin private key, begin rsa private key ...
+                pattern: '(?i)\s*-BEGIN\s+.*PRIVATE KEY-\s*'

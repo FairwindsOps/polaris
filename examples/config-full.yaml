@@ -25,6 +25,8 @@ checks:
   insecureCapabilities: warning
   hostNetworkSet: danger
   hostPortSet: warning
+  sensitiveContainerEnvVar: danger
+  sensitiveConfigmapContent: danger
   # custom
   resourceLimits: warning
   imageRegistry: danger

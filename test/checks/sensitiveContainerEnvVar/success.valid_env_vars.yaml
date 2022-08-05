@@ -1,0 +1,14 @@
+# This succeeds because there are no sensitive environment variable names or values.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+spec:
+  containers:
+  - name: nginx
+    env:
+    - name: greeting
+      value: hello
+    image: nginx
+    ports:
+    - containerPort: 80
