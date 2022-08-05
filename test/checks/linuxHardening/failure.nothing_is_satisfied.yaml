@@ -1,0 +1,11 @@
+# This fails because none of the seccompProfile, seLinuxOptions, AppArmor, or dropping capabilities are present.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 80

@@ -199,6 +199,7 @@ func SetupTestAPI(objects ...runtime.Object) (kubernetes.Interface, dynamic.Inte
 			APIResources: []metav1.APIResource{
 				{Name: "pods", Namespaced: true, Kind: "Pod"},
 				{Name: "replicationcontrollers", Namespaced: true, Kind: "ReplicationController"},
+				{Name: "serviceaccounts", Namespaced: true, Kind: "ServiceAccount"},
 			},
 		},
 		{
@@ -239,6 +240,7 @@ func SetupTestAPI(objects ...runtime.Object) (kubernetes.Interface, dynamic.Inte
 			GroupVersion: "networking.k8s.io/v1",
 			APIResources: []metav1.APIResource{
 				{Name: "ingresses", Namespaced: true, Kind: "Ingress", Version: "v1"},
+				{Name: "networkpolicies", Namespaced: true, Kind: "NetworkPolicy", Version: "v1"},
 			},
 		},
 		{

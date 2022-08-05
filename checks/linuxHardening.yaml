@@ -1,0 +1,89 @@
+successMessage: One of AppArmor, Seccomp, SELinux, or dropping Linux Capabilities are used to restrict containers using unwanted privileges
+FailureMessage: Use one of AppArmor, Seccomp, SELinux, or dropping Linux Capabilities to restrict containers using unwanted privileges
+category: Security
+target: Container
+schemaString: |
+  '$schema': http://json-schema.org/draft-07/schema
+  definitions:
+    podOrContainerSeccompProfile:
+      type: object
+      {{ $podSeccompProfileType := .Polaris.PodSpec.securityContext.seccompProfile.type }}
+      required:
+      {{ if or (not $podSeccompProfileType) (eq $podSeccompProfileType "Unconfined") }}
+        - securityContext
+      {{ end }}
+      properties:
+        securityContext:
+          type: object
+          required:
+          {{ if or (not $podSeccompProfileType) (eq $podSeccompProfileType "Unconfined") }}
+            - seccompProfile
+          {{ end }}
+          properties:
+            seccompProfile:
+              type: object
+              required:
+              {{ if or (not $podSeccompProfileType) (eq $podSeccompProfileType "Unconfined") }}
+                - type
+              {{ end }}
+              properties:
+                type:
+                  type: string
+                  allOf:
+                    - not:
+                        const: "Unconfined"
+                    {{ if or (not $podSeccompProfileType) (eq $podSeccompProfileType "Unconfined") }}
+                    - minLength: 1
+                    {{ end }}
+    podOrContainerSELinuxOptions:
+      type: object
+      {{ $podSELinuxOptions := .Polaris.PodSpec.securityContext.seLinuxOptions }}
+      {{ if not $podSELinuxOptions }}
+      required: ["securityContext"]
+      properties:
+        securityContext:
+          type: object
+          required: ["seLinuxOptions"]
+          properties:
+            seLinuxOptions:
+              type: object
+              minProperties: 1
+      {{ end }}
+    containerDropCapabilities:
+      type: object
+      required: ["securityContext"]
+      properties:
+        securityContext:
+          type: object
+          required: ["capabilities"]
+          properties:
+            capabilities:
+              type: object
+              required: ["drop"]
+              properties:
+                drop:
+                  type: array
+                  minItems: 1
+                add:
+                  type: array
+                  items:
+                    type: string
+                    not:
+                      pattern: '^(?i)ALL$'
+  # End of definitions
+  {{/* Check for AppArmor which uses pod annotations. IF pod fields are missing,
+       require one of the other hardening measures. */}}
+  {{ $annotationName := (print "container.apparmor.security.beta.kubernetes.io/" .Polaris.Container.name) }}
+  {{/* Checking annotations before using index() avoids a nil panic when there are no annotations */}}
+  {{ $annotationExists := false }}
+  {{ if .Polaris.PodTemplate.metadata.annotations }}
+  {{ $annotationExists = index .Polaris "PodTemplate" "metadata" "annotations" $annotationName }}
+  {{ end }}
+  {{ if $annotationExists }}
+  type: object
+  {{ else }}
+  anyOf:
+  - $ref: "#/definitions/podOrContainerSeccompProfile"
+  - $ref: "#/definitions/podOrContainerSELinuxOptions"
+  - $ref: "#/definitions/containerDropCapabilities"
+  {{ end}}
