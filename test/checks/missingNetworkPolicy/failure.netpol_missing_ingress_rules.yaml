@@ -1,0 +1,34 @@
+# This fails because the NetworkPolicy lacks ingress rules.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+  labels:
+    security: medium
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: test
+spec:
+  podSelector:
+    matchLabels:
+      security: medium
+  policyTypes:
+  - Egress
+  - Ingress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          # Allow outbound with other medium-security pods.
+          security: medium
+    ports:
+    - protocol: TCP
+      port: 80

@@ -1,0 +1,18 @@
+# This fails because the annotation names do not match the containers.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+  annotations:
+    container.apparmor.security.beta.kubernetes.io/container1: runtime/default
+    container.apparmor.security.beta.kubernetes.io/container2: runtime/default
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 80
+  - name: nginx2
+    image: nginx
+    ports:
+    - containerPort: 81

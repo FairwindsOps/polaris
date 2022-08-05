@@ -1,0 +1,17 @@
+# This succeeds because SOME capability is dropped, and ALL capabilities are not added.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    securityContext:
+      capabilities:
+        drop:
+        - ALL
+        add:
+        - someCapabilities
+    ports:
+    - containerPort: 80
