@@ -11,7 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Slack Notification
-        uses: bryannice/gitactions-slack-notification@2.0.0
         run: |
           curl -X POST "${{ secrets.SLACK_INCOMING_WEBHOOK }}" -H "Content-type: application/json" -d '{
             "text": "Danny Torrence left a 1 star review for your property.",
