@@ -13,13 +13,13 @@ jobs:
       - name: Slack Notification
         run: |
           curl -X POST "${{ secrets.SLACK_INCOMING_WEBHOOK }}" -H "Content-type: application/json" -d '{
-            "text": "Danny Torrence left a 1 star review for your property.",
+            "text": "New ${{ github.event_name }}",
             "blocks": [
             	{
             		"type": "section",
             		"text": {
             			"type": "mrkdwn",
-            			"text": "Danny Torrence left the following review for your property:"
+            			"text": "${{ github.event.issue.title }}\n\n$github.com/{{ github.event.repository.name }}/issues/${{ github.event.issue.id }}"
             		}
             	},
             	{
@@ -47,8 +47,3 @@ jobs:
             	}
             ]
           }'
-
-        env:
-          SLACK_INCOMING_WEBHOOK: ${{ secrets.SLACK_INCOMING_WEBHOOK }}
-          SLACK_TITLE: 'New issue for ${{ github.event.repository.name }}'
-          SLACK_MESSAGE: '${{ github.event.issue.title }}\n\n$github.com/{{ github.event.repository.name }}/issues/${{ github.event.issue.id }}'
