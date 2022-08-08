@@ -19,7 +19,7 @@ jobs:
             		"type": "section",
             		"text": {
             			"type": "mrkdwn",
-            			"text": "${{ github.event.issue.title }}\n\n$github.com/{{ github.event.repository.name }}/issues/${{ github.event.issue.id }}"
+            			"text": "${{ github.event.issue.title }}\n\n$github.com/${{ github.event.repository.name }}/issues/${{ github.event.issue.id }}"
             		}
             	},
             	{
