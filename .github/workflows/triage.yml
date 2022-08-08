@@ -1,0 +1,25 @@
+name: Triage issues
+on:
+  issues:
+    types:
+      - reopened
+      - opened
+  pull_request:
+jobs:
+  label_issues:
+    if: github.actor!= 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Label issues
+        uses: andymckay/labeler@e6c4322d0397f3240f0e7e30a33b5c5df2d39e90
+        with:
+          add-labels: "triage"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Slack Notification
+        uses: bryannice/gitactions-slack-notification@2.0.0
+        env:
+          SLACK_INCOMING_WEBHOOK: ${{ secrets.SLACK_INCOMING_WEBHOOK }}
+          SLACK_TITLE: 'New issue for ${{ GITHUB_REPOSITORY }}'
+          SLACK_MESSAGE: '${{ github.event.issue.title }}\n\n$github.com/{{ GITHUB_REPOSITORY }}/issues/${{ github.event.issue.id }}'
