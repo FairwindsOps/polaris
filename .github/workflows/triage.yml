@@ -14,5 +14,5 @@ jobs:
         uses: bryannice/gitactions-slack-notification@2.0.0
         env:
           SLACK_INCOMING_WEBHOOK: ${{ secrets.SLACK_INCOMING_WEBHOOK }}
-          SLACK_TITLE: 'New issue for ${{ GITHUB_REPOSITORY }}'
-          SLACK_MESSAGE: '${{ github.event.issue.title }}\n\n$github.com/{{ GITHUB_REPOSITORY }}/issues/${{ github.event.issue.id }}'
+          SLACK_TITLE: 'New issue for ${{ github.event.repository.name }}'
+          SLACK_MESSAGE: '${{ github.event.issue.title }}\n\n$github.com/{{ github.event.repository.name }}/issues/${{ github.event.issue.id }}'
