@@ -51,6 +51,7 @@ jobs:
             ]
           }' > body-template.json
           envsubst < body-template.json > body.json
+          cat body.json
           curl -X POST "${{ secrets.SLACK_INCOMING_WEBHOOK }}" -H "Content-type: application/json" -d @./body.json
 
       - name: Issue Notification
