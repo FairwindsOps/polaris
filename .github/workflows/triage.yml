@@ -35,9 +35,24 @@ jobs:
               title=${titles[$index]}
               link=${links[$index]} 
               echo "$index $title $link"
-              message="$message* $title$link\n\n"
+              message="$message* $title: $link\n\n"
           done
           echo "message: $message"
+          echo '{
+            "text": "New Pull Request",
+            "blocks": [
+            	{
+            		"type": "section",
+            		"text": {
+            			"type": "mrkdwn",
+            			"text": "$message"
+            		}
+            	}
+            ]
+          }' > body-template.json
+          envsubst < body-template.json > body.json
+          curl -X POST "${{ secrets.SLACK_INCOMING_WEBHOOK }}" -H "Content-type: application/json" -d @./body.json
+
       - name: Issue Notification
         if: github.event.issue.title != ''
         env:
