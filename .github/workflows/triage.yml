@@ -24,7 +24,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Scheduled Reminders
         run: |
-          echo "Scheduled reminder! steps.need_triage.outputs.data"
+          echo "Scheduled reminder! ${{ steps.need_triage.outputs.data }}"
       - name: Issue Notification
         if: github.event.issue.title != ''
         env:
