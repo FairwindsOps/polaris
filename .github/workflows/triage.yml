@@ -19,14 +19,14 @@ jobs:
       - uses: octokit/request-action@v2.x
         id: need_triage
         with:
-          route: GET /repos/FairwindsOps/${{ github.event.repository.name }}/releases/latest
+          route: GET /repos/FairwindsOps/${{ github.event.repository.name }}/issues?labels=triage
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Scheduled Reminders
         env:
-          DATA: "${{ steps.need_triage.outputs.data }}"
+          TITLES: "${{ fromJSON(steps.need_triage.outputs.data).*.title }}"
         run: |
-          echo "Scheduled reminder! ${DATA}"
+          echo "Scheduled reminder! ${TITLES}"
       - name: Issue Notification
         if: github.event.issue.title != ''
         env:
