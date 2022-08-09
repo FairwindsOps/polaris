@@ -5,6 +5,9 @@ on:
       - reopened
       - opened
   pull_request:
+    types:
+      - reopened
+      - opened
 jobs:
   notify:
     if: github.actor!= 'dependabot[bot]'
@@ -14,6 +17,7 @@ jobs:
         if: github.event.issue.title != ''
         env:
           TITLE: "${{ github.event.issue.title }}"
+          EVENT: github.event.pull_request.merged == true
           LINK: "github.com/FairwindsOps/${{ github.event.repository.name }}/pulls/${{ github.event.issue.number }}"
         run: |
           echo '{
