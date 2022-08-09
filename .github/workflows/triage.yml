@@ -10,7 +10,7 @@ jobs:
     if: github.actor!= 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
-      - name: Slack Notification
+      - name: Issue Notification
         if: github.event.issue.title != ''
         env:
           TITLE: "${{ github.event.issue.title }}"
@@ -38,7 +38,7 @@ jobs:
           envsubst < body-template.json > body.json
           curl -X POST "${{ secrets.SLACK_INCOMING_WEBHOOK }}" -H "Content-type: application/json" -d @./body.json
 
-      - name: Slack Notification
+      - name: PR Notification
         if: github.event.pull_request.title != ''
         env:
           TITLE: "${{ github.event.pull_request.title }}"
