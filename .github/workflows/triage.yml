@@ -30,7 +30,7 @@ jobs:
           echo "Scheduled reminder! ${TITLES}"
           IFS=';' read -r -a titles <<< "$TITLES"
           IFS=';' read -r -a links <<< "$LINKS"
-          message = ""
+          message=""
           for index in "${!links[@]}"; do
               title=${titles[$index]}
               link=${links[$index]} 
