@@ -24,7 +24,7 @@ jobs:
           token: ${{ github.token }}
       - name: Scheduled Reminders
         env:
-          OPEN_ISSUES: "foo"
+          OPEN_ISSUES: "${{steps.bugs.outputs}}"
         run: |
           echo "Scheduled reminder! $OPEN_ISSUES"
       - name: Issue Notification
