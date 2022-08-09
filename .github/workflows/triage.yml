@@ -16,7 +16,7 @@ jobs:
           TITLE: "{{ github.event.pull_request.title }}"
           LINK: "github.com/${{ github.event.repository.name }}/pulls/${{ github.event.pull_request.id }}"
         run: |
-          curl -X POST "${{ secrets.SLACK_INCOMING_WEBHOOK }}" -H "Content-type: application/json" -d '{
+          echo '{
             "text": "New Pull Request",
             "blocks": [
             	{
@@ -30,8 +30,10 @@ jobs:
             		"type": "section",
             		"text": {
             			"type": "mrkdwn",
-            			"text": "$LINK"
+            			"text": "${LINK}"
             		},
             	},
             ]
-          }'
+          }' > body-template.json
+          envsubst < body-template.json > body.json
+          curl -X POST "${{ secrets.SLACK_INCOMING_WEBHOOK }}" -H "Content-type: application/json" -d @./body.json
