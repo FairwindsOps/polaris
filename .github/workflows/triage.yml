@@ -13,8 +13,8 @@ jobs:
       - name: Slack Notification
         if: github.event.pull_request.title != ''
         env:
-          TITLE: "{{ github.event.pull_request.title }}"
-          LINK: "github.com/${{ github.event.repository.name }}/pulls/${{ github.event.pull_request.id }}"
+          TITLE: "${{ github.event.pull_request.title }}"
+          LINK: "github.com/${{ github.event.repository.name }}/pulls/${{ github.event.pull_request.number }}"
         run: |
           echo '{
             "text": "New Pull Request",
