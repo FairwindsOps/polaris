@@ -35,7 +35,7 @@ jobs:
               title=${titles[$index]}
               link=${links[$index]} 
               echo "$index $title $link"
-              message="$message* $title: $link\n\n"
+              message="$message* $title: $link\\n\\n"
           done
           echo "message: $message"
           echo '{
