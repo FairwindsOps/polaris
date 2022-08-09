@@ -23,7 +23,7 @@ jobs:
           query: 'label:triage is:open'
           token: ${{ github.token }}
       - name: Scheduled Reminders
-        # if: github.event_name == 'schedule'
+#       if: github.event_name == 'schedule'
         env:
           OPEN_ISSUES: "${{ steps.issues.outputs }}"
         run: |
