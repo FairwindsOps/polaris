@@ -16,28 +16,17 @@ jobs:
     if: github.actor!= 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
-      - name: Find open issues
-        id: issues
-        uses: lee-dohm/select-matching-issues@v1
+      - uses: octokit/request-action@v2.x
+        id: need_triage
         with:
-          query: 'label:triage is:open'
-          path: issues.txt
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Find open PRs
-        id: prs
-        uses: lee-dohm/select-matching-issues@v1
-        with:
-          query: 'label:triage is:open is:pr'
-          path: prs.txt
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Scheduled Reminders
+          route: GET /repos/{owner}/{repo}/releases/latest
+          owner: "FairwindsOps"
+          repo: "${{ github.event.repository.name }}"
         env:
-          ISSUE_FILE: "${{steps.issues.outputs.path}}"
-          PR_FILE: "${{steps.prs.outputs.path}}"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Scheduled Reminders
         run: |
-          echo "Scheduled reminder! $ISSUE_FILE"
-          cat $ISSUE_FILE
-          cat $PR_FILE
+          echo "Scheduled reminder! steps.need_triage.outputs.data"
       - name: Issue Notification
         if: github.event.issue.title != ''
         env:
