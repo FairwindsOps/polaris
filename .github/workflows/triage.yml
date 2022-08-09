@@ -24,9 +24,10 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Scheduled Reminders
         env:
-          OPEN_ISSUES: "${{steps.bugs.outputs}}"
+          OPEN_ISSUES: "${{steps.bugs.outputs.path}}"
         run: |
           echo "Scheduled reminder! $OPEN_ISSUES"
+          cat $OPEN_ISSUES
       - name: Issue Notification
         if: github.event.issue.title != ''
         env:
