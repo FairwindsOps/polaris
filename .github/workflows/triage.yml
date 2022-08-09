@@ -23,7 +23,7 @@ jobs:
             		"type": "section",
             		"text": {
             			"type": "mrkdwn",
-            			"text": "New Pull Request: ${TITLE}"
+            			"text": ":issue: New Issue: ${TITLE}"
             		}
             	},
             	{
@@ -51,7 +51,7 @@ jobs:
             		"type": "section",
             		"text": {
             			"type": "mrkdwn",
-            			"text": "New Pull Request: ${TITLE}"
+            			"text": ":pr: New Pull Request: ${TITLE}"
             		}
             	},
             	{
