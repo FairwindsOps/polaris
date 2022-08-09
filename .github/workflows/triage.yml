@@ -11,10 +11,38 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Slack Notification
+        if: github.event.issue.title != ''
+        env:
+          TITLE: "${{ github.event.issue.title }}"
+          LINK: "github.com/FairwindsOps/${{ github.event.repository.name }}/pulls/${{ github.event.issue.number }}"
+        run: |
+          echo '{
+            "text": "New Pull Request",
+            "blocks": [
+            	{
+            		"type": "section",
+            		"text": {
+            			"type": "mrkdwn",
+            			"text": "New Pull Request: ${TITLE}"
+            		}
+            	},
+            	{
+            		"type": "section",
+            		"text": {
+            			"type": "mrkdwn",
+            			"text": "${LINK}"
+            		},
+            	},
+            ]
+          }' > body-template.json
+          envsubst < body-template.json > body.json
+          curl -X POST "${{ secrets.SLACK_INCOMING_WEBHOOK }}" -H "Content-type: application/json" -d @./body.json
+
+      - name: Slack Notification
         if: github.event.pull_request.title != ''
         env:
           TITLE: "${{ github.event.pull_request.title }}"
-          LINK: "github.com/${{ github.event.repository.name }}/pulls/${{ github.event.pull_request.number }}"
+          LINK: "github.com/FairwindsOps/${{ github.event.repository.name }}/pulls/${{ github.event.pull_request.number }}"
         run: |
           echo '{
             "text": "New Pull Request",
