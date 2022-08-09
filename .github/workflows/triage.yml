@@ -19,9 +19,7 @@ jobs:
       - uses: octokit/request-action@v2.x
         id: need_triage
         with:
-          route: GET /repos/{owner}/{repo}/releases/latest
-          owner: "FairwindsOps"
-          repo: "${{ github.event.repository.name }}"
+          route: GET /repos/FairwindsOps/${{ github.event.repository.name }}/releases/latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Scheduled Reminders
