@@ -5,9 +5,9 @@ on:
       - reopened
       - opened
   pull_request:
-    types:
-      - reopened
-      - opened
+#    types:
+#    - reopened
+#    - opened
 jobs:
   notify:
     if: github.actor!= 'dependabot[bot]'
