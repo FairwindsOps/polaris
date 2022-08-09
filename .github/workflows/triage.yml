@@ -50,6 +50,7 @@ jobs:
             	}
             ]
           }' > body-template.json
+          export message="${message}"
           envsubst < body-template.json > body.json
           cat body.json
           curl -X POST "${{ secrets.SLACK_INCOMING_WEBHOOK }}" -H "Content-type: application/json" -d @./body.json
