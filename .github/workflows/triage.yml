@@ -24,7 +24,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Scheduled Reminders
         env:
-          TITLES: "${{ join(steps.need_triage.outputs.data.*.title, '|') }}"
+          TITLES: "${{ join(fromJSON(steps.need_triage.outputs.data).*.title, '|') }}"
         run: |
           echo "Scheduled reminder! ${TITLES}"
       - name: Issue Notification
