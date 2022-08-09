@@ -35,11 +35,11 @@ jobs:
               title=${titles[$index]}
               link=${links[$index]} 
               echo "$index $title $link"
-              message="$message- <$link|$title>\\n\\n"
+              message="$message- <$link|$title>\\n"
           done
           echo "message: $message"
           echo '{
-            "text": "New Pull Request",
+            "text": "Needs Triage",
             "blocks": [
             	{
             		"type": "section",
@@ -50,7 +50,7 @@ jobs:
             	}
             ]
           }' > body-template.json
-          export message="${message}"
+          export message=$(echo "${message}" | sed 's/"//g')
           envsubst < body-template.json > body.json
           cat body.json
           curl -X POST "${{ secrets.SLACK_INCOMING_WEBHOOK }}" -H "Content-type: application/json" -d @./body.json
@@ -60,7 +60,7 @@ jobs:
         env:
           TITLE: "${{ github.event.issue.title }}"
           EVENT: github.event.pull_request.merged == true
-          LINK: "github.com/FairwindsOps/${{ github.event.repository.name }}/pulls/${{ github.event.issue.number }}"
+          LINK: "https://github.com/FairwindsOps/${{ github.event.repository.name }}/pulls/${{ github.event.issue.number }}"
         run: |
           echo '{
             "text": "New Pull Request",
@@ -81,7 +81,7 @@ jobs:
         if: github.event.pull_request.title != ''
         env:
           TITLE: "${{ github.event.pull_request.title }}"
-          LINK: "github.com/FairwindsOps/${{ github.event.repository.name }}/pulls/${{ github.event.pull_request.number }}"
+          LINK: "https://github.com/FairwindsOps/${{ github.event.repository.name }}/pulls/${{ github.event.pull_request.number }}"
         run: |
           echo '{
             "text": "New Pull Request",
