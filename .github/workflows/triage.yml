@@ -13,6 +13,18 @@ jobs:
     if: github.actor!= 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
+      - name: Find open issues
+        id: issues
+        uses: lee-dohm/select-matching-issues@v1
+        with:
+          query: 'label:triage is:open'
+          token: ${{ github.token }}
+      - name: Scheduled Reminders
+        # if: github.event_name == 'schedule'
+        env:
+          OPEN_ISSUES: "${{ steps.issues.outputs }}"
+        run: |
+          echo "Scheduled reminder! $OPEN_ISSUES"
       - name: Issue Notification
         if: github.event.issue.title != ''
         env:
