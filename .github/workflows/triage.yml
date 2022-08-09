@@ -1,5 +1,8 @@
 name: Triage issues
 on:
+  schedule:
+#   - cron: '0 16 * * Mon' # noon ET on Mondays
+    - cron: '*/5 * * * *' # every 5 minutes (for testing)
   issues:
     types:
       - reopened
