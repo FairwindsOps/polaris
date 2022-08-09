@@ -69,16 +69,9 @@ jobs:
             		"type": "section",
             		"text": {
             			"type": "mrkdwn",
-            			"text": ":issue: New Issue: ${TITLE}"
+            			"text": ":issue: New Issue: <${LINK}|${TITLE}>"
             		}
-            	},
-            	{
-            		"type": "section",
-            		"text": {
-            			"type": "mrkdwn",
-            			"text": "${LINK}"
-            		},
-            	},
+            	}
             ]
           }' > body-template.json
           envsubst < body-template.json > body.json
@@ -97,16 +90,9 @@ jobs:
             		"type": "section",
             		"text": {
             			"type": "mrkdwn",
-            			"text": ":pr: New Pull Request: ${TITLE}"
+            			"text": ":pr: New Pull Request: <${LINK}|${TITLE}>"
             		}
-            	},
-            	{
-            		"type": "section",
-            		"text": {
-            			"type": "mrkdwn",
-            			"text": "${LINK}"
-            		},
-            	},
+            	}
             ]
           }' > body-template.json
           envsubst < body-template.json > body.json
