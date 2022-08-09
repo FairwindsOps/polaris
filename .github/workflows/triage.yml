@@ -27,7 +27,7 @@ jobs:
           TITLES: ${{ join(fromJSON(steps.need_triage.outputs.data).*.title, ';;;') }}
         run: |
           echo "Scheduled reminder! ${TITLES}"
-          titles=($(echo "${TITLES}" | tr ";;;" "\n"))
+          IFS=';;;' read -r -a titles <<< "$TITLES"
           for i in "${titles[@]}"; do
             echo "title: $i"
           done
