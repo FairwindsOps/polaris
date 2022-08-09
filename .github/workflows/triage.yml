@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Slack Notification
-        if: steps.filter.outputs.is_pull_request == 'true'
+        if: github.event.pull_request.title != ''
         env:
           TITLE: "{{ github.event.pull_request.title }}"
           LINK: "github.com/${{ github.event.repository.name }}/pulls/${{ github.event.pull_request.id }}"
