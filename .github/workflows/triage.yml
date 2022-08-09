@@ -24,13 +24,20 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Scheduled Reminders
         env:
-          TITLES: ${{ join(fromJSON(steps.need_triage.outputs.data).*.title, ';;;') }}
+          TITLES: ${{ join(fromJSON(steps.need_triage.outputs.data).*.title, ';') }}
+          LINKS: ${{ join(fromJSON(steps.need_triage.outputs.data).*.html_url, ';') }}
         run: |
           echo "Scheduled reminder! ${TITLES}"
-          IFS=';;;' read -r -a titles <<< "$TITLES"
-          for i in "${titles[@]}"; do
-            echo "title: $i"
+          IFS=';' read -r -a titles <<< "$TITLES"
+          IFS=';' read -r -a links <<< "$LINKS"
+          message = ""
+          for index in "${!links[@]}"; do
+              title=${titles[$index]}
+              link=${links[$index]} 
+              echo "$index $title $link"
+              message="$message* $title$link\n\n"
           done
+          echo "message: $message"
       - name: Issue Notification
         if: github.event.issue.title != ''
         env:
