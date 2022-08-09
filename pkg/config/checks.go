@@ -59,6 +59,8 @@ var (
 		"missingPodDisruptionBudget",
 		"missingNetworkPolicy",
 		"sensitiveConfigmapContent",
+		"rolePodExecAttach",
+		"clusterrolePodExecAttach",
 	}
 )
 

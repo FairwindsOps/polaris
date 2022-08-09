@@ -1,0 +1,44 @@
+successMessage: The Role does not allow Pod exec or attach
+failureMessage: The Role allows Pods/exec or pods/attach
+category: Security
+target: rbac.authorization.k8s.io/Role
+schemaString: |
+  '$schema': http://json-schema.org/draft-07/schema
+  type: object
+  required: ["metadata", "rules"]
+  properties:
+    metadata:
+      required: ["name"]
+      properties:
+        name:
+          type: string
+    rules:
+      type: array
+      items:
+        type: object
+        not:
+          required: ["apiGroups", "resources", "verbs"]
+          properties:
+            apiGroups:
+              type: array
+              contains:
+                type: string
+                anyOf:
+                  - const: ""
+                  - const: '*'
+            resources:
+              type: array
+              contains:
+                type: string
+                anyOf:
+                  - const: '*'
+                  - const: "pods/exec"
+                  - const: "pods/attach"
+            verbs:
+              type: array
+              contains:
+                type: string
+                anyOf:
+                  - const: '*'
+                  - const: 'get'
+                  - const: 'create'
