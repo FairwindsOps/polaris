@@ -294,6 +294,47 @@ func removeNodes(doc *yaml.Node, path string) error {
 func removeMatchingNode(node *yaml.Node, selectors []string) error {
 	currentSelector := selectors[0]
 	lastSelector := len(selectors) == 1
+	if i := strings.LastIndex(currentSelector, "["); i > 0 && strings.HasSuffix(currentSelector, "]") {
+		arrayIndex := currentSelector[i+1 : len(currentSelector)-1]
+		currentSelector = currentSelector[:i]
+
+		index, err := strconv.Atoi(arrayIndex)
+		if err != nil {
+			if arrayIndex == "*" {
+				index = -1
+			} else {
+				return errors.Wrapf(err, "can't parse array index from %v[%v]", currentSelector, arrayIndex)
+			}
+		} else if index < 0 {
+			return errors.Wrapf(err, "array index can't be negative %v[%v]", currentSelector, arrayIndex)
+		}
+		// Go into array node(s).
+		arrayNodes, err := findNodes(node, []string{currentSelector})
+		if err != nil {
+			return errors.Errorf("can't find %v", currentSelector)
+		}
+		for _, arrayNode := range arrayNodes {
+			if arrayNode.Kind != yaml.SequenceNode {
+				return errors.Errorf("%v is not an array", currentSelector)
+			}
+			if index >= len(arrayNode.Content) {
+				return errors.Errorf("%v array doesn't have index %v", currentSelector, index)
+			}
+
+			var visitArrayNodes []*yaml.Node
+			if index >= 0 { // array[N]
+				visitArrayNodes = []*yaml.Node{arrayNode.Content[index]}
+			} else { // array[*]
+				visitArrayNodes = arrayNode.Content
+			}
+			for _, node := range visitArrayNodes {
+				lastSelector := len(selectors) == 1
+				if !lastSelector {
+					removeMatchingNode(node, selectors[1:])
+				}
+			}
+		}
+	}
 
 	// Iterate over the keys (the slice is key/value pairs).
 	for i := 0; i < len(node.Content); i += 2 {

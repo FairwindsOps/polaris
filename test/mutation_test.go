@@ -17,6 +17,7 @@ checks:
   hostIPCSet: danger
   hostPIDSet: danger
   hostNetworkSet: danger
+  hostPortSet: warning
   deploymentMissingReplicas: warning
   priorityClassNotSet: ignore
   runAsRootAllowed: danger
