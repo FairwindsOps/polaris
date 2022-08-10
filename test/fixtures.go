@@ -259,6 +259,7 @@ func SetupTestAPI(objects ...runtime.Object) (kubernetes.Interface, dynamic.Inte
 		{
 			GroupVersion: "rbac.authorization.k8s.io/v1",
 			APIResources: []metav1.APIResource{
+				{Name: "clusterroles", Namespaced: false, Kind: "ClusterRole"},
 				{Name: "roles", Namespaced: true, Kind: "Role"},
 			},
 		},
