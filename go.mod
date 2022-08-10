@@ -3,7 +3,6 @@ module github.com/fairwindsops/polaris
 go 1.17
 
 require (
-	github.com/evanphx/json-patch/v5 v5.6.0
 	github.com/fatih/color v1.13.0
 	github.com/gobuffalo/packr/v2 v2.8.3
 	github.com/gorilla/mux v1.8.0

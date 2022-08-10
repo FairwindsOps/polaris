@@ -3,14 +3,11 @@ package mutation
 import (
 	"bufio"
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
 
-	jsonpatchV5 "github.com/evanphx/json-patch/v5"
 	"github.com/fairwindsops/polaris/pkg/config"
-	"github.com/fairwindsops/polaris/pkg/kube"
 	"github.com/fairwindsops/polaris/pkg/validator"
 	"github.com/pkg/errors"
 	"github.com/thoas/go-funk"
@@ -31,7 +28,6 @@ func ApplyAllMutations(manifest string, mutations []jsonpatch.Operation) (string
 		tag, value, kind := getValueTagAndKind(patch.Value)
 		switch patch.Operation {
 		case "add", "replace":
-			fmt.Println(patch.Path)
 			var newNode = yaml.Node{
 				Kind:  kind,
 				Tag:   tag,
@@ -60,34 +56,6 @@ func ApplyAllMutations(manifest string, mutations []jsonpatch.Operation) (string
 	}
 
 	return buf.String(), nil
-}
-
-// ApplyAllSchemaMutations applies available mutation to a single resource
-func ApplyAllSchemaMutations(conf *config.Configuration, resourceProvider *kube.ResourceProvider, resource kube.GenericResource, mutations []jsonpatch.Operation) (kube.GenericResource, error) {
-	resByte := resource.OriginalObjectJSON
-	var jsonByte []byte
-	mutationByte, err := json.Marshal(mutations)
-	if err != nil {
-		return resource, err
-	}
-
-	patch, err := jsonpatchV5.DecodePatch(mutationByte)
-	if err != nil {
-		return resource, err
-	}
-	jsonByte, err = patch.ApplyWithOptions(resByte, &jsonpatchV5.ApplyOptions{
-		AllowMissingPathOnRemove: true,
-		EnsurePathExistsOnAdd:    true,
-	})
-	if err != nil {
-		return resource, err
-	}
-	mutated, err := kube.NewGenericResourceFromBytes(jsonByte)
-	if err != nil {
-		return resource, err
-	}
-
-	return mutated, nil
 }
 
 // GetMutationsAndCommentsFromResults returns all mutations from results
@@ -301,10 +269,12 @@ func getValueTagAndKind(valueInterface interface{}) (tag, value string, kind yam
 	case int:
 		return "!!int", strconv.Itoa(v), yaml.ScalarNode
 	case float64:
-		return "!!float", fmt.Sprintf("%f", v), yaml.ScalarNode
+		return "!!int", strconv.Itoa(int(v)), yaml.ScalarNode
 	case string:
 		// v is a string here, so e.g. v + " Yeah!" is possible.
 		return "!!str", v, yaml.ScalarNode
+	case bool:
+		return "!!bool", fmt.Sprintf("%t", v), yaml.ScalarNode
 	default:
 		return "!!map", fmt.Sprintf("%v", v), yaml.MappingNode
 	}

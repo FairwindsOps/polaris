@@ -9,7 +9,6 @@ import (
 	"github.com/fairwindsops/polaris/pkg/mutation"
 	"github.com/fairwindsops/polaris/pkg/validator"
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/yaml"
 )
 
 var configYaml = `
@@ -55,12 +54,10 @@ func TestMutations(t *testing.T) {
 				assert.Len(t, resources, 1)
 				key := fmt.Sprintf("%s/%s/%s", resources[0].Kind, resources[0].Resource.GetName(), resources[0].Resource.GetNamespace())
 				mutations := allMutations[key]
-				mutated, err := mutation.ApplyAllSchemaMutations(&c, tc.resources, resources[0], mutations)
+				yamlContent, err := mutation.ApplyAllMutations(tc.manifest, mutations)
 				assert.NoError(t, err)
-				yamlContent, err := yaml.JSONToYAML(mutated.OriginalObjectJSON)
-				assert.NoError(t, err)
-				contentStr := mutation.UpdateMutatedContentWithComments(string(yamlContent), comments)
-				assert.EqualValues(t, mutatedYamlContent, contentStr, "Mutation test case for " + tc.check + "/" + tc.filename + " failed")
+				contentStr := mutation.UpdateMutatedContentWithComments(yamlContent, comments)
+				assert.EqualValues(t, mutatedYamlContent, contentStr, "Mutation test case for "+tc.check+"/"+tc.filename+" failed")
 			}
 		}
 	}
