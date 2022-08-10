@@ -54,43 +54,42 @@ func NewValidateWebhook(mgr manager.Manager, validator Validator) {
 	mgr.GetWebhookServer().Register(path, &webhook.Admission{Handler: &validator})
 }
 
-func (v *Validator) handleInternal(req admission.Request) (*validator.Result, error) {
+func (v *Validator) handleInternal(req admission.Request) (*validator.Result, kube.GenericResource, error) {
 	return GetValidatedResults(req.AdmissionRequest.Kind.Kind, v.decoder, req, v.Config)
 }
 
 // GetValidatedResults returns the validated results.
-func GetValidatedResults(kind string, decoder *admission.Decoder, req admission.Request, config config.Configuration) (*validator.Result, error) {
+func GetValidatedResults(kind string, decoder *admission.Decoder, req admission.Request, config config.Configuration) (*validator.Result, kube.GenericResource, error) {
 	var controller kube.GenericResource
 	var err error
 	if kind == "Pod" {
 		pod := corev1.Pod{}
 		err := decoder.Decode(req, &pod)
 		if err != nil {
-			return nil, err
+			return nil, controller, err
 		}
 		if len(pod.ObjectMeta.OwnerReferences) > 0 {
 			logrus.Infof("Allowing owned pod %s/%s to pass through webhook", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name)
-			return nil, nil
+			return nil, controller, nil
 		}
 		controller, err = kube.NewGenericResourceFromPod(pod, pod)
 	} else {
 		controller, err = kube.NewGenericResourceFromBytes(req.Object.Raw)
 	}
 	if err != nil {
-		return nil, err
+		return nil, controller, err
 	}
-	// TODO: consider enabling multi-resource checks
 	controllerResult, err := validator.ApplyAllSchemaChecks(&config, nil, controller)
 	if err != nil {
-		return nil, err
+		return nil, controller, err
 	}
-	return &controllerResult, nil
+	return &controllerResult, controller, nil
 }
 
 // Handle for Validator to run validation checks.
 func (v *Validator) Handle(ctx context.Context, req admission.Request) admission.Response {
 	logrus.Info("Starting request")
-	result, err := v.handleInternal(req)
+	result, _, err := v.handleInternal(req)
 	if err != nil {
 		logrus.Errorf("Error validating request: %v", err)
 		return admission.Errored(http.StatusBadRequest, err)
