@@ -509,3 +509,17 @@ func SerializePod(pod *corev1.Pod) (map[string]interface{}, error) {
 	}
 	return podMap, nil
 }
+
+// SerializeContainer converts a typed Container into a map[string]interface{}
+func SerializeContainer(container *corev1.Container) (map[string]interface{}, error) {
+	containerJSON, err := json.Marshal(container)
+	if err != nil {
+		return nil, err
+	}
+	containerMap := make(map[string]interface{})
+	err = json.Unmarshal(containerJSON, &containerMap)
+	if err != nil {
+		return nil, err
+	}
+	return containerMap, nil
+}

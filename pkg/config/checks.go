@@ -32,6 +32,7 @@ var (
 		"hostIPCSet",
 		"hostPIDSet",
 		"hostNetworkSet",
+		"automountServiceAccountToken",
 		// Container checks
 		"memoryLimitsMissing",
 		"memoryRequestsMissing",
@@ -49,11 +50,15 @@ var (
 		"dangerousCapabilities",
 		"insecureCapabilities",
 		"priorityClassNotSet",
+		"linuxHardening",
+		"sensitiveContainerEnvVar",
 		// Other checks
 		"tlsSettingsMissing",
 		"pdbDisruptionsIsZero",
 		"metadataAndNameMismatched",
 		"missingPodDisruptionBudget",
+		"missingNetworkPolicy",
+		"sensitiveConfigmapContent",
 	}
 )
 

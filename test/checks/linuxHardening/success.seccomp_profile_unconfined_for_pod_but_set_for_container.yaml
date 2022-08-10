@@ -1,0 +1,17 @@
+# This succeeds because the container seccomp profile  overrides the pod Unconfined setting.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+spec:
+  securityContext:
+    seccompProfile:
+      type: Unconfined
+  containers:
+  - name: nginx
+    securityContext:
+      seccompProfile:
+        type: RuntimeDefault
+    image: nginx
+    ports:
+    - containerPort: 80

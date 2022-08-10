@@ -1,0 +1,43 @@
+successMessage: The ConfigMap does not contain potentially sensitive content in its keys and values
+failureMessage: Potentially sensitive content is detected in the ConfigMap keys or values
+category: Security
+target: /ConfigMap
+schemaString: |
+  '$schema': http://json-schema.org/draft-07/schema
+  type: object
+  required: ["metadata"]
+  properties:
+    metadata:
+      required: ["name"]
+      properties:
+        name:
+          type: string
+    data:
+      type: object
+      propertyNames:
+        '$comment': These ConfigMap keys will be disallowed.
+        allOf:
+          - not:
+              pattern: '(?i)^AWS_SECRET_ACCESS_KEY$'
+          - not:
+              pattern: '(?i)^GOOGLE_APPLICATION_CREDENTIALS$'
+          - not:
+              pattern: '(?i)^AZURE_.+KEY$'
+          - not:
+              pattern: '(?i)^OCI_CLI_KEY_CONTENT$'
+          - not:
+              pattern: '(?i)password'
+          - not:
+              pattern: '(?i)token'
+          - not:
+              pattern: '(?i)bearer'
+          - not:
+              pattern: '(?i)secret'
+            '$comment': This allows ConfigMap keys not excluded above.
+          - pattern: '(?i).*'
+      additionalProperties:
+        '$comment': These ConfigMap values will be disallowed.
+        allOf:
+        - not:
+            '$comment': THis matches variations like begin private key, begin rsa private key ...
+            pattern: '(?i)\s*-BEGIN\s+.*PRIVATE KEY-\s*'

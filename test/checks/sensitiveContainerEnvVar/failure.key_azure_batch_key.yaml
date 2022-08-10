@@ -1,0 +1,16 @@
+# This fails because an environment variable named AZURE_BATCH_KEY is set.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+spec:
+  containers:
+  - name: nginx
+    env:
+    - name: password
+      value: abc123
+    - name: AZURE_BATCH_KEY
+      value: xxx
+    image: nginx
+    ports:
+    - containerPort: 80

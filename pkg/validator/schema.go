@@ -84,7 +84,7 @@ func getTemplateInput(test schemaTestCase) (map[string]interface{}, error) {
 	if templateInput == nil {
 		return nil, nil
 	}
-	if test.Target == config.TargetPodSpec {
+	if test.Target == config.TargetPodSpec || test.Target == config.TargetContainer {
 		podSpecMap, err := kube.SerializePodSpec(test.Resource.PodSpec)
 		if err != nil {
 			return nil, err
@@ -93,8 +93,19 @@ func getTemplateInput(test schemaTestCase) (map[string]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		if podTemplateMap, ok := test.Resource.PodTemplate.(map[string]interface{}); ok {
+		podTemplateMap, ok := test.Resource.PodTemplate.(map[string]interface{})
+		if ok {
 			err := unstructured.SetNestedMap(templateInput, podTemplateMap, "Polaris", "PodTemplate")
+			if err != nil {
+				return nil, err
+			}
+		}
+		if test.Target == config.TargetContainer {
+			containerMap, err := kube.SerializeContainer(test.Container)
+			if err != nil {
+				return nil, err
+			}
+			err = unstructured.SetNestedMap(templateInput, containerMap, "Polaris", "Container")
 			if err != nil {
 				return nil, err
 			}

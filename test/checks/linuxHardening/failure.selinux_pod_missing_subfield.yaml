@@ -1,0 +1,13 @@
+# This fails because seLinuxOptions is defined but without any sub-field.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+spec:
+  securityContext:
+    seLinuxOptions:
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 80

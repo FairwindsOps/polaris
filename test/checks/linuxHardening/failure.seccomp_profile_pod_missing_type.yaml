@@ -1,0 +1,13 @@
+# This fails because the pod seccompPRofile is missing the type field.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+spec:
+  securityContext:
+    seccompProfile:
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 80

@@ -1,0 +1,14 @@
+# This succeeds because a seccomp profile is defined for the pod and not undefined for the container.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+spec:
+  securityContext:
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 80
