@@ -311,7 +311,7 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 			})
 			prefix = getJSONSchemaPrefix(test.Resource.Kind)
 			if prefix != "" {
-				prefix += "/containers/" + strconv.Itoa(containerIndex)
+				prefix += "/containers[" + strconv.Itoa(containerIndex) + "]"
 			}
 			passes, issues, err = check.CheckPodSpec(&podCopy)
 		} else {
@@ -329,7 +329,7 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 		})
 		prefix = getJSONSchemaPrefix(test.Resource.Kind)
 		if prefix != "" {
-			prefix += "/containers/" + strconv.Itoa(containerIndex)
+			prefix += "/containers[" + strconv.Itoa(containerIndex) + "]"
 		}
 		passes, issues, err = check.CheckContainer(test.Container)
 	} else {
@@ -393,12 +393,12 @@ func deepCopyMutation(source jsonpatch.Operation) jsonpatch.Operation {
 
 func getJSONSchemaPrefix(kind string) (prefix string) {
 	if kind == "CronJob" {
-		prefix = "/spec/jobTemplate/spec/template/spec"
+		prefix = "spec/jobTemplate/spec/template/spec"
 	} else if kind == "Pod" {
-		prefix = "/spec"
+		prefix = "spec"
 	} else if (kind == "Deployment") || (kind == "DaemonSet") ||
 		(kind == "StatefulSet") || (kind == "Job") || (kind == "ReplicationController") {
-		prefix = "/spec/template/spec"
+		prefix = "spec/template/spec"
 	} else {
 		logrus.Warningf("Mutation for this this resource (%s) is not supported", kind)
 	}
