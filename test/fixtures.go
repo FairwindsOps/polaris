@@ -261,6 +261,8 @@ func SetupTestAPI(objects ...runtime.Object) (kubernetes.Interface, dynamic.Inte
 			APIResources: []metav1.APIResource{
 				{Name: "clusterroles", Namespaced: false, Kind: "ClusterRole"},
 				{Name: "roles", Namespaced: true, Kind: "Role"},
+				{Name: "clusterrolebindings", Namespaced: false, Kind: "ClusterRoleBinding"},
+				{Name: "rolebindings", Namespaced: true, Kind: "RoleBinding"},
 			},
 		},
 	}
