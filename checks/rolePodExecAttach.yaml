@@ -1,4 +1,4 @@
-successMessage: The Role does not allow Pod exec or attach
+successMessage: The Role does not allow pods/exec or pods/attach
 failureMessage: The Role allows Pods/exec or pods/attach
 category: Security
 target: rbac.authorization.k8s.io/Role
@@ -40,5 +40,6 @@ schemaString: |
                 type: string
                 anyOf:
                   - const: '*'
+                  # An exec is also possible by `get`ing a web socket.
                   - const: 'get'
                   - const: 'create'
