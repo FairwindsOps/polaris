@@ -1,5 +1,5 @@
 successMessage: The RoleBinding does not reference a Role allowing Pod exec or attach
-failureMessage: The RoleBinding references a Role that allows Pods/exec or pods/attach
+failureMessage: The RoleBinding references a Role that allows Pods/exec, allows pods/attach, or that does not exist
 category: Security
 target: rbac.authorization.k8s.io/RoleBinding
 schemaString: |

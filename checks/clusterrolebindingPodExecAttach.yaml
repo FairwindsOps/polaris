@@ -1,5 +1,5 @@
 successMessage: The ClusterRoleBinding does not reference a ClusterRole allowing pods/exec or pods/attach
-failureMessage: The ClusterRoleBinding references a ClusterRole that allows Pods/exec or pods/attach
+failureMessage: The ClusterRoleBinding references a ClusterRole that allows Pods/exec, allows pods/attach, or that does not exist
 category: Security
 target: rbac.authorization.k8s.io/ClusterRoleBinding
 schemaString: |
