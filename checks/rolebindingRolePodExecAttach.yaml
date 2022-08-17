@@ -6,7 +6,7 @@ schemaString: |
   '$schema': http://json-schema.org/draft-07/schema
   type: object
   anyOf:
-    # Do not alert on default Roles.
+    # Do not alert on default RoleBindings.
     - required: ["metadata"]
       properties:
         metadata:
@@ -19,6 +19,18 @@ schemaString: |
                 - const: "cluster-admin"
                 - const: "system:controller:generic-garbage-collector"
                 - const: "system:controller:namespace-controller"
+    # Pass RoleBindings that point to a ClusterRole.
+    - required: ["roleRef"]
+      properties:
+        roleRef:
+          required: ["apiGroup", "kind", "name"]
+          properties:
+            apiGroup:
+              type: string
+              const: "rbac.authorization.k8s.io"
+            kind:
+              type: string
+              const: "Role"
     - required: ["roleRef"]
       properties:
         roleRef:
@@ -36,6 +48,8 @@ schemaString: |
 additionalSchemaStrings:
   rbac.authorization.k8s.io/Role: |
     type: object
+    # This schema is validated for all roleBindings, regardless of their roleRef.
+    {{ if eq .roleRef.kind "Role" }}
     # Do not alert on default RoleBindings.
     {{ if and (ne .metadata.name "cluster-admin") (ne .metadata.name "system:controller:generic-garbage-collector") (ne .metadata.name "system:controller:namespace-controller") }}
     required: ["metadata", "rules"]
@@ -79,4 +93,5 @@ additionalSchemaStrings:
                         # An exec is also possible by `get`ing a web socket.
                         - const: 'get'
                         - const: 'create'
+    {{ end }}
     {{ end }}
