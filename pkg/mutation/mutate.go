@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -25,6 +26,7 @@ func ApplyAllMutations(manifest string, mutations []jsonpatch.Operation) (string
 	}
 
 	for _, patch := range mutations {
+		splits := getSplitFromPath(patch.Path)
 		tag, value, kind := getValueTagAndKind(patch.Value)
 		switch patch.Operation {
 		case "add", "replace":
@@ -33,13 +35,13 @@ func ApplyAllMutations(manifest string, mutations []jsonpatch.Operation) (string
 				Tag:   tag,
 				Value: value,
 			}
-			err = addOrReplaceValue(&doc, patch.Path, &newNode)
+			err = addOrReplaceValue(&doc, splits, &newNode)
 			if err != nil {
 				return mutated, err
 			}
 		case "remove":
 			// ignore error if the value specified does not exists
-			_ = removeNodes(&doc, patch.Path)
+			_ = removeNodes(&doc, splits)
 		}
 	}
 
@@ -236,8 +238,7 @@ func findNodes(node *yaml.Node, selectors []string) ([]*yaml.Node, error) {
 	return []*yaml.Node{node}, nil
 }
 
-func addOrReplaceValue(node *yaml.Node, path string, value *yaml.Node) error {
-	splits := strings.Split(path, "/")
+func addOrReplaceValue(node *yaml.Node, splits []string, value *yaml.Node) error {
 	nodes, err := findNodes(node.Content[0], splits)
 	if err != nil {
 		return err
@@ -280,12 +281,10 @@ func getValueTagAndKind(valueInterface interface{}) (tag, value string, kind yam
 	}
 }
 
-func removeNodes(doc *yaml.Node, path string) error {
-	selectors := strings.Split(path, "/")
-
+func removeNodes(doc *yaml.Node, selectors []string) error {
 	err := removeMatchingNode(doc.Content[0], selectors)
 	if err != nil {
-		return errors.Wrapf(err, "failed to match %q", path)
+		return errors.Wrapf(err, "failed to match %q", strings.Join(selectors, "/"))
 	}
 
 	return nil
@@ -353,4 +352,24 @@ func removeMatchingNode(node *yaml.Node, selectors []string) error {
 	}
 
 	return errors.Errorf("can't find %q", strings.Join(selectors, "."))
+}
+
+func getSplitFromPath(path string) []string {
+	var digitStarCheck = regexp.MustCompile(`^[0-9*]+$`)
+	splits := strings.Split(path, "/")
+	var formatedSplit []string
+	for _, key := range splits {
+		if key == "" {
+			continue
+		}
+		if digitStarCheck.MatchString(key) {
+			lastElementIdx := len(formatedSplit) - 1
+			lastElement := formatedSplit[lastElementIdx]
+			lastElement = fmt.Sprintf("%s[%s]", lastElement, key)
+			formatedSplit[lastElementIdx] = lastElement
+			continue
+		}
+		formatedSplit = append(formatedSplit, key)
+	}
+	return formatedSplit
 }

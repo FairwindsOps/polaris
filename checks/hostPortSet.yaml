@@ -15,4 +15,4 @@ schema:
             const: 0
 mutations:
   - op: remove
-    path: /ports[*]/hostPort
+    path: /ports/*/hostPort
