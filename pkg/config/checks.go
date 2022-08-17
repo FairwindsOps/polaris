@@ -59,6 +59,9 @@ var (
 		"missingPodDisruptionBudget",
 		"missingNetworkPolicy",
 		"sensitiveConfigmapContent",
+		"clusterrolebindingClusterAdmin",
+		"rolebindingClusterAdminClusterRole",
+		"rolebindingClusterAdminRole",
 	}
 )
 
