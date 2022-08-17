@@ -30,6 +30,14 @@ var locationYaml = `pets:
   - name: scooby
 `
 
+var redactedYaml = `pets:
+  - name: fido
+    owners:
+      - name: Alice
+      - name: Bob
+  - name: scooby
+`
+
 func TestApplyAllMutationsAddOps(t *testing.T) {
 
 	mutation := jsonpatch.Operation{
@@ -41,4 +49,13 @@ func TestApplyAllMutationsAddOps(t *testing.T) {
 	mutated, err := ApplyAllMutations(oldYaml, []jsonpatch.Operation{mutation})
 	assert.NoError(t, err)
 	assert.EqualValues(t, locationYaml, mutated)
+
+	mutation = jsonpatch.Operation{
+		Operation: "remove",
+		Path:      "/pets/0/owners/*/aliases",
+	}
+
+	mutated, err = ApplyAllMutations(oldYaml, []jsonpatch.Operation{mutation})
+	assert.NoError(t, err)
+	assert.EqualValues(t, redactedYaml, mutated)
 }
