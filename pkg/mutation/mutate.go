@@ -35,13 +35,14 @@ func ApplyAllMutations(manifest string, mutations []jsonpatch.Operation) (string
 
 	for _, patch := range mutations {
 		splits := getSplitFromPath(patch.Path)
-		tag, value, kind := getValueTagAndKind(patch.Value)
+		tag, value, kind, content := getValueTagAndKind(patch.Value)
 		switch patch.Operation {
 		case "add", "replace":
 			var newNode = yaml.Node{
-				Kind:  kind,
-				Tag:   tag,
-				Value: value,
+				Kind:    kind,
+				Tag:     tag,
+				Value:   value,
+				Content: content,
 			}
 			err = addOrReplaceValue(&doc, splits, &newNode)
 			if err != nil {
@@ -146,9 +147,16 @@ func UpdateMutatedContentWithComments(yamlContent string, comments []config.Muta
 func findNodes(node *yaml.Node, selectors []string) ([]*yaml.Node, error) {
 	var nodes []*yaml.Node
 	currentSelector := selectors[0]
+	isLastSelector := len(selectors) == 1
 	// array[N] or array[*] selectors.
 	if i := strings.LastIndex(currentSelector, "["); i > 0 && strings.HasSuffix(currentSelector, "]") {
 		return findArrayNodes(selectors, currentSelector, node, nodes, i)
+	}
+	if currentSelector == "-" {
+		if isLastSelector {
+			return []*yaml.Node{node}, nil
+		}
+		findNodes(node, selectors[1:])
 	}
 	switch node.Kind {
 	case yaml.MappingNode:
@@ -156,7 +164,6 @@ func findNodes(node *yaml.Node, selectors []string) ([]*yaml.Node, error) {
 			// Does the current key match the selector?
 			if node.Content[i].Value == currentSelector {
 				// Found last key, return its value.
-				isLastSelector := len(selectors) == 1
 				if !isLastSelector {
 					// Match the rest of the selector path, ie. go deeper
 					// in to the value node.
@@ -177,7 +184,15 @@ func findNodes(node *yaml.Node, selectors []string) ([]*yaml.Node, error) {
 		return nil, errors.Errorf("parent node is of unknown kind %v", node.Kind)
 	}
 	// Create the rest of the selector path.
-	for _, selector := range selectors {
+	for idx, selector := range selectors {
+		if selector == "-" {
+			continue
+		}
+		kind, tag := yaml.MappingNode, mapTag
+		// if the next selector is "-" then current selector is sequence/slice/array
+		if idx < len(selectors)-1 && selectors[idx+1] == "-" {
+			kind, tag = yaml.SequenceNode, seqTag
+		}
 		var newNode = yaml.Node{
 			Content: []*yaml.Node{
 				{
@@ -186,8 +201,8 @@ func findNodes(node *yaml.Node, selectors []string) ([]*yaml.Node, error) {
 					Value: selector,
 				},
 				{
-					Kind: yaml.MappingNode,
-					Tag:  mapTag,
+					Kind: kind,
+					Tag:  tag,
 				},
 			},
 		}
@@ -225,19 +240,25 @@ func addOrReplaceValue(node *yaml.Node, splits []string, value *yaml.Node) error
 	return nil
 }
 
-func getValueTagAndKind(valueInterface interface{}) (tag, value string, kind yaml.Kind) {
+func getValueTagAndKind(valueInterface interface{}) (tag, value string, kind yaml.Kind, contents []*yaml.Node) {
+	var content []*yaml.Node
 	switch v := valueInterface.(type) {
 	case int:
-		return intTag, strconv.Itoa(v), yaml.ScalarNode
+		return intTag, strconv.Itoa(v), yaml.ScalarNode, content
 	case float64:
-		return intTag, strconv.Itoa(int(v)), yaml.ScalarNode
+		return intTag, strconv.Itoa(int(v)), yaml.ScalarNode, content
 	case string:
-		// v is a string here, so e.g. v + " Yeah!" is possible.
-		return strTag, v, yaml.ScalarNode
+		if strings.HasPrefix(v, "[") && strings.HasSuffix(v, "]") && len(v) > 2 {
+			itemStr := v[1 : len(v)-1]
+			items := strings.Split(itemStr, ",")
+			content = getSequenceNodeContent(items)
+			return seqTag, "", yaml.SequenceNode, content
+		}
+		return strTag, v, yaml.ScalarNode, content
 	case bool:
-		return boolTag, fmt.Sprintf("%t", v), yaml.ScalarNode
+		return boolTag, fmt.Sprintf("%t", v), yaml.ScalarNode, content
 	default:
-		return mapTag, fmt.Sprintf("%v", v), yaml.MappingNode
+		return mapTag, fmt.Sprintf("%v", v), yaml.MappingNode, content
 	}
 }
 
@@ -384,4 +405,18 @@ func findArrayNodes(selectors []string, currentSelector string, node *yaml.Node,
 		}
 	}
 	return nodes, nil
+}
+
+func getSequenceNodeContent(items []string) []*yaml.Node {
+	var content []*yaml.Node
+	for _, item := range items {
+		tag, value, kind, _ := getValueTagAndKind(item)
+		var newNode = yaml.Node{
+			Kind:  kind,
+			Tag:   tag,
+			Value: value,
+		}
+		content = append(content, &newNode)
+	}
+	return content
 }
