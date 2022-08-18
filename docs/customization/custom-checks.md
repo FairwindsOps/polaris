@@ -138,6 +138,7 @@ schema:
 * The object available via the go template is the full object, and not limited by `target`.
 * A check of `target: PodSpec` can directly access the pod specification via the go template variable `.Polaris.PodSpec`.
 * A check of `target: PodTemplate` can directly access the pod template via the go template variable `.Polaris.PodTemplate`.
+* A check of `target: Container` can directly access the container being checked via the go template variable `.Polaris.container`. The pod template and pod specification can also be accessed via the respective variables `.Polaris.PodTemplate` and `.Polaris.PodSpec`. Access to pod-level fields allows a container check to consult related fields from the pod, such as `securityContext`.
 
 You can also use the full [Go template syntax](https://golang.org/pkg/text/template/), though
 you may need to specify your schema as a string in order to use concepts like `range`. E.g.

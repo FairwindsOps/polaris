@@ -1,0 +1,16 @@
+# This fails because an environment variable named OCI_CLI_KEY_CONTENT is set.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+spec:
+  containers:
+  - name: nginx
+    env:
+    - name: password
+      value: abc123
+    - name: OCI_CLI_KEY_CONTENT
+      value: xxx
+    image: nginx
+    ports:
+    - containerPort: 80

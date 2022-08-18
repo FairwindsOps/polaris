@@ -1,0 +1,7 @@
+# This fails because the key AZURE_BATCH_KEY is set.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-config
+data:
+  AZURE_BATCH_KEY: xxxxx

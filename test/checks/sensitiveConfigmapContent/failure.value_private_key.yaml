@@ -1,0 +1,11 @@
+# This fails because a value contains a private key.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-config
+data:
+  a_key: and value that are ok
+  ssh_access: |
+    -----BEGIN PRIVATE KEY-----
+    xxxxxxxx
+    -----END OPENSSH PRIVATE KEY-----

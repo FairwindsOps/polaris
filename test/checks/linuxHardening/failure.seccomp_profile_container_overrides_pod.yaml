@@ -1,0 +1,17 @@
+# This fails because the container overrides the pod profile type.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+spec:
+  securityContext:
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+  - name: nginx
+    securityContext:
+      seccompProfile:
+        type: Unconfined
+    image: nginx
+    ports:
+    - containerPort: 80
