@@ -1,12 +1,12 @@
-# This fails because the roleBinding references a ClusterRole that uses all wildcards and all verbs.
+# This succeeds because the RoleBinding references a ClusterRole with safe permissions.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: test
 rules:
-  - apiGroups: [ "*" ]
-    resources: [ "*" ]
-    verbs: [ "get", "list", "watch", "create", "update", "patch", "delete" ]
+  - apiGroups: [ "" ]
+    resources: [ "deployments" ]
+    verbs: [ "get", "list" ]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -22,7 +22,7 @@ subjects:
   kind: User
   name: testuser
 ---
-# This Role exists so there is at least one Role for the additionalSchema to find.
+  # This Role exists so there is at least one Role for the additionalSchema to find.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:

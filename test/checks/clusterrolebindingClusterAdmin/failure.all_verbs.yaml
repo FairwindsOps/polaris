@@ -27,7 +27,6 @@ kind: Role
 metadata:
   name: not-used
   namespace: test
-  namespace: test
 rules:
   - apiGroups: [ "" ]
     resources: [ "pods" ]

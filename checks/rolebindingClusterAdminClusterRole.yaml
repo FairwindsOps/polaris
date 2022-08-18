@@ -1,5 +1,5 @@
-successMessage: The RoleBinding does not reference a ClusterRole with wildcard permissions
-failureMessage: The RoleBinding references a ClusterRole with wildcard permissions
+successMessage: The RoleBinding does not reference the default cluster-admin ClusterRole or one with wildcard permissions
+failureMessage: The RoleBinding references the default cluster-admin ClusterRole or one with wildcard permissions
 category: Security
 target: rbac.authorization.k8s.io/RoleBinding
 schemaString: |
@@ -29,6 +29,8 @@ schemaString: |
             name:
               type: string
               minLength: 1
+              not:
+                const: "cluster-admin"
 additionalSchemaStrings:
   rbac.authorization.k8s.io/ClusterRole: |
     type: object

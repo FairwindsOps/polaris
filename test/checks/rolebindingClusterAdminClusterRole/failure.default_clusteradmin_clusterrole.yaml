@@ -24,7 +24,7 @@ rules:
   resources:
   - '*'
   verbs:
-  - '*'
+  - 'get'
 - nonResourceURLs:
   - '*'
   verbs:
