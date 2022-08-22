@@ -6,19 +6,6 @@ schemaString: |
   '$schema': http://json-schema.org/draft-07/schema
   type: object
   anyOf:
-    # Do not alert on default RoleBindings.
-    - required: ["metadata"]
-      properties:
-        metadata:
-          type: object
-          required: ["name"]
-          properties:
-            name:
-              type: string
-              anyOf:
-                - const: "cluster-admin"
-                - const: "system:controller:generic-garbage-collector"
-                - const: "system:controller:namespace-controller"
     # Pass RoleBindings that point to a ClusterRole.
     - required: ["roleRef"]
       properties:
@@ -50,8 +37,6 @@ additionalSchemaStrings:
     type: object
     # This schema is validated for all roleBindings, regardless of their roleRef.
     {{ if eq .roleRef.kind "Role" }}
-    # Do not alert on default RoleBindings.
-    {{ if and (ne .metadata.name "cluster-admin") (ne .metadata.name "system:controller:generic-garbage-collector") (ne .metadata.name "system:controller:namespace-controller") }}
     required: ["metadata", "rules"]
     allOf:
       - properties:
@@ -93,5 +78,4 @@ additionalSchemaStrings:
                         # An exec is also possible by `get`ing a web socket.
                         - const: 'get'
                         - const: 'create'
-    {{ end }}
     {{ end }}
