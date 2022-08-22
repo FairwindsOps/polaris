@@ -15,8 +15,9 @@ RUN go get -u github.com/gobuffalo/packr/v2/packr2
 COPY . .
 RUN packr2 build -a -o polaris *.go
 
-FROM alpine:3.16.1
+FROM alpine:3.16
 WORKDIR /usr/local/bin
+RUN apk -U upgrade
 RUN apk --no-cache add ca-certificates
 
 RUN addgroup -S polaris && adduser -u 1200 -S polaris -G polaris
