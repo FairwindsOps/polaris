@@ -7,7 +7,7 @@ meta:
 ---
 ## 7.0.2
 * Fixes for pretty CLI output
-* Some new checks
+* Some new checks (disabled by default)
 * Some additional features in templating engine
 
 ## 7.0.1
