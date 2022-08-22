@@ -256,6 +256,15 @@ func SetupTestAPI(objects ...runtime.Object) (kubernetes.Interface, dynamic.Inte
 				{Name: "namespaces", Namespaced: false, Kind: "Namespace"},
 			},
 		},
+		{
+			GroupVersion: "rbac.authorization.k8s.io/v1",
+			APIResources: []metav1.APIResource{
+				{Name: "clusterroles", Namespaced: false, Kind: "ClusterRole"},
+				{Name: "roles", Namespaced: true, Kind: "Role"},
+				{Name: "clusterrolebindings", Namespaced: false, Kind: "ClusterRoleBinding"},
+				{Name: "rolebindings", Namespaced: true, Kind: "RoleBinding"},
+			},
+		},
 	}
 	return k, dynamicClient
 }

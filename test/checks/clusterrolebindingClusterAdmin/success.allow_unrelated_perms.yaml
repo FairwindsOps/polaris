@@ -1,0 +1,22 @@
+# This succeeds because the ClusterRoleBinding references a ClusterRole with safe permissions.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: test
+rules:
+  - apiGroups: [ "" ]
+    resources: [ "deployments" ]
+    verbs: [ "get", "list" ]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: test
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: test
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: testuser
