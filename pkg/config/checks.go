@@ -64,6 +64,9 @@ var (
 		"clusterrolebindingPodExecAttach",
 		"rolebindingClusterRolePodExecAttach",
 		"rolebindingRolePodExecAttach",
+		"clusterrolebindingClusterAdmin",
+		"rolebindingClusterAdminClusterRole",
+		"rolebindingClusterAdminRole",
 	}
 )
 

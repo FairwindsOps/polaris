@@ -1,0 +1,34 @@
+# This succeeds because the roleBinding references a ClusterRole instead of a Role.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: test
+rules:
+  - apiGroups: [ "" ]
+    resources: [ "pods" ]
+    verbs: [ get, create ]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: test
+  namespace: test
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: test
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: testuser
+---
+# This Role exists so there is at leat one Role for the additionalSchema to find.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: not-used
+  namespace: test
+rules:
+  - apiGroups: [ "" ]
+    resources: [ "pods" ]
+    verbs: [ list ]
