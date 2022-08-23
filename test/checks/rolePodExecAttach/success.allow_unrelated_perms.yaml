@@ -1,0 +1,10 @@
+# This succeeds because the Role does not allow pods/exec|attach.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: test
+  namespace: test
+rules:
+  - apiGroups: [ "" ]
+    resources: [ "pods" ]
+    verbs: [ get, create ]

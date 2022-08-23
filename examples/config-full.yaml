@@ -27,6 +27,11 @@ checks:
   hostPortSet: warning
   sensitiveContainerEnvVar: danger
   sensitiveConfigmapContent: danger
+  clusterrolePodExecAttach: danger
+  rolePodExecAttach: danger
+  clusterrolebindingPodExecAttach: danger
+  rolebindingClusterRolePodExecAttach: danger
+  rolebindingRolePodExecAttach: danger
   # custom
   resourceLimits: warning
   imageRegistry: danger
