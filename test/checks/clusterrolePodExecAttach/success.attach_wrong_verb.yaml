@@ -1,0 +1,9 @@
+# This succeeds because the ClusterRole allows pods/attach but with a safe verb.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: test
+rules:
+  - apiGroups: [ "" ]
+    resources: [ "pods/attach" ]
+    verbs: [ list ]

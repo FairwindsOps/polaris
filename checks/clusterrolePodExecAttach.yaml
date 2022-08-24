@@ -1,0 +1,55 @@
+successMessage: The ClusterRole does not allow pods/exec or pods/attach
+failureMessage: The ClusterRole allows Pods/exec or pods/attach
+category: Security
+target: rbac.authorization.k8s.io/ClusterRole
+schemaString: |
+  '$schema': http://json-schema.org/draft-07/schema
+  type: object
+  required: ["metadata", "rules"]
+  anyOf:
+    # Do not alert on default ClusterRoles.
+    - properties:
+        metadata:
+          required: ["name"]
+          properties:
+            name:
+              type: string
+              anyOf:
+                - const: 'admin'
+                - const: "cluster-admin"
+                - const: "edit"
+                - const: "system:aggregate-to-edit"
+                - const: "system:controller:generic-garbage-collector"
+                - const: "system:controller:namespace-controller"
+    - properties:
+        rules:
+          type: array
+          items:
+            type: object
+            not:
+              required: ["apiGroups", "resources", "verbs"]
+              properties:
+                apiGroups:
+                  type: array
+                  contains:
+                    type: string
+                    anyOf:
+                      - const: ""
+                      - const: '*'
+                resources:
+                  type: array
+                  contains:
+                    type: string
+                    anyOf:
+                      - const: '*'
+                      - const: "pods/exec"
+                      - const: "pods/attach"
+                verbs:
+                  type: array
+                  contains:
+                    type: string
+                    anyOf:
+                      - const: '*'
+                      # An exec is also possible by `get`ing a web socket.
+                      - const: 'get'
+                      - const: 'create'

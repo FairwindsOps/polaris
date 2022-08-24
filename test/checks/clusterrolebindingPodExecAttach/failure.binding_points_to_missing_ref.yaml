@@ -1,0 +1,13 @@
+# This fails because the roleRef points to a ClusterRole that does not exist.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: test
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: does-not-exist
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: testuser

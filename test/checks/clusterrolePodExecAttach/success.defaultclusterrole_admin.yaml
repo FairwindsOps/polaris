@@ -1,0 +1,9 @@
+# This succeeds because the ClusterRole is an expected default one (by name).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: admin
+rules:
+  - apiGroups: [ "" ]
+    resources: [ "pods/attach" ]
+    verbs: [ "create" ]
