@@ -144,7 +144,7 @@ func UpdateMutatedContentWithComments(yamlContent string, comments []config.Muta
 	return fileContent
 }
 
-func findNodes(node *yaml.Node, selectors []string) ([]*yaml.Node, error) {
+func ensurePathExists(node *yaml.Node, selectors []string) ([]*yaml.Node, error) {
 	var nodes []*yaml.Node
 	currentSelector := selectors[0]
 	isLastSelector := len(selectors) == 1
@@ -156,7 +156,10 @@ func findNodes(node *yaml.Node, selectors []string) ([]*yaml.Node, error) {
 		if isLastSelector {
 			return []*yaml.Node{node}, nil
 		}
-		findNodes(node, selectors[1:])
+		_, err := ensurePathExists(node, selectors[1:])
+		if err != nil {
+			return nil, err
+		}
 	}
 	switch node.Kind {
 	case yaml.MappingNode:
@@ -167,7 +170,7 @@ func findNodes(node *yaml.Node, selectors []string) ([]*yaml.Node, error) {
 				if !isLastSelector {
 					// Match the rest of the selector path, ie. go deeper
 					// in to the value node.
-					return findNodes(node.Content[i+1], selectors[1:])
+					return ensurePathExists(node.Content[i+1], selectors[1:])
 				}
 				return []*yaml.Node{node.Content[i+1]}, nil
 			}
@@ -214,7 +217,7 @@ func findNodes(node *yaml.Node, selectors []string) ([]*yaml.Node, error) {
 }
 
 func addOrReplaceValue(node *yaml.Node, splits []string, value *yaml.Node) error {
-	nodes, err := findNodes(node.Content[0], splits)
+	nodes, err := ensurePathExists(node.Content[0], splits)
 	if err != nil {
 		return err
 	}
@@ -226,7 +229,7 @@ func addOrReplaceValue(node *yaml.Node, splits []string, value *yaml.Node) error
 			// Append new values onto an existing map node.
 			node.Content = append(value.Content, node.Content...)
 		} else if node.Kind == yaml.MappingNode && node.Content == nil {
-			// Overwrite a new map node we created in findNodes(), as confirmed
+			// Overwrite a new map node we created in ensurePathExists(), as confirmed
 			// by the nil check (the node.Content wouldn't be nil otherwise).
 			*node = *value
 		} else if node.Kind == yaml.SequenceNode && value.Kind == yaml.SequenceNode {
@@ -289,7 +292,7 @@ func removeMatchingNode(node *yaml.Node, selectors []string) error {
 			return errors.Wrapf(err, "array index can't be negative %v[%v]", currentSelector, arrayIndex)
 		}
 		// Go into array node(s).
-		arrayNodes, err := findNodes(node, []string{currentSelector})
+		arrayNodes, err := ensurePathExists(node, []string{currentSelector})
 		if err != nil {
 			return errors.Errorf("can't find %v", currentSelector)
 		}
@@ -371,7 +374,7 @@ func findArrayNodes(selectors []string, currentSelector string, node *yaml.Node,
 	}
 
 	// Go into array node(s).
-	arrayNodes, err := findNodes(node, []string{currentSelector})
+	arrayNodes, err := ensurePathExists(node, []string{currentSelector})
 	if err != nil {
 		return nil, errors.Errorf("can't find %v", currentSelector)
 	}
@@ -396,7 +399,7 @@ func findArrayNodes(selectors []string, currentSelector string, node *yaml.Node,
 				nodes = append(nodes, node)
 			} else {
 				// Go deeper into a specific array.
-				deeperNodes, err := findNodes(node, selectors[1:])
+				deeperNodes, err := ensurePathExists(node, selectors[1:])
 				if err != nil {
 					return nil, errors.Wrapf(err, "failed to go deeper into %v[%v]", currentSelector, i)
 				}
