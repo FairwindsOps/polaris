@@ -5,6 +5,11 @@ meta:
     content: "Fairwinds Polaris | Changelog"
 
 ---
+## 7.0.2
+* Fixes for pretty CLI output
+* Some new checks (disabled by default)
+* Some additional features in templating engine
+
 ## 7.0.1
 * Documentation updates
 
