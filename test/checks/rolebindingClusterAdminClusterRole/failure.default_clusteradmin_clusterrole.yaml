@@ -1,0 +1,31 @@
+# This fails because the roleBinding references the default cluster-admin ClusterRole.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: test
+  namespace: test
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: testuser
+---
+# This ClusterRole emulates the default cluster-admin one.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cluster-admin
+rules:
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - 'get'
+- nonResourceURLs:
+  - '*'
+  verbs:
+  - '*'

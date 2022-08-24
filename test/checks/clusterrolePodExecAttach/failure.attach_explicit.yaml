@@ -1,0 +1,9 @@
+# This fails because the ClusterRole allows pods/attach.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: test
+rules:
+  - apiGroups: [ "" ]
+    resources: [ "pods/attach" ]
+    verbs: [ create ]

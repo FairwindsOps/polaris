@@ -1,0 +1,23 @@
+# This succeeds because the ClusterRole does not allow pods/exec|attach.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: test
+rules:
+  - apiGroups: [ "" ]
+    resources: [ "pods" ]
+    verbs: [ get, create ]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: test
+  namespace: test
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: test
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: testuser
