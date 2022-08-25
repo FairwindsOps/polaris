@@ -1,0 +1,84 @@
+successMessage: The RoleBinding does not reference the default cluster-admin ClusterRole or one with wildcard permissions
+failureMessage: The RoleBinding references the default cluster-admin ClusterRole or one with wildcard permissions
+category: Security
+target: rbac.authorization.k8s.io/RoleBinding
+schemaString: |
+  '$schema': http://json-schema.org/draft-07/schema
+  type: object
+  anyOf:
+    # Pass RoleBindings that point to a Role.
+    - required: ["roleRef"]
+      properties:
+        roleRef:
+          required: ["kind"]
+          properties:
+            kind:
+              type: string
+              const: "Role"
+    - required: ["roleRef"]
+      properties:
+        roleRef:
+          required: ["apiGroup", "kind", "name"]
+          properties:
+            apiGroup:
+              type: string
+              const: "rbac.authorization.k8s.io"
+            kind:
+              type: string
+              const: "ClusterRole"
+            name:
+              type: string
+              minLength: 1
+              not:
+                const: "cluster-admin"
+additionalSchemaStrings:
+  rbac.authorization.k8s.io/ClusterRole: |
+    type: object
+    # This schema is validated for all roleBindings, regardless of their roleRef.
+    {{ if eq .roleRef.kind "ClusterRole" }}
+    required: ["metadata", "rules"]
+    allOf:
+      - properties:
+          metadata:
+            required: ["name"]
+            properties:
+              name:
+                type: string
+                const: "{{ .roleRef.name }}"
+      - properties:
+          rules:
+            type: array
+            items:
+              type: object
+              not:
+                required: ["apiGroups", "resources", "verbs"]
+                properties:
+                  apiGroups:
+                    type: array
+                    contains:
+                      type: string
+                      const: "*"
+                  resources:
+                    type: array
+                    contains:
+                      type: string
+                      const: '*'
+                  verbs:
+                    type: array
+                    uniqueItems: true
+                    oneOf:
+                      - contains:
+                          type: string
+                          const: '*'
+                      - minItems: 7
+                        items:
+                          type: string
+                          enum:
+                            - "get"
+                            - "list"
+                            - "watch"
+                            - "create"
+                            - "update"
+                            - "patch"
+                            - "delete"
+    {{ end }}

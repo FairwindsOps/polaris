@@ -59,6 +59,14 @@ var (
 		"missingPodDisruptionBudget",
 		"missingNetworkPolicy",
 		"sensitiveConfigmapContent",
+		"clusterrolePodExecAttach",
+		"rolePodExecAttach",
+		"clusterrolebindingPodExecAttach",
+		"rolebindingClusterRolePodExecAttach",
+		"rolebindingRolePodExecAttach",
+		"clusterrolebindingClusterAdmin",
+		"rolebindingClusterAdminClusterRole",
+		"rolebindingClusterAdminRole",
 	}
 )
 

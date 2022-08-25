@@ -1,0 +1,22 @@
+# This fails because the ClusterRole allows pods/exec using all apiGroups.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: test
+rules:
+  - apiGroups: [ "*" ]
+    resources: [ "pods/exec" ]
+    verbs: [ get ]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: test
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: test
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: testuser
