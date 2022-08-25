@@ -173,7 +173,9 @@ func ApplyAllSchemaChecksToAllResources(conf *config.Configuration, resourceProv
 		if err != nil {
 			return results, err
 		}
-		results = append(results, result)
+		if result.Kind != "" && result.Name != "" {
+			results = append(results, result)
+		}
 	}
 	return results, nil
 }
