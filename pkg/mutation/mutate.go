@@ -234,7 +234,10 @@ func addOrReplaceValue(node *yaml.Node, splits []string, value *yaml.Node) error
 			*node = *value
 		} else if node.Kind == yaml.SequenceNode && value.Kind == yaml.SequenceNode {
 			// Append new values onto an existing array node.
-			node.Content = append(value.Content, node.Content...)
+			node.Content = append(node.Content, value.Content...)
+		} else if node.Kind == yaml.SequenceNode && value.Kind == yaml.ScalarNode {
+			// Append new value onto an existing array node.
+			node.Content = append(node.Content, value)
 		} else {
 			return errors.Errorf("can't overwrite %v value (line: %v, column: %v) with %v value", node.Tag, node.Line, node.Column, value.Tag)
 		}

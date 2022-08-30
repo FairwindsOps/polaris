@@ -45,8 +45,8 @@ var aliasesYaml = `pets:
           - rob
       - name: Bob
         aliases:
-          - rob
           - Robert
+          - rob
   - name: scooby
 `
 
@@ -73,7 +73,7 @@ func TestApplyAllMutations(t *testing.T) {
 
 	mutation = jsonpatch.Operation{
 		Operation: "add",
-		Value:     "[rob]",
+		Value:     "rob",
 		Path:      "/pets/0/owners/*/aliases/-",
 	}
 	mutated, err = ApplyAllMutations(oldYaml, []jsonpatch.Operation{mutation})
