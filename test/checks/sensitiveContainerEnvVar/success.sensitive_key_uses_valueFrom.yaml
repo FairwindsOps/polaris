@@ -1,0 +1,17 @@
+# This succeeds because a sensitive environment variable name references an external value.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+spec:
+  containers:
+  - name: nginx
+    env:
+    - name: token
+      valueFrom:
+        secretKeyRef:
+          key: token
+          name: a-secret
+    image: nginx
+    ports:
+    - containerPort: 80
