@@ -155,6 +155,15 @@ func createPathAndFindNodes(node *yaml.Node, selectors []string, create bool) ([
 		if checkIfNodeExistedInContent(node.Content, currentSelector) || !create {
 			return findArrayNodes(selectors, currentSelector, node, nodes, arrayIndex, create)
 		}
+		index, err := strconv.Atoi(arrayIndex)
+		if err != nil {
+			if arrayIndex != "-" {
+				return nil, errors.Wrapf(err, "can't parse array index from %v[%v]", currentSelector, arrayIndex)
+			}
+			// if index provided is greater than or less than 0 for an empty array should throw an exception
+		} else if index != 0 {
+			return nil, errors.Wrapf(err, "array index does not exists", currentSelector, arrayIndex)
+		}
 		// default to zero since no node is present.
 		selectorsToCreateNodes := []string{currentSelector, "0"}
 		if len(selectors) > 1 {
@@ -447,6 +456,7 @@ func createNonExistingPath(selectors []string, node *yaml.Node) []*yaml.Node {
 				},
 			},
 		}
+		// if previous node is array/sequenceNode append a node rather than appending contents
 		if node.Kind == yaml.SequenceNode {
 			newNode.Kind = kind
 			node.Content = append(node.Content, &newNode)
