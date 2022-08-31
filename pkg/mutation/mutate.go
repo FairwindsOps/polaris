@@ -209,7 +209,6 @@ func addOrReplaceValue(node *yaml.Node, splits []string, value *yaml.Node) error
 		return err
 	}
 	for _, node := range nodes {
-		fmt.Printf("is this called here, %v \n", node.Value)
 		if node.Kind == yaml.ScalarNode {
 			// Overwrite an existing scalar value with a new value (whatever kind).
 			*node = *value
@@ -217,7 +216,6 @@ func addOrReplaceValue(node *yaml.Node, splits []string, value *yaml.Node) error
 			// Append new values onto an existing map node.
 			node.Content = append(value.Content, node.Content...)
 		} else if node.Kind == yaml.MappingNode && node.Content == nil {
-			fmt.Printf("is this called here, %v \n", node.Kind == yaml.MappingNode)
 			// Overwrite a new map node we created in createPathAndFindNodes(), as confirmed
 			// by the nil check (the node.Content wouldn't be nil otherwise).
 			*node = *value
@@ -452,7 +450,6 @@ func createNonExistingPath(selectors []string, node *yaml.Node) []*yaml.Node {
 		node.Content = append(node.Content, newNode.Content...)
 		node = newNode.Content[len(newNode.Content)-1]
 	}
-	fmt.Printf("kind, %v \n", node.Kind)
 	return []*yaml.Node{node}
 
 }

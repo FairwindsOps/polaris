@@ -63,40 +63,40 @@ var addedOwnersKeyYaml = `pets:
 
 func TestApplyAllMutations(t *testing.T) {
 
-	// mutation := jsonpatch.Operation{
-	// 	Operation: "add",
-	// 	Value:     "Denver",
-	// 	Path:      "/pets/0/owners/*/location",
-	// }
-
-	// mutated, err := ApplyAllMutations(oldYaml, []jsonpatch.Operation{mutation})
-	// assert.NoError(t, err)
-	// assert.EqualValues(t, locationYaml, mutated)
-
-	// mutation = jsonpatch.Operation{
-	// 	Operation: "remove",
-	// 	Path:      "/pets/0/owners/*/aliases",
-	// }
-
-	// mutated, err = ApplyAllMutations(oldYaml, []jsonpatch.Operation{mutation})
-	// assert.NoError(t, err)
-	// assert.EqualValues(t, redactedYaml, mutated)
-
-	// mutation = jsonpatch.Operation{
-	// 	Operation: "add",
-	// 	Value:     "rob",
-	// 	Path:      "/pets/0/owners/*/aliases/-",
-	// }
-	// mutated, err = ApplyAllMutations(oldYaml, []jsonpatch.Operation{mutation})
-	// assert.NoError(t, err)
-	// assert.EqualValues(t, aliasesYaml, mutated)
-
 	mutation := jsonpatch.Operation{
+		Operation: "add",
+		Value:     "Denver",
+		Path:      "/pets/0/owners/*/location",
+	}
+
+	mutated, err := ApplyAllMutations(oldYaml, []jsonpatch.Operation{mutation})
+	assert.NoError(t, err)
+	assert.EqualValues(t, locationYaml, mutated)
+
+	mutation = jsonpatch.Operation{
+		Operation: "remove",
+		Path:      "/pets/0/owners/*/aliases",
+	}
+
+	mutated, err = ApplyAllMutations(oldYaml, []jsonpatch.Operation{mutation})
+	assert.NoError(t, err)
+	assert.EqualValues(t, redactedYaml, mutated)
+
+	mutation = jsonpatch.Operation{
+		Operation: "add",
+		Value:     "rob",
+		Path:      "/pets/0/owners/*/aliases/-",
+	}
+	mutated, err = ApplyAllMutations(oldYaml, []jsonpatch.Operation{mutation})
+	assert.NoError(t, err)
+	assert.EqualValues(t, aliasesYaml, mutated)
+
+	mutation = jsonpatch.Operation{
 		Operation: "add",
 		Value:     "Alice",
 		Path:      "/pets/0/owners/0/name",
 	}
-	mutated, err := ApplyAllMutations(nonOwnersKeyYaml, []jsonpatch.Operation{mutation})
+	mutated, err = ApplyAllMutations(nonOwnersKeyYaml, []jsonpatch.Operation{mutation})
 	assert.NoError(t, err)
 	assert.EqualValues(t, addedOwnersKeyYaml, mutated)
 }
