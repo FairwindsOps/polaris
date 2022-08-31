@@ -206,7 +206,7 @@ func createPathAndFindNodes(node *yaml.Node, selectors []string, create bool) ([
 		return nil, errors.Errorf("parent node is of unknown kind %v", node.Kind)
 	}
 	if !create {
-		return nil, errors.Errorf("failed to match %q", strings.Join(selectors, "/"))
+		return nil, errors.Errorf("failed to match %s", strings.Join(selectors, "/"))
 	}
 
 	return createNonExistingPath(selectors, node), nil
