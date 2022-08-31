@@ -144,19 +144,29 @@ func UpdateMutatedContentWithComments(yamlContent string, comments []config.Muta
 	return fileContent
 }
 
-func createPathAndFindNodes(node *yaml.Node, selectors []string) ([]*yaml.Node, error) {
+func createPathAndFindNodes(node *yaml.Node, selectors []string, create bool) ([]*yaml.Node, error) {
 	var nodes []*yaml.Node
 	currentSelector := selectors[0]
 	isLastSelector := len(selectors) == 1
 	// array[N] or array[*] selectors.
 	if i := strings.LastIndex(currentSelector, "["); i > 0 && strings.HasSuffix(currentSelector, "]") {
-		return findArrayNodes(selectors, currentSelector, node, nodes, i)
+		arrayIndex := currentSelector[i+1 : len(currentSelector)-1]
+		currentSelector = currentSelector[:i]
+		if checkIfNodeExistedInContent(node.Content, currentSelector) || !create {
+			return findArrayNodes(selectors, currentSelector, node, nodes, arrayIndex, create)
+		}
+		// default to zero since no node is present.
+		selectorsToCreateNodes := []string{currentSelector, "0"}
+		if len(selectors) > 1 {
+			selectorsToCreateNodes = append(selectorsToCreateNodes, selectors[1:]...)
+			return createNonExistingPath(selectorsToCreateNodes, node), nil
+		}
 	}
 	if currentSelector == "-" {
 		if isLastSelector {
 			return []*yaml.Node{node}, nil
 		}
-		_, err := createPathAndFindNodes(node, selectors[1:])
+		_, err := createPathAndFindNodes(node, selectors[1:], create)
 		if err != nil {
 			return nil, err
 		}
@@ -170,7 +180,7 @@ func createPathAndFindNodes(node *yaml.Node, selectors []string) ([]*yaml.Node, 
 				if !isLastSelector {
 					// Match the rest of the selector path, ie. go deeper
 					// in to the value node.
-					return createPathAndFindNodes(node.Content[i+1], selectors[1:])
+					return createPathAndFindNodes(node.Content[i+1], selectors[1:], create)
 				}
 				return []*yaml.Node{node.Content[i+1]}, nil
 			}
@@ -186,42 +196,20 @@ func createPathAndFindNodes(node *yaml.Node, selectors []string) ([]*yaml.Node, 
 	default:
 		return nil, errors.Errorf("parent node is of unknown kind %v", node.Kind)
 	}
-	// Create the rest of the selector path.
-	for idx, selector := range selectors {
-		if selector == "-" {
-			continue
-		}
-		kind, tag := yaml.MappingNode, mapTag
-		// if the next selector is "-" then current selector is sequence/slice/array
-		if idx < len(selectors)-1 && selectors[idx+1] == "-" {
-			kind, tag = yaml.SequenceNode, seqTag
-		}
-		var newNode = yaml.Node{
-			Content: []*yaml.Node{
-				{
-					Kind:  yaml.ScalarNode,
-					Tag:   strTag,
-					Value: selector,
-				},
-				{
-					Kind: kind,
-					Tag:  tag,
-				},
-			},
-		}
-		node.Content = append(node.Content, newNode.Content...)
-		node = newNode.Content[len(newNode.Content)-1]
+	if !create {
+		return nil, errors.Errorf("failed to match %q", strings.Join(selectors, "/"))
 	}
 
-	return []*yaml.Node{node}, nil
+	return createNonExistingPath(selectors, node), nil
 }
 
 func addOrReplaceValue(node *yaml.Node, splits []string, value *yaml.Node) error {
-	nodes, err := createPathAndFindNodes(node.Content[0], splits)
+	nodes, err := createPathAndFindNodes(node.Content[0], splits, true)
 	if err != nil {
 		return err
 	}
 	for _, node := range nodes {
+		fmt.Printf("is this called here, %v \n", node.Value)
 		if node.Kind == yaml.ScalarNode {
 			// Overwrite an existing scalar value with a new value (whatever kind).
 			*node = *value
@@ -229,6 +217,7 @@ func addOrReplaceValue(node *yaml.Node, splits []string, value *yaml.Node) error
 			// Append new values onto an existing map node.
 			node.Content = append(value.Content, node.Content...)
 		} else if node.Kind == yaml.MappingNode && node.Content == nil {
+			fmt.Printf("is this called here, %v \n", node.Kind == yaml.MappingNode)
 			// Overwrite a new map node we created in createPathAndFindNodes(), as confirmed
 			// by the nil check (the node.Content wouldn't be nil otherwise).
 			*node = *value
@@ -295,7 +284,7 @@ func removeMatchingNode(node *yaml.Node, selectors []string) error {
 			return errors.Wrapf(err, "array index can't be negative %v[%v]", currentSelector, arrayIndex)
 		}
 		// Go into array node(s).
-		arrayNodes, err := createPathAndFindNodes(node, []string{currentSelector})
+		arrayNodes, err := createPathAndFindNodes(node, []string{currentSelector}, false)
 		if err != nil {
 			return errors.Errorf("can't find %v", currentSelector)
 		}
@@ -361,9 +350,7 @@ func getSplitFromPath(path string) []string {
 	return formatedSplit
 }
 
-func findArrayNodes(selectors []string, currentSelector string, node *yaml.Node, nodes []*yaml.Node, idx int) ([]*yaml.Node, error) {
-	arrayIndex := currentSelector[idx+1 : len(currentSelector)-1]
-	currentSelector = currentSelector[:idx]
+func findArrayNodes(selectors []string, currentSelector string, node *yaml.Node, nodes []*yaml.Node, arrayIndex string, create bool) ([]*yaml.Node, error) {
 
 	index, err := strconv.Atoi(arrayIndex)
 	if err != nil {
@@ -375,9 +362,8 @@ func findArrayNodes(selectors []string, currentSelector string, node *yaml.Node,
 	} else if index < 0 {
 		return nil, errors.Wrapf(err, "array index can't be negative %v[%v]", currentSelector, arrayIndex)
 	}
-
 	// Go into array node(s).
-	arrayNodes, err := createPathAndFindNodes(node, []string{currentSelector})
+	arrayNodes, err := createPathAndFindNodes(node, []string{currentSelector}, create)
 	if err != nil {
 		return nil, errors.Errorf("can't find %v", currentSelector)
 	}
@@ -402,7 +388,7 @@ func findArrayNodes(selectors []string, currentSelector string, node *yaml.Node,
 				nodes = append(nodes, node)
 			} else {
 				// Go deeper into a specific array.
-				deeperNodes, err := createPathAndFindNodes(node, selectors[1:])
+				deeperNodes, err := createPathAndFindNodes(node, selectors[1:], create)
 				if err != nil {
 					return nil, errors.Wrapf(err, "failed to go deeper into %v[%v]", currentSelector, i)
 				}
@@ -425,4 +411,48 @@ func getSequenceNodeContent(items []string) []*yaml.Node {
 		content = append(content, &newNode)
 	}
 	return content
+}
+
+func checkIfNodeExistedInContent(nodes []*yaml.Node, currentSelector string) bool {
+	for i := 0; i < len(nodes); i += 2 {
+		// Does the current key match the selector?
+		if nodes[i].Value == currentSelector {
+			return true
+		}
+	}
+
+	return false
+}
+
+func createNonExistingPath(selectors []string, node *yaml.Node) []*yaml.Node {
+	var digitDashCheck = regexp.MustCompile(`^[0-9-]+$`)
+	// Create the rest of the selector path.
+	for idx, selector := range selectors {
+		if digitDashCheck.MatchString(selector) {
+			continue
+		}
+		kind, tag := yaml.MappingNode, mapTag
+		// if the next selector is "-" then current selector is sequence/slice/array
+		if idx < len(selectors)-1 && digitDashCheck.MatchString(selectors[idx+1]) {
+			kind, tag = yaml.SequenceNode, seqTag
+		}
+		var newNode = yaml.Node{
+			Content: []*yaml.Node{
+				{
+					Kind:  yaml.ScalarNode,
+					Tag:   strTag,
+					Value: selector,
+				},
+				{
+					Kind: kind,
+					Tag:  tag,
+				},
+			},
+		}
+		node.Content = append(node.Content, newNode.Content...)
+		node = newNode.Content[len(newNode.Content)-1]
+	}
+	fmt.Printf("kind, %v \n", node.Kind)
+	return []*yaml.Node{node}
+
 }
