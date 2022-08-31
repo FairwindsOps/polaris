@@ -447,7 +447,12 @@ func createNonExistingPath(selectors []string, node *yaml.Node) []*yaml.Node {
 				},
 			},
 		}
-		node.Content = append(node.Content, newNode.Content...)
+		if node.Kind == yaml.SequenceNode {
+			newNode.Kind = kind
+			node.Content = append(node.Content, &newNode)
+		} else {
+			node.Content = append(node.Content, newNode.Content...)
+		}
 		node = newNode.Content[len(newNode.Content)-1]
 	}
 	return []*yaml.Node{node}
