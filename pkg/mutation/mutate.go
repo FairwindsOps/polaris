@@ -158,11 +158,11 @@ func createPathAndFindNodes(node *yaml.Node, selectors []string, create bool) ([
 		index, err := strconv.Atoi(arrayIndex)
 		if err != nil {
 			if arrayIndex != "-" {
-				return nil, errors.Wrapf(err, "can't parse array index from %v[%v]", currentSelector, arrayIndex)
+				return nil, errors.Wrapf(err, "can't parse array index from %v/%v/", currentSelector, arrayIndex)
 			}
 			// if index provided is greater than or less than 0 for an empty array should throw an exception
 		} else if index != 0 {
-			return nil, errors.Wrapf(err, "array index does not exists", currentSelector, arrayIndex)
+			return nil, errors.Errorf("array index (%s) does not exists because array (%s) does not exists", arrayIndex, currentSelector)
 		}
 		// default to zero since no node is present.
 		selectorsToCreateNodes := []string{currentSelector, "0"}
@@ -285,10 +285,10 @@ func removeMatchingNode(node *yaml.Node, selectors []string) error {
 			if arrayIndex == "*" {
 				index = -1
 			} else {
-				return errors.Wrapf(err, "can't parse array index from %v[%v]", currentSelector, arrayIndex)
+				return errors.Wrapf(err, "can't parse array index from %v/%v/", currentSelector, arrayIndex)
 			}
 		} else if index < 0 {
-			return errors.Wrapf(err, "array index can't be negative %v[%v]", currentSelector, arrayIndex)
+			return errors.Wrapf(err, "array index can't be negative %v/%v/", currentSelector, arrayIndex)
 		}
 		// Go into array node(s).
 		arrayNodes, err := createPathAndFindNodes(node, []string{currentSelector}, false)
@@ -364,10 +364,10 @@ func findArrayNodes(selectors []string, currentSelector string, node *yaml.Node,
 		if arrayIndex == "*" {
 			index = -1
 		} else {
-			return nil, errors.Wrapf(err, "can't parse array index from %v[%v]", currentSelector, arrayIndex)
+			return nil, errors.Wrapf(err, "can't parse array index from %v/%v/", currentSelector, arrayIndex)
 		}
 	} else if index < 0 {
-		return nil, errors.Wrapf(err, "array index can't be negative %v[%v]", currentSelector, arrayIndex)
+		return nil, errors.Wrapf(err, "array index can't be negative %v/%v/", currentSelector, arrayIndex)
 	}
 	// Go into array node(s).
 	arrayNodes, err := createPathAndFindNodes(node, []string{currentSelector}, create)
@@ -397,7 +397,7 @@ func findArrayNodes(selectors []string, currentSelector string, node *yaml.Node,
 				// Go deeper into a specific array.
 				deeperNodes, err := createPathAndFindNodes(node, selectors[1:], create)
 				if err != nil {
-					return nil, errors.Wrapf(err, "failed to go deeper into %v[%v]", currentSelector, i)
+					return nil, errors.Wrapf(err, "failed to go deeper into %v/%v/", currentSelector, i)
 				}
 				nodes = append(nodes, deeperNodes...)
 			}
