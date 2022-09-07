@@ -1,3 +1,8 @@
+---
+name: PR Request
+description: Submit a PR request
+labels: [triage]
+---
 This PR fixes #
 
 ## Checklist
