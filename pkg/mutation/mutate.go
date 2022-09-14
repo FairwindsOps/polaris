@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/sirupsen/logrus"
 	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/validator"
 	"github.com/pkg/errors"
@@ -35,16 +36,13 @@ func ApplyAllMutations(manifest string, mutations []jsonpatch.Operation) (string
 
 	for _, patch := range mutations {
 		splits := getSplitFromPath(patch.Path)
-		tag, value, kind, content := getValueTagAndKind(patch.Value)
+		valueNode, err := getNodeFromValue(patch.Value)
+		if err != nil {
+			return mutated, err
+		}
 		switch patch.Operation {
 		case "add", "replace":
-			var newNode = yaml.Node{
-				Kind:    kind,
-				Tag:     tag,
-				Value:   value,
-				Content: content,
-			}
-			err = addOrReplaceValue(&doc, splits, &newNode)
+			err = addOrReplaceValue(&doc, splits, valueNode)
 			if err != nil {
 				return mutated, err
 			}
@@ -247,26 +245,18 @@ func addOrReplaceValue(node *yaml.Node, splits []string, value *yaml.Node) error
 	return nil
 }
 
-func getValueTagAndKind(valueInterface interface{}) (tag, value string, kind yaml.Kind, contents []*yaml.Node) {
-	var content []*yaml.Node
-	switch v := valueInterface.(type) {
-	case int:
-		return intTag, strconv.Itoa(v), yaml.ScalarNode, content
-	case float64:
-		return intTag, strconv.Itoa(int(v)), yaml.ScalarNode, content
-	case string:
-		if strings.HasPrefix(v, "[") && strings.HasSuffix(v, "]") && len(v) > 2 {
-			itemStr := v[1 : len(v)-1]
-			items := strings.Split(itemStr, ",")
-			content = getSequenceNodeContent(items)
-			return seqTag, "", yaml.SequenceNode, content
-		}
-		return strTag, v, yaml.ScalarNode, content
-	case bool:
-		return boolTag, fmt.Sprintf("%t", v), yaml.ScalarNode, content
-	default:
-		return mapTag, fmt.Sprintf("%v", v), yaml.MappingNode, content
+func getNodeFromValue(value interface{}) (*yaml.Node, error) {
+	bytes, err := yaml.Marshal(value)
+	if err != nil {
+		return nil, err
 	}
+	var doc yaml.Node
+	err = yaml.Unmarshal(bytes, &doc)
+	if err != nil {
+		return nil, err
+	}
+	logrus.Infof("Node from value: %#v", doc.Content[0])
+	return doc.Content[0], nil
 }
 
 func removeNodes(doc *yaml.Node, selectors []string) error {
@@ -409,20 +399,6 @@ func findArrayNodes(selectors []string, currentSelector string, node *yaml.Node,
 		}
 	}
 	return nodes, nil
-}
-
-func getSequenceNodeContent(items []string) []*yaml.Node {
-	var content []*yaml.Node
-	for _, item := range items {
-		tag, value, kind, _ := getValueTagAndKind(item)
-		var newNode = yaml.Node{
-			Kind:  kind,
-			Tag:   tag,
-			Value: value,
-		}
-		content = append(content, &newNode)
-	}
-	return content
 }
 
 func checkIfNodeExistedInContent(nodes []*yaml.Node, currentSelector string) bool {
