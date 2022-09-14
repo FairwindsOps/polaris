@@ -215,6 +215,9 @@ func createPathAndFindNodes(node *yaml.Node, selectors []string, create bool) ([
 }
 
 func addOrReplaceValue(node *yaml.Node, splits []string, value *yaml.Node) error {
+	if len(node.Content) == 0 {
+		return errors.New("No content in node")
+	}
 	nodes, err := createPathAndFindNodes(node.Content[0], splits, true)
 	if err != nil {
 		return err

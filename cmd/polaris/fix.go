@@ -15,10 +15,7 @@
 package cmd
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -29,7 +26,6 @@ import (
 	"github.com/fairwindsops/polaris/pkg/validator"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	yamlV3 "gopkg.in/yaml.v3"
 )
 
 var (
@@ -75,8 +71,6 @@ var fixCommand = &cobra.Command{
 		} else {
 			yamlFiles = append(yamlFiles, filesPath)
 		}
-		var contentStr string
-		isFirstResource := true
 
 		if len(checksToFix) > 0 {
 			if len(checksToFix) == 1 && checksToFix[0] == "all" {
@@ -92,63 +86,42 @@ var fixCommand = &cobra.Command{
 
 		for _, fullFilePath := range yamlFiles {
 
-			yamlFile, err := ioutil.ReadFile(fullFilePath)
+			yamlContent, err := ioutil.ReadFile(fullFilePath)
 			if err != nil {
 				logrus.Fatalf("Error reading file with file path %s: %v", fullFilePath, err)
 			}
 
-			dec := yamlV3.NewDecoder(bytes.NewReader(yamlFile))
+			if err != nil {
+				logrus.Fatalf("Error marshalling %s: %v", fullFilePath, err)
+			}
+			kubeResources := kube.CreateResourceProviderFromYaml(string(yamlContent))
+			results, err := validator.ApplyAllSchemaChecksToResourceProvider(&config, kubeResources)
+			if err != nil {
+				logrus.Fatalf("Error applying schema check to the resources %s: %v", fullFilePath, err)
+			}
+			comments, allMutations := mutation.GetMutationsAndCommentsFromResults(results)
 
-			for {
-				data := map[string]interface{}{}
-				err := dec.Decode(&data)
-				// check it was parsed
-				if data == nil {
-					continue
-				}
-				// break the loop in case of EOF
-				if errors.Is(err, io.EOF) {
-					break
-				}
-				if err != nil {
-					logrus.Fatalf("Error decoding data for file with file path %s: %v", fullFilePath, err)
-				}
-				yamlContent, err := yamlV3.Marshal(data)
-				if err != nil {
-					logrus.Fatalf("Error marshalling %s: %v", fullFilePath, err)
-				}
-				kubeResources := kube.CreateResourceProviderFromYaml(string(yamlContent))
-				results, err := validator.ApplyAllSchemaChecksToResourceProvider(&config, kubeResources)
-				if err != nil {
-					logrus.Fatalf("Error applying schema check to the resources %s: %v", fullFilePath, err)
-				}
-				comments, allMutations := mutation.GetMutationsAndCommentsFromResults(results)
-				updatedYamlContent := string(yamlContent)
-				if len(allMutations) > 0 {
-					for _, resources := range kubeResources.Resources {
-						key := fmt.Sprintf("%s/%s/%s", resources[0].Kind, resources[0].Resource.GetName(), resources[0].Resource.GetNamespace())
+			updatedYamlContent := ""
+			if len(allMutations) > 0 {
+				for _, resources := range kubeResources.Resources {
+					for _, resource := range resources {
+						key := fmt.Sprintf("%s/%s/%s", resource.Kind, resource.Resource.GetName(), resource.Resource.GetNamespace())
 						mutations := allMutations[key]
-						mutatedYamlContent, err := mutation.ApplyAllMutations(string(yamlFile), mutations)
+						mutatedYamlContent, err := mutation.ApplyAllMutations(string(resource.OriginalObjectYAML), mutations)
 						if err != nil {
-							logrus.Errorf("Error applying schema mutations to the resources: %v", err)
+							logrus.Errorf("Error applying schema mutations to the resource %s: %v", key, err)
 							os.Exit(1)
 						}
-						updatedYamlContent = mutation.UpdateMutatedContentWithComments(mutatedYamlContent, comments)
+						if updatedYamlContent != "" {
+							updatedYamlContent += "\n---\n"
+						}
+						updatedYamlContent += mutation.UpdateMutatedContentWithComments(mutatedYamlContent, comments)
 					}
-				}
-				if isFirstResource {
-					contentStr = updatedYamlContent
-					isFirstResource = false
-				} else {
-					contentStr += "\n"
-					contentStr += "---"
-					contentStr += "\n"
-					contentStr += updatedYamlContent
 				}
 			}
 
-			if contentStr != "" {
-				err = ioutil.WriteFile(fullFilePath, []byte(contentStr), 0644)
+			if updatedYamlContent != "" {
+				err = ioutil.WriteFile(fullFilePath, []byte(updatedYamlContent), 0644)
 				if err != nil {
 					logrus.Fatalf("Error writing output to file: %v", err)
 				}

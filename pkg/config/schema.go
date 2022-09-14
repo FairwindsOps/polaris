@@ -82,7 +82,7 @@ type SchemaCheck struct {
 type resourceMinimum string
 type resourceMaximum string
 
-func unmarshalYAMLOrJSON(raw []byte, dest interface{}) error {
+func UnmarshalYAMLOrJSON(raw []byte, dest interface{}) error {
 	reader := bytes.NewReader(raw)
 	d := k8sYaml.NewYAMLOrJSONDecoder(reader, 4096)
 	for {
@@ -99,7 +99,7 @@ func unmarshalYAMLOrJSON(raw []byte, dest interface{}) error {
 // ParseCheck parses a check from a byte array
 func ParseCheck(id string, rawBytes []byte) (SchemaCheck, error) {
 	check := SchemaCheck{}
-	err := unmarshalYAMLOrJSON(rawBytes, &check)
+	err := UnmarshalYAMLOrJSON(rawBytes, &check)
 	if err != nil {
 		return check, err
 	}
@@ -243,13 +243,13 @@ func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, err
 	newCheck.AdditionalValidators = map[string]jsonschema.RootSchema{}
 	for kind, schemaStr := range newCheck.AdditionalSchemaStrings {
 		val := jsonschema.RootSchema{}
-		err := unmarshalYAMLOrJSON([]byte(schemaStr), &val)
+		err := UnmarshalYAMLOrJSON([]byte(schemaStr), &val)
 		if err != nil {
 			return nil, err
 		}
 		newCheck.AdditionalValidators[kind] = val
 	}
-	err := unmarshalYAMLOrJSON([]byte(newCheck.SchemaString), &newCheck.Validator)
+	err := UnmarshalYAMLOrJSON([]byte(newCheck.SchemaString), &newCheck.Validator)
 	if err != nil {
 		return nil, err
 	}
