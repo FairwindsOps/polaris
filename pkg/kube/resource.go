@@ -206,6 +206,7 @@ func resolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod
 }
 
 func cacheAllObjectsOfKind(ctx context.Context, apiVersion, kind string, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) error {
+	logrus.Infof("Caching all %s", kind)
 	fqKind := schema.FromAPIVersionAndKind(apiVersion, kind)
 	mapping, err := (*restMapper).RESTMapping(fqKind.GroupKind(), fqKind.Version)
 	if err != nil {
@@ -220,6 +221,7 @@ func cacheAllObjectsOfKind(ctx context.Context, apiVersion, kind string, dynamic
 	}
 	for idx, object := range objects.Items {
 		key := fmt.Sprintf("%s/%s/%s", object.GetKind(), object.GetNamespace(), object.GetName())
+		logrus.Infof("  caching key %s", key)
 		objectCache[key] = objects.Items[idx]
 	}
 	return nil

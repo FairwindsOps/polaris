@@ -394,7 +394,8 @@ func LoadControllers(ctx context.Context, pods []corev1.Pod, dynamicClientPointe
 		}
 		deduped[pod.ObjectMeta.Namespace+"/"+owners[0].Kind+"/"+owners[0].Name] = &pods[idx]
 	}
-	for _, pod := range deduped {
+	for key, pod := range deduped {
+		logrus.Infof("Resolving controller from pod %s", key)
 		workload, err := ResolveControllerFromPod(ctx, *pod, dynamicClientPointer, restMapperPointer, objectCache)
 		if err != nil {
 			return nil, err
