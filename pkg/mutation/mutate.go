@@ -97,22 +97,24 @@ func GetMutationsAndCommentsFromResult(result *validator.Result) ([]jsonpatch.Op
 		}
 	}
 
-	for _, resultMessage := range result.PodResult.Results {
-		if len(resultMessage.Mutations) > 0 {
-			mutations = append(mutations, resultMessage.Mutations...)
-		}
-		if len(resultMessage.Comments) > 0 {
-			comments = append(comments, resultMessage.Comments...)
-		}
-	}
-
-	for _, containerResult := range result.PodResult.ContainerResults {
-		for _, resultMessage := range containerResult.Results {
+	if result.PodResult != nil {
+		for _, resultMessage := range result.PodResult.Results {
 			if len(resultMessage.Mutations) > 0 {
 				mutations = append(mutations, resultMessage.Mutations...)
 			}
 			if len(resultMessage.Comments) > 0 {
 				comments = append(comments, resultMessage.Comments...)
+			}
+		}
+
+		for _, containerResult := range result.PodResult.ContainerResults {
+			for _, resultMessage := range containerResult.Results {
+				if len(resultMessage.Mutations) > 0 {
+					mutations = append(mutations, resultMessage.Mutations...)
+				}
+				if len(resultMessage.Comments) > 0 {
+					comments = append(comments, resultMessage.Comments...)
+				}
 			}
 		}
 	}
