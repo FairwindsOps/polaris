@@ -386,13 +386,13 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 func LoadControllers(ctx context.Context, pods []corev1.Pod, dynamicClientPointer *dynamic.Interface, restMapperPointer *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) ([]GenericResource, error) {
 	interfaces := []GenericResource{}
 	deduped := map[string]*corev1.Pod{}
-	for _, pod := range pods {
+	for idx, pod := range pods {
 		owners := pod.ObjectMeta.OwnerReferences
 		if len(owners) == 0 {
-			deduped[pod.ObjectMeta.Namespace+"/Pod/"+pod.ObjectMeta.Name] = &pod
+			deduped[pod.ObjectMeta.Namespace+"/Pod/"+pod.ObjectMeta.Name] = &pods[idx]
 			continue
 		}
-		deduped[pod.ObjectMeta.Namespace+"/"+owners[0].Kind+"/"+owners[0].Name] = &pod
+		deduped[pod.ObjectMeta.Namespace+"/"+owners[0].Kind+"/"+owners[0].Name] = &pods[idx]
 	}
 	for _, pod := range deduped {
 		workload, err := ResolveControllerFromPod(ctx, *pod, dynamicClientPointer, restMapperPointer, objectCache)
