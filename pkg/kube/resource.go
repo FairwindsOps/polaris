@@ -167,7 +167,13 @@ func resolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod
 		lastKey = key
 		abstractObject, ok := objectCache[key]
 		if !ok {
-			err := cacheAllObjectsOfKind(ctx, firstOwner.APIVersion, firstOwner.Kind, dynamicClient, restMapper, objectCache)
+			var err error
+			if firstOwner.Kind == "ReplicaSet" {
+				// There are often many ReplicaSets that are orphaned (default 10 per deployment) so we don't cache them
+				err = cacheSingleObject(ctx, firstOwner.APIVersion, firstOwner.Kind, topMeta.GetNamespace(), firstOwner.Name, dynamicClient, restMapper, objectCache)
+			} else {
+				err = cacheAllObjectsOfKind(ctx, firstOwner.APIVersion, firstOwner.Kind, dynamicClient, restMapper, objectCache)
+			}
 			if err != nil {
 				logrus.Warnf("Error caching objects of Kind %s %v", firstOwner.Kind, err)
 				break
@@ -205,6 +211,19 @@ func resolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod
 	return workload, nil
 }
 
+func cacheSingleObject(ctx context.Context, apiVersion, kind, namespace, name string, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) error {
+	logrus.Infof("Caching a single %s", kind)
+	object, err := getObject(ctx, namespace, kind, apiVersion, name, dynamicClient, restMapper)
+	if err != nil {
+		logrus.Warnf("Error retrieving object %s/%s/%s/%s because of error: %v", kind, apiVersion, namespace, name, err)
+		return err
+	}
+	key := fmt.Sprintf("%s/%s/%s", object.GetKind(), object.GetNamespace(), object.GetName())
+	logrus.Infof("Caching key %s", key)
+	objectCache[key] = *object
+	return nil
+}
+
 func cacheAllObjectsOfKind(ctx context.Context, apiVersion, kind string, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) error {
 	logrus.Infof("Caching all %s", kind)
 	fqKind := schema.FromAPIVersionAndKind(apiVersion, kind)
@@ -228,8 +247,8 @@ func cacheAllObjectsOfKind(ctx context.Context, apiVersion, kind string, dynamic
 }
 
 func getObject(ctx context.Context, namespace, kind, version, name string, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper) (*unstructured.Unstructured, error) {
-	fqKind := schema.ParseGroupKind(kind)
-	mapping, err := (*restMapper).RESTMapping(fqKind, version)
+	fqKind := schema.FromAPIVersionAndKind(version, kind)
+	mapping, err := (*restMapper).RESTMapping(fqKind.GroupKind(), fqKind.Version)
 	if err != nil {
 		return nil, err
 	}
