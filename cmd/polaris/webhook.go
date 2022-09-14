@@ -16,7 +16,6 @@ package cmd
 
 import (
 	"os"
-	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -31,6 +30,7 @@ var webhookPort int
 var disableWebhookConfigInstaller bool
 var enableMutations bool
 var enableValidations bool
+var certDir string
 
 func init() {
 	rootCmd.AddCommand(webhookCmd)
@@ -38,6 +38,7 @@ func init() {
 	webhookCmd.PersistentFlags().BoolVar(&disableWebhookConfigInstaller, "disable-webhook-config-installer", false, "Disable the installer in the webhook server, so it won't install webhook configuration resources during bootstrapping.")
 	webhookCmd.PersistentFlags().BoolVar(&enableValidations, "validate", true, "Enable the validating webhook to reject workloads with issues")
 	webhookCmd.PersistentFlags().BoolVar(&enableMutations, "mutate", false, "Enable the mutating webhook to modify workloads with issues")
+	webhookCmd.PersistentFlags().StringVar(&certDir, "cert-dir", "/opt/cert", "Directory in which tls certificate is located")
 }
 
 var webhookCmd = &cobra.Command{
@@ -48,7 +49,7 @@ var webhookCmd = &cobra.Command{
 		logrus.Debug("Setting up controller manager")
 
 		mgr, err := manager.New(k8sConfig.GetConfigOrDie(), manager.Options{
-			CertDir: "/opt/cert",
+			CertDir: certDir,
 			Port:    webhookPort,
 		})
 		if err != nil {
@@ -56,9 +57,8 @@ var webhookCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		_, err = os.Stat("/opt/cert/tls.crt")
+		_, err = os.Stat(certDir + "/tls.crt")
 		if os.IsNotExist(err) {
-			time.Sleep(time.Second * 10)
 			panic("Cert does not exist")
 		}
 		server := mgr.GetWebhookServer()
