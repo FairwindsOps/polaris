@@ -20,7 +20,7 @@ Polaris is an open source policy engine for Kubernetes that validates and remedi
 
 Polaris can be run in three different modes:
 * As a [dashboard](https://polaris.docs.fairwinds.com/dashboard) - Validate Kubernetes resources against policy-as-code.
-* As an [admission controller](https://polaris.docs.fairwinds.com/admission-controller) - Automatically deny and remediate workloads that don't adhere to your organization's policies.
+* As an [admission controller](https://polaris.docs.fairwinds.com/admission-controller) - Automatically reject or modify workloads that don't adhere to your organization's policies.
 * As a [command-line tool](https://polaris.docs.fairwinds.com/infrastructure-as-code) - Incorporate policy-as-code into the CI/CD process to test local YAML files.
 <p align="center">
   <img src="https://polaris.docs.fairwinds.com/img/architecture.svg" alt="Polaris Architecture" width="550"/>
