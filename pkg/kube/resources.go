@@ -278,12 +278,14 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 	}
 	provider := newResourceProvider(serverVersion.Major+"."+serverVersion.Minor, sourceType, clusterName)
 
+	logrus.Info("Loading nodes")
 	nodes, err := kube.CoreV1().Nodes().List(ctx, listOpts)
 	if err != nil {
 		logrus.Errorf("Error fetching Nodes: %v", err)
 		return nil, err
 	}
 
+	logrus.Info("Loading nodes")
 	var namespaces *corev1.NamespaceList
 	if c.Namespace != "" {
 		ns, err := kube.CoreV1().Namespaces().Get(ctx, c.Namespace, metav1.GetOptions{})
@@ -301,12 +303,14 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		}
 		namespaces = nsList
 	}
+	logrus.Info("Loading pods")
 	pods, err := kube.CoreV1().Pods(c.Namespace).List(ctx, listOpts)
 	if err != nil {
 		logrus.Errorf("Error fetching Pods: %v", err)
 		return nil, err
 	}
 
+	logrus.Info("Setting up restmapper")
 	resources, err := restmapper.GetAPIGroupResources(kube.Discovery())
 	if err != nil {
 		logrus.Errorf("Error getting API Group resources: %v", err)
@@ -346,6 +350,7 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 			return nil, err
 		}
 
+		logrus.Info("Loading " + kind)
 		objects, err := (*dynamic).Resource(mapping.Resource).Namespace(c.Namespace).List(ctx, metav1.ListOptions{})
 		if err != nil {
 			logrus.Warnf("Error retrieving parent object API %s and Kind %s because of error: %v", mapping.Resource.Version, mapping.Resource.Resource, err)
@@ -362,6 +367,7 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 
 	objectCache := map[string]unstructured.Unstructured{}
 
+	logrus.Info("Loading controllers")
 	controllers, err := LoadControllers(ctx, pods.Items, dynamic, &restMapper, objectCache)
 	if err != nil {
 		logrus.Errorf("Error loading controllers from pods: %v", err)
