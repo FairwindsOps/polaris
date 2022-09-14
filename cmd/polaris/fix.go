@@ -52,7 +52,7 @@ var fixCommand = &cobra.Command{
 		logrus.Debug("Setting up controller manager")
 
 		if filesPath == "" {
-			logrus.Error("Please specify a file-path flag")
+			logrus.Error("Please specify a files-path flag")
 			cmd.Help()
 			os.Exit(1)
 		}
