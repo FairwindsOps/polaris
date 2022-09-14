@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	"github.com/qri-io/jsonschema"
-	"github.com/sirupsen/logrus"
 	"github.com/thoas/go-funk"
 	"gomodules.xyz/jsonpatch/v2"
 	corev1 "k8s.io/api/core/v1"
