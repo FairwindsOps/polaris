@@ -359,7 +359,7 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 			break
 		}
 		if test.ResourceProvider == nil {
-			logrus.Warnf("No ResourceProvider available, check %s not work in this context (e.g. admission control)", checkID)
+			logrus.Warnf("No ResourceProvider available, check %s will not work in this context (e.g. admission control)", checkID)
 			break
 		}
 		resources := test.ResourceProvider.Resources[groupkind]
