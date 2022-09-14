@@ -285,7 +285,7 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		return nil, err
 	}
 
-	logrus.Info("Loading nodes")
+	logrus.Info("Loading namespaces")
 	var namespaces *corev1.NamespaceList
 	if c.Namespace != "" {
 		ns, err := kube.CoreV1().Namespaces().Get(ctx, c.Namespace, metav1.GetOptions{})
@@ -385,17 +385,17 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 // LoadControllers loads a list of controllers from the kubeResources Pods
 func LoadControllers(ctx context.Context, pods []corev1.Pod, dynamicClientPointer *dynamic.Interface, restMapperPointer *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) ([]GenericResource, error) {
 	interfaces := []GenericResource{}
-	deduped := map[string]corev1.Pod{}
+	deduped := map[string]*corev1.Pod{}
 	for _, pod := range pods {
 		owners := pod.ObjectMeta.OwnerReferences
 		if len(owners) == 0 {
-			deduped[pod.ObjectMeta.Namespace+"/Pod/"+pod.ObjectMeta.Name] = pod
+			deduped[pod.ObjectMeta.Namespace+"/Pod/"+pod.ObjectMeta.Name] = &pod
 			continue
 		}
-		deduped[pod.ObjectMeta.Namespace+"/"+owners[0].Kind+"/"+owners[0].Name] = pod
+		deduped[pod.ObjectMeta.Namespace+"/"+owners[0].Kind+"/"+owners[0].Name] = &pod
 	}
 	for _, pod := range deduped {
-		workload, err := ResolveControllerFromPod(ctx, pod, dynamicClientPointer, restMapperPointer, objectCache)
+		workload, err := ResolveControllerFromPod(ctx, *pod, dynamicClientPointer, restMapperPointer, objectCache)
 		if err != nil {
 			return nil, err
 		}
