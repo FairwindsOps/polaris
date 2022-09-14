@@ -1,7 +1,7 @@
 <div align="center" class="no-border">
   <img src="https://polaris.docs.fairwinds.com/img/polaris-logo.png" alt="Polaris Logo">
   <br>
-  <h3>Best Practices for Kubernetes Workload Configuration</h3>
+  <h3>Polaris is an open source policy engine for Kubernetes</h3>
   <a href="https://github.com/FairwindsOps/polaris/releases">
     <img src="https://img.shields.io/github/v/release/FairwindsOps/polaris">
   </a>
@@ -16,15 +16,12 @@
   </a>
 </div>
 
-Fairwinds' Polaris keeps your clusters sailing smoothly. It runs a variety of checks to ensure that
-Kubernetes pods and controllers are configured using best practices, helping you avoid
-problems in the future.
+Polaris is an open source policy engine for Kubernetes that validates and remediates resource configuration. It includes 30+ built in configuration policies, as well as the ability to build custom policies with JSON Schema. When run on the command line or as a mutating webhook, Polaris can automatically remediate issues based on policy criteria.
 
 Polaris can be run in three different modes:
-* As a [dashboard](https://polaris.docs.fairwinds.com/dashboard), so you can audit what's running inside your cluster.
-* As an [admission controller](https://polaris.docs.fairwinds.com/admission-controller), so you can automatically reject workloads that don't adhere to your organization's policies.
-* As a [command-line tool](https://polaris.docs.fairwinds.com/infrastructure-as-code), so you can test local YAML files, e.g. as part of a CI/CD process.
-
+* As a [dashboard](https://polaris.docs.fairwinds.com/dashboard) - Validate Kubernetes resources against policy-as-code.
+* As an [admission controller](https://polaris.docs.fairwinds.com/admission-controller) - Automatically reject or modify workloads that don't adhere to your organization's policies.
+* As a [command-line tool](https://polaris.docs.fairwinds.com/infrastructure-as-code) - Incorporate policy-as-code into the CI/CD process to test local YAML files.
 <p align="center">
   <img src="https://polaris.docs.fairwinds.com/img/architecture.svg" alt="Polaris Architecture" width="550"/>
 </p>
