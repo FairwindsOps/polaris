@@ -16,7 +16,7 @@
   </a>
 </div>
 
-Polaris is an open source policy engine for Kubernetes that validates and remediates clusters. It includes 30+ built in configuration policies and the ability to build custom policies with JSON. As a Kubernetes policy management tool, Polaris can automatically remediate any issues based on policy criteria.
+Polaris is an open source policy engine for Kubernetes that validates and remediates resource configuration. It includes 30+ built in configuration policies, as well as the ability to build custom policies with JSON Schema. When run on the command line or as a mutating webhook, Polaris can automatically remediate issues based on policy criteria.
 
 Polaris can be run in three different modes:
 * As a [dashboard](https://polaris.docs.fairwinds.com/dashboard) - Validate Kubernetes resources against policy-as-code.
