@@ -7,10 +7,12 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+	yaml "gopkg.in/yaml.v3"
+
 	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/validator"
 	"github.com/pkg/errors"
-	yaml "gopkg.in/yaml.v3"
 )
 
 const (
@@ -184,7 +186,24 @@ func addOrReplaceValue(node *yaml.Node, splits []string, value *yaml.Node) error
 			*node = *value
 		} else if node.Kind == yaml.MappingNode && value.Kind == yaml.MappingNode {
 			// Append new values onto an existing map node.
-			node.Content = append(value.Content, node.Content...)
+			if len(value.Content) < 2 {
+				logrus.Error("Found a mapping node without enough content")
+				continue
+			}
+			mapKey := value.Content[0].Value
+			found := false
+			for idx, subNode := range node.Content {
+				if idx % 2 != 0 {
+					continue
+				}
+				if subNode.Value == mapKey {
+					found = true
+					node.Content[idx+1] = value.Content[1]
+				}
+			}
+			if !found {
+				node.Content = append(value.Content, node.Content...)
+			}
 		} else if node.Kind == yaml.MappingNode && node.Content == nil {
 			// Overwrite a new map node we created in createPathAndFindNodes(), as confirmed
 			// by the nil check (the node.Content wouldn't be nil otherwise).
