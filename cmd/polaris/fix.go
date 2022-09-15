@@ -105,7 +105,6 @@ var fixCommand = &cobra.Command{
 			if isTemplate {
 				yamlContent = []byte(detemplate(string(yamlContent)))
 			}
-			fmt.Println("template", string(yamlContent))
 			kubeResources := kube.CreateResourceProviderFromYaml(string(yamlContent))
 			results, err := validator.ApplyAllSchemaChecksToResourceProvider(&config, kubeResources)
 			if err != nil {
