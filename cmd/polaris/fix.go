@@ -28,15 +28,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const templateLineMarker = "# POLARIS_FIX_TMPL"
+const templateOpenMarker = "POLARIS_OPEN_TMPL"
+const templateCloseMarker = "POLARIS_CLOSE_TMPL"
+
 var (
 	filesPath   string
 	checksToFix []string
 	fixAll      bool
+	isTemplate  bool
 )
 
 func init() {
 	rootCmd.AddCommand(fixCommand)
 	fixCommand.PersistentFlags().StringVar(&filesPath, "files-path", "", "mutate and fix one or more YAML files in a specified folder")
+	fixCommand.PersistentFlags().BoolVar(&isTemplate, "template", false, "set to true when modifyng a YAML template, like a Helm chart (experimental)")
 	fixCommand.PersistentFlags().StringSliceVar(&checksToFix, "checks", []string{}, "Optional flag to specify specific checks to fix eg. checks=hostIPCSet,hostPIDSet and checks=all applies fix to all defined checks mutations")
 }
 
@@ -87,7 +93,6 @@ var fixCommand = &cobra.Command{
 		}
 
 		for _, fullFilePath := range yamlFiles {
-
 			yamlContent, err := ioutil.ReadFile(fullFilePath)
 			if err != nil {
 				logrus.Fatalf("Error reading file with file path %s: %v", fullFilePath, err)
@@ -96,6 +101,11 @@ var fixCommand = &cobra.Command{
 			if err != nil {
 				logrus.Fatalf("Error marshalling %s: %v", fullFilePath, err)
 			}
+
+			if isTemplate {
+				yamlContent = []byte(detemplate(string(yamlContent)))
+			}
+			fmt.Println("template", string(yamlContent))
 			kubeResources := kube.CreateResourceProviderFromYaml(string(yamlContent))
 			results, err := validator.ApplyAllSchemaChecksToResourceProvider(&config, kubeResources)
 			if err != nil {
@@ -122,6 +132,10 @@ var fixCommand = &cobra.Command{
 				}
 			}
 
+			if isTemplate {
+				updatedYamlContent = retemplate(updatedYamlContent)
+			}
+
 			if updatedYamlContent != "" {
 				err = ioutil.WriteFile(fullFilePath, []byte(updatedYamlContent), 0644)
 				if err != nil {
@@ -131,6 +145,42 @@ var fixCommand = &cobra.Command{
 		}
 
 	},
+}
+
+func detemplate(content string) string {
+	lines := strings.Split(content, "\n")
+	for idx, line := range lines {
+		lines[idx] = detemplateLine(line)
+	}
+	return strings.Join(lines, "\n")
+}
+
+func retemplate(content string) string {
+	lines := strings.Split(content, "\n")
+	for idx, line := range lines {
+		lines[idx] = retemplateLine(line)
+	}
+	return strings.Join(lines, "\n")
+}
+
+func detemplateLine(line string) string {
+	if !strings.HasPrefix(strings.TrimSpace(line), "{{") {
+		line = strings.ReplaceAll(line, "{", templateOpenMarker)
+		line = strings.ReplaceAll(line, "}", templateCloseMarker)
+		return line
+	}
+	tmplStart := strings.Index(line, "{{")
+	newLine := line[:tmplStart] + templateLineMarker + line[tmplStart:]
+	return newLine
+}
+
+func retemplateLine(line string) string {
+	if !strings.Contains(line, templateLineMarker) {
+		line = strings.ReplaceAll(line, templateOpenMarker, "{")
+		line = strings.ReplaceAll(line, templateCloseMarker, "}")
+		return line
+	}
+	return strings.Replace(line, templateLineMarker, "", 1)
 }
 
 func getYamlFiles(rootpath string) ([]string, error) {
