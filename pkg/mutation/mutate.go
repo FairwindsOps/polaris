@@ -255,7 +255,6 @@ func getNodeFromValue(value interface{}) (*yaml.Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	logrus.Infof("Node from value: %#v", doc.Content[0])
 	return doc.Content[0], nil
 }
 
