@@ -52,6 +52,7 @@ var HandledTargets = []TargetKind{
 	TargetPodTemplate,
 }
 
+// Mutation defines how to change a YAML file, in the style of JSON Patch
 type Mutation struct {
 	Path    string
 	Op      string
@@ -81,6 +82,7 @@ type SchemaCheck struct {
 type resourceMinimum string
 type resourceMaximum string
 
+// UnmarshalYAMLOrJSON is a helper function to unmarshal data in an arbitrary format
 func UnmarshalYAMLOrJSON(raw []byte, dest interface{}) error {
 	reader := bytes.NewReader(raw)
 	d := k8sYaml.NewYAMLOrJSONDecoder(reader, 4096)
