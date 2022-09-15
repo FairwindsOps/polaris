@@ -6,7 +6,7 @@ spec:
   template:
     spec:
       containers:
-      - image: nginx
-        name: nginx
-        securityContext:
-          runAsNonRoot: true
+        - name: nginx
+          image: nginx
+          securityContext:
+            runAsNonRoot: true

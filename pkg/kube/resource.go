@@ -37,6 +37,7 @@ type GenericResource struct {
 	PodSpec            *kubeAPICoreV1.PodSpec
 	PodTemplate        interface{}
 	OriginalObjectJSON []byte
+	OriginalObjectYAML []byte
 }
 
 // NewGenericResourceFromUnstructured creates a workload from an unstructured.Unstructured
@@ -128,7 +129,9 @@ func NewGenericResourceFromBytes(contentBytes []byte) (GenericResource, error) {
 	if err != nil {
 		return GenericResource{}, err
 	}
-	return NewGenericResourceFromUnstructured(unst, nil)
+	res, err := NewGenericResourceFromUnstructured(unst, nil)
+	res.OriginalObjectYAML = contentBytes
+	return res, err
 }
 
 // ResolveControllerFromPod builds a new workload for a given Pod

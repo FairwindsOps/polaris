@@ -38,6 +38,7 @@ type testCase struct {
 	resources *kube.ResourceProvider
 	failure   bool
 	config    config.Configuration
+	manifest  string
 }
 
 var mutatedYamlContentMap = map[string]string{}
@@ -80,6 +81,10 @@ func init() {
 			if tc.Name() == "check.yaml" {
 				continue
 			}
+			yamlContent, err := os.ReadFile(checkDir + "/" + tc.Name())
+			if err != nil {
+				panic(err)
+			}
 			resourceFilename := strings.Replace(tc.Name(), "mutated", "failure", -1)
 
 			resources, err := kube.CreateResourceProviderFromPath(checkDir + "/" + resourceFilename)
@@ -92,13 +97,10 @@ func init() {
 				resources: resources,
 				failure:   strings.Contains(resourceFilename, "failure"),
 				config:    c,
+				manifest:  string(yamlContent),
 			}
 
 			if strings.Contains(tc.Name(), "mutated") {
-				yamlContent, err := os.ReadFile(checkDir + "/" + tc.Name())
-				if err != nil {
-					panic(err)
-				}
 				key := fmt.Sprintf("%s/%s", check, tc.Name())
 				mutatedYamlContentMap[key] = string(yamlContent)
 				testCases, ok := mutationTestCasesMap[check]

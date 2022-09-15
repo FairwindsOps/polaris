@@ -471,6 +471,7 @@ func (resources *ResourceProvider) addResourceFromString(contents string) error 
 		if err != nil {
 			return err
 		}
+		workload.OriginalObjectYAML = contentBytes
 		resources.Resources.addResource(workload)
 	} else {
 		newResource, err := NewGenericResourceFromBytes(contentBytes)

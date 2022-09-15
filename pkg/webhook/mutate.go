@@ -25,6 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
+	"sigs.k8s.io/yaml"
 )
 
 // Mutator mutate k8s resources.
@@ -44,12 +45,20 @@ func NewMutateWebhook(mgr manager.Manager, mutator Mutator) {
 }
 
 func (m *Mutator) mutate(req admission.Request) ([]jsonpatch.Operation, error) {
-	results, err := GetValidatedResults(req.AdmissionRequest.Kind.Kind, m.decoder, req, m.Config)
+	results, kubeResources, err := GetValidatedResults(req.AdmissionRequest.Kind.Kind, m.decoder, req, m.Config)
 	if err != nil {
 		return nil, err
 	}
-	patches, _ := mutation.GetMutationsAndCommentsFromResult(results)
-	return patches, nil
+	patches := mutation.GetMutationsFromResult(results)
+	originalYaml, err := yaml.JSONToYAML(kubeResources.OriginalObjectJSON)
+	if err != nil {
+		return nil, err
+	}
+	mutatedYamlStr, err := mutation.ApplyAllMutations(string(originalYaml), patches)
+	if err != nil {
+		return nil, err
+	}
+	return jsonpatch.CreatePatch(originalYaml, []byte(mutatedYamlStr))
 }
 
 // Handle for Validator to run validation checks.

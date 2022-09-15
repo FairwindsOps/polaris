@@ -8,6 +8,5 @@ spec:
   containers:
     - name: nginx
       image: nginx
-      resources:
-        requests:
-          memory: 512Mi # TODO: Set this to the amount of Memory you want to reserve for your workload
+      ports:
+        - containerPort: 80

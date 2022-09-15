@@ -15,10 +15,7 @@
 package cmd
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -29,19 +26,23 @@ import (
 	"github.com/fairwindsops/polaris/pkg/validator"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	yamlV3 "gopkg.in/yaml.v3"
-	"sigs.k8s.io/yaml"
 )
+
+const templateLineMarker = "# POLARIS_FIX_TMPL"
+const templateOpenMarker = "POLARIS_OPEN_TMPL"
+const templateCloseMarker = "POLARIS_CLOSE_TMPL"
 
 var (
 	filesPath   string
 	checksToFix []string
 	fixAll      bool
+	isTemplate  bool
 )
 
 func init() {
 	rootCmd.AddCommand(fixCommand)
 	fixCommand.PersistentFlags().StringVar(&filesPath, "files-path", "", "mutate and fix one or more YAML files in a specified folder")
+	fixCommand.PersistentFlags().BoolVar(&isTemplate, "template", false, "set to true when modifyng a YAML template, like a Helm chart (experimental)")
 	fixCommand.PersistentFlags().StringSliceVar(&checksToFix, "checks", []string{}, "Optional flag to specify specific checks to fix eg. checks=hostIPCSet,hostPIDSet and checks=all applies fix to all defined checks mutations")
 }
 
@@ -53,7 +54,7 @@ var fixCommand = &cobra.Command{
 		logrus.Debug("Setting up controller manager")
 
 		if filesPath == "" {
-			logrus.Error("Please specify a file-path flag")
+			logrus.Error("Please specify a files-path flag")
 			cmd.Help()
 			os.Exit(1)
 		}
@@ -76,8 +77,6 @@ var fixCommand = &cobra.Command{
 		} else {
 			yamlFiles = append(yamlFiles, filesPath)
 		}
-		var contentStr string
-		isFirstResource := true
 
 		if len(checksToFix) > 0 {
 			if len(checksToFix) == 1 && checksToFix[0] == "all" {
@@ -86,75 +85,58 @@ var fixCommand = &cobra.Command{
 					allchecks = append(allchecks, key)
 				}
 				config.Mutations = allchecks
+			} else if len(checksToFix) == 0 && checksToFix[0] == "none" {
+				config.Mutations = nil
 			} else {
 				config.Mutations = checksToFix
 			}
 		}
 
 		for _, fullFilePath := range yamlFiles {
-
-			yamlFile, err := ioutil.ReadFile(fullFilePath)
+			yamlContent, err := ioutil.ReadFile(fullFilePath)
 			if err != nil {
 				logrus.Fatalf("Error reading file with file path %s: %v", fullFilePath, err)
 			}
 
-			dec := yamlV3.NewDecoder(bytes.NewReader(yamlFile))
+			if err != nil {
+				logrus.Fatalf("Error marshalling %s: %v", fullFilePath, err)
+			}
 
-			for {
-				data := map[string]interface{}{}
-				err := dec.Decode(&data)
-				// check it was parsed
-				if data == nil {
-					continue
-				}
-				// break the loop in case of EOF
-				if errors.Is(err, io.EOF) {
-					break
-				}
-				if err != nil {
-					logrus.Fatalf("Error decoding data for file with file path %s: %v", fullFilePath, err)
-				}
-				yamlContent, err := yamlV3.Marshal(data)
-				if err != nil {
-					logrus.Fatalf("Error marshalling %s: %v", fullFilePath, err)
-				}
-				kubeResources := kube.CreateResourceProviderFromYaml(string(yamlContent))
-				results, err := validator.ApplyAllSchemaChecksToResourceProvider(&config, kubeResources)
-				if err != nil {
-					logrus.Fatalf("Error applying schema check to the resources %s: %v", fullFilePath, err)
-				}
-				comments, allMutations := mutation.GetMutationsAndCommentsFromResults(results)
-				updatedYamlContent := string(yamlContent)
-				if len(allMutations) > 0 {
-					for _, resources := range kubeResources.Resources {
-						key := fmt.Sprintf("%s/%s/%s", resources[0].Kind, resources[0].Resource.GetName(), resources[0].Resource.GetNamespace())
+			if isTemplate {
+				yamlContent = []byte(detemplate(string(yamlContent)))
+			}
+			kubeResources := kube.CreateResourceProviderFromYaml(string(yamlContent))
+			results, err := validator.ApplyAllSchemaChecksToResourceProvider(&config, kubeResources)
+			if err != nil {
+				logrus.Fatalf("Error applying schema check to the resources %s: %v", fullFilePath, err)
+			}
+			allMutations := mutation.GetMutationsFromResults(results)
+
+			updatedYamlContent := ""
+			if len(allMutations) > 0 {
+				for _, resources := range kubeResources.Resources {
+					for _, resource := range resources {
+						key := fmt.Sprintf("%s/%s/%s", resource.Kind, resource.Resource.GetName(), resource.Resource.GetNamespace())
 						mutations := allMutations[key]
-						mutated, err := mutation.ApplyAllSchemaMutations(&config, kubeResources, resources[0], mutations)
+						mutatedYamlContent, err := mutation.ApplyAllMutations(string(resource.OriginalObjectYAML), mutations)
 						if err != nil {
-							logrus.Errorf("Error applying schema mutations to the resources: %v", err)
+							logrus.Errorf("Error applying schema mutations to the resource %s: %v", key, err)
 							os.Exit(1)
 						}
-						mutatedYamlContent, err := yaml.JSONToYAML(mutated.OriginalObjectJSON)
-						if err != nil {
-							logrus.Errorf("Error converting JSON to Yaml : %v", err)
-							os.Exit(1)
+						if updatedYamlContent != "" {
+							updatedYamlContent += "\n---\n"
 						}
-						updatedYamlContent = mutation.UpdateMutatedContentWithComments(string(mutatedYamlContent), comments)
+						updatedYamlContent += mutatedYamlContent
 					}
-				}
-				if isFirstResource {
-					contentStr = updatedYamlContent
-					isFirstResource = false
-				} else {
-					contentStr += "\n"
-					contentStr += "---"
-					contentStr += "\n"
-					contentStr += updatedYamlContent
 				}
 			}
 
-			if contentStr != "" {
-				err = ioutil.WriteFile(fullFilePath, []byte(contentStr), 0644)
+			if isTemplate {
+				updatedYamlContent = retemplate(updatedYamlContent)
+			}
+
+			if updatedYamlContent != "" {
+				err = ioutil.WriteFile(fullFilePath, []byte(updatedYamlContent), 0644)
 				if err != nil {
 					logrus.Fatalf("Error writing output to file: %v", err)
 				}
@@ -162,6 +144,42 @@ var fixCommand = &cobra.Command{
 		}
 
 	},
+}
+
+func detemplate(content string) string {
+	lines := strings.Split(content, "\n")
+	for idx, line := range lines {
+		lines[idx] = detemplateLine(line)
+	}
+	return strings.Join(lines, "\n")
+}
+
+func retemplate(content string) string {
+	lines := strings.Split(content, "\n")
+	for idx, line := range lines {
+		lines[idx] = retemplateLine(line)
+	}
+	return strings.Join(lines, "\n")
+}
+
+func detemplateLine(line string) string {
+	if !strings.HasPrefix(strings.TrimSpace(line), "{{") {
+		line = strings.ReplaceAll(line, "{", templateOpenMarker)
+		line = strings.ReplaceAll(line, "}", templateCloseMarker)
+		return line
+	}
+	tmplStart := strings.Index(line, "{{")
+	newLine := line[:tmplStart] + templateLineMarker + line[tmplStart:]
+	return newLine
+}
+
+func retemplateLine(line string) string {
+	if !strings.Contains(line, templateLineMarker) {
+		line = strings.ReplaceAll(line, templateOpenMarker, "{")
+		line = strings.ReplaceAll(line, templateCloseMarker, "}")
+		return line
+	}
+	return strings.Replace(line, templateLineMarker, "", 1)
 }
 
 func getYamlFiles(rootpath string) ([]string, error) {

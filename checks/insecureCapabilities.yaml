@@ -55,8 +55,6 @@ schema:
                 - contains:
                     pattern: '^(?i)AUDIT_WRITE$'
 mutations:
-  - op: remove
-    path: /securityContext/capabilities
-  - op: add
+  - op: replace
     path: /securityContext/capabilities
     value: {"drop": ["ALL"]}
