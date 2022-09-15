@@ -212,20 +212,20 @@ func resolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod
 }
 
 func cacheSingleObject(ctx context.Context, apiVersion, kind, namespace, name string, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) error {
-	logrus.Infof("Caching a single %s", kind)
+	logrus.Debugf("Caching a single %s", kind)
 	object, err := getObject(ctx, namespace, kind, apiVersion, name, dynamicClient, restMapper)
 	if err != nil {
 		logrus.Warnf("Error retrieving object %s/%s/%s/%s because of error: %v", kind, apiVersion, namespace, name, err)
 		return err
 	}
 	key := fmt.Sprintf("%s/%s/%s", object.GetKind(), object.GetNamespace(), object.GetName())
-	logrus.Infof("Caching key %s", key)
+	logrus.Debugf("Caching key %s", key)
 	objectCache[key] = *object
 	return nil
 }
 
 func cacheAllObjectsOfKind(ctx context.Context, apiVersion, kind string, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) error {
-	logrus.Infof("Caching all %s", kind)
+	logrus.Debugf("Caching all %s", kind)
 	fqKind := schema.FromAPIVersionAndKind(apiVersion, kind)
 	mapping, err := (*restMapper).RESTMapping(fqKind.GroupKind(), fqKind.Version)
 	if err != nil {
@@ -240,7 +240,7 @@ func cacheAllObjectsOfKind(ctx context.Context, apiVersion, kind string, dynamic
 	}
 	for idx, object := range objects.Items {
 		key := fmt.Sprintf("%s/%s/%s", object.GetKind(), object.GetNamespace(), object.GetName())
-		logrus.Infof("  caching key %s", key)
+		logrus.Debugf("  caching key %s", key)
 		objectCache[key] = objects.Items[idx]
 	}
 	return nil
