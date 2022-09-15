@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/thoas/go-funk"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 	kubeAPICoreV1 "k8s.io/api/core/v1"
@@ -28,6 +29,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 )
+
+// There are often many ReplicaSets that are orphaned (default 10 per deployment) so we don't cache all of them
+var skipListCacheKinds = []string{"ReplicaSet", "Job"}
 
 // GenericResource is a base implementation with some free methods for inherited structs
 type GenericResource struct {
@@ -168,8 +172,7 @@ func resolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod
 		abstractObject, ok := objectCache[key]
 		if !ok {
 			var err error
-			if firstOwner.Kind == "ReplicaSet" {
-				// There are often many ReplicaSets that are orphaned (default 10 per deployment) so we don't cache them
+			if funk.Contains(skipListCacheKinds, firstOwner.Kind) {
 				err = cacheSingleObject(ctx, firstOwner.APIVersion, firstOwner.Kind, topMeta.GetNamespace(), firstOwner.Name, dynamicClient, restMapper, objectCache)
 			} else {
 				err = cacheAllObjectsOfKind(ctx, firstOwner.APIVersion, firstOwner.Kind, dynamicClient, restMapper, objectCache)
