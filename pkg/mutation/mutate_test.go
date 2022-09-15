@@ -1,6 +1,7 @@
 package mutation
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -23,6 +24,7 @@ var testCases = []struct{
 	original string
 	mutated string
 	patch config.Mutation
+	message string
 }{{
 	original: oldYaml,
 	patch: config.Mutation{
@@ -111,12 +113,26 @@ obj:
       - d
   baz: quux
 `,
+}, {
+	original:`
+foo: bar
+`,
+	patch: config.Mutation{
+		Op: "replace",
+		Value: "baz",
+		Path: "/foo",
+		Comment: "# We set this to baz",
+	},
+	mutated: `
+foo: baz # We set this to baz
+`,
+	message: "Expected a comment to appear",
 }}
 
 func TestApplyAllMutations(t *testing.T) {
 	for _, tc := range testCases {
 		mutated, err := ApplyAllMutations(tc.original, []config.Mutation{tc.patch})
 		assert.NoError(t, err)
-		assert.EqualValues(t, tc.mutated, mutated)
+		assert.EqualValues(t, strings.TrimSpace(tc.mutated), strings.TrimSpace(mutated), tc.message)
 	}
 }
