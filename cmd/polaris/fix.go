@@ -79,6 +79,8 @@ var fixCommand = &cobra.Command{
 					allchecks = append(allchecks, key)
 				}
 				config.Mutations = allchecks
+			} else if len(checksToFix) == 0 && checksToFix[0] == "none" {
+				config.Mutations = nil
 			} else {
 				config.Mutations = checksToFix
 			}
