@@ -152,7 +152,6 @@ jobs:
       - *test_k8s
 
   test:
-    working_directory: /go/src/github.com/fairwindsops/polaris/
     docker:
       - image: cimg/go:1.19
     steps:
