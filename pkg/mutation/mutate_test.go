@@ -88,6 +88,29 @@ pets:
     owners:
       - name: Alice
 `,
+}, {
+	original: `
+obj:
+  foo:
+    bar:
+      - a
+      - b
+  baz: quux
+`,
+	patch: config.Mutation{
+		Op: "replace",
+		Value: map[string]interface{}{
+			"bar": []string{"c", "d"},
+		},
+		Path: "/obj/foo",
+	},
+	mutated: `obj:
+  foo:
+    bar:
+      - c
+      - d
+  baz: quux
+`,
 }}
 
 func TestApplyAllMutations(t *testing.T) {
