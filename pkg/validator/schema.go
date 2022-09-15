@@ -23,7 +23,6 @@ import (
 
 	"github.com/qri-io/jsonschema"
 	"github.com/thoas/go-funk"
-	"gomodules.xyz/jsonpatch/v2"
 	corev1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -380,13 +379,12 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 	result := makeResult(conf, check, passes, issues)
 	if !passes {
 		if funk.Contains(conf.Mutations, checkID) && len(check.Mutations) > 0 {
-			mutations := funk.Map(check.Mutations, func(mutation jsonpatch.Operation) jsonpatch.Operation {
+			mutations := funk.Map(check.Mutations, func(mutation config.Mutation) config.Mutation {
 				mutationCopy := deepCopyMutation(mutation)
 				mutationCopy.Path = prefix + mutationCopy.Path
 				return mutationCopy
-			}).([]jsonpatch.Operation)
+			}).([]config.Mutation)
 			result.Mutations = mutations
-			result.Comments = check.Comments
 		}
 	}
 	return &result, nil
@@ -401,11 +399,12 @@ func getSortedKeys(m map[string]config.Severity) []string {
 	return keys
 }
 
-func deepCopyMutation(source jsonpatch.Operation) jsonpatch.Operation {
-	destination := jsonpatch.Operation{
-		Operation: source.Operation,
-		Path:      source.Path,
-		Value:     source.Value,
+func deepCopyMutation(source config.Mutation) config.Mutation {
+	destination := config.Mutation{
+		Op:      source.Op,
+		Path:    source.Path,
+		Value:   source.Value,
+		Comment: source.Comment,
 	}
 	return destination
 }

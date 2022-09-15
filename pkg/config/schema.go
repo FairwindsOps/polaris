@@ -25,7 +25,6 @@ import (
 
 	"github.com/qri-io/jsonschema"
 	"github.com/thoas/go-funk"
-	"gomodules.xyz/jsonpatch/v2"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	k8sYaml "k8s.io/apimachinery/pkg/util/yaml"
@@ -53,10 +52,12 @@ var HandledTargets = []TargetKind{
 	TargetPodTemplate,
 }
 
-// MutationComment is the comments added to a mutated file
-type MutationComment struct {
-	Find    string `yaml:"find" json:"find"`
-	Comment string `yaml:"comment" json:"comment"`
+// Mutation defines how to change a YAML file, in the style of JSON Patch
+type Mutation struct {
+	Path    string
+	Op      string
+	Value   interface{}
+	Comment string
 }
 
 // SchemaCheck is a Polaris check that runs using JSON Schema
@@ -75,14 +76,14 @@ type SchemaCheck struct {
 	AdditionalSchemas       map[string]map[string]interface{} `yaml:"additionalSchemas" json:"additionalSchemas"`
 	AdditionalSchemaStrings map[string]string                 `yaml:"additionalSchemaStrings" json:"additionalSchemaStrings"`
 	AdditionalValidators    map[string]jsonschema.RootSchema  `yaml:"-" json:"-"`
-	Mutations               []jsonpatch.Operation             `yaml:"mutations" json:"mutations"`
-	Comments                []MutationComment                 `yaml:"comments" json:"comments"`
+	Mutations               []Mutation                        `yaml:"mutations" json:"mutations"`
 }
 
 type resourceMinimum string
 type resourceMaximum string
 
-func unmarshalYAMLOrJSON(raw []byte, dest interface{}) error {
+// UnmarshalYAMLOrJSON is a helper function to unmarshal data in an arbitrary format
+func UnmarshalYAMLOrJSON(raw []byte, dest interface{}) error {
 	reader := bytes.NewReader(raw)
 	d := k8sYaml.NewYAMLOrJSONDecoder(reader, 4096)
 	for {
@@ -99,7 +100,7 @@ func unmarshalYAMLOrJSON(raw []byte, dest interface{}) error {
 // ParseCheck parses a check from a byte array
 func ParseCheck(id string, rawBytes []byte) (SchemaCheck, error) {
 	check := SchemaCheck{}
-	err := unmarshalYAMLOrJSON(rawBytes, &check)
+	err := UnmarshalYAMLOrJSON(rawBytes, &check)
 	if err != nil {
 		return check, err
 	}
@@ -243,13 +244,13 @@ func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, err
 	newCheck.AdditionalValidators = map[string]jsonschema.RootSchema{}
 	for kind, schemaStr := range newCheck.AdditionalSchemaStrings {
 		val := jsonschema.RootSchema{}
-		err := unmarshalYAMLOrJSON([]byte(schemaStr), &val)
+		err := UnmarshalYAMLOrJSON([]byte(schemaStr), &val)
 		if err != nil {
 			return nil, err
 		}
 		newCheck.AdditionalValidators[kind] = val
 	}
-	err := unmarshalYAMLOrJSON([]byte(newCheck.SchemaString), &newCheck.Validator)
+	err := UnmarshalYAMLOrJSON([]byte(newCheck.SchemaString), &newCheck.Validator)
 	if err != nil {
 		return nil, err
 	}

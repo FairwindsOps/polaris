@@ -23,6 +23,4 @@ mutations:
   - op: add
     path: /livenessProbe
     value: {"exec": { "command": [ "cat", "/tmp/healthy" ] }, "initialDelaySeconds": 5, "periodSeconds": 5 }
-comments:
-  - find: "livenessProbe:"
-    comment: "TODO: Change livenessProbe setting to reflect your health endpoints"
+    comment: "TODO: Change the livenessProbe setting to reflect your application's health"

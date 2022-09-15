@@ -29,6 +29,4 @@ mutations:
   - op: add
     path: /resources/requests/memory
     value: "512Mi"
-comments:
-  - find: "memory: 512Mi"
     comment: "TODO: Set this to the amount of Memory you want to reserve for your workload"
