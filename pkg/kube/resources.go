@@ -379,6 +379,7 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 	provider.Nodes = nodes.Items
 	provider.Namespaces = namespaces.Items
 	provider.Resources.addResources(kubernetesResources)
+	logrus.Info("Done loading Kubernetes resources")
 	return &provider, nil
 }
 
@@ -395,7 +396,7 @@ func LoadControllers(ctx context.Context, pods []corev1.Pod, dynamicClientPointe
 		deduped[pod.ObjectMeta.Namespace+"/"+owners[0].Kind+"/"+owners[0].Name] = &pods[idx]
 	}
 	for key, pod := range deduped {
-		logrus.Infof("Resolving controller from pod %s", key)
+		logrus.Debugf("Resolving controller from pod %s", key)
 		workload, err := ResolveControllerFromPod(ctx, *pod, dynamicClientPointer, restMapperPointer, objectCache)
 		if err != nil {
 			return nil, err
