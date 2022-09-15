@@ -157,9 +157,7 @@ jobs:
     steps:
       - checkout
       - *set_environment_variables
-      - run: go get -u golang.org/x/lint/golint
-      - run: go list ./... | grep -v vendor | xargs golint -set_exit_status
-      - run: go list ./... | grep -v vendor | xargs go vet
+      - run: go vet ./...
       - run: go test ./... -coverprofile=coverage.txt -covermode=count
       - *test_binary_dashboard
 
