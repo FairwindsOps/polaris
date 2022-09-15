@@ -53,9 +53,9 @@ var HandledTargets = []TargetKind{
 }
 
 type Mutation struct {
-	Path string
-	Op string
-	Value interface{}
+	Path    string
+	Op      string
+	Value   interface{}
 	Comment string
 }
 
@@ -75,7 +75,7 @@ type SchemaCheck struct {
 	AdditionalSchemas       map[string]map[string]interface{} `yaml:"additionalSchemas" json:"additionalSchemas"`
 	AdditionalSchemaStrings map[string]string                 `yaml:"additionalSchemaStrings" json:"additionalSchemaStrings"`
 	AdditionalValidators    map[string]jsonschema.RootSchema  `yaml:"-" json:"-"`
-	Mutations               []Mutation `yaml:"mutations" json:"mutations"`
+	Mutations               []Mutation                        `yaml:"mutations" json:"mutations"`
 }
 
 type resourceMinimum string

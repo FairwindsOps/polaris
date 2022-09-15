@@ -75,7 +75,7 @@ func GetMutationsFromResults(results []validator.Result) map[string][]config.Mut
 }
 
 // GetMutationsFromResult returns all mutations from single result
-func GetMutationsFromResult(result *validator.Result) ([]config.Mutation) {
+func GetMutationsFromResult(result *validator.Result) []config.Mutation {
 	mutations := []config.Mutation{}
 	for _, resultMessage := range result.Results {
 		if len(resultMessage.Mutations) > 0 {

@@ -402,9 +402,9 @@ func getSortedKeys(m map[string]config.Severity) []string {
 
 func deepCopyMutation(source config.Mutation) config.Mutation {
 	destination := config.Mutation{
-		Op: source.Op,
-		Path:      source.Path,
-		Value:     source.Value,
+		Op:      source.Op,
+		Path:    source.Path,
+		Value:   source.Value,
 		Comment: source.Comment,
 	}
 	return destination
