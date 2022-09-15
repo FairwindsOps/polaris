@@ -213,7 +213,14 @@ func getNodeFromValue(value interface{}, comment string) (*yaml.Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	doc.Content[0].LineComment = comment
+	if len(doc.Content) == 0 {
+		return nil, errors.New("Generated an empty YAML document")
+	}
+	if doc.Content[0].Kind == yaml.MappingNode {
+		doc.Content[0].Content[0].HeadComment = comment
+	} else {
+		doc.Content[0].LineComment = comment
+	}
 	return doc.Content[0], nil
 }
 
