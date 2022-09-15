@@ -127,6 +127,25 @@ foo: bar
 foo: baz # We set this to baz
 `,
 	message: "Expected a comment to appear",
+}, {
+	original:`
+foo: bar
+`,
+	patch: config.Mutation{
+		Op: "add",
+		Value: map[string]interface{}{
+			"baz": "quux",
+		},
+		Path: "/extra",
+		Comment: "# These are extra things",
+	},
+	mutated: `
+foo: bar
+extra:
+  # These are extra things
+  baz: quux
+`,
+	message: "Expected a comment to appear next to an object",
 }}
 
 func TestApplyAllMutations(t *testing.T) {
