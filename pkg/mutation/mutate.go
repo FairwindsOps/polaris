@@ -1,7 +1,6 @@
 package mutation
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"regexp"
@@ -11,8 +10,6 @@ import (
 	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/validator"
 	"github.com/pkg/errors"
-	"github.com/thoas/go-funk"
-	"gomodules.xyz/jsonpatch/v2"
 	yaml "gopkg.in/yaml.v3"
 )
 
@@ -25,7 +22,7 @@ const (
 )
 
 // ApplyAllMutations applies available mutation to a single resource
-func ApplyAllMutations(manifest string, mutations []jsonpatch.Operation) (string, error) {
+func ApplyAllMutations(manifest string, mutations []config.Mutation) (string, error) {
 	var mutated string
 	var doc yaml.Node
 	err := yaml.Unmarshal([]byte(manifest), &doc)
@@ -35,11 +32,11 @@ func ApplyAllMutations(manifest string, mutations []jsonpatch.Operation) (string
 
 	for _, patch := range mutations {
 		splits := getSplitFromPath(patch.Path)
-		valueNode, err := getNodeFromValue(patch.Value)
+		valueNode, err := getNodeFromValue(patch.Value, patch.Comment)
 		if err != nil {
 			return mutated, err
 		}
-		switch patch.Operation {
+		switch patch.Op {
 		case "add", "replace":
 			err = addOrReplaceValue(&doc, splits, valueNode)
 			if err != nil {
@@ -66,31 +63,23 @@ func ApplyAllMutations(manifest string, mutations []jsonpatch.Operation) (string
 	return buf.String(), nil
 }
 
-// GetMutationsAndCommentsFromResults returns all mutations from results
-func GetMutationsAndCommentsFromResults(results []validator.Result) ([]config.MutationComment, map[string][]jsonpatch.Operation) {
-	allMutationsFromResults := make(map[string][]jsonpatch.Operation)
-	comments := []config.MutationComment{}
+// GetMutationsFromResults returns all mutations from results
+func GetMutationsFromResults(results []validator.Result) map[string][]config.Mutation {
+	allMutationsFromResults := make(map[string][]config.Mutation)
 	for _, result := range results {
 		key := fmt.Sprintf("%s/%s/%s", result.Kind, result.Name, result.Namespace)
-
-		mutations, resultsComments := GetMutationsAndCommentsFromResult(&result)
+		mutations := GetMutationsFromResult(&result)
 		allMutationsFromResults[key] = mutations
-		comments = append(comments, resultsComments...)
-
 	}
-	return comments, allMutationsFromResults
+	return allMutationsFromResults
 }
 
-// GetMutationsAndCommentsFromResult returns all mutations from single result
-func GetMutationsAndCommentsFromResult(result *validator.Result) ([]jsonpatch.Operation, []config.MutationComment) {
-	mutations := []jsonpatch.Operation{}
-	comments := []config.MutationComment{}
+// GetMutationsFromResult returns all mutations from single result
+func GetMutationsFromResult(result *validator.Result) ([]config.Mutation) {
+	mutations := []config.Mutation{}
 	for _, resultMessage := range result.Results {
 		if len(resultMessage.Mutations) > 0 {
 			mutations = append(mutations, resultMessage.Mutations...)
-		}
-		if len(resultMessage.Comments) > 0 {
-			comments = append(comments, resultMessage.Comments...)
 		}
 	}
 
@@ -99,9 +88,6 @@ func GetMutationsAndCommentsFromResult(result *validator.Result) ([]jsonpatch.Op
 			if len(resultMessage.Mutations) > 0 {
 				mutations = append(mutations, resultMessage.Mutations...)
 			}
-			if len(resultMessage.Comments) > 0 {
-				comments = append(comments, resultMessage.Comments...)
-			}
 		}
 
 		for _, containerResult := range result.PodResult.ContainerResults {
@@ -109,38 +95,11 @@ func GetMutationsAndCommentsFromResult(result *validator.Result) ([]jsonpatch.Op
 				if len(resultMessage.Mutations) > 0 {
 					mutations = append(mutations, resultMessage.Mutations...)
 				}
-				if len(resultMessage.Comments) > 0 {
-					comments = append(comments, resultMessage.Comments...)
-				}
 			}
 		}
 	}
 
-	return mutations, comments
-}
-
-// UpdateMutatedContentWithComments Updates mutated object with comments
-func UpdateMutatedContentWithComments(yamlContent string, comments []config.MutationComment) string {
-	var lines []string
-	scanner := bufio.NewScanner(strings.NewReader(yamlContent))
-	scanner.Split(bufio.ScanLines)
-	for scanner.Scan() {
-		line := scanner.Text()
-		lines = append(lines, line)
-	}
-	commentMap := funk.Map(comments, func(c config.MutationComment) (string, string) {
-		return c.Find, c.Comment
-	}).(map[string]string)
-	fileContent := ""
-	for _, line := range lines {
-		comment, ok := commentMap[strings.TrimSpace(line)]
-		if ok {
-			line += (" #" + comment)
-		}
-		fileContent += line
-		fileContent += "\n"
-	}
-	return fileContent
+	return mutations
 }
 
 func createPathAndFindNodes(node *yaml.Node, selectors []string, create bool) ([]*yaml.Node, error) {
@@ -244,7 +203,7 @@ func addOrReplaceValue(node *yaml.Node, splits []string, value *yaml.Node) error
 	return nil
 }
 
-func getNodeFromValue(value interface{}) (*yaml.Node, error) {
+func getNodeFromValue(value interface{}, comment string) (*yaml.Node, error) {
 	bytes, err := yaml.Marshal(value)
 	if err != nil {
 		return nil, err
@@ -254,6 +213,7 @@ func getNodeFromValue(value interface{}) (*yaml.Node, error) {
 	if err != nil {
 		return nil, err
 	}
+	doc.Content[0].LineComment = comment
 	return doc.Content[0], nil
 }
 

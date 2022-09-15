@@ -29,6 +29,4 @@ mutations:
   - op: add
     path: /resources/limits/cpu
     value: 100m
-comments:
-  - find: "cpu: 100m"
     comment: "TODO: Set this to the maximum amount of CPU you want your workload to use"

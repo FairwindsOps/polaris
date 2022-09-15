@@ -49,7 +49,7 @@ func (m *Mutator) mutate(req admission.Request) ([]jsonpatch.Operation, error) {
 	if err != nil {
 		return nil, err
 	}
-	patches, _ := mutation.GetMutationsAndCommentsFromResult(results)
+	patches := mutation.GetMutationsFromResult(results)
 	originalYaml, err := yaml.JSONToYAML(kubeResources.OriginalObjectJSON)
 	if err != nil {
 		return nil, err

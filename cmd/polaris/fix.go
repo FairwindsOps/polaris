@@ -110,7 +110,7 @@ var fixCommand = &cobra.Command{
 			if err != nil {
 				logrus.Fatalf("Error applying schema check to the resources %s: %v", fullFilePath, err)
 			}
-			comments, allMutations := mutation.GetMutationsAndCommentsFromResults(results)
+			allMutations := mutation.GetMutationsFromResults(results)
 
 			updatedYamlContent := ""
 			if len(allMutations) > 0 {
@@ -126,7 +126,7 @@ var fixCommand = &cobra.Command{
 						if updatedYamlContent != "" {
 							updatedYamlContent += "\n---\n"
 						}
-						updatedYamlContent += mutation.UpdateMutatedContentWithComments(mutatedYamlContent, comments)
+						updatedYamlContent += mutatedYamlContent
 					}
 				}
 			}

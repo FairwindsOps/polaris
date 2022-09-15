@@ -25,7 +25,6 @@ import (
 
 	"github.com/qri-io/jsonschema"
 	"github.com/thoas/go-funk"
-	"gomodules.xyz/jsonpatch/v2"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	k8sYaml "k8s.io/apimachinery/pkg/util/yaml"
@@ -53,10 +52,11 @@ var HandledTargets = []TargetKind{
 	TargetPodTemplate,
 }
 
-// MutationComment is the comments added to a mutated file
-type MutationComment struct {
-	Find    string `yaml:"find" json:"find"`
-	Comment string `yaml:"comment" json:"comment"`
+type Mutation struct {
+	Path string
+	Op string
+	Value interface{}
+	Comment string
 }
 
 // SchemaCheck is a Polaris check that runs using JSON Schema
@@ -75,8 +75,7 @@ type SchemaCheck struct {
 	AdditionalSchemas       map[string]map[string]interface{} `yaml:"additionalSchemas" json:"additionalSchemas"`
 	AdditionalSchemaStrings map[string]string                 `yaml:"additionalSchemaStrings" json:"additionalSchemaStrings"`
 	AdditionalValidators    map[string]jsonschema.RootSchema  `yaml:"-" json:"-"`
-	Mutations               []jsonpatch.Operation             `yaml:"mutations" json:"mutations"`
-	Comments                []MutationComment                 `yaml:"comments" json:"comments"`
+	Mutations               []Mutation `yaml:"mutations" json:"mutations"`
 }
 
 type resourceMinimum string
