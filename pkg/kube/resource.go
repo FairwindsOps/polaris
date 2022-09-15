@@ -19,8 +19,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/thoas/go-funk"
 	"github.com/sirupsen/logrus"
+	"github.com/thoas/go-funk"
 	"gopkg.in/yaml.v3"
 	kubeAPICoreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"

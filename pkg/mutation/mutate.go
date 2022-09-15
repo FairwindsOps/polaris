@@ -193,7 +193,7 @@ func addOrReplaceValue(node *yaml.Node, splits []string, value *yaml.Node) error
 			mapKey := value.Content[0].Value
 			found := false
 			for idx, subNode := range node.Content {
-				if idx % 2 != 0 {
+				if idx%2 != 0 {
 					continue
 				}
 				if subNode.Value == mapKey {
