@@ -4,7 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"gomodules.xyz/jsonpatch/v2"
+
+	"github.com/fairwindsops/polaris/pkg/config"
 )
 
 var oldYaml = `

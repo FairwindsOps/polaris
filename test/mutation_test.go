@@ -49,7 +49,7 @@ func TestMutations(t *testing.T) {
 			results, err := validator.ApplyAllSchemaChecksToResourceProvider(&newConfig, tc.resources)
 			assert.NoError(t, err)
 			assert.Len(t, results, 1)
-			comments, allMutations := mutation.GetMutationsAndCommentsFromResults(results)
+			allMutations := mutation.GetMutationsFromResults(results)
 			assert.Len(t, allMutations, 1)
 			for _, resources := range tc.resources.Resources {
 				assert.Len(t, resources, 1)
@@ -57,8 +57,7 @@ func TestMutations(t *testing.T) {
 				mutations := allMutations[key]
 				yamlContent, err := mutation.ApplyAllMutations(tc.manifest, mutations)
 				assert.NoError(t, err)
-				contentStr := mutation.UpdateMutatedContentWithComments(yamlContent, comments)
-				assert.EqualValues(t, mutatedYamlContent, contentStr, "Mutation test case for "+tc.check+"/"+tc.filename+" failed")
+				assert.EqualValues(t, mutatedYamlContent, yamlContent, "Mutation test case for "+tc.check+"/"+tc.filename+" failed")
 			}
 		}
 	}
