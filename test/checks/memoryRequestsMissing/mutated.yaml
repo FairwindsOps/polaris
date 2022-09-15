@@ -10,4 +10,4 @@ spec:
       image: nginx
       resources:
         requests:
-          memory: 512Mi #TODO: Set this to the amount of Memory you want to reserve for your workload
+          memory: 512Mi # TODO: Set this to the amount of Memory you want to reserve for your workload

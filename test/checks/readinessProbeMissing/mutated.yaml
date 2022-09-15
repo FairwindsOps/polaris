@@ -12,4 +12,11 @@ spec:
         - /bin/sh
         - -c
         - touch /tmp/healthy; sleep 30; rm -rf /tmp/healthy; sleep 600
-      readinessProbe: {}
+      readinessProbe:
+        # TODO: Change readinessProbe setting to reflect your application's readiness to serve traffic
+        exec:
+          command:
+            - cat
+            - /tmp/healthy
+        initialDelaySeconds: 5
+        periodSeconds: 5

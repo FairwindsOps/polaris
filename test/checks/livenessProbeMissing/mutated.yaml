@@ -12,7 +12,8 @@ spec:
         - /bin/sh
         - -c
         - touch /tmp/healthy; sleep 30; rm -rf /tmp/healthy; sleep 600
-      livenessProbe: #TODO: Change livenessProbe setting to reflect your health endpoints
+      livenessProbe:
+        # TODO: Change livenessProbe setting to reflect your health endpoints
         exec:
           command:
             - cat
