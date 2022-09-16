@@ -20,7 +20,7 @@ checks:
   hostIPCSet: danger
   hostPIDSet: danger
   linuxHardening: warning
-  missingNetworkPolicy: warning
+  missingNetworkPolicy: ignore
   notReadOnlyRootFilesystem: warning
   privilegeEscalationAllowed: danger
   runAsRootAllowed: danger
