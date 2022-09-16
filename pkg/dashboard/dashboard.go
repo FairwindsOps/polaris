@@ -204,12 +204,14 @@ func GetRouter(c config.Configuration, auditPath string, port int, basePath stri
 
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" && r.URL.Path != basePath {
+			logrus.Warningf("Path not found: %s", r.URL.Path)
 			http.NotFound(w, r)
 			return
 		}
 		adjustedConf := getConfigForQuery(c, r.URL.Query())
 
 		if auditData == nil {
+			logrus.Infof("Creating resource provider")
 			k, err := kube.CreateResourceProvider(r.Context(), auditPath, "", c)
 			if err != nil {
 				logrus.Errorf("Error fetching Kubernetes resources %v", err)
@@ -217,6 +219,7 @@ func GetRouter(c config.Configuration, auditPath string, port int, basePath stri
 				return
 			}
 
+			logrus.Infof("Running audit")
 			var auditData validator.AuditData
 			auditData, err = validator.RunAudit(adjustedConf, k)
 			if err != nil {
@@ -224,8 +227,10 @@ func GetRouter(c config.Configuration, auditPath string, port int, basePath stri
 				http.Error(w, "Error running audit", 500)
 				return
 			}
+			logrus.Infof("Sending results")
 			MainHandler(w, r, adjustedConf, auditData, basePath)
 		} else {
+			logrus.Infof("Sending results")
 			MainHandler(w, r, adjustedConf, *auditData, basePath)
 		}
 

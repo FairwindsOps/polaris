@@ -418,8 +418,6 @@ func getJSONSchemaPrefix(kind string) (prefix string) {
 	} else if (kind == "Deployment") || (kind == "DaemonSet") ||
 		(kind == "StatefulSet") || (kind == "Job") || (kind == "ReplicationController") {
 		prefix = "/spec/template/spec"
-	} else {
-		logrus.Warningf("Mutation for this this resource (%s) is not supported", kind)
 	}
 	return prefix
 }

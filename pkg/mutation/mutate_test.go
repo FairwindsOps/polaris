@@ -20,11 +20,11 @@ pets:
   - name: scooby
 `
 
-var testCases = []struct{
+var testCases = []struct {
 	original string
-	mutated string
-	patch config.Mutation
-	message string
+	mutated  string
+	patch    config.Mutation
+	message  string
 }{{
 	original: oldYaml,
 	patch: config.Mutation{
@@ -114,13 +114,13 @@ obj:
   baz: quux
 `,
 }, {
-	original:`
+	original: `
 foo: bar
 `,
 	patch: config.Mutation{
-		Op: "replace",
-		Value: "baz",
-		Path: "/foo",
+		Op:      "replace",
+		Value:   "baz",
+		Path:    "/foo",
 		Comment: "# We set this to baz",
 	},
 	mutated: `
@@ -128,7 +128,7 @@ foo: baz # We set this to baz
 `,
 	message: "Expected a comment to appear",
 }, {
-	original:`
+	original: `
 foo: bar
 `,
 	patch: config.Mutation{
@@ -136,7 +136,7 @@ foo: bar
 		Value: map[string]interface{}{
 			"baz": "quux",
 		},
-		Path: "/extra",
+		Path:    "/extra",
 		Comment: "# These are extra things",
 	},
 	mutated: `

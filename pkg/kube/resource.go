@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/sirupsen/logrus"
+	"github.com/thoas/go-funk"
 	"gopkg.in/yaml.v3"
 	kubeAPICoreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -28,6 +29,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 )
+
+// There are often many ReplicaSets that are orphaned (default 10 per deployment) so we don't cache all of them
+var skipListCacheKinds = []string{"ReplicaSet", "Job"}
 
 // GenericResource is a base implementation with some free methods for inherited structs
 type GenericResource struct {
@@ -170,7 +174,12 @@ func resolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod
 		lastKey = key
 		abstractObject, ok := objectCache[key]
 		if !ok {
-			err := cacheAllObjectsOfKind(ctx, firstOwner.APIVersion, firstOwner.Kind, dynamicClient, restMapper, objectCache)
+			var err error
+			if funk.Contains(skipListCacheKinds, firstOwner.Kind) {
+				err = cacheSingleObject(ctx, firstOwner.APIVersion, firstOwner.Kind, topMeta.GetNamespace(), firstOwner.Name, dynamicClient, restMapper, objectCache)
+			} else {
+				err = cacheAllObjectsOfKind(ctx, firstOwner.APIVersion, firstOwner.Kind, dynamicClient, restMapper, objectCache)
+			}
 			if err != nil {
 				logrus.Warnf("Error caching objects of Kind %s %v", firstOwner.Kind, err)
 				break
@@ -208,7 +217,21 @@ func resolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod
 	return workload, nil
 }
 
+func cacheSingleObject(ctx context.Context, apiVersion, kind, namespace, name string, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) error {
+	logrus.Debugf("Caching a single %s", kind)
+	object, err := getObject(ctx, namespace, kind, apiVersion, name, dynamicClient, restMapper)
+	if err != nil {
+		logrus.Warnf("Error retrieving object %s/%s/%s/%s because of error: %v", kind, apiVersion, namespace, name, err)
+		return err
+	}
+	key := fmt.Sprintf("%s/%s/%s", object.GetKind(), object.GetNamespace(), object.GetName())
+	logrus.Debugf("Caching key %s", key)
+	objectCache[key] = *object
+	return nil
+}
+
 func cacheAllObjectsOfKind(ctx context.Context, apiVersion, kind string, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) error {
+	logrus.Debugf("Caching all %s", kind)
 	fqKind := schema.FromAPIVersionAndKind(apiVersion, kind)
 	mapping, err := (*restMapper).RESTMapping(fqKind.GroupKind(), fqKind.Version)
 	if err != nil {
@@ -223,14 +246,15 @@ func cacheAllObjectsOfKind(ctx context.Context, apiVersion, kind string, dynamic
 	}
 	for idx, object := range objects.Items {
 		key := fmt.Sprintf("%s/%s/%s", object.GetKind(), object.GetNamespace(), object.GetName())
+		logrus.Debugf("  caching key %s", key)
 		objectCache[key] = objects.Items[idx]
 	}
 	return nil
 }
 
 func getObject(ctx context.Context, namespace, kind, version, name string, dynamicClient *dynamic.Interface, restMapper *meta.RESTMapper) (*unstructured.Unstructured, error) {
-	fqKind := schema.ParseGroupKind(kind)
-	mapping, err := (*restMapper).RESTMapping(fqKind, version)
+	fqKind := schema.FromAPIVersionAndKind(version, kind)
+	mapping, err := (*restMapper).RESTMapping(fqKind.GroupKind(), fqKind.Version)
 	if err != nil {
 		return nil, err
 	}

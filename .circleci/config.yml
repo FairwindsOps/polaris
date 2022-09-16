@@ -87,13 +87,6 @@ references:
           echo "Skipping Kubernetes tests for forked PR"
         fi
 
-  docker_build: &docker_build
-    run:
-      name: Docker login and build
-      command: |
-        docker-pull -f .circleci/build.config
-        docker-build -f .circleci/build.config
-
   docker_build_and_push: &docker_build_and_push
     run:
       name: Docker login, build, and push
@@ -124,15 +117,6 @@ references:
         mv vault /usr/bin/vault
 
 jobs:
-  build:
-    docker:
-      - image: quay.io/reactiveops/ci-images:v11.0-stretch
-    steps:
-      - checkout
-      - setup_remote_docker
-      - *set_environment_variables
-      - *docker_build
-
   push:
     docker:
       - image: quay.io/reactiveops/ci-images:v11.0-stretch
@@ -206,16 +190,13 @@ jobs:
 workflows:
   version: 2
 
-  build:
+  test_and_push:
     jobs:
       - test
-      - build:
-          requires:
-            - test
       - push:
           context: org-global
           requires:
-            - build
+            - test
           filters:
             branches:
               ignore: /pull\/[0-9]+/
