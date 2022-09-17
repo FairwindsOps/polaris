@@ -9,6 +9,17 @@ executors:
     machine:
       enabled: true
 
+commands:
+  install_goreleaser_dependencies:
+    description: Installs dependencies for CI scripts
+    steps:
+    - run: apk update
+    # gettext provides envsubst
+    - run: apk add gettext
+    # Register other docker platforms, to build arm64.
+    # This shouldn't be needed, why TBD.
+    - run: docker run --privileged --rm tonistiigi/binfmt --install all
+
 references:
   set_environment_variables: &set_environment_variables
     run:
@@ -156,6 +167,7 @@ jobs:
           vault_path: repo/polaris/env
       - *set_environment_variables
       - run: docker login quay.io -u="${fairwinds_quay_user}" -p="${fairwinds_quay_token}"
+      - install_goreleaser_dependencies
       - run: go get -u github.com/gobuffalo/packr/v2/packr2
       - run: git checkout -- . # FIXME: the go get makes the directory dirty
       - run: packr2
