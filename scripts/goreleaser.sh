@@ -6,7 +6,11 @@ hash envsubst
 hash goreleaser
 export skip_feature_docker_tags=false
 export skip_release=true
-if [ "${CIRCLE_BRANCH}" == "testmaster" ] ; then
+if [ "${CIRCLE_BRANCH}" == "" ] ; then
+  echo "${this_script} requires the CIRCLE_BRANCH environment variable to be set to the current git branch"
+  exit 1
+  fi
+  if [ "${CIRCLE_BRANCH}" == "testmaster" ] ; then
   echo "${this_script} setting skip_release to false, and skip_feature_docker_tags to true,  because this is the main branch"
 export skip_feature_docker_tags=true
 export skip_release=false
