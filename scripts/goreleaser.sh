@@ -9,7 +9,7 @@ if [ "${CIRCLE_BRANCH}" == "" ] ; then
   fi
   hash envsubst
 hash goreleaser
-if [ "${CIRCLE_TAG} == "" ] ; then
+if [ "${CIRCLE_TAG}" == "" ] ; then
   last_git_Tag="$(git describe --tags --abbrev=0 2>/dev/null)"
   if [ "${last_git_tag}" == "" ] ; then
     echo "${this_script} is unable to determine the last git tag using: git describe --tags --abbrev=0"
@@ -33,6 +33,7 @@ fi
 echo "${this_script} using git tag ${GORELEASER_CURRENT_TAG}"
 export skip_feature_docker_tags=false
 export skip_release=true
+# CIRCLE_BRANCH is used because its safer than relying on CIRCLE_TAG to only be set during main/master merges.
 if [ "${CIRCLE_BRANCH}" == "testmaster" ] ; then
   echo "${this_script} setting skip_release to false, and skip_feature_docker_tags to true,  because this is the main branch"
 export skip_feature_docker_tags=true
@@ -47,9 +48,9 @@ goreleaser $@
 if [ $? -eq 0 ] ; then
   echo "${this_script} removing the temporary .goreleaser.yml since goreleaser was successful"
   rm .goreleaser.yml # Keep git clean for additional goreleaser runs
-  echo "${this_script} resetting the git repository so it is not in a dirty state for future goreleaser runs since goreleaser was successful"
-  git checkout .
 fi
-echo "${this_script} deleting git tag ${temporary_git_tag} for goreleaser"
-unset GORELEASER_CURRENT_TAG
-git tag -d ${temporary_git_tag}
+if [ "${CIRCLE_TAG}" == "" ] ; then
+  echo "${this_script} deleting git tag ${temporary_git_tag} for goreleaser"
+  unset GORELEASER_CURRENT_TAG
+  git tag -d ${temporary_git_tag}
+fi
