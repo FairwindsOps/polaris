@@ -10,7 +10,7 @@ if [ "${CIRCLE_BRANCH}" == "" ] ; then
   hash envsubst
 hash goreleaser
 if [ "${CIRCLE_TAG}" == "" ] ; then
-  last_git_Tag="$(git describe --tags --abbrev=0 2>/dev/null)"
+  last_git_tag="$(git describe --tags --abbrev=0 2>/dev/null)"
   if [ "${last_git_tag}" == "" ] ; then
     echo "${this_script} is unable to determine the last git tag using: git describe --tags --abbrev=0"
     exit 1
