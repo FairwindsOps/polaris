@@ -1,16 +1,39 @@
 #!/usr/bin/env sh
-# Wrap goreleaser by using envsubst on .goreleaser.yml.
+# Wrap goreleaser by using envsubst on .goreleaser.yml,
+# and creating a temporary git tag.
 set -e
 this_script="$(basename $0)"
-hash envsubst
-hash goreleaser
-export skip_feature_docker_tags=false
-export skip_release=true
 if [ "${CIRCLE_BRANCH}" == "" ] ; then
-  echo "${this_script} requires the CIRCLE_BRANCH environment variable to be set to the current git branch"
+  echo "${this_script} requires the CIRCLE_BRANCH environment variable, which is not set"
   exit 1
   fi
-  if [ "${CIRCLE_BRANCH}" == "testmaster" ] ; then
+  hash envsubst
+hash goreleaser
+if [ "${CIRCLE_TAG} == "" ] ; then
+  last_git_Tag="$(git describe --tags --abbrev=0 2>/dev/null)"
+  if [ "${last_git_tag}" == "" ] ; then
+    echo "${this_script} is unable to determine the last git tag using: git describe --tags --abbrev=0"
+    exit 1
+  fi
+  temporary_git_tag=$(echo "${last_git_tag}" | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')-rc
+  echo "${this_script} creating git tag ${temporary_git_tag} for goreleaser, the last real tag is ${last_git_tag}"
+  # The -f is included to overwrite existing tags, perhaps from previous CI jobs.
+  git tag -f -m "temporary local tag for goreleaser" ${temporary_git_tag}
+  export GORELEASER_CURRENT_TAG=${temporary_git_tag}
+  if [ "$(git config user.email)" == "" ] ; then
+    # git will use this env var as its user.email.
+    # git tag -m is used in case tags are manually pushed by accident,
+    # however git tag -m requires an email.
+    export EMAIL='goreleaser_ci@fairwinds.com'
+    echo "${this_script} using ${EMAIL} temporarily as the git user.email"
+  fi
+  else
+  export GORELEASER_CURRENT_TAG=${CIRCLE_TAG}
+fi
+echo "${this_script} using git tag ${GORELEASER_CURRENT_TAG}"
+export skip_feature_docker_tags=false
+export skip_release=true
+if [ "${CIRCLE_BRANCH}" == "testmaster" ] ; then
   echo "${this_script} setting skip_release to false, and skip_feature_docker_tags to true,  because this is the main branch"
 export skip_feature_docker_tags=true
 export skip_release=false
@@ -24,4 +47,9 @@ goreleaser $@
 if [ $? -eq 0 ] ; then
   echo "${this_script} removing the temporary .goreleaser.yml since goreleaser was successful"
   rm .goreleaser.yml # Keep git clean for additional goreleaser runs
+  echo "${this_script} resetting the git repository so it is not in a dirty state for future goreleaser runs since goreleaser was successful"
+  git checkout .
 fi
+echo "${this_script} deleting git tag ${temporary_git_tag} for goreleaser"
+unset GORELEASER_CURRENT_TAG
+git tag -d ${temporary_git_tag}
