@@ -21,7 +21,7 @@ if [ "${CIRCLE_BRANCH}" == "" ] ; then
 hash goreleaser
 if [ "${TMPDIR}" == "" ] ; then
   export TMPDIR="/tmp"
-  echo "${this_script} temporarily set the TMPDIR environment variable to ${TMPDIR}, used by some .goreleaser.yml files"
+  echo "${this_script} temporarily set the TMPDIR environment variable to ${TMPDIR}, used for a temporary GOBIN environment variable"
 fi
 if [ "${CIRCLE_TAG}" == "" ] ; then
   last_git_tag="$(git describe --tags --abbrev=0 2>/dev/null)"
@@ -29,11 +29,6 @@ if [ "${CIRCLE_TAG}" == "" ] ; then
     echo "${this_script} is unable to determine the last git tag using: git describe --tags --abbrev=0"
     exit 1
   fi
-  temporary_git_tag=$(echo "${last_git_tag}" | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')-rc
-  echo "${this_script} creating git tag ${temporary_git_tag} for goreleaser, the last real tag is ${last_git_tag}"
-  # The -f is included to overwrite existing tags, perhaps from previous CI jobs.
-  git tag -f -m "temporary local tag for goreleaser" ${temporary_git_tag}
-  export GORELEASER_CURRENT_TAG=${temporary_git_tag}
   if [ "$(git config user.email)" == "" ] ; then
     # git will use this env var as its user.email.
     # git tag -m is used in case tags are manually pushed by accident,
@@ -41,6 +36,11 @@ if [ "${CIRCLE_TAG}" == "" ] ; then
     export EMAIL='goreleaser_ci@fairwinds.com'
     echo "${this_script} using ${EMAIL} temporarily as the git user.email"
   fi
+  temporary_git_tag=$(echo "${last_git_tag}" | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')-rc
+  echo "${this_script} creating git tag ${temporary_git_tag} for goreleaser, the last real tag is ${last_git_tag}"
+  # The -f is included to overwrite existing tags, perhaps from previous CI jobs.
+  git tag -f -m "temporary local tag for goreleaser" ${temporary_git_tag}
+  export GORELEASER_CURRENT_TAG=${temporary_git_tag}
   else
   export GORELEASER_CURRENT_TAG=${CIRCLE_TAG}
 fi
