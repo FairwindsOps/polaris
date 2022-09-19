@@ -57,7 +57,8 @@ else
   export feature_docker_tag=$(echo "${CIRCLE_BRANCH:0:26}" | sed 's/[^a-zA-Z0-9]/-/g' | sed 's/-\+$//')
   echo "${this_script} also using docker tag ${feature_docker_tag} since ${CIRCLE_BRANCH} is a feature branch"
 fi
-cat .goreleaser.yml.envsubst |envsubst >.goreleaser.yml
+# SUbstitute specific variables, as goreleaser uses `signature` and `artifact` variables as part of the signs stanza.
+cat .goreleaser.yml.envsubst |envsubst '${skip_release} ${skip_feature_docker_tags} ${feature_docker_tag}' >.goreleaser.yml
 goreleaser $@
 if [ $? -eq 0 ] ; then
   echo "${this_script} removing the temporary .goreleaser.yml since goreleaser was successful"
