@@ -84,25 +84,25 @@ docker_manifests:
   - "ivanfetch/polaris:{{ .FullCommit }}-arm64"
 - name_template: ivanfetch/polaris:latest
   # This is replaced using `envsubst`, depending on the git branch.
-  skip_push: ${skip_main_docker_tags}
+  skip_push: ${skip_release}
   image_templates:
   - "ivanfetch/polaris:{{ .FullCommit }}-amd64"
   - "ivanfetch/polaris:{{ .FullCommit }}-arm64"
 - name_template: ivanfetch/polaris:{{ .Tag }}
   # This is replaced using `envsubst`, depending on the git branch.
-  skip_push: ${skip_main_docker_tags}
+  skip_push: ${skip_release}
   image_templates:
   - "ivanfetch/polaris:{{ .FullCommit }}-amd64"
   - "ivanfetch/polaris:{{ .FullCommit }}-arm64"
 - name_template: ivanfetch/polaris:{{ .Major }}
   # This is replaced using `envsubst`, depending on the git branch.
-  skip_push: ${skip_main_docker_tags}
+  skip_push: ${skip_release}
   image_templates:
   - "ivanfetch/polaris:{{ .FullCommit }}-amd64"
   - "ivanfetch/polaris:{{ .FullCommit }}-arm64"
 - name_template: ivanfetch/polaris:{{ .Major }}.{{ .Minor }}
   # This is replaced using `envsubst`, depending on the git branch.
-  skip_push: ${skip_main_docker_tags}
+  skip_push: ${skip_release}
   image_templates:
   - "ivanfetch/polaris:{{ .FullCommit }}-amd64"
   - "ivanfetch/polaris:{{ .FullCommit }}-arm64"
