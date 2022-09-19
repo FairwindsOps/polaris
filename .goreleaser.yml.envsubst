@@ -58,12 +58,12 @@ dockers:
   # There are multiple images to match the `--platform` docker build flag with
   # combinations of `GOOS`, `GOARCH`, and `GOARM`
 - image_templates:
-  - "quay.io/fairwinds/test-polaris:{{ .FullCommit }}-amd64"
+  - "ivanfetch/polaris:{{ .FullCommit }}-amd64"
   use: buildx
   build_flag_templates:
   - "--platform=linux/amd64"
 - image_templates:
-  - "quay.io/fairwinds/test-polaris:{{ .FullCommit }}-arm64"
+  - "ivanfetch/polaris:{{ .FullCommit }}-arm64"
   use: buildx
   goarch: arm64
   goos: linux
@@ -72,37 +72,37 @@ dockers:
 docker_manifests:
 # Create DOcker manifests that make multiple architectures available within a tag,
 # and provide partial-version tags like 2, and 2.2.
-- name_template: quay.io/fairwinds/test-polaris:{{ .FullCommit }}
+- name_template: ivanfetch/polaris:{{ .FullCommit }}
   image_templates:
-  - "quay.io/fairwinds/test-polaris:{{ .FullCommit }}-amd64"
-  - "quay.io/fairwinds/test-polaris:{{ .FullCommit }}-arm64"
-- name_template: quay.io/fairwinds/test-polaris:{{ .Env.feature_docker_tag }}
+  - "ivanfetch/polaris:{{ .FullCommit }}-amd64"
+  - "ivanfetch/polaris:{{ .FullCommit }}-arm64"
+- name_template: ivanfetch/polaris:{{ .Env.feature_docker_tag }}
   # This is replaced using `envsubst`, depending on the git branch.
   skip_push: ${skip_feature_docker_tags}
   image_templates:
-  - "quay.io/fairwinds/test-polaris:{{ .FullCommit }}-amd64"
-  - "quay.io/fairwinds/test-polaris:{{ .FullCommit }}-arm64"
-- name_template: quay.io/fairwinds/test-polaris:latest
+  - "ivanfetch/polaris:{{ .FullCommit }}-amd64"
+  - "ivanfetch/polaris:{{ .FullCommit }}-arm64"
+- name_template: ivanfetch/polaris:latest
   # This is replaced using `envsubst`, depending on the git branch.
   skip_push: ${skip_main_docker_tags}
   image_templates:
-  - "quay.io/fairwinds/test-polaris:{{ .FullCommit }}-amd64"
-  - "quay.io/fairwinds/test-polaris:{{ .FullCommit }}-arm64"
-- name_template: quay.io/fairwinds/test-polaris:{{ .Tag }}
+  - "ivanfetch/polaris:{{ .FullCommit }}-amd64"
+  - "ivanfetch/polaris:{{ .FullCommit }}-arm64"
+- name_template: ivanfetch/polaris:{{ .Tag }}
   # This is replaced using `envsubst`, depending on the git branch.
   skip_push: ${skip_main_docker_tags}
   image_templates:
-  - "quay.io/fairwinds/test-polaris:{{ .FullCommit }}-amd64"
-  - "quay.io/fairwinds/test-polaris:{{ .FullCommit }}-arm64"
-- name_template: quay.io/fairwinds/test-polaris:{{ .Major }}
+  - "ivanfetch/polaris:{{ .FullCommit }}-amd64"
+  - "ivanfetch/polaris:{{ .FullCommit }}-arm64"
+- name_template: ivanfetch/polaris:{{ .Major }}
   # This is replaced using `envsubst`, depending on the git branch.
   skip_push: ${skip_main_docker_tags}
   image_templates:
-  - "quay.io/fairwinds/test-polaris:{{ .FullCommit }}-amd64"
-  - "quay.io/fairwinds/test-polaris:{{ .FullCommit }}-arm64"
-- name_template: quay.io/fairwinds/test-polaris:{{ .Major }}.{{ .Minor }}
+  - "ivanfetch/polaris:{{ .FullCommit }}-amd64"
+  - "ivanfetch/polaris:{{ .FullCommit }}-arm64"
+- name_template: ivanfetch/polaris:{{ .Major }}.{{ .Minor }}
   # This is replaced using `envsubst`, depending on the git branch.
   skip_push: ${skip_main_docker_tags}
   image_templates:
-  - "quay.io/fairwinds/test-polaris:{{ .FullCommit }}-amd64"
-  - "quay.io/fairwinds/test-polaris:{{ .FullCommit }}-arm64"
+  - "ivanfetch/polaris:{{ .FullCommit }}-amd64"
+  - "ivanfetch/polaris:{{ .FullCommit }}-arm64"
