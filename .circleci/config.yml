@@ -159,9 +159,6 @@ jobs:
       - *set_environment_variables
       - run: docker login quay.io -u="${fairwinds_quay_user}" -p="${fairwinds_quay_token}"
       - install_goreleaser_dependencies
-      - run: go get -u github.com/gobuffalo/packr/v2/packr2
-      - run: git checkout -- . # FIXME: the go get makes the directory dirty
-      - run: packr2
       - run: scripts/goreleaser.sh
 
 workflows:

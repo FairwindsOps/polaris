@@ -19,6 +19,10 @@ if [ "${CIRCLE_BRANCH}" == "" ] ; then
   fi
   hash envsubst
 hash goreleaser
+if [ "${TMPDIR}" == "" ] ; then
+  export TMPDIR="/tmp"
+  echo "${this_script} temporarily set the TMPDIR environment variable to ${TMPDIR}, used by some .goreleaser.yml files"
+fi
 if [ "${CIRCLE_TAG}" == "" ] ; then
   last_git_tag="$(git describe --tags --abbrev=0 2>/dev/null)"
   if [ "${last_git_tag}" == "" ] ; then

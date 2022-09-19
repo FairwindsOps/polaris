@@ -6,6 +6,12 @@ changelog:
     exclude:
     - '^docs:'
     - '^test:'
+env:
+  - GOBIN={{ .Env.TMPDIR }}/go-bin
+before:
+  hooks:
+    - go mod download
+    - ./scripts/install-and-run-packr2.sh
 builds:
   - id: polaris
     ldflags:
