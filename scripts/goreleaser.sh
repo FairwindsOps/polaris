@@ -1,7 +1,17 @@
 #!/usr/bin/env sh
 # Wrap goreleaser by using envsubst on .goreleaser.yml,
 # and creating a temporary git tag.
-set -e
+
+function cleanup {
+if [ "${CIRCLE_TAG}" == "" ] ; then
+  echo "${this_script} deleting git tag ${temporary_git_tag} for goreleaser"
+  unset GORELEASER_CURRENT_TAG
+  git tag -d ${temporary_git_tag}
+fi
+}
+
+set -eE # errexit and errtrace
+trap 'cleanup' ERR
 this_script="$(basename $0)"
 if [ "${CIRCLE_BRANCH}" == "" ] ; then
   echo "${this_script} requires the CIRCLE_BRANCH environment variable, which is not set"
@@ -49,8 +59,5 @@ if [ $? -eq 0 ] ; then
   echo "${this_script} removing the temporary .goreleaser.yml since goreleaser was successful"
   rm .goreleaser.yml # Keep git clean for additional goreleaser runs
 fi
-if [ "${CIRCLE_TAG}" == "" ] ; then
-  echo "${this_script} deleting git tag ${temporary_git_tag} for goreleaser"
-  unset GORELEASER_CURRENT_TAG
-  git tag -d ${temporary_git_tag}
-fi
+cleanup
+
