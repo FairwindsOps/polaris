@@ -44,7 +44,7 @@ echo "${this_script} using git tag ${GORELEASER_CURRENT_TAG}"
 export skip_feature_docker_tags=false
 export skip_release=true
 # CIRCLE_BRANCH is used because its safer than relying on CIRCLE_TAG to only be set during main/master merges.
-if [ "${CIRCLE_BRANCH}" == "testmaster" ] ; then
+if [ "${CIRCLE_BRANCH}" == "master" ] ; then
   echo "${this_script} setting skip_release to false, and skip_feature_docker_tags to true,  because this is the main branch"
 export skip_feature_docker_tags=true
 export skip_release=false
