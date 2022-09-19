@@ -109,15 +109,6 @@ references:
         mv vault /usr/bin/vault
 
 jobs:
-  push:
-    docker:
-      - image: quay.io/reactiveops/ci-images:v11.0-stretch
-    steps:
-      - checkout
-      - setup_remote_docker
-      - *set_environment_variables
-      - *docker_build_and_push
-
   test_k8s:
     working_directory: ~/polaris
     resource_class: medium
@@ -171,12 +162,10 @@ jobs:
       - run: go get -u github.com/gobuffalo/packr/v2/packr2
       - run: git checkout -- . # FIXME: the go get makes the directory dirty
       - run: packr2
-      - run: echo 'export GORELEASER_CURRENT_TAG="${CIRCLE_TAG}"' >> $BASH_ENV
       - run: scripts/goreleaser.sh
 
 workflows:
   version: 2
-
 
   release:
     jobs:
@@ -208,6 +197,6 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              #ignore: /^testing-.*/
               # ifetch: temporary while testing
+              #ignore: /^testing-.*/
               ignore: /.*/
