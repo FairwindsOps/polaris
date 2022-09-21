@@ -3,11 +3,11 @@
 # and creating a temporary git tag.
 
 function cleanup {
-if [ "${CIRCLE_TAG}" == "" ] ; then
-  echo "${this_script} deleting git tag ${temporary_git_tag} for goreleaser"
-  unset GORELEASER_CURRENT_TAG
-  git tag -d ${temporary_git_tag}
-fi
+  if [ "${CIRCLE_TAG}" == "" ] ; then
+    echo "${this_script} deleting git tag ${temporary_git_tag} for goreleaser"
+    unset GORELEASER_CURRENT_TAG
+    git tag -d ${temporary_git_tag}
+  fi
 }
 
 set -eE # errexit and errtrace
@@ -16,8 +16,8 @@ this_script="$(basename $0)"
 if [ "${CIRCLE_BRANCH}" == "" ] ; then
   echo "${this_script} requires the CIRCLE_BRANCH environment variable, which is not set"
   exit 1
-  fi
-  hash envsubst
+fi
+hash envsubst
 hash goreleaser
 if [ "${TMPDIR}" == "" ] ; then
   export TMPDIR="/tmp"
@@ -41,7 +41,7 @@ if [ "${CIRCLE_TAG}" == "" ] ; then
   # The -f is included to overwrite existing tags, perhaps from previous CI jobs.
   git tag -f -m "temporary local tag for goreleaser" ${temporary_git_tag}
   export GORELEASER_CURRENT_TAG=${temporary_git_tag}
-  else
+else
   export GORELEASER_CURRENT_TAG=${CIRCLE_TAG}
 fi
 echo "${this_script} using git tag ${GORELEASER_CURRENT_TAG}"
@@ -51,7 +51,7 @@ export skip_release=true
 if [ "${CIRCLE_BRANCH}" == "master" ] ; then
   echo "${this_script} setting skip_release to false, and skip_feature_docker_tags to true,  because this is the main branch"
 export skip_feature_docker_tags=true
-export skip_release=false
+  export skip_release=false
 else
   # Use an adjusted git branch name as an additional docker tag, for feature branches.
   export feature_docker_tag=$(echo "${CIRCLE_BRANCH:0:26}" | sed 's/[^a-zA-Z0-9]/-/g' | sed 's/-\+$//')
