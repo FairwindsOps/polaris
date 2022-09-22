@@ -146,7 +146,7 @@ jobs:
       # The goreleaser image tag determins the version of Go.
       # Manually check goreleaser images for their version of Go.
       # Ref: https://hub.docker.com/r/goreleaser/goreleaser/tags
-      - image: goreleaser/goreleaser:v1.11.3
+      - image: goreleaser/goreleaser:v1.11.4
     steps:
       - checkout
       - setup_remote_docker:
