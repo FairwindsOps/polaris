@@ -166,7 +166,7 @@ workflows:
 
   release:
     jobs:
-      - test
+      - test:
           filters:
             tags:
               only: /.*/
