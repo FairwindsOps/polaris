@@ -24,9 +24,10 @@ if [ "${TMPDIR}" == "" ] ; then
   echo "${this_script} temporarily set the TMPDIR environment variable to ${TMPDIR}, used for a temporary GOBIN environment variable"
 fi
 if [ "${CIRCLE_TAG}" == "" ] ; then
+  # Create a temporary tag for goreleaser, incrementing the last tag.
   last_git_tag="$(git describe --tags --abbrev=0 2>/dev/null)"
   if [ "${last_git_tag}" == "" ] ; then
-    echo "${this_script} is unable to determine the last git tag using: git describe --tags --abbrev=0"
+    echo "${this_script} is unable to determine the last git tag so a temporary tag can be created, using: git describe --tags --abbrev=0"
     exit 1
   fi
   if [ "$(git config user.email)" == "" ] ; then
@@ -47,9 +48,9 @@ fi
 echo "${this_script} using git tag ${GORELEASER_CURRENT_TAG}"
 export skip_feature_docker_tags=false
 export skip_release=true
-# CIRCLE_BRANCH is used because its safer than relying on CIRCLE_TAG to only be set during main/master merges.
+# CIRCLE_BRANCH is used because its safer than relying on CIRCLE_TAG only being set during main/master merges.
 if [ "${CIRCLE_BRANCH}" == "master" ] ; then
-  echo "${this_script} setting skip_release to false, and skip_feature_docker_tags to true,  because this is the main branch"
+  echo "${this_script} setting skip_release to false, and skip_feature_docker_tags to true,  because this is the master branch"
   export skip_feature_docker_tags=true
   export skip_release=false
 else
@@ -57,7 +58,8 @@ else
   export feature_docker_tag=$(echo "${CIRCLE_BRANCH:0:26}" | sed 's/[^a-zA-Z0-9]/-/g' | sed 's/-\+$//')
   echo "${this_script} also using docker tag ${feature_docker_tag} since ${CIRCLE_BRANCH} is a feature branch"
 fi
-# SUbstitute specific variables, as goreleaser uses `signature` and `artifact` variables as part of the signs stanza.
+# Only substitute specific variables, as goreleaser uses shell variable syntax
+# for its `signs` section `signature` and `artifact` variables.
 cat .goreleaser.yml.envsubst |envsubst '${skip_release} ${skip_feature_docker_tags} ${feature_docker_tag}' >.goreleaser.yml
 goreleaser $@
 if [ $? -eq 0 ] ; then
