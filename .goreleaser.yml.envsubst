@@ -1,0 +1,113 @@
+checksum:
+  name_template: 'checksums.txt'
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
+env:
+  - GOBIN={{ .Env.TMPDIR }}/go-bin
+before:
+  hooks:
+    - go mod download
+    - ./scripts/install-and-run-packr2.sh
+builds:
+  - id: polaris
+    ldflags:
+      - -X main.Version={{.Version}} -X main.Commit={{.Commit}} -s -w
+    env:
+      - CGO_ENABLED=0
+      - GO111MODULE=on
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm
+      - arm64
+    goarm:
+      - 6
+      - 7
+archives:
+  - id: polaris
+    builds: ["polaris"]
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}"
+signs:
+- cmd: cosign
+  args: ["sign-blob", "--key=hashivault://cosign", "-output-signature=${signature}", "${artifact}"]
+  artifacts: checksum
+release:
+  # This is replaced using `envsubst`, depending on the git branch.
+  disable: ${skip_release}
+  prerelease: auto
+  footer: |
+    You can verify the signature of the checksums.txt file using [cosign](https://github.com/sigstore/cosign).
+
+    ```
+    cosign verify-blob checksums.txt --signature=checksums.txt.sig  --key https://artifacts.fairwinds.com/cosign.pub
+    ```
+brews:
+  - name: polaris
+    # This is replaced using `envsubst`, depending on the git branch.
+    skip_upload: ${skip_release}
+    tap:
+      owner: FairwindsOps
+      name: homebrew-tap
+    folder: Formula
+    description: Open Source Best Practices for Kubernetes
+    test: |
+      system "#{bin}/polaris version"
+dockers:
+  # There are multiple images to match the `--platform` docker build flag with
+  # combinations of `GOOS`, `GOARCH`, and `GOARM`
+- image_templates:
+  - "quay.io/fairwinds/polaris:{{ .FullCommit }}-amd64"
+  use: buildx
+  build_flag_templates:
+  - "--platform=linux/amd64"
+- image_templates:
+  - "quay.io/fairwinds/polaris:{{ .FullCommit }}-arm64"
+  use: buildx
+  goarch: arm64
+  goos: linux
+  build_flag_templates:
+  - "--platform=linux/arm64"
+docker_manifests:
+# Create DOcker manifests that make multiple architectures available within a tag,
+# and provide partial-version tags like 2, and 2.2.
+- name_template: quay.io/fairwinds/polaris:{{ .FullCommit }}
+  image_templates:
+  - "quay.io/fairwinds/polaris:{{ .FullCommit }}-amd64"
+  - "quay.io/fairwinds/polaris:{{ .FullCommit }}-arm64"
+- name_template: quay.io/fairwinds/polaris:{{ .Env.feature_docker_tag }}
+  # This is replaced using `envsubst`, depending on the git branch.
+  skip_push: ${skip_feature_docker_tags}
+  image_templates:
+  - "quay.io/fairwinds/polaris:{{ .FullCommit }}-amd64"
+  - "quay.io/fairwinds/polaris:{{ .FullCommit }}-arm64"
+- name_template: quay.io/fairwinds/polaris:latest
+  # This is replaced using `envsubst`, depending on the git branch.
+  skip_push: ${skip_release}
+  image_templates:
+  - "quay.io/fairwinds/polaris:{{ .FullCommit }}-amd64"
+  - "quay.io/fairwinds/polaris:{{ .FullCommit }}-arm64"
+- name_template: quay.io/fairwinds/polaris:{{ .Tag }}
+  # This is replaced using `envsubst`, depending on the git branch.
+  skip_push: ${skip_release}
+  image_templates:
+  - "quay.io/fairwinds/polaris:{{ .FullCommit }}-amd64"
+  - "quay.io/fairwinds/polaris:{{ .FullCommit }}-arm64"
+- name_template: quay.io/fairwinds/polaris:{{ .Major }}
+  # This is replaced using `envsubst`, depending on the git branch.
+  skip_push: ${skip_release}
+  image_templates:
+  - "quay.io/fairwinds/polaris:{{ .FullCommit }}-amd64"
+  - "quay.io/fairwinds/polaris:{{ .FullCommit }}-arm64"
+- name_template: quay.io/fairwinds/polaris:{{ .Major }}.{{ .Minor }}
+  # This is replaced using `envsubst`, depending on the git branch.
+  skip_push: ${skip_release}
+  image_templates:
+  - "quay.io/fairwinds/polaris:{{ .FullCommit }}-amd64"
+  - "quay.io/fairwinds/polaris:{{ .FullCommit }}-arm64"

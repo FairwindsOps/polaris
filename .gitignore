@@ -1,4 +1,7 @@
-# Binaries for programs and plugins
+# goreleaser is run via a wrapper that creates .goreleaser.yml from .goreleaser.yml.envsubst
+.goreleaser.yml
+# dist
+# # Binaries for programs and plugins
 .go-version
 *.exe
 *.exe~
