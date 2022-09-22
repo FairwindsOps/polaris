@@ -160,7 +160,7 @@ jobs:
     resource_class: large
     shell: /bin/bash
     docker:
-      - image: goreleaser/goreleaser:v1.11.14
+      - image: goreleaser/goreleaser:v1.11.4
     steps:
       - checkout
       - setup_remote_docker:
