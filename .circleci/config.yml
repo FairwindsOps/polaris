@@ -167,6 +167,9 @@ workflows:
   release:
     jobs:
       - test
+          filters:
+            tags:
+              only: /.*/
       - build_and_push:
           context: org-global
           requires:
@@ -182,12 +185,16 @@ workflows:
           filters:
             branches:
               ignore: /pull\/[0-9]+/
+            tags:
+              ignore: /^testing-.*/
       - test_k8s:
           requires:
             - build_and_push
           filters:
             branches:
               ignore: /pull\/[0-9]+/
+            tags:
+              ignore: /^testing-.*/
       - oss-docs/publish-docs:
           repository: polaris
           filters:
