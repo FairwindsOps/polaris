@@ -13,16 +13,15 @@ function cleanup {
 set -eE # errexit and errtrace
 trap 'cleanup' ERR
 this_script="$(basename $0)"
-if [ "${CIRCLE_BRANCH}" == "" ] ; then
-  echo "${this_script} requires the CIRCLE_BRANCH environment variable, which is not set"
-  exit 1
-fi
 hash envsubst
 hash goreleaser
 if [ "${TMPDIR}" == "" ] ; then
   export TMPDIR="/tmp"
   echo "${this_script} temporarily set the TMPDIR environment variable to ${TMPDIR}, used for a temporary GOBIN environment variable"
 fi
+
+export skip_feature_docker_tags=false
+export skip_release=true
 if [ "${CIRCLE_TAG}" == "" ] ; then
   # Create a temporary tag for goreleaser, incrementing the last tag.
   last_git_tag="$(git describe --tags --abbrev=0 2>/dev/null)"
@@ -38,26 +37,21 @@ if [ "${CIRCLE_TAG}" == "" ] ; then
     echo "${this_script} using ${EMAIL} temporarily as the git user.email"
   fi
   temporary_git_tag=$(echo "${last_git_tag}" | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')-rc
-  echo "${this_script} creating git tag ${temporary_git_tag} for goreleaser, the last real tag is ${last_git_tag}"
+  echo "${this_script} creating temporary git tag ${temporary_git_tag} for goreleaser, the last real tag is ${last_git_tag}"
   # The -f is included to overwrite existing tags, perhaps from previous CI jobs.
   git tag -f -m "temporary local tag for goreleaser" ${temporary_git_tag}
   export GORELEASER_CURRENT_TAG=${temporary_git_tag}
-else
-  export GORELEASER_CURRENT_TAG=${CIRCLE_TAG}
-fi
-echo "${this_script} using git tag ${GORELEASER_CURRENT_TAG}"
-export skip_feature_docker_tags=false
-export skip_release=true
-# CIRCLE_BRANCH is used because its safer than relying on CIRCLE_TAG only being set during main/master merges.
-if [ "${CIRCLE_BRANCH}" == "master" ] ; then
-  echo "${this_script} setting skip_release to false, and skip_feature_docker_tags to true,  because this is the master branch"
-  export skip_feature_docker_tags=true
-  export skip_release=false
-else
-  # Use an adjusted git branch name as an additional docker tag, for feature branches.
+  # Use an adjusted git feature branch name as a docker tag.
   export feature_docker_tag=$(echo "${CIRCLE_BRANCH:0:26}" | sed 's/[^a-zA-Z0-9]/-/g' | sed 's/-\+$//')
   echo "${this_script} also using docker tag ${feature_docker_tag} since ${CIRCLE_BRANCH} is a feature branch"
+else
+  export GORELEASER_CURRENT_TAG=${CIRCLE_TAG}
+  echo "${this_script} setting skip_release to false, and skip_feature_docker_tags to true,  because CIRCLE_TAG is set"
+  export skip_feature_docker_tags=true
+  export skip_release=false
 fi
+
+echo "${this_script} using git tag ${GORELEASER_CURRENT_TAG}"
 # Only substitute specific variables, as goreleaser uses shell variable syntax
 # for its `signs` section `signature` and `artifact` variables.
 cat .goreleaser.yml.envsubst |envsubst '${skip_release} ${skip_feature_docker_tags} ${feature_docker_tag}' >.goreleaser.yml
