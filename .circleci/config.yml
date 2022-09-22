@@ -194,6 +194,4 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              # ifetch: temporary while testing
-              #ignore: /^testing-.*/
-              ignore: /.*/
+              ignore: /^testing-.*/
