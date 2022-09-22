@@ -172,7 +172,7 @@ jobs:
       - rok8s/get_vault_env:
           vault_path: repo/polaris/env
       - *set_environment_variables
-      - run: go get -u github.com/gobuffalo/packr/v2/packr2
+      - run: go install github.com/gobuffalo/packr/v2/packr2@latest
       - run: git checkout -- . # FIXME: the go get makes the directory dirty
       - run: packr2
       - run: echo 'export GORELEASER_CURRENT_TAG="${CIRCLE_TAG}"' >> $BASH_ENV
