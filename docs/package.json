@@ -8,9 +8,9 @@
   },
   "description": "A repository with a Vuepress template for Fairwinds projects",
   "devDependencies": {
-    "vuepress": "^1.4.0",
+    "vuepress": "^1.9.7",
     "vuepress-plugin-clean-urls": "^1.1.1",
-    "vuepress-plugin-redirect": "^1.2.3"
+    "vuepress-plugin-redirect": "^1.2.5"
   },
   "directories": {
     "doc": "docs"
