@@ -24,7 +24,6 @@ import (
 	"github.com/qri-io/jsonschema"
 	"github.com/sirupsen/logrus"
 	"github.com/thoas/go-funk"
-	"gomodules.xyz/jsonpatch/v2"
 	corev1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -155,6 +154,9 @@ func hasExemptionAnnotation(objMeta metaV1.Object, checkID string) bool {
 // ApplyAllSchemaChecksToResourceProvider applies all available checks to a ResourceProvider
 func ApplyAllSchemaChecksToResourceProvider(conf *config.Configuration, resourceProvider *kube.ResourceProvider) ([]Result, error) {
 	results := []Result{}
+	if resourceProvider == nil {
+		return nil, errors.New("No resource provider set, cannot apply schema checks")
+	}
 	for _, resources := range resourceProvider.Resources {
 		kindResults, err := ApplyAllSchemaChecksToAllResources(conf, resourceProvider, resources)
 		if err != nil {
@@ -173,7 +175,9 @@ func ApplyAllSchemaChecksToAllResources(conf *config.Configuration, resourceProv
 		if err != nil {
 			return results, err
 		}
-		results = append(results, result)
+		if result.Kind != "" && result.Name != "" {
+			results = append(results, result)
+		}
 	}
 	return results, nil
 }
@@ -353,6 +357,10 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 		if !passes {
 			break
 		}
+		if test.ResourceProvider == nil {
+			logrus.Warnf("No ResourceProvider available, check %s will not work in this context (e.g. admission control)", checkID)
+			break
+		}
 		resources := test.ResourceProvider.Resources[groupkind]
 		namespace := test.Resource.ObjectMeta.GetNamespace()
 		if test.Resource.Kind == "Namespace" {
@@ -372,13 +380,12 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 	result := makeResult(conf, check, passes, issues)
 	if !passes {
 		if funk.Contains(conf.Mutations, checkID) && len(check.Mutations) > 0 {
-			mutations := funk.Map(check.Mutations, func(mutation jsonpatch.Operation) jsonpatch.Operation {
+			mutations := funk.Map(check.Mutations, func(mutation config.Mutation) config.Mutation {
 				mutationCopy := deepCopyMutation(mutation)
 				mutationCopy.Path = prefix + mutationCopy.Path
 				return mutationCopy
-			}).([]jsonpatch.Operation)
+			}).([]config.Mutation)
 			result.Mutations = mutations
-			result.Comments = check.Comments
 		}
 	}
 	return &result, nil
@@ -393,11 +400,12 @@ func getSortedKeys(m map[string]config.Severity) []string {
 	return keys
 }
 
-func deepCopyMutation(source jsonpatch.Operation) jsonpatch.Operation {
-	destination := jsonpatch.Operation{
-		Operation: source.Operation,
-		Path:      source.Path,
-		Value:     source.Value,
+func deepCopyMutation(source config.Mutation) config.Mutation {
+	destination := config.Mutation{
+		Op:      source.Op,
+		Path:    source.Path,
+		Value:   source.Value,
+		Comment: source.Comment,
 	}
 	return destination
 }
@@ -410,8 +418,6 @@ func getJSONSchemaPrefix(kind string) (prefix string) {
 	} else if (kind == "Deployment") || (kind == "DaemonSet") ||
 		(kind == "StatefulSet") || (kind == "Job") || (kind == "ReplicationController") {
 		prefix = "/spec/template/spec"
-	} else {
-		logrus.Warningf("Mutation for this this resource (%s) is not supported", kind)
 	}
 	return prefix
 }

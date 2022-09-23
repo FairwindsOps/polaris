@@ -6,7 +6,6 @@ metadata:
   name: nginx
 spec:
   containers:
-  - image: nginx
-    imagePullPolicy: Always
-    name: nginx
-    resources: {}
+    - image: nginx
+      imagePullPolicy: Always
+      name: nginx

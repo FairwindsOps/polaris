@@ -6,17 +6,17 @@ metadata:
   name: readiness-exec
 spec:
   containers:
-  - args:
-    - /bin/sh
-    - -c
-    - touch /tmp/healthy; sleep 30; rm -rf /tmp/healthy; sleep 600
-    image: k8s.gcr.io/busybox
-    name: readiness
-    readinessProbe: #TODO: Change livenessProbe setting to reflect your health endpoints
-      exec:
-        command:
-        - cat
-        - /tmp/healthy
-      initialDelaySeconds: 5
-      periodSeconds: 5
-    resources: {}
+    - name: readiness
+      image: k8s.gcr.io/busybox
+      args:
+        - /bin/sh
+        - -c
+        - touch /tmp/healthy; sleep 30; rm -rf /tmp/healthy; sleep 600
+      readinessProbe:
+        # TODO: Change readinessProbe setting to reflect your application's readiness to serve traffic
+        exec:
+          command:
+            - cat
+            - /tmp/healthy
+        initialDelaySeconds: 5
+        periodSeconds: 5

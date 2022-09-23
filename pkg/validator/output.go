@@ -21,7 +21,6 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/thoas/go-funk"
-	"gomodules.xyz/jsonpatch/v2"
 
 	"github.com/fairwindsops/polaris/pkg/config"
 )
@@ -89,8 +88,7 @@ type ResultMessage struct {
 	Success   bool
 	Severity  config.Severity
 	Category  string
-	Mutations []jsonpatch.Operation
-	Comments  []config.MutationComment
+	Mutations []config.Mutation
 }
 
 // ResultSet contiains the results for a set of checks
@@ -188,7 +186,7 @@ func fillString(id string, l int) string {
 // GetPrettyOutput returns a human-readable string
 func (res AuditData) GetPrettyOutput(useColor bool) string {
 	color.NoColor = !useColor
-	str := titleColor.Sprint(fmt.Sprintf("\n\nPolaris audited %s %s at %s\n", res.SourceType, res.SourceName, res.AuditTime))
+	str := titleColor.Sprint(fmt.Sprintf("Polaris audited %s %s at %s\n", res.SourceType, res.SourceName, res.AuditTime))
 	str += color.CyanString(fmt.Sprintf("    Nodes: %d | Namespaces: %d | Controllers: %d\n", res.ClusterInfo.Nodes, res.ClusterInfo.Namespaces, res.ClusterInfo.Controllers))
 	str += color.GreenString(fmt.Sprintf("    Final score: %d\n", res.Score))
 	str += "\n"
@@ -217,7 +215,7 @@ func (res Result) GetPrettyOutput() string {
 func (res PodResult) GetPrettyOutput() string {
 	str := res.Results.GetPrettyOutput()
 	for _, cont := range res.ContainerResults {
-		str += cont.GetPrettyOutput() + "\n"
+		str += cont.GetPrettyOutput()
 	}
 	return str
 }

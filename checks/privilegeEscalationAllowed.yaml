@@ -41,3 +41,8 @@ schema:
           properties:
             securityContext:
               $ref: "#/definitions/goodSecurityContext"
+
+mutations:
+  - op: add
+    path: /securityContext/allowPrivilegeEscalation
+    value: false

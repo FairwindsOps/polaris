@@ -6,17 +6,17 @@ metadata:
   name: liveness-exec
 spec:
   containers:
-  - args:
-    - /bin/sh
-    - -c
-    - touch /tmp/healthy; sleep 30; rm -rf /tmp/healthy; sleep 600
-    image: k8s.gcr.io/busybox
-    livenessProbe: #TODO: Change livenessProbe setting to reflect your health endpoints
-      exec:
-        command:
-        - cat
-        - /tmp/healthy
-      initialDelaySeconds: 5
-      periodSeconds: 5
-    name: liveness
-    resources: {}
+    - name: liveness
+      image: k8s.gcr.io/busybox
+      args:
+        - /bin/sh
+        - -c
+        - touch /tmp/healthy; sleep 30; rm -rf /tmp/healthy; sleep 600
+      livenessProbe:
+        # TODO: Change livenessProbe setting to reflect your health endpoints
+        exec:
+          command:
+            - cat
+            - /tmp/healthy
+        initialDelaySeconds: 5
+        periodSeconds: 5

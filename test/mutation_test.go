@@ -9,7 +9,6 @@ import (
 	"github.com/fairwindsops/polaris/pkg/mutation"
 	"github.com/fairwindsops/polaris/pkg/validator"
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/yaml"
 )
 
 var configYaml = `
@@ -18,6 +17,7 @@ checks:
   hostIPCSet: danger
   hostPIDSet: danger
   hostNetworkSet: danger
+  hostPortSet: warning
   deploymentMissingReplicas: warning
   priorityClassNotSet: ignore
   runAsRootAllowed: danger
@@ -49,18 +49,15 @@ func TestMutations(t *testing.T) {
 			results, err := validator.ApplyAllSchemaChecksToResourceProvider(&newConfig, tc.resources)
 			assert.NoError(t, err)
 			assert.Len(t, results, 1)
-			comments, allMutations := mutation.GetMutationsAndCommentsFromResults(results)
+			allMutations := mutation.GetMutationsFromResults(results)
 			assert.Len(t, allMutations, 1)
 			for _, resources := range tc.resources.Resources {
 				assert.Len(t, resources, 1)
 				key := fmt.Sprintf("%s/%s/%s", resources[0].Kind, resources[0].Resource.GetName(), resources[0].Resource.GetNamespace())
 				mutations := allMutations[key]
-				mutated, err := mutation.ApplyAllSchemaMutations(&c, tc.resources, resources[0], mutations)
+				yamlContent, err := mutation.ApplyAllMutations(tc.manifest, mutations)
 				assert.NoError(t, err)
-				yamlContent, err := yaml.JSONToYAML(mutated.OriginalObjectJSON)
-				assert.NoError(t, err)
-				contentStr := mutation.UpdateMutatedContentWithComments(string(yamlContent), comments)
-				assert.EqualValues(t, mutatedYamlContent, contentStr, "Mutation test case for " + tc.check + "/" + tc.filename + " failed")
+				assert.EqualValues(t, mutatedYamlContent, yamlContent, "Mutation test case for "+tc.check+"/"+tc.filename+" failed")
 			}
 		}
 	}
