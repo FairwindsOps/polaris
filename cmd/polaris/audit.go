@@ -19,7 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"os/exec"
@@ -137,7 +137,7 @@ func ProcessHelmTemplates(helmChart, helmValues string) (string, error) {
 		return "", err
 	}
 
-	dir, err := ioutil.TempDir("", "*")
+	dir, err := os.MkdirTemp("", "*")
 	if err != nil {
 		return "", err
 	}
@@ -212,7 +212,7 @@ func outputAudit(auditData validator.AuditData, outputFile, outputURL, outputFor
 
 			defer resp.Body.Close()
 
-			body, err := ioutil.ReadAll(resp.Body)
+			body, err := io.ReadAll(resp.Body)
 
 			if err != nil {
 				logrus.Errorf("Error reading response: %v", err)
@@ -223,7 +223,7 @@ func outputAudit(auditData validator.AuditData, outputFile, outputURL, outputFor
 		}
 
 		if outputFile != "" {
-			err := ioutil.WriteFile(outputFile, []byte(outputBytes), 0644)
+			err := os.WriteFile(outputFile, []byte(outputBytes), 0644)
 			if err != nil {
 				logrus.Errorf("Error writing output to file: %v", err)
 				os.Exit(1)

@@ -16,7 +16,6 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -93,7 +92,7 @@ var fixCommand = &cobra.Command{
 		}
 
 		for _, fullFilePath := range yamlFiles {
-			yamlContent, err := ioutil.ReadFile(fullFilePath)
+			yamlContent, err := os.ReadFile(fullFilePath)
 			if err != nil {
 				logrus.Fatalf("Error reading file with file path %s: %v", fullFilePath, err)
 			}
@@ -136,7 +135,7 @@ var fixCommand = &cobra.Command{
 			}
 
 			if updatedYamlContent != "" {
-				err = ioutil.WriteFile(fullFilePath, []byte(updatedYamlContent), 0644)
+				err = os.WriteFile(fullFilePath, []byte(updatedYamlContent), 0644)
 				if err != nil {
 					logrus.Fatalf("Error writing output to file: %v", err)
 				}

@@ -19,8 +19,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/gobuffalo/packr/v2"
@@ -70,10 +70,10 @@ func ParseFile(path string) (Configuration, error) {
 		if err2 != nil {
 			return Configuration{}, err2
 		}
-		rawBytes, err = ioutil.ReadAll(response.Body)
+		rawBytes, err = io.ReadAll(response.Body)
 	} else {
 		// path is local
-		rawBytes, err = ioutil.ReadFile(path)
+		rawBytes, err = os.ReadFile(path)
 	}
 	if err != nil {
 		return Configuration{}, err
