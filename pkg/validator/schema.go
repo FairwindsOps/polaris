@@ -40,6 +40,12 @@ type schemaTestCase struct {
 	ResourceProvider *kube.ResourceProvider
 }
 
+// ShortString supplies some fields of a schemaTestCase suitable for brief
+// output.
+func (s schemaTestCase) ShortString() string {
+	return fmt.Sprintf("target %s, resource %s/%s", s.Target, s.Resource.Kind, s.Resource.ObjectMeta.GetName())
+}
+
 func resolveCheck(conf *config.Configuration, checkID string, test schemaTestCase) (*config.SchemaCheck, error) {
 	if !conf.DisallowExemptions &&
 		!conf.DisallowAnnotationExemptions &&
@@ -110,6 +116,7 @@ func getTemplateInput(test schemaTestCase) (map[string]interface{}, error) {
 			}
 		}
 	}
+	logrus.Debugf("template input for schema test-case %s is: %#v", test.ShortString, templateInput)
 	return templateInput, nil
 }
 
@@ -130,6 +137,9 @@ func makeResult(conf *config.Configuration, check *config.SchemaCheck, passes bo
 		result.Message = check.SuccessMessage
 	} else {
 		result.Message = check.FailureMessage
+	}
+	if len(details) > 0 {
+		logrus.Debugf("there were %d issue(s) from schema validation: %v", len(details), details)
 	}
 	return result
 }
