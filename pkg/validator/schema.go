@@ -43,7 +43,20 @@ type schemaTestCase struct {
 // ShortString supplies some fields of a schemaTestCase suitable for brief
 // output.
 func (s schemaTestCase) ShortString() string {
-	return fmt.Sprintf("target %s, resource %s/%s", s.Target, s.Resource.Kind, s.Resource.ObjectMeta.GetName())
+	var msg strings.Builder
+	targetStr := s.Target
+	if targetStr != "" {
+		msg.WriteString(fmt.Sprintf("target=%s, ", targetStr))
+	}
+	ns := s.Resource.ObjectMeta.GetNamespace()
+	if ns != "" {
+		msg.WriteString(fmt.Sprintf("namespace=%s, ", ns))
+	}
+	msg.WriteString(fmt.Sprintf("resource=%s/%s", s.Resource.Kind, s.Resource.ObjectMeta.GetName()))
+	if s.Target == config.TargetContainer {
+		msg.WriteString(fmt.Sprintf(", container=%s", s.Container.Name))
+	}
+	return msg.String()
 }
 
 func resolveCheck(conf *config.Configuration, checkID string, test schemaTestCase) (*config.SchemaCheck, error) {
@@ -137,9 +150,6 @@ func makeResult(conf *config.Configuration, check *config.SchemaCheck, passes bo
 		result.Message = check.SuccessMessage
 	} else {
 		result.Message = check.FailureMessage
-	}
-	if len(details) > 0 {
-		logrus.Debugf("there were %d issue(s) from schema validation: %v", len(details), details)
 	}
 	return result
 }
@@ -386,6 +396,16 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 		if err != nil {
 			return nil, err
 		}
+	}
+	if len(issues) > 0 {
+		issueMessages := make([]string, len(issues))
+		for i, issue := range issues {
+			issueMessages[i] = issue.Message
+		}
+		logrus.Debugf("there were %d issue(s) validating the schema for test-case %s: %v", len(issueMessages), test.ShortString(), issueMessages)
+	} else {
+		logrus.Debugf("there were no issues validating the schema for test-case %s", test.ShortString())
+
 	}
 	result := makeResult(conf, check, passes, issues)
 	if !passes {
