@@ -116,7 +116,7 @@ func getTemplateInput(test schemaTestCase) (map[string]interface{}, error) {
 			}
 		}
 	}
-	logrus.Debugf("template input for schema test-case %s is: %#v", test.ShortString, templateInput)
+	logrus.Debugf("template input for schema test-case %s is: %#v", test.ShortString(), templateInput)
 	return templateInput, nil
 }
 
