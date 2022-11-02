@@ -16,7 +16,7 @@ checks:
   memoryRequestsMissing: warning
   memoryLimitsMissing: warning
   # security
-  automountServiceAccountToken: warning
+  automountServiceAccountToken: ignore
   hostIPCSet: danger
   hostPIDSet: danger
   linuxHardening: warning
