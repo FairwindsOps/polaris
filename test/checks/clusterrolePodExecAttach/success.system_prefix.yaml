@@ -1,0 +1,9 @@
+# This succeeds because the clusterRole has an exempt `system:` prefix.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: system:test
+rules:
+  - apiGroups: [ "*" ]
+    resources: [ "*" ]
+    verbs: [ "*" ]

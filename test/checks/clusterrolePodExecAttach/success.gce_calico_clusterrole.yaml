@@ -1,0 +1,9 @@
+# This succeeds because the clusterRole is an exempt name `gce:podsecuritypolicy:calico-sa`
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: gce:podsecuritypolicy:calico-sa
+rules:
+  - apiGroups: [ "*" ]
+    resources: [ "*" ]
+    verbs: [ "*" ]
