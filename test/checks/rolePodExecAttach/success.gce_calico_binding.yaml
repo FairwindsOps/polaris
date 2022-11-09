@@ -1,0 +1,10 @@
+# This succeeds because the role is an exempt name `gce:podsecuritypolicy:calico-sa`
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: gce:podsecuritypolicy:calico-sa
+  namespace: kube-system
+rules:
+  - apiGroups: [ "*" ]
+    resources: [ "*" ]
+    verbs: [ "*" ]

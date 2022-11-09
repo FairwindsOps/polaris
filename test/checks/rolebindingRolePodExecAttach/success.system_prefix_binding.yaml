@@ -1,0 +1,24 @@
+# This succeeds because the RoleBinding has an exempt `system:` prefix.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: test
+  namespace: test
+rules:
+  - apiGroups: [ "*" ]
+    resources: [ "*" ]
+    verbs: [ "*" ]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: system:test
+  namespace: test
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: test
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: testuser

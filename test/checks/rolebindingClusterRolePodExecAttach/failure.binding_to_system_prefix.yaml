@@ -1,0 +1,26 @@
+# This fails because the roleBinding references a ClusterRole that uses all wildcards which happens to have a `system:` prefix.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  # The system: prefix does not cause this test to fail, but this test
+  # avoids incorectly ignoring user-created bindings to system ClusterRoles.
+  name: system:test
+  namespace: test
+rules:
+  - apiGroups: [ "*" ]
+    resources: [ "*" ]
+    verbs: [ "*" ]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: test-binding-to-system-prefix-role
+  namespace: test
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:test
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: testuser
