@@ -167,6 +167,18 @@ schemaString: |
               {{ end }}
 ```
 
+### Additional Go Template Functions
+
+These functions are also available in the GO template.
+
+* [hasPrefix](https://pkg.go.dev/strings#HasPrefix) - for example, `hasPrefix "string" "prefix"`
+* [hasSuffix](https://pkg.go.dev/strings#HasSuffix) - for example, `hasSuffix "string" "suffix"`
+
+For example, the `hasPrefix` function can be used in a template to determine whether a resource name starts with `system:`
+```
+{{ if hasPrefix .metadata.name "system:" }}
+```
+
 ## Multi-Resource Checks
 You can write checks that span multiple resources. This is helpful for ensuring e.g.
 that every Deployment has a PDB or an HPA associated with it.

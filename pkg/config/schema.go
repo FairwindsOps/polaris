@@ -223,7 +223,10 @@ func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, err
 	newCheck.AdditionalSchemaStrings = map[string]string{}
 
 	for kind, tmplString := range templateStrings {
-		tmpl := template.New(newCheck.ID)
+		tmpl := template.New(newCheck.ID).Funcs(template.FuncMap{
+			"hasPrefix": strings.HasPrefix,
+			"hasSuffix": strings.HasSuffix,
+		})
 		tmpl, err := tmpl.Parse(tmplString)
 		if err != nil {
 			return nil, err
