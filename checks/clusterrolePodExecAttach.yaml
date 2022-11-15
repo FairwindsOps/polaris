@@ -18,9 +18,8 @@ schemaString: |
                 - const: 'admin'
                 - const: "cluster-admin"
                 - const: "edit"
-                - const: "system:aggregate-to-edit"
-                - const: "system:controller:generic-garbage-collector"
-                - const: "system:controller:namespace-controller"
+                - pattern: '^system:'
+                - const: "gce:podsecuritypolicy:calico-sa"
     - properties:
         rules:
           type: array

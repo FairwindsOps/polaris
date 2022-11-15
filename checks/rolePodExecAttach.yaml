@@ -6,40 +6,51 @@ schemaString: |
   '$schema': http://json-schema.org/draft-07/schema
   type: object
   required: ["metadata", "rules"]
-  properties:
-    metadata:
-      required: ["name"]
-      properties:
-        name:
-          type: string
-    rules:
-      type: array
-      items:
-        type: object
-        not:
-          required: ["apiGroups", "resources", "verbs"]
+  anyOf:
+    # Do not alert on default Roles.
+    - properties:
+        metadata:
+          required: ["name"]
           properties:
-            apiGroups:
-              type: array
-              contains:
-                type: string
-                anyOf:
-                  - const: ""
-                  - const: '*'
-            resources:
-              type: array
-              contains:
-                type: string
-                anyOf:
-                  - const: '*'
-                  - const: "pods/exec"
-                  - const: "pods/attach"
-            verbs:
-              type: array
-              contains:
-                type: string
-                anyOf:
-                  - const: '*'
-                  # An exec is also possible by `get`ing a web socket.
-                  - const: 'get'
-                  - const: 'create'
+            name:
+              type: string
+              anyOf:
+                - pattern: '^system:'
+                - const: "gce:podsecuritypolicy:calico-sa"
+    - properties:
+        metadata:
+          required: ["name"]
+          properties:
+            name:
+              type: string
+        rules:
+          type: array
+          items:
+            type: object
+            not:
+              required: ["apiGroups", "resources", "verbs"]
+              properties:
+                apiGroups:
+                  type: array
+                  contains:
+                    type: string
+                    anyOf:
+                      - const: ""
+                      - const: '*'
+                resources:
+                  type: array
+                  contains:
+                    type: string
+                    anyOf:
+                      - const: '*'
+                      - const: "pods/exec"
+                      - const: "pods/attach"
+                verbs:
+                  type: array
+                  contains:
+                    type: string
+                    anyOf:
+                      - const: '*'
+                      # An exec is also possible by `get`ing a web socket.
+                      - const: 'get'
+                      - const: 'create'

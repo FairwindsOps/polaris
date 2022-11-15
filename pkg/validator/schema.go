@@ -40,6 +40,25 @@ type schemaTestCase struct {
 	ResourceProvider *kube.ResourceProvider
 }
 
+// ShortString supplies some fields of a schemaTestCase suitable for brief
+// output.
+func (s schemaTestCase) ShortString() string {
+	var msg strings.Builder
+	targetStr := s.Target
+	if targetStr != "" {
+		msg.WriteString(fmt.Sprintf("target=%s, ", targetStr))
+	}
+	ns := s.Resource.ObjectMeta.GetNamespace()
+	if ns != "" {
+		msg.WriteString(fmt.Sprintf("namespace=%s, ", ns))
+	}
+	msg.WriteString(fmt.Sprintf("resource=%s/%s", s.Resource.Kind, s.Resource.ObjectMeta.GetName()))
+	if s.Target == config.TargetContainer {
+		msg.WriteString(fmt.Sprintf(", container=%s", s.Container.Name))
+	}
+	return msg.String()
+}
+
 func resolveCheck(conf *config.Configuration, checkID string, test schemaTestCase) (*config.SchemaCheck, error) {
 	if !conf.DisallowExemptions &&
 		!conf.DisallowAnnotationExemptions &&
@@ -110,6 +129,7 @@ func getTemplateInput(test schemaTestCase) (map[string]interface{}, error) {
 			}
 		}
 	}
+	logrus.Debugf("the go template input for schema test-case %s is: %v", test.ShortString(), templateInput)
 	return templateInput, nil
 }
 
@@ -376,6 +396,16 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 		if err != nil {
 			return nil, err
 		}
+	}
+	if len(issues) > 0 {
+		issueMessages := make([]string, len(issues))
+		for i, issue := range issues {
+			issueMessages[i] = issue.Message
+		}
+		logrus.Debugf("there were %d issue(s) validating the schema for test-case %s: %v", len(issueMessages), test.ShortString(), issueMessages)
+	} else {
+		logrus.Debugf("there were no issues validating the schema for test-case %s", test.ShortString())
+
 	}
 	result := makeResult(conf, check, passes, issues)
 	if !passes {

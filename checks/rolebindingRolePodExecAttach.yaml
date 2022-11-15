@@ -18,6 +18,18 @@ schemaString: |
             kind:
               type: string
               const: "Role"
+    # Do not alert on default RoleBindings.
+    - required: ["metadata"]
+      properties:
+        metadata:
+          type: object
+          required: ["name"]
+          properties:
+            name:
+              type: string
+              anyOf:
+                - pattern: '^system:'
+                - const: "gce:podsecuritypolicy:calico-sa"
     - required: ["roleRef"]
       properties:
         roleRef:
@@ -37,6 +49,7 @@ additionalSchemaStrings:
     type: object
     # This schema is validated for all roleBindings, regardless of their roleRef.
     {{ if eq .roleRef.kind "Role" }}
+    {{ if and (not (hasPrefix .metadata.name "system:")) (ne .metadata.name "gce:podsecuritypolicy:calico-sa") }}
     required: ["metadata", "rules"]
     allOf:
       - properties:
@@ -78,4 +91,5 @@ additionalSchemaStrings:
                         # An exec is also possible by `get`ing a web socket.
                         - const: 'get'
                         - const: 'create'
+    {{ end }}
     {{ end }}

@@ -32,6 +32,9 @@ checks:
   clusterrolebindingPodExecAttach: danger
   rolebindingClusterRolePodExecAttach: danger
   rolebindingRolePodExecAttach: danger
+  clusterrolebindingClusterAdmin: danger
+  rolebindingClusterAdminClusterRole: danger
+  rolebindingClusterAdminRole: danger
   # custom
   resourceLimits: warning
   imageRegistry: danger

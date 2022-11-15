@@ -17,8 +17,8 @@ schemaString: |
               type: string
               anyOf:
                 - const: "cluster-admin"
-                - const: "system:controller:generic-garbage-collector"
-                - const: "system:controller:namespace-controller"
+                - pattern: '^system:'
+                - const: "gce:podsecuritypolicy:calico-sa"
     - required: ["roleRef"]
       properties:
         roleRef:
@@ -39,7 +39,7 @@ additionalSchemaStrings:
   rbac.authorization.k8s.io/ClusterRole: |
     type: object
     # Do not alert on default ClusterRoleBindings.
-    {{ if and (ne .metadata.name "cluster-admin") (ne .metadata.name "system:controller:generic-garbage-collector") (ne .metadata.name "system:controller:namespace-controller") }}
+    {{ if and (ne .metadata.name "cluster-admin") (not (hasPrefix .metadata.name "system:")) (ne .metadata.name "gce:podsecuritypolicy:calico-sa") }}
     required: ["metadata", "rules"]
     allOf:
       - properties:

@@ -1,0 +1,10 @@
+# This succeeds because the Role has an exempt `system:` prefix.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: system:controller:glbc
+  namespace: kube-system
+rules:
+  - apiGroups: [ "*" ]
+    resources: [ "*" ]
+    verbs: [ "*" ]
