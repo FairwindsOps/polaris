@@ -17,7 +17,7 @@ package kube
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 
@@ -78,7 +78,7 @@ func TestGetMultipleResourceFromBadFile(t *testing.T) {
 }
 
 func TestAddResourcesFromReader(t *testing.T) {
-	contents, err := ioutil.ReadFile("./test_files/test_2/multi.yaml")
+	contents, err := os.ReadFile("./test_files/test_2/multi.yaml")
 	assert.NoError(t, err)
 	reader := bytes.NewBuffer(contents)
 	resources := newResourceProvider("unknown", "Path", "-")

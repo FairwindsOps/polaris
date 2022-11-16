@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -62,7 +61,7 @@ func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider) (
 // ReadAuditFromFile reads the data from a past audit stored in a JSON or YAML file.
 func ReadAuditFromFile(fileName string) AuditData {
 	auditData := AuditData{}
-	oldFileBytes, err := ioutil.ReadFile(fileName)
+	oldFileBytes, err := os.ReadFile(fileName)
 	if err != nil {
 		logrus.Errorf("Unable to read contents of loaded file: %v", err)
 		os.Exit(1)

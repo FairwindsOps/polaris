@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -216,7 +215,7 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 		if !strings.HasSuffix(path, ".yml") && !strings.HasSuffix(path, ".yaml") {
 			return nil
 		}
-		contents, err := ioutil.ReadFile(path)
+		contents, err := os.ReadFile(path)
 		if err != nil {
 			logrus.Errorf("Error reading file: %v", path)
 			return err
@@ -427,7 +426,7 @@ func deduplicateControllers(inputResources []GenericResource) []GenericResource 
 }
 
 func (resources *ResourceProvider) addResourcesFromReader(reader io.Reader) error {
-	contents, err := ioutil.ReadAll(reader)
+	contents, err := io.ReadAll(reader)
 	if err != nil {
 		logrus.Errorf("Error reading from %v: %v", reader, err)
 		return err
