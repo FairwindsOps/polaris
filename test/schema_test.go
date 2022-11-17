@@ -16,7 +16,6 @@ package test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -48,7 +47,7 @@ func init() {
 	checkToTest := os.Getenv("POLARIS_CHECK_TEST")
 	_, baseDir, _, _ := runtime.Caller(0)
 	baseDir = filepath.Dir(baseDir) + "/checks"
-	dirs, err := ioutil.ReadDir(baseDir)
+	dirs, err := os.ReadDir(baseDir)
 	if err != nil {
 		panic(err)
 	}
@@ -58,13 +57,13 @@ func init() {
 			continue
 		}
 		checkDir := baseDir + "/" + check
-		cases, err := ioutil.ReadDir(checkDir)
+		cases, err := os.ReadDir(checkDir)
 		if err != nil {
 			panic(err)
 		}
 		configString := "checks:\n  " + check + ": danger"
 		checkPath := checkDir + "/check.yaml"
-		customCheckContent, err := ioutil.ReadFile(checkPath)
+		customCheckContent, err := os.ReadFile(checkPath)
 		if err == nil {
 			lines := strings.Split(string(customCheckContent), "\n")
 			for idx := range lines {
