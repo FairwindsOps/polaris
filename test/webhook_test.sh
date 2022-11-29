@@ -145,7 +145,7 @@ helm upgrade --install polaris fairwinds-stable/polaris --namespace polaris --cr
 echo "Waiting for the webhook to come online"
 check_webhook_is_ready
 kubectl apply -n mutate-test -f test/webhook_cases/mutation.deployment.yaml
-if ! kubectl get -n mutate-test deployment nginx-deployment-mutated -oyaml | grep imagePullPolicy: Always; then
+if ! kubectl get -n mutate-test deployment nginx-deployment-mutated -oyaml | grep "imagePullPolicy: Always"; then
   ALL_TESTS_PASSED=0
   echo -e "${RED}****Test Failed: Polaris failed to mutate this resource****${NC}"
 else
