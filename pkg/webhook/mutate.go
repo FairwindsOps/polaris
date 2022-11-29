@@ -58,7 +58,11 @@ func (m *Mutator) mutate(req admission.Request) ([]jsonpatch.Operation, error) {
 	if err != nil {
 		return nil, err
 	}
-	return jsonpatch.CreatePatch(originalYaml, []byte(mutatedYamlStr))
+	mutatedJSONStr, err := yaml.YAMLToJSON([]byte(mutatedYamlStr))
+	if err != nil {
+		return nil, err
+	}
+	return jsonpatch.CreatePatch(kubeResources.OriginalObjectJSON, []byte(mutatedJSONStr))
 }
 
 // Handle for Validator to run validation checks.
