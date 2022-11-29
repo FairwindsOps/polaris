@@ -50,6 +50,7 @@ function check_timeout() {
 function clean_up() {
     echo -e "\n\nCleaning up (you may see some errors)...\n\n"
     kubectl delete ns scale-test || true
+    kubectl delete ns mutate-test || true
     kubectl delete ns polaris || true
     kubectl delete ns tests || true
     # Clean up files you've installed (helps with local testing)
@@ -76,6 +77,7 @@ clean_up || true
 
 echo -e "Setting up..."
 kubectl create ns scale-test
+kubectl create ns mutate-test
 kubectl create ns polaris
 kubectl create ns tests
 
@@ -139,6 +141,24 @@ if [ -z $SKIP_FINAL_CLEANUP ]; then
   echo "Doing final cleanup..."
   clean_up
 fi
+
+echo "Checking mutations"
+helm upgrade --install polaris fairwinds-stable/polaris --namespace polaris --create-namespace \
+  --set dashboard.enable=false \
+  --set webhook.enable=true \
+  --set image.tag=$CI_SHA1
+echo "Waiting for the webhook to come online"
+check_webhook_is_ready
+kubectl apply -n mutate-test -f test/webhook_cases/mutation.deployment.yaml
+if ! kubectl get -n mutate-test deployment nginx-deployment-mutated -oyaml | grep imagePullPolicy: Always; then
+  ALL_TESTS_PASSED=0
+  echo "Failed to mutate imagePullPolicy"
+else
+  echo "Mutation OK"
+fi
+kubectl delete -n mutate-test -f test/webhook_cases/mutation.deployment.yaml || true
+sleep 5
+
 
 echo "Done with tests"
 
