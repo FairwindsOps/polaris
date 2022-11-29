@@ -137,11 +137,6 @@ if [ $pod_count != 2 ]; then
   echo "Existing deployment was unable to scale after webhook installed: found $pod_count pods"
 fi
 
-if [ -z $SKIP_FINAL_CLEANUP ]; then
-  echo "Doing final cleanup..."
-  clean_up
-fi
-
 echo "Checking mutations"
 helm upgrade --install polaris fairwinds-stable/polaris --namespace polaris --create-namespace \
   --set dashboard.enable=false \
@@ -152,15 +147,20 @@ check_webhook_is_ready
 kubectl apply -n mutate-test -f test/webhook_cases/mutation.deployment.yaml
 if ! kubectl get -n mutate-test deployment nginx-deployment-mutated -oyaml | grep imagePullPolicy: Always; then
   ALL_TESTS_PASSED=0
-  echo "Failed to mutate imagePullPolicy"
+  echo -e "${RED}****Test Failed: Polaris failed to mutate this resource****${NC}"
 else
-  echo "Mutation OK"
+  echo -e "${GREEN}****Test Passed: Polaris mutated this resource****${NC}"
 fi
 kubectl delete -n mutate-test -f test/webhook_cases/mutation.deployment.yaml || true
 sleep 5
 
 
 echo "Done with tests"
+
+if [ -z $SKIP_FINAL_CLEANUP ]; then
+  echo "Doing final cleanup..."
+  clean_up
+fi
 
 #Verify that all the tests passed.
 if [ $ALL_TESTS_PASSED -eq 1 ]; then
