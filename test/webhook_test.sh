@@ -61,7 +61,7 @@ function clean_up() {
     echo "Uninstalling webhook and webhook config"
     kubectl delete validatingwebhookconfigurations polaris-webhook --wait=false || true
     kubectl delete validatingwebhookconfigurations polaris-validate-webhook --wait=false || true
-    kubectl delete validatingwebhookconfigurations polaris-mutate-webhook --wait=false || true
+    kubectl delete mutatingwebhookconfigurations polaris-mutate-webhook --wait=false || true
     kubectl -n polaris delete deploy -l app=polaris --wait=false || true
     echo -e "\n\nDone cleaning up\n\n"
 }
@@ -80,6 +80,8 @@ kubectl create ns scale-test
 kubectl create ns mutate-test
 kubectl create ns polaris
 kubectl create ns tests
+
+kubectl get validatingwebhookconfiguration
 
 echo "Installing a bad deployment"
 kubectl apply -n scale-test -f ./test/webhook_cases/failing_test.deployment.yaml
@@ -141,6 +143,7 @@ echo "Checking mutations"
 helm upgrade --install polaris fairwinds-stable/polaris --namespace polaris --create-namespace \
   --set dashboard.enable=false \
   --set webhook.enable=true \
+  --set webhook.mutate=true \
   --set image.tag=$CI_SHA1
 echo "Waiting for the webhook to come online"
 check_webhook_is_ready
