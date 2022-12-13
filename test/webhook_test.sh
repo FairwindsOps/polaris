@@ -25,6 +25,7 @@ function check_webhook_is_ready() {
 
     # loop until this fails (desired condition is we cannot apply this yaml doc, which means the webhook is working
     echo "Waiting for webhook to be ready"
+    kubectl get pods -n polaris
     while ! kubectl get pods -n polaris | grep -E "webhook.*1/1.*Running"; do
         check_timeout "${timeout_epoch}"
         echo -n "."
@@ -33,6 +34,10 @@ function check_webhook_is_ready() {
     check_timeout "${timeout_epoch}"
 
     echo "Webhook started!"
+    kubectl get svc -n polaris
+    kubectl get pods -n polaris
+    kubectl get validatingwebhookconfiguration -n polaris
+    kubectl get mutatingwebhookconfiguration -n polaris
 }
 
 # Check if timeout is hit and exit if it is
