@@ -33,6 +33,7 @@ var (
 		"hostPIDSet",
 		"hostNetworkSet",
 		"automountServiceAccountToken",
+		"topologySpreadConstraint",
 		// Container checks
 		"memoryLimitsMissing",
 		"memoryRequestsMissing",
