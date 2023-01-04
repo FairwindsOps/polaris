@@ -9,6 +9,7 @@ checks:
   metadataAndNameMismatched: ignore
   pdbDisruptionsIsZero: warning
   missingPodDisruptionBudget: ignore
+  topologySpreadConstraint: warning
 
   # efficiency
   cpuRequestsMissing: warning
