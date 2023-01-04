@@ -146,7 +146,7 @@ func TestGetResourceFromAPI(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			resources, err := CreateResourceProviderFromAPI(context.Background(), k8s, tt.clusterName, &dynamicInterface, tt.config)
+			resources, err := CreateResourceProviderFromAPI(context.Background(), k8s, tt.clusterName, dynamicInterface, tt.config)
 
 			if tt.wantErr {
 				assert.Error(t, err)
