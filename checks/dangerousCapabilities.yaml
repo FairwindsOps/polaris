@@ -28,4 +28,4 @@ schema:
 
 mutations:
   - op: remove
-    path: /securityContext/capabilities
+    path: /securityContext/capabilities/add
