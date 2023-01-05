@@ -76,6 +76,9 @@ var rootCmd = &cobra.Command{
 		}
 		os.Exit(1)
 	},
+	PersistentPostRun: func(cmd *cobra.Command, args []string) {
+		os.Stderr.WriteString("\n\nWant more? Automate Polaris for free with Fairwinds Insights!\n🚀 https://fairwinds.com/insights-signup/polaris 🚀 \n")
+	},
 }
 
 // Execute the stuff
