@@ -143,7 +143,7 @@ func ProcessHelmTemplates(helmChart, helmValues string) (string, error) {
 	}
 	params := []string{
 		"template", helmChart,
-		helmChart,
+		"--generate-name",
 		"--output-dir",
 		dir,
 	}
