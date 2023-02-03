@@ -9,6 +9,7 @@ spec:
     env:
     - name: greeting
       value: hello
+    - name: empty
     image: nginx
     ports:
     - containerPort: 80
