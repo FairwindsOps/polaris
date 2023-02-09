@@ -157,7 +157,7 @@ jobs:
       - rok8s/get_vault_env:
           vault_path: repo/polaris/env
       - *set_environment_variables
-      - run: docker login quay.io -u="${fairwinds_quay_user}" -p="${fairwinds_quay_token}"
+      - run: docker login quay.io -u="${FAIRWINDS_QUAY_USER}" -p="${FAIRWINDS_QUAY_TOKEN}"
       - install_goreleaser_dependencies
       - run: scripts/goreleaser.sh
 
