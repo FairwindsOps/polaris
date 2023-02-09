@@ -128,16 +128,6 @@ jobs:
       - run: go test ./... -coverprofile=coverage.txt -covermode=count
       - *test_binary_dashboard
 
-  insights:
-    docker:
-      - image: quay.io/reactiveops/ci-images:v11.0-stretch
-    steps:
-      - checkout
-      - setup_remote_docker
-      - run:
-          name: Insights CI
-          command: curl -L https://insights.fairwinds.com/v0/insights-ci.sh | bash
-
   build_and_push:
     working_directory: /go/src/github.com/fairwindsops/polaris/
     resource_class: large
@@ -157,7 +147,7 @@ jobs:
       - rok8s/get_vault_env:
           vault_path: repo/polaris/env
       - *set_environment_variables
-      - run: docker login quay.io -u="${fairwinds_quay_user}" -p="${fairwinds_quay_token}"
+      - run: docker login quay.io -u="${FAIRWINDS_QUAY_USER}" -p="${FAIRWINDS_QUAY_TOKEN}"
       - install_goreleaser_dependencies
       - run: scripts/goreleaser.sh
 
@@ -174,14 +164,6 @@ workflows:
           context: org-global
           requires:
             - test
-          filters:
-            branches:
-              ignore: /pull\/[0-9]+/
-            tags:
-              ignore: /^testing-.*/
-      - insights:
-          requires:
-            - build_and_push
           filters:
             branches:
               ignore: /pull\/[0-9]+/
