@@ -20,6 +20,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -135,7 +137,7 @@ var podSpecFields = []string{"jobTemplate", "spec", "template"}
 // CreateResourceProvider returns a new ResourceProvider object to interact with k8s resources
 func CreateResourceProvider(ctx context.Context, directory, workload string, c conf.Configuration) (*ResourceProvider, error) {
 	if workload != "" {
-		return CreateResourceProviderFromResource(ctx, workload)
+		return CreateResourceProviderFromResource(ctx, workload, c.KubeConfig)
 	}
 	if directory != "" {
 		return CreateResourceProviderFromPath(directory)
@@ -144,12 +146,23 @@ func CreateResourceProvider(ctx context.Context, directory, workload string, c c
 }
 
 // CreateResourceProviderFromResource creates a new ResourceProvider that just contains one workload
-func CreateResourceProviderFromResource(ctx context.Context, workload string) (*ResourceProvider, error) {
-	kubeConf, configError := config.GetConfig()
-	if configError != nil {
-		logrus.Errorf("Error fetching KubeConfig: %v", configError)
-		return nil, configError
+func CreateResourceProviderFromResource(ctx context.Context, workload, kubeConfigPath string) (*ResourceProvider, error) {
+	var kubeConf *rest.Config
+	var err error
+	if kubeConfigPath != "" {
+		kubeConf, err = clientcmd.BuildConfigFromFlags("", kubeConfigPath)
+		if err != nil {
+			logrus.Errorf("Error fetching KubeConfig: %v", err)
+			return nil, err
+		}
+	} else {
+		kubeConf, err = config.GetConfig()
+		if err != nil {
+			logrus.Errorf("Error fetching KubeConfig: %v", err)
+			return nil, err
+		}
 	}
+
 	kube, err := kubernetes.NewForConfig(kubeConf)
 	if err != nil {
 		logrus.Errorf("Error creating Kubernetes client: %v", err)
@@ -243,10 +256,26 @@ func CreateResourceProviderFromYaml(yamlContent string) *ResourceProvider {
 
 // CreateResourceProviderFromCluster creates a new ResourceProvider using live data from a cluster
 func CreateResourceProviderFromCluster(ctx context.Context, c conf.Configuration) (*ResourceProvider, error) {
+	var kubeConf *rest.Config
+	var err error
 	kubeConf, configError := config.GetConfigWithContext(c.KubeContext)
 	if configError != nil {
 		logrus.Errorf("Error fetching KubeConfig: %v", configError)
 		return nil, configError
+	}
+
+	if c.KubeConfig != "" {
+		kubeConf, err = clientcmd.BuildConfigFromFlags("", c.KubeConfig)
+		if err != nil {
+			logrus.Errorf("Error fetching KubeConfig: %v", err)
+			return nil, err
+		}
+	} else {
+		kubeConf, err = config.GetConfig()
+		if err != nil {
+			logrus.Errorf("Error fetching KubeConfig: %v", err)
+			return nil, err
+		}
 	}
 	api, err := kubernetes.NewForConfig(kubeConf)
 	if err != nil {

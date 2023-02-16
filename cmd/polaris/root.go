@@ -29,12 +29,15 @@ var auditPath string
 var displayName string
 var kubeContext string
 
+var kubeconfig string
+
 var (
 	version string
 )
 
 func init() {
 	// Flags
+	rootCmd.PersistentFlags().StringVar(&kubeconfig, "kubeconfig", "", "Path to the kubeconfig file to use for CLI requests.")
 	rootCmd.PersistentFlags().StringVarP(&configPath, "config", "c", "", "Location of Polaris configuration file.")
 	rootCmd.PersistentFlags().StringVarP(&kubeContext, "context", "x", "", "Set the kube context.")
 	rootCmd.PersistentFlags().BoolVarP(&disallowExemptions, "disallow-exemptions", "", false, "Disallow any configured exemption.")
@@ -67,6 +70,7 @@ var rootCmd = &cobra.Command{
 		config.DisallowConfigExemptions = disallowConfigExemptions
 		config.DisallowAnnotationExemptions = disallowAnnotationExemptions
 		config.KubeContext = kubeContext
+		config.KubeConfig = kubeconfig
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		logrus.Error("You must specify a sub-command.")
