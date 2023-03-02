@@ -90,7 +90,7 @@ func TestAddResourcesFromReader(t *testing.T) {
 
 	assert.Equal(t, 0, len(resources.Nodes), "Should not have any nodes")
 
-	assert.Equal(t, 6, len(resources.Resources), "Should have one controller")
+	assert.Equal(t, 6, len(resources.Resources), "Should have 6 resources")
 	deployment := funk.Find(resources.Resources, func(res GenericResource) bool {
 		return res.Resource.GroupVersionKind().Kind == "Deployment"
 	}).(GenericResource)
