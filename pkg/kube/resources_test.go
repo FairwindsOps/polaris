@@ -21,9 +21,11 @@ import (
 	"testing"
 	"time"
 
-	conf "github.com/fairwindsops/polaris/pkg/config"
+	"github.com/thoas/go-funk"
 	"github.com/fairwindsops/polaris/test"
 	"github.com/stretchr/testify/assert"
+
+	conf "github.com/fairwindsops/polaris/pkg/config"
 )
 
 func TestGetResourcesFromPath(t *testing.T) {
@@ -42,12 +44,10 @@ func TestGetResourcesFromPath(t *testing.T) {
 	assert.Equal(t, "two", provider.Namespaces[0].ObjectMeta.Name)
 
 	namespaceCount := map[string]int{}
-	for _, resources := range provider.Resources {
-		for _, controller := range resources {
-			namespaceCount[controller.ObjectMeta.GetNamespace()]++
-		}
+	for _, controller := range provider.Resources {
+		namespaceCount[controller.ObjectMeta.GetNamespace()]++
 	}
-	assert.Equal(t, 11, provider.Resources.GetLength())
+	assert.Equal(t, 11, len(provider.Resources))
 	assert.Equal(t, 10, namespaceCount[""])
 	assert.Equal(t, 1, namespaceCount["two"])
 }
@@ -64,8 +64,11 @@ func TestGetMultipleResourceFromSingleFile(t *testing.T) {
 
 	assert.Equal(t, 0, len(resources.Nodes), "Should not have any nodes")
 
-	assert.Equal(t, 1, len(resources.Resources["extensions/Deployment"]), "Should have one controller")
-	assert.Equal(t, "dashboard", resources.Resources["extensions/Deployment"][0].PodSpec.Containers[0].Name)
+	assert.Equal(t, 6, len(resources.Resources), "Should have 6 resources")
+	deployment := funk.Find(resources.Resources, func(res GenericResource) bool {
+		return res.Resource.GroupVersionKind().Kind == "Deployment"
+	}).(GenericResource)
+	assert.Equal(t, "dashboard", deployment.PodSpec.Containers[0].Name)
 
 	assert.Equal(t, 2, len(resources.Namespaces), "Should have a namespace")
 	assert.Equal(t, "polaris", resources.Namespaces[0].ObjectMeta.Name)
@@ -87,8 +90,11 @@ func TestAddResourcesFromReader(t *testing.T) {
 
 	assert.Equal(t, 0, len(resources.Nodes), "Should not have any nodes")
 
-	assert.Equal(t, 1, len(resources.Resources["extensions/Deployment"]), "Should have one controller")
-	assert.Equal(t, "dashboard", resources.Resources["extensions/Deployment"][0].PodSpec.Containers[0].Name)
+	assert.Equal(t, 6, len(resources.Resources), "Should have one controller")
+	deployment := funk.Find(resources.Resources, func(res GenericResource) bool {
+		return res.Resource.GroupVersionKind().Kind == "Deployment"
+	}).(GenericResource)
+	assert.Equal(t, "dashboard", deployment.PodSpec.Containers[0].Name)
 
 	assert.Equal(t, 2, len(resources.Namespaces), "Should have a namespace")
 	assert.Equal(t, "polaris", resources.Namespaces[0].ObjectMeta.Name)
@@ -158,10 +164,8 @@ func TestGetResourceFromAPI(t *testing.T) {
 				assert.Equal(t, 0, len(resources.Nodes), "Should not have any nodes")
 				assert.Equal(t, 5, len(resources.Resources), "Should have 5 controllers")
 
-				for _, controllers := range resources.Resources {
-					for _, ctrl := range controllers {
-						expectedNames[ctrl.ObjectMeta.GetName()] = true
-					}
+				for _, ctrl := range resources.Resources {
+					expectedNames[ctrl.ObjectMeta.GetName()] = true
 				}
 				for name, val := range expectedNames {
 					assert.Equal(t, true, val, name)

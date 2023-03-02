@@ -113,20 +113,19 @@ var fixCommand = &cobra.Command{
 
 			updatedYamlContent := ""
 			if len(allMutations) > 0 {
-				for _, resources := range kubeResources.Resources {
-					for _, resource := range resources {
-						key := fmt.Sprintf("%s/%s/%s", resource.Kind, resource.Resource.GetName(), resource.Resource.GetNamespace())
-						mutations := allMutations[key]
-						mutatedYamlContent, err := mutation.ApplyAllMutations(string(resource.OriginalObjectYAML), mutations)
-						if err != nil {
-							logrus.Errorf("Error applying schema mutations to the resource %s: %v", key, err)
-							os.Exit(1)
-						}
-						if updatedYamlContent != "" {
-							updatedYamlContent += "\n---\n"
-						}
-						updatedYamlContent += mutatedYamlContent
+				for _, resource := range kubeResources.Resources {
+					key := fmt.Sprintf("%s/%s/%s", resource.Kind, resource.Resource.GetName(), resource.Resource.GetNamespace())
+					fmt.Println("resource", key)
+					mutations := allMutations[key]
+					mutatedYamlContent, err := mutation.ApplyAllMutations(string(resource.OriginalObjectYAML), mutations)
+					if err != nil {
+						logrus.Errorf("Error applying schema mutations to the resource %s: %v", key, err)
+						os.Exit(1)
 					}
+					if updatedYamlContent != "" {
+						updatedYamlContent += "\n---\n"
+					}
+					updatedYamlContent += mutatedYamlContent
 				}
 			}
 

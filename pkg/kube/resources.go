@@ -51,46 +51,32 @@ type ResourceProvider struct {
 	SourceType    string
 	Nodes         []corev1.Node
 	Namespaces    []corev1.Namespace
-	Resources     resourceKindMap
+	Resources     resourceSet
 }
 
-type resourceKindMap map[string][]GenericResource
+type resourceSet []GenericResource
 
-func (rkm resourceKindMap) addResource(r GenericResource) {
-	gvk := r.Resource.GroupVersionKind()
-	var key string
-	if gvk.Group != "" {
-		key = gvk.Group + "/" + gvk.Kind
-	} else {
-		key = gvk.Kind
-	}
-	rkm[key] = append(rkm[key], r)
-}
-
-func (rkm resourceKindMap) addResources(rs []GenericResource) {
+func (rs resourceSet) GetNumberOfControllers() int {
+	total := 0
 	for _, r := range rs {
-		rkm.addResource(r)
-	}
-}
-
-func (rkm resourceKindMap) GetLength() int {
-	total := 0
-	for _, rs := range rkm {
-		total += len(rs)
-	}
-	return total
-}
-
-func (rkm resourceKindMap) GetNumberOfControllers() int {
-	total := 0
-	for _, rs := range rkm {
-		for _, r := range rs {
-			if r.PodSpec != nil {
-				total++
-			}
+		if r.PodSpec != nil {
+			total++
 		}
 	}
 	return total
+}
+
+func (rs resourceSet) GetAllOfGroupKind(gk string) []GenericResource {
+	return funk.Filter(rs, func(res GenericResource) bool {
+		gvk := res.Resource.GroupVersionKind()
+		var key string
+		if gvk.Group != "" {
+			key = gvk.Group + "/" + gvk.Kind
+		} else {
+			key = gvk.Kind
+		}
+		return key == gk
+	}).([]GenericResource)
 }
 
 // This is here for backward compatibility reasons
@@ -122,7 +108,7 @@ func newResourceProvider(version, sourceType, sourceName string) ResourceProvide
 		CreationTime:  time.Now(),
 		Nodes:         make([]corev1.Node, 0),
 		Namespaces:    make([]corev1.Namespace, 0),
-		Resources:     make(map[string][]GenericResource),
+		Resources:     make([]GenericResource, 0),
 	}
 }
 
@@ -193,7 +179,7 @@ func CreateResourceProviderFromResource(ctx context.Context, workload string) (*
 		return nil, err
 	}
 
-	resources.Resources.addResource(workloadObj)
+	resources.Resources = append(resources.Resources, workloadObj)
 	return &resources, nil
 }
 
@@ -377,7 +363,7 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 
 	provider.Nodes = nodes.Items
 	provider.Namespaces = namespaces.Items
-	provider.Resources.addResources(kubernetesResources)
+	provider.Resources = append(provider.Resources, kubernetesResources...)
 	logrus.Info("Done loading Kubernetes resources")
 	return &provider, nil
 }
@@ -479,13 +465,13 @@ func (resources *ResourceProvider) addResourceFromString(contents string) error 
 			return err
 		}
 		workload.OriginalObjectYAML = contentBytes
-		resources.Resources.addResource(workload)
+		resources.Resources = append(resources.Resources, workload)
 	} else {
 		newResource, err := NewGenericResourceFromBytes(contentBytes)
 		if err != nil {
 			return err
 		}
-		resources.Resources.addResource(newResource)
+		resources.Resources = append(resources.Resources, newResource)
 	}
 	return err
 }

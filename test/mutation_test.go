@@ -51,9 +51,8 @@ func TestMutations(t *testing.T) {
 			assert.Len(t, results, 1)
 			allMutations := mutation.GetMutationsFromResults(results)
 			assert.Len(t, allMutations, 1)
-			for _, resources := range tc.resources.Resources {
-				assert.Len(t, resources, 1)
-				key := fmt.Sprintf("%s/%s/%s", resources[0].Kind, resources[0].Resource.GetName(), resources[0].Resource.GetNamespace())
+			for _, resource := range tc.resources.Resources {
+				key := fmt.Sprintf("%s/%s/%s", resource.Kind, resource.Resource.GetName(), resource.Resource.GetNamespace())
 				mutations := allMutations[key]
 				yamlContent, err := mutation.ApplyAllMutations(tc.manifest, mutations)
 				assert.NoError(t, err)

@@ -173,18 +173,10 @@ func hasExemptionAnnotation(objMeta metaV1.Object, checkID string) bool {
 
 // ApplyAllSchemaChecksToResourceProvider applies all available checks to a ResourceProvider
 func ApplyAllSchemaChecksToResourceProvider(conf *config.Configuration, resourceProvider *kube.ResourceProvider) ([]Result, error) {
-	results := []Result{}
 	if resourceProvider == nil {
 		return nil, errors.New("No resource provider set, cannot apply schema checks")
 	}
-	for _, resources := range resourceProvider.Resources {
-		kindResults, err := ApplyAllSchemaChecksToAllResources(conf, resourceProvider, resources)
-		if err != nil {
-			return results, err
-		}
-		results = append(results, kindResults...)
-	}
-	return results, nil
+	return ApplyAllSchemaChecksToAllResources(conf, resourceProvider, resourceProvider.Resources)
 }
 
 // ApplyAllSchemaChecksToAllResources applies available checks to a list of resources
@@ -381,7 +373,7 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 			logrus.Warnf("No ResourceProvider available, check %s will not work in this context (e.g. admission control)", checkID)
 			break
 		}
-		resources := test.ResourceProvider.Resources[groupkind]
+		resources := test.ResourceProvider.Resources.GetAllOfGroupKind(groupkind)
 		namespace := test.Resource.ObjectMeta.GetNamespace()
 		if test.Resource.Kind == "Namespace" {
 			namespace = test.Resource.ObjectMeta.GetName()
