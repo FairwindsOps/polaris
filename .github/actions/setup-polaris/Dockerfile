@@ -1,6 +1,6 @@
 # The action uses an own Dockerfile on purpose because the root Dockerfile takes way too long to build for an action
 
-FROM alpine:3.10
+FROM alpine:3.17
 
 RUN	apk add --no-cache \
   bash \
