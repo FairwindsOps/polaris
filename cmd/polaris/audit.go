@@ -17,6 +17,7 @@ package cmd
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -45,6 +46,7 @@ var (
 	helmValues          string
 	checks              []string
 	auditNamespace      string
+	skipSslValidation   bool
 )
 
 func init() {
@@ -63,6 +65,7 @@ func init() {
 	auditCmd.PersistentFlags().StringVar(&helmValues, "helm-values", "", "Optional flag to add helm values")
 	auditCmd.PersistentFlags().StringSliceVar(&checks, "checks", []string{}, "Optional flag to specify specific checks to check")
 	auditCmd.PersistentFlags().StringVar(&auditNamespace, "namespace", "", "Namespace to audit. Only applies to in-cluster audits")
+	auditCmd.PersistentFlags().BoolVar(&skipSslValidation, "skip-ssl-validation", false, "Skip https certificate verification")
 }
 
 var auditCmd = &cobra.Command{
@@ -143,7 +146,7 @@ func ProcessHelmTemplates(helmChart, helmValues string) (string, error) {
 	}
 	params := []string{
 		"template", helmChart,
-		helmChart,
+		"--generate-name",
 		"--output-dir",
 		dir,
 	}
@@ -202,9 +205,13 @@ func outputAudit(auditData validator.AuditData, outputFile, outputURL, outputFor
 			} else {
 				req.Header.Set("Content-Type", "text/plain")
 			}
-			client := &http.Client{}
-			resp, err := client.Do(req)
 
+			client := &http.Client{}
+			if skipSslValidation {
+				transport := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+				client = &http.Client{Transport: transport}
+			}
+			resp, err := client.Do(req)
 			if err != nil {
 				logrus.Errorf("Error making request for output: %v", err)
 				os.Exit(1)
@@ -223,7 +230,7 @@ func outputAudit(auditData validator.AuditData, outputFile, outputURL, outputFor
 		}
 
 		if outputFile != "" {
-			err := os.WriteFile(outputFile, []byte(outputBytes), 0644)
+			err := os.WriteFile(outputFile, outputBytes, 0644)
 			if err != nil {
 				logrus.Errorf("Error writing output to file: %v", err)
 				os.Exit(1)
