@@ -38,7 +38,7 @@ and network with fellow Kubernetes users.
 or
 [join the user group](https://www.fairwinds.com/open-source-software-user-group) to get involved!
 
-<a href="https://www.fairwinds.com/t-shirt-offer?utm_source=polaris&utm_medium=polaris&utm_campaign=polaris-tshirt">
+<a href="https://insights.fairwinds.com/auth/register/">
   <img src="https://www.fairwinds.com/hubfs/Doc_Banners/Fairwinds_OSS_User_Group_740x125_v6.png" alt="Love Fairwinds Open Source? Share your business email and job title and we'll send you a free Fairwinds t-shirt!" />
 </a>
 
