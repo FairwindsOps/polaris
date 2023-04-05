@@ -22,19 +22,19 @@ key | default | description
 `hostNetworkSet` | `warning` | Fails when `hostNetwork` attribute is configured.
 `hostPortSet` | `warning` | Fails when `hostPort` attribute is configured.
 `tlsSettingsMissing` | `warning` | Fails when an Ingress lacks TLS settings.
-`automountServiceAccountToken` | | Fails if service account tokens are automounted to pods
-`clusterrolePodExecAttach` | | Fails if a ClusterRole is able to exec into pods
-`clusterrolebindingClusterAdmin` | | Fails if a ClusterRoleBinding is attached to the admin role
-`clusterrolebindingPodExecAttach` | | Fails if a ClusterRoleBinding is able to exec into pods
-`rolePodExecAttach` | | Fails if a Role is able to exec into pods
-`rolebindingClusterAdminClusterRole` | | Fails if a RoleBinding is attached to the cluster admin role
-`rolebindingClusterAdminRole` | | Fails if a RoleBinding is attached to the admin role
-`rolebindingClusterRolePodExecAttach` | | Fails if a RoleBinding is able to exec into pods in any namespace
-`rolebindingRolePodExecAttach` | | Fails if a RoleBinding is able to exec into pods in its namespace
-`linuxHardening` | | Fails if one of AppArmor, Seccomp, SELinux, or dropping Linux Capabilities are not used to limit unwanted privileges
-`missingNetworkPolicy` | | Fails if a controller lacks a corresponding NetworkPolicy
-`sensitiveConfigmapContent` | | Fails if a ConfigMap contains a likely password or secret
-`sensitiveContainerEnvVar` | | Fails if a controller has an environment variable hard-coded to a likely password or secret
+`automountServiceAccountToken` | `ignore` | Fails if service account tokens are automounted to pods
+`clusterrolePodExecAttach` | `warning` | Fails if a ClusterRole is able to exec into pods
+`clusterrolebindingClusterAdmin` | `warning` | Fails if a ClusterRoleBinding is attached to the admin role
+`clusterrolebindingPodExecAttach` | `warning` | Fails if a ClusterRoleBinding is able to exec into pods
+`rolePodExecAttach` | `warning` | Fails if a Role is able to exec into pods
+`rolebindingClusterAdminClusterRole` | `warning` | Fails if a RoleBinding is attached to the cluster admin role
+`rolebindingClusterAdminRole` | `warning` | Fails if a RoleBinding is attached to the admin role
+`rolebindingClusterRolePodExecAttach` | `warning` | Fails if a RoleBinding is able to exec into pods in any namespace
+`rolebindingRolePodExecAttach` | `warning` | Fails if a RoleBinding is able to exec into pods in its namespace
+`linuxHardening` | `warning` | Fails if one of AppArmor, Seccomp, SELinux, or dropping Linux Capabilities are not used to limit unwanted privileges
+`missingNetworkPolicy` | `warning` | Fails if a controller lacks a corresponding NetworkPolicy
+`sensitiveConfigmapContent` | `warning` | Fails if a ConfigMap contains a likely password or secret
+`sensitiveContainerEnvVar` | `warning` | Fails if a controller has an environment variable hard-coded to a likely password or secret
 
 ## Background
 
