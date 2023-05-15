@@ -3,7 +3,6 @@ package auth
 import (
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -35,22 +34,10 @@ type Host struct {
 var tokenOrErrorChan = make(chan tokenOrError)
 
 func HandleLogin() error {
-	// checking for existing configuration
 	if _, err := os.Stat(polarisHostsFilepath); err == nil {
-		// file exists
-		f, err := os.Open(polarisHostsFilepath)
+		content, err := readPolarisHostsFile()
 		if err != nil {
-			return fmt.Errorf("opening existing polaris hosts file: %w", err)
-		}
-		b, err := io.ReadAll(f)
-		if err != nil {
-			return fmt.Errorf("reading from existing polaris hosts file: %w", err)
-		}
-
-		content := map[string]Host{}
-		err = yaml.Unmarshal(b, &content)
-		if err != nil {
-			return fmt.Errorf("unmarshaling from existing polaris hosts file: %w", err)
+			return fmt.Errorf("reading polaris hosts file: %w", err)
 		}
 
 		if len(content) > 0 {

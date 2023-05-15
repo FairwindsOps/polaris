@@ -2,11 +2,9 @@ package auth
 
 import (
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v3"
 )
 
 func HandleLogout() error {
@@ -24,17 +22,7 @@ func HandleLogout() error {
 
 func performLogout() (bool, error) {
 	if _, err := os.Stat(polarisHostsFilepath); err == nil {
-		f, err := os.Open(polarisHostsFilepath)
-		if err != nil {
-			return false, nil
-		}
-		b, err := io.ReadAll(f)
-		if err != nil {
-			return false, nil
-		}
-
-		content := map[string]Host{}
-		err = yaml.Unmarshal(b, &content)
+		content, err := readPolarisHostsFile()
 		if err != nil {
 			return false, nil
 		}
