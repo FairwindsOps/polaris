@@ -55,12 +55,10 @@ var statusCmd = &cobra.Command{
 	Short: "View authentication status.",
 	Long:  `View authentication status.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		/*
-			✓ Logged in to github.com as vitorvezani (keyring)
-			✓ Git operations for github.com configured to use ssh protocol.
-			✓ Token: ghp_************************************
-			✓ Token scopes: admin:public_key, read:org, repo
-		*/
+		err := auth.PrintStatus()
+		if err != nil {
+			logrus.Fatalf("printing status")
+		}
 	},
 	PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
 		return nil
