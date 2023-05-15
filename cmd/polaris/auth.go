@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/fairwindsops/polaris/pkg/auth"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -27,7 +25,6 @@ var loginCmd = &cobra.Command{
 	Short: "Authenticate polaris with Fairwinds Insights.",
 	Long:  `Authenticate polaris with Fairwinds Insights.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// parse arguments
 		err := auth.HandleLogin()
 		if err != nil {
 			logrus.Fatal(err)
@@ -40,10 +37,13 @@ var loginCmd = &cobra.Command{
 
 var logoutCmd = &cobra.Command{
 	Use:   "logout",
-	Short: "Log out of a GitHub host.",
-	Long:  `Log out of a GitHub host.`,
+	Short: "Log out of a Fairwinds Insights.",
+	Long:  `Log out of a Fairwinds Insights.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("logout:" + version)
+		err := auth.HandleLogout()
+		if err != nil {
+			logrus.Fatal(err)
+		}
 	},
 	PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
 		return nil
@@ -55,7 +55,12 @@ var statusCmd = &cobra.Command{
 	Short: "View authentication status.",
 	Long:  `View authentication status.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("status:" + version)
+		/*
+			✓ Logged in to github.com as vitorvezani (keyring)
+			✓ Git operations for github.com configured to use ssh protocol.
+			✓ Token: ghp_************************************
+			✓ Token scopes: admin:public_key, read:org, repo
+		*/
 	},
 	PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
 		return nil
@@ -67,7 +72,10 @@ var tokenCmd = &cobra.Command{
 	Short: "Print the auth token gh is configured to use.",
 	Long:  `Print the auth token gh is configured to use.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("token:" + version)
+		err := auth.PrintToken()
+		if err != nil {
+			logrus.Fatalf("printing token: %w", err)
+		}
 	},
 	PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
 		return nil
