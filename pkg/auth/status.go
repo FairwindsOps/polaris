@@ -10,7 +10,7 @@ func PrintStatus() error {
 		if len(content) > 0 {
 			for k, h := range content {
 				if len(content) == 1 {
-					fmt.Printf("✓ Logged in to %s as <user>\n", k)
+					fmt.Printf("✓ Logged in to %s as %s\n", k, h.User)
 					fmt.Printf("✓ Token: %s\n", hideToken(h.Token, 3))
 				}
 			}

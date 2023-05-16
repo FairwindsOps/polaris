@@ -24,11 +24,13 @@ const (
 
 type tokenOrError struct {
 	token string
+	user  string
 	err   error
 }
 
 type Host struct {
 	Token string `yaml:"token"`
+	User  string `yaml:"user"`
 }
 
 var tokenOrErrorChan = make(chan tokenOrError)
@@ -66,7 +68,7 @@ func HandleLogin() error {
 		return fmt.Errorf("asking how to authenticate: %w", err)
 	}
 
-	var token string
+	var user, token string
 	if answer == loginUsingBrowser {
 		err = openBrowser(fmt.Sprintf(insightsURL + loginPath + "?source=polaris"))
 		if err != nil {
@@ -90,6 +92,7 @@ func HandleLogin() error {
 		}
 
 		token = tokenOrError.token
+		user = tokenOrError.user
 	} else {
 		var answer string
 		err := survey.AskOne(&survey.Password{Message: "Paste your authentication token:"}, &answer, survey.WithValidator(validateToken))
@@ -97,6 +100,7 @@ func HandleLogin() error {
 			return fmt.Errorf("asking how to authenticate: %w", err)
 		}
 		token = answer
+		user = "admin" // TODO: fetch name from bots endpoint
 	}
 
 	polarisCfgDir := filepath.Join(userHomeDir, ".config", "polaris")
@@ -115,7 +119,7 @@ func HandleLogin() error {
 		}
 	}()
 
-	content := map[string]Host{insightsURL: {Token: token}}
+	content := map[string]Host{insightsURL: {Token: token, User: user}}
 	b, err := yaml.Marshal(content)
 	if err != nil {
 		return fmt.Errorf("marshalling yaml data: %w", err)
@@ -129,7 +133,7 @@ func HandleLogin() error {
 	logrus.Debugf("hosts file has been saved")
 
 	fmt.Println("✓ Authentication complete.")
-	fmt.Println("✓ Logged in as <user>.")
+	fmt.Printf("✓ Logged in as %s.\n", user)
 	return nil
 }
 
@@ -139,7 +143,13 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 		tokenOrErrorChan <- tokenOrError{err: errors.New("token query param is required in callback")}
 		return
 	}
-	tokenOrErrorChan <- tokenOrError{token: token}
+	user := r.URL.Query().Get("user")
+	if len(user) == 0 {
+		tokenOrErrorChan <- tokenOrError{err: errors.New("user query param is required in callback")}
+		return
+	}
+
+	tokenOrErrorChan <- tokenOrError{token: token, user: user}
 	return
 }
 
