@@ -6,17 +6,23 @@ checks:
   pullPolicyNotAlways: warning
   readinessProbeMissing: warning
   livenessProbeMissing: warning
+  topologySpreadConstraint: warning
+  pdbDisruptionsIsZero: warning
+  missingPodDisruptionBudget: ignore
+  metadataAndNameMismatched: ignore
+
   # efficiency
   cpuRequestsMissing: warning
   cpuLimitsMissing: warning
   memoryRequestsMissing: warning
   memoryLimitsMissing: warning
+
   # security
   automountServiceAccountToken: warning
   hostIPCSet: danger
   hostPIDSet: danger
   linuxHardening: danger
-  missingNetworkPolicy: warning
+  missingNetworkPolicy: ignore
   notReadOnlyRootFilesystem: warning
   privilegeEscalationAllowed: danger
   runAsRootAllowed: danger
@@ -25,6 +31,7 @@ checks:
   insecureCapabilities: warning
   hostNetworkSet: danger
   hostPortSet: warning
+  tlsSettingsMissing: warning
   sensitiveContainerEnvVar: danger
   sensitiveConfigmapContent: danger
   clusterrolePodExecAttach: danger
@@ -39,7 +46,6 @@ checks:
   resourceLimits: warning
   imageRegistry: danger
 
-  
 exemptions:
   - controllerNames:
     - my-network-controller
