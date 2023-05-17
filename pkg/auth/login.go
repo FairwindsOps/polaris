@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -15,7 +16,7 @@ import (
 )
 
 const loginPath = "/auth/login"
-const authServerPort = "8089"
+const registerPath = "/auth/register"
 
 const (
 	loginUsingBrowser          = "Login with a web browser"
@@ -70,7 +71,11 @@ func HandleLogin() error {
 
 	var user, token string
 	if answer == loginUsingBrowser {
-		err = openBrowser(fmt.Sprintf(insightsURL + loginPath + "?source=polaris"))
+		listener, err := net.Listen("tcp", ":0")
+		if err != nil {
+			panic(err)
+		}
+		err = openBrowser(fmt.Sprintf(insightsURL + registerPath + "?source=polaris&callbackUrl=" + fmt.Sprintf("http://localhost:%d/auth/login/callback", listener.Addr().(*net.TCPAddr).Port)))
 		if err != nil {
 			logrus.Fatal(err)
 		}
@@ -79,7 +84,7 @@ func HandleLogin() error {
 		go func() {
 			router = mux.NewRouter()
 			router.HandleFunc("/auth/login/callback", callbackHandler)
-			if err := http.ListenAndServe(":"+authServerPort, router); err != nil {
+			if err := http.Serve(listener, router); err != nil {
 				tokenOrErrorChan <- tokenOrError{err: fmt.Errorf("starting the local http server: %w", err)}
 			}
 		}()
