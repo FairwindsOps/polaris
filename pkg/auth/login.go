@@ -61,7 +61,6 @@ func HandleLogin(insightsURL string) error {
 		}
 	}
 
-	// How would you like to authenticate GitHub CLI?  [Use arrows to move, type to filter]
 	selection := &survey.Select{
 		Message: "How would you like to authenticate Polaris?",
 		Options: []string{loginUsingBrowser, pasteAnAuthenticationToken},
