@@ -6,7 +6,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var insightsURL string
+
 func init() {
+	loginCmd.Flags().StringVar(&insightsURL, "insights-host", "https://insights.fairwinds.com", "insights host URL")
+
 	rootCmd.AddCommand(authCmd)
 	authCmd.AddCommand(loginCmd)
 	authCmd.AddCommand(logoutCmd)
@@ -25,7 +29,7 @@ var loginCmd = &cobra.Command{
 	Short: "Authenticate polaris with Fairwinds Insights.",
 	Long:  `Authenticate polaris with Fairwinds Insights.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := auth.HandleLogin()
+		err := auth.HandleLogin(insightsURL)
 		if err != nil {
 			logrus.Fatal(err)
 		}

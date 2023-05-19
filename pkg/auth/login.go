@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/gorilla/mux"
@@ -40,7 +41,7 @@ type Host struct {
 
 var paramsOrErrorChan = make(chan paramsOrError)
 
-func HandleLogin() error {
+func HandleLogin(insightsURL string) error {
 	if _, err := os.Stat(polarisHostsFilepath); err == nil {
 		content, err := readPolarisHostsFile()
 		if err != nil {
@@ -88,7 +89,7 @@ func HandleLogin() error {
 		var router *mux.Router
 		go func() {
 			router = mux.NewRouter()
-			router.HandleFunc("/auth/login/callback", callbackHandler(localServerPort))
+			router.HandleFunc("/auth/login/callback", callbackHandler(insightsURL, localServerPort))
 			if err := http.Serve(listener, router); err != nil {
 				paramsOrErrorChan <- paramsOrError{err: fmt.Errorf("starting the local http server: %w", err)}
 			}
@@ -106,13 +107,14 @@ func HandleLogin() error {
 		token = paramOrError.token
 	} else {
 		var answer string
-		err := survey.AskOne(&survey.Password{Message: "Paste your authentication token:"}, &answer, survey.WithValidator(validateToken))
+		var bot Bot
+		err := survey.AskOne(&survey.Password{Message: "Paste your authentication token:"}, &answer, survey.WithValidator(validateToken(insightsURL, &bot)))
 		if err != nil {
 			return fmt.Errorf("asking how to authenticate: %w", err)
 		}
 		token = answer
-		user = "admin"           // TODO: Vitor - fetch name from bots endpoint
-		organization = "acme-co" // TODO: Vitor - fetch organization from bots endpoint
+		user = bot.Name
+		organization = bot.Organization
 	}
 
 	polarisCfgDir := filepath.Join(userHomeDir, ".config", "polaris")
@@ -187,7 +189,7 @@ func fetchAuthToken(insightsURL, organization, code string) (string, error) {
 	return token, nil
 }
 
-func callbackHandler(localServerPort int) func(w http.ResponseWriter, r *http.Request) {
+func callbackHandler(insightsURL string, localServerPort int) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// checks for error in the params
 		errMsg := r.URL.Query().Get("error")
@@ -227,16 +229,50 @@ func callbackHandler(localServerPort int) func(w http.ResponseWriter, r *http.Re
 	}
 }
 
-func validateToken(args any) error {
-	token, ok := args.(string)
-	if !ok {
-		return errors.New("casting token to string")
+func validateToken(insightsURL string, bot *Bot) func(args any) error {
+	return func(args any) error {
+		token, ok := args.(string)
+		if !ok {
+			return errors.New("casting token to string")
+		}
+		if len(strings.TrimSpace(token)) <= 0 {
+			return errors.New("token is required")
+		}
+		return fetchOrganizationBot(insightsURL, token, bot)
+	}
+}
+
+type Bot struct {
+	ID           int
+	Organization string
+	Name         string
+	Role         string
+	AuthToken    string
+	CreatedAt    time.Time
+}
+
+func fetchOrganizationBot(insightsURL, authToken string, bot *Bot) error {
+	authTokenURL := fmt.Sprintf("%s/v0/bots/from-request", insightsURL)
+	r, err := http.NewRequest("GET", authTokenURL, nil)
+	if err != nil {
+		return err
+	}
+	r.Header.Add("Content-Type", "application/json")
+	r.Header.Add("Authorization", "Bearer "+authToken)
+
+	res, err := http.DefaultClient.Do(r)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode < 200 || res.StatusCode >= 400 {
+		return fmt.Errorf("expected 200 (OK) - received %d", res.StatusCode)
 	}
 
-	if len(strings.TrimSpace(token)) <= 0 {
-		return errors.New("token is required")
+	err = json.NewDecoder(res.Body).Decode(bot)
+	if err != nil {
+		return err
 	}
-
-	// TODO: Vitor - validate token against the API?
 	return nil
 }

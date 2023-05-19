@@ -8,8 +8,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const insightsURL = "http://localhost:3001" // TODO: make it configurable
-
 var userHomeDir string
 var polarisHostsFilepath string
 
