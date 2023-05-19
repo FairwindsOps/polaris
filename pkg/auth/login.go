@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -99,9 +101,9 @@ func HandleLogin() error {
 			return paramOrError.err
 		}
 
-		token = paramOrError.token
 		user = paramOrError.user
 		organization = paramOrError.organization
+		token = paramOrError.token
 	} else {
 		var answer string
 		err := survey.AskOne(&survey.Password{Message: "Paste your authentication token:"}, &answer, survey.WithValidator(validateToken))
@@ -147,12 +149,59 @@ func HandleLogin() error {
 	return nil
 }
 
+func fetchAuthToken(insightsURL, organization, code string) (string, error) {
+	authTokenURL := fmt.Sprintf("%s/v0/organizations/%s/auth/token", insightsURL, organization)
+	body := map[string]any{"grantType": "authorization_code", "code": code}
+	b, err := json.Marshal(body)
+	if err != nil {
+		return "", err
+	}
+
+	r, err := http.NewRequest("POST", authTokenURL, bytes.NewBuffer(b))
+	if err != nil {
+		return "", err
+	}
+	r.Header.Add("Content-Type", "application/json")
+
+	res, err := http.DefaultClient.Do(r)
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode < 200 || res.StatusCode >= 400 {
+		return "", fmt.Errorf("expected 200 (OK) - received %d", res.StatusCode)
+	}
+
+	var rBody map[string]any
+	err = json.NewDecoder(res.Body).Decode(&rBody)
+	if err != nil {
+		return "", err
+	}
+
+	token, ok := rBody["accessToken"].(string)
+	if !ok {
+		return "", fmt.Errorf("unable to parse accessToken from response body: %v", rBody)
+	}
+
+	return token, nil
+}
+
 func callbackHandler(localServerPort int) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		token := r.URL.Query().Get("token")
+		// checks for error in the params
+		errMsg := r.URL.Query().Get("error")
+		if len(errMsg) > 0 {
+			errDescriptionMsg := r.URL.Query().Get("error_description")
+			fmt.Fprintf(w, "unable to perform integration: %s - %s", errMsg, errDescriptionMsg)
+			paramsOrErrorChan <- paramsOrError{err: fmt.Errorf("%s - %s", errMsg, errDescriptionMsg)}
+			return
+		}
+
 		var err error
-		if len(token) == 0 {
-			err = errors.New("token query param is required in callback")
+		code := r.URL.Query().Get("code")
+		if len(code) == 0 {
+			err = errors.New("code query param is required in callback")
 		}
 		user := r.URL.Query().Get("user")
 		if len(user) == 0 {
@@ -162,12 +211,17 @@ func callbackHandler(localServerPort int) func(w http.ResponseWriter, r *http.Re
 		if len(organization) == 0 {
 			err = errors.New("organization query param is required in callback")
 		}
+		token, err := fetchAuthToken(insightsURL, organization, code)
+		if err != nil {
+			err = fmt.Errorf("fetching auth token: %w", err)
+		}
 		if err != nil {
 			fmt.Fprintf(w, "unable to perform integration: %v", err)
 			paramsOrErrorChan <- paramsOrError{err: err}
 			return
 		}
-		fmt.Fprint(w, "integration finished successfully, you can safely close this tab now")
+
+		fmt.Fprint(w, "integration finished successfully, you can safely close this tab now.")
 		paramsOrErrorChan <- paramsOrError{token: token, user: user, organization: organization}
 		return
 	}
