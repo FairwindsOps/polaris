@@ -275,3 +275,16 @@ func fetchOrganizationBot(insightsURL, authToken string, bot *Bot) error {
 	}
 	return nil
 }
+
+func IsLoggedIn() bool {
+	if _, err := os.Stat(polarisHostsFilepath); err == nil {
+		content, err := readPolarisHostsFile()
+		if err != nil {
+			return false
+		}
+		if len(content) > 0 {
+			return true
+		}
+	}
+	return false
+}

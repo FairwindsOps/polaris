@@ -25,6 +25,7 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/fairwindsops/polaris/pkg/auth"
 	cfg "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
 	"github.com/fairwindsops/polaris/pkg/validator"
@@ -47,6 +48,8 @@ var (
 	checks              []string
 	auditNamespace      string
 	skipSslValidation   bool
+	uploadInsights      bool
+	clusterName         string
 )
 
 func init() {
@@ -66,6 +69,8 @@ func init() {
 	auditCmd.PersistentFlags().StringSliceVar(&checks, "checks", []string{}, "Optional flag to specify specific checks to check")
 	auditCmd.PersistentFlags().StringVar(&auditNamespace, "namespace", "", "Namespace to audit. Only applies to in-cluster audits")
 	auditCmd.PersistentFlags().BoolVar(&skipSslValidation, "skip-ssl-validation", false, "Skip https certificate verification")
+	auditCmd.PersistentFlags().BoolVar(&uploadInsights, "upload-insights", false, "Upload scan results to Fairwinds Insights")
+	auditCmd.PersistentFlags().StringVar(&clusterName, "cluster-name", "", "Cluster name")
 }
 
 var auditCmd = &cobra.Command{
@@ -100,11 +105,23 @@ var auditCmd = &cobra.Command{
 			var err error
 			auditPath, err = ProcessHelmTemplates(helmChart, helmValues)
 			if err != nil {
-				logrus.Infof("Couldn't process helm chart: %v", err)
+				logrus.Errorf("Couldn't process helm chart: %v", err)
 				os.Exit(1)
 			}
 		}
-
+		if uploadInsights && len(clusterName) == 0 {
+			logrus.Error("cluster-name is required when using --upload-insights")
+			os.Exit(1)
+		}
+		if uploadInsights {
+			if !auth.IsLoggedIn() {
+				err := auth.HandleLogin(insightsURL)
+				if err != nil {
+					logrus.Errorf("error handling logging: %v", err)
+					os.Exit(1)
+				}
+			}
+		}
 		k, err := kube.CreateResourceProvider(context.TODO(), auditPath, resourceToAudit, config)
 		if err != nil {
 			logrus.Errorf("Error fetching Kubernetes resources %v", err)

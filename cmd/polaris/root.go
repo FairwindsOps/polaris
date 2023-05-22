@@ -22,12 +22,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var configPath string
-var disallowExemptions, disallowConfigExemptions, disallowAnnotationExemptions, fixChecks bool
-var logLevel string
-var auditPath string
-var displayName string
-var kubeContext string
+var (
+	configPath                   string
+	disallowExemptions           bool
+	disallowConfigExemptions     bool
+	disallowAnnotationExemptions bool
+	fixChecks                    bool
+	logLevel                     string
+	auditPath                    string
+	displayName                  string
+	kubeContext                  string
+	insightsURL                  string
+)
 
 var (
 	version string
@@ -41,6 +47,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&disallowConfigExemptions, "disallow-config-exemptions", "", false, "Disallow exemptions set within the configuration file.")
 	rootCmd.PersistentFlags().BoolVarP(&disallowAnnotationExemptions, "disallow-annotation-exemptions", "", false, "Disallow any exemption defined as a controller annotation.")
 	rootCmd.PersistentFlags().StringVarP(&logLevel, "log-level", "", logrus.InfoLevel.String(), "Logrus log level to be output (trace, debug, info, warning, error, fatal, panic).")
+	rootCmd.PersistentFlags().StringVar(&insightsURL, "insights-host", "https://insights.fairwinds.com", "Fairwinds Insights host URL")
 }
 
 var config conf.Configuration
