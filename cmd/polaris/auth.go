@@ -76,7 +76,7 @@ var tokenCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		err := auth.PrintToken()
 		if err != nil {
-			logrus.Fatalf("printing token: %w", err)
+			logrus.Fatalf("printing token: %v", err)
 		}
 	},
 	PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
