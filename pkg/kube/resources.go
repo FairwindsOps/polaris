@@ -343,7 +343,7 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 	var kubernetesResources []GenericResource
 	for _, kind := range additionalKinds {
 		groupKind := parseGroupKind(maybeTransformKindIntoGroupKind(string(kind)))
-		mapping, err := (restMapper).RESTMapping(groupKind)
+		mapping, err := restMapper.RESTMapping(groupKind)
 		if err != nil {
 			logrus.Warnf("Error retrieving mapping of Kind %s because of error: %v", kind, err)
 			return nil, err
@@ -367,7 +367,7 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 	objectCache := map[string]unstructured.Unstructured{}
 
 	logrus.Info("Loading controllers")
-	controllers, err := LoadControllers(ctx, pods.Items, dynamic, &restMapper, objectCache)
+	controllers, err := LoadControllers(ctx, pods.Items, dynamic, restMapper, objectCache)
 	if err != nil {
 		logrus.Errorf("Error loading controllers from pods: %v", err)
 		return nil, err
@@ -383,7 +383,7 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 }
 
 // LoadControllers loads a list of controllers from the kubeResources Pods
-func LoadControllers(ctx context.Context, pods []corev1.Pod, dynamicClient dynamic.Interface, restMapperPointer *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) ([]GenericResource, error) {
+func LoadControllers(ctx context.Context, pods []corev1.Pod, dynamicClient dynamic.Interface, restMapperPointer meta.RESTMapper, objectCache map[string]unstructured.Unstructured) ([]GenericResource, error) {
 	interfaces := []GenericResource{}
 	deduped := map[string]*corev1.Pod{}
 	for idx, pod := range pods {
