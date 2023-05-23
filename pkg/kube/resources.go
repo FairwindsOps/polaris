@@ -133,12 +133,12 @@ type k8sResource struct {
 var podSpecFields = []string{"jobTemplate", "spec", "template"}
 
 // CreateResourceProvider returns a new ResourceProvider object to interact with k8s resources
-func CreateResourceProvider(ctx context.Context, directory, workload string, c conf.Configuration) (*ResourceProvider, error) {
+func CreateResourceProvider(ctx context.Context, auditPath, workload string, c conf.Configuration) (*ResourceProvider, error) {
 	if workload != "" {
 		return CreateResourceProviderFromResource(ctx, workload)
 	}
-	if directory != "" {
-		return CreateResourceProviderFromPath(directory)
+	if auditPath != "" {
+		return CreateResourceProviderFromPath(auditPath)
 	}
 	return CreateResourceProviderFromCluster(ctx, c)
 }
@@ -182,7 +182,7 @@ func CreateResourceProviderFromResource(ctx context.Context, workload string) (*
 		return nil, err
 	}
 	restMapper := restmapper.NewDiscoveryRESTMapper(groupResources)
-	obj, err := getObject(ctx, namespace, kind, version, name, dynamicInterface, &restMapper)
+	obj, err := getObject(ctx, namespace, kind, version, name, dynamicInterface, restMapper)
 	if err != nil {
 		logrus.Errorf("Could not find workload %s: %v", workload, err)
 		return nil, err

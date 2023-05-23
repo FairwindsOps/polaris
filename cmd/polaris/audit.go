@@ -114,6 +114,10 @@ var auditCmd = &cobra.Command{
 			os.Exit(1)
 		}
 		if uploadInsights {
+			if auditPath != "" {
+				logrus.Errorf("upload-insights and audit-path are not supported when used simultaneously") // TODO: Vitor - should we support it?
+				os.Exit(1)
+			}
 			if !auth.IsLoggedIn() {
 				err := auth.HandleLogin(insightsURL)
 				if err != nil {
@@ -122,6 +126,7 @@ var auditCmd = &cobra.Command{
 				}
 			}
 		}
+
 		k, err := kube.CreateResourceProvider(context.TODO(), auditPath, resourceToAudit, config)
 		if err != nil {
 			logrus.Errorf("Error fetching Kubernetes resources %v", err)
