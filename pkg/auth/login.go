@@ -106,7 +106,7 @@ func HandleLogin(insightsURL string) error {
 		token = paramOrError.token
 	} else {
 		var answer string
-		var bot Bot
+		var bot bot
 		err := survey.AskOne(&survey.Password{Message: "Paste your authentication token:"}, &answer, survey.WithValidator(validateToken(insightsURL, &bot)))
 		if err != nil {
 			return fmt.Errorf("asking how to authenticate: %w", err)
@@ -228,7 +228,7 @@ func callbackHandler(insightsURL string, localServerPort int) func(w http.Respon
 	}
 }
 
-func validateToken(insightsURL string, bot *Bot) func(args any) error {
+func validateToken(insightsURL string, bot *bot) func(args any) error {
 	return func(args any) error {
 		token, ok := args.(string)
 		if !ok {
@@ -241,7 +241,7 @@ func validateToken(insightsURL string, bot *Bot) func(args any) error {
 	}
 }
 
-type Bot struct {
+type bot struct {
 	ID           int
 	Organization string
 	Name         string
@@ -250,7 +250,7 @@ type Bot struct {
 	CreatedAt    time.Time
 }
 
-func fetchOrganizationBot(insightsURL, authToken string, bot *Bot) error {
+func fetchOrganizationBot(insightsURL, authToken string, bot *bot) error {
 	authTokenURL := fmt.Sprintf("%s/v0/bots/from-request", insightsURL)
 	r, err := http.NewRequest("GET", authTokenURL, nil)
 	if err != nil {

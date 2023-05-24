@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"io"
 	"os"
 
@@ -10,6 +11,8 @@ import (
 
 var userHomeDir string
 var polarisHostsFilepath string
+
+var ErrNotLoggedIn = errors.New("not logged in")
 
 func init() {
 	var err error
@@ -33,4 +36,18 @@ func readPolarisHostsFile() (map[string]Host, error) {
 	content := map[string]Host{}
 	err = yaml.Unmarshal(b, &content)
 	return content, err
+}
+
+func GetAuth(insightsURL string) (*Host, error) {
+	hosts, err := readPolarisHostsFile()
+	if err != nil {
+		return nil, err
+	}
+	if len(hosts) == 0 {
+		return nil, ErrNotLoggedIn
+	}
+	if h, ok := hosts[insightsURL]; ok {
+		return &h, nil
+	}
+	return nil, ErrNotLoggedIn
 }

@@ -24,10 +24,13 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"runtime/debug"
 
+	workloads "github.com/fairwindsops/insights-plugins/plugins/workloads/pkg"
 	"github.com/fairwindsops/polaris/pkg/auth"
 	cfg "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
+	"github.com/fairwindsops/polaris/pkg/reporter"
 	"github.com/fairwindsops/polaris/pkg/validator"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -115,7 +118,7 @@ var auditCmd = &cobra.Command{
 		}
 		if uploadInsights {
 			if auditPath != "" {
-				logrus.Errorf("upload-insights and audit-path are not supported when used simultaneously") // TODO: Vitor - should we support it?
+				logrus.Errorf("upload-insights and audit-path are not supported when used simultaneously") // TODO: should we support it?
 				os.Exit(1)
 			}
 			if !auth.IsLoggedIn() {
@@ -127,7 +130,8 @@ var auditCmd = &cobra.Command{
 			}
 		}
 
-		k, err := kube.CreateResourceProvider(context.TODO(), auditPath, resourceToAudit, config)
+		ctx := context.TODO()
+		k, err := kube.CreateResourceProvider(ctx, auditPath, resourceToAudit, config)
 		if err != nil {
 			logrus.Errorf("Error fetching Kubernetes resources %v", err)
 			os.Exit(1)
@@ -139,7 +143,34 @@ var auditCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		outputAudit(auditData, auditOutputFile, auditOutputURL, auditOutputFormat, useColor, onlyShowFailedTests)
+		if uploadInsights {
+			auth, err := auth.GetAuth(insightsURL)
+			if err != nil {
+				logrus.Errorf("getting auth: %v", err)
+				os.Exit(1)
+			}
+			// fetch workloads using workload plugin... or should we adapt the workloads from above?
+			dynamicClient, restMapper, clientSet, host, err := kube.GetKubeClient(ctx, "")
+			if err != nil {
+				logrus.Errorf("getting the kubernetes client: %v", err)
+				os.Exit(1)
+			}
+			k8sResources, err := workloads.CreateResourceProviderFromAPI(ctx, dynamicClient, restMapper, clientSet, host)
+			if err != nil {
+				logrus.Errorf("creating resource provider: %v", err)
+				os.Exit(1)
+			}
+			workloadsVersion := getDependencyModuleVersion("github.com/fairwindsops/insights-plugins/plugins/workloads")
+			insightsReporter := reporter.NewInsightsReporter(insightsURL, *auth, version, workloadsVersion)
+			err = insightsReporter.ReportAuditToFairwindsInsights(clusterName, *k8sResources, auditData)
+			if err != nil {
+				logrus.Errorf("reporting audit file to insights: %v", err)
+				os.Exit(1)
+			}
+			logrus.Infof("sent workloads and polaris reports to fairwinds insights")
+		} else {
+			outputAudit(auditData, auditOutputFile, auditOutputURL, auditOutputFormat, useColor, onlyShowFailedTests)
+		}
 
 		summary := auditData.GetSummary()
 		score := summary.GetScore()
@@ -259,4 +290,18 @@ func outputAudit(auditData validator.AuditData, outputFile, outputURL, outputFor
 			}
 		}
 	}
+}
+
+func getDependencyModuleVersion(path string) string {
+	bi, ok := debug.ReadBuildInfo()
+	if !ok {
+		logrus.Warn("Failed to read build info")
+		return ""
+	}
+	for _, dep := range bi.Deps {
+		if dep.Path == path {
+			return dep.Version
+		}
+	}
+	return ""
 }

@@ -39,6 +39,7 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth" // Required for other auth providers like GKE.
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 )
@@ -133,9 +134,9 @@ type k8sResource struct {
 var podSpecFields = []string{"jobTemplate", "spec", "template"}
 
 // CreateResourceProvider returns a new ResourceProvider object to interact with k8s resources
-func CreateResourceProvider(ctx context.Context, auditPath, workload string, c conf.Configuration) (*ResourceProvider, error) {
-	if workload != "" {
-		return CreateResourceProviderFromResource(ctx, workload)
+func CreateResourceProvider(ctx context.Context, auditPath, resourceToAudit string, c conf.Configuration) (*ResourceProvider, error) {
+	if resourceToAudit != "" {
+		return CreateResourceProviderFromResource(ctx, resourceToAudit)
 	}
 	if auditPath != "" {
 		return CreateResourceProviderFromPath(auditPath)
@@ -145,20 +146,13 @@ func CreateResourceProvider(ctx context.Context, auditPath, workload string, c c
 
 // CreateResourceProviderFromResource creates a new ResourceProvider that just contains one workload
 func CreateResourceProviderFromResource(ctx context.Context, workload string) (*ResourceProvider, error) {
-	kubeConf, configError := config.GetConfig()
-	if configError != nil {
-		logrus.Errorf("Error fetching KubeConfig: %v", configError)
-		return nil, configError
-	}
-	kube, err := kubernetes.NewForConfig(kubeConf)
+	dynamicClient, restMapper, clientSet, _, err := GetKubeClient(ctx, "")
 	if err != nil {
-		logrus.Errorf("Error creating Kubernetes client: %v", err)
 		return nil, err
 	}
-	serverVersion, err := kube.Discovery().ServerVersion()
+	serverVersion, err := clientSet.Discovery().ServerVersion()
 	if err != nil {
-		logrus.Errorf("Error fetching Cluster API version: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("Error fetching Cluster API version: %w", err)
 	}
 	resources := newResourceProvider(serverVersion.Major+"."+serverVersion.Minor, "Resource", workload)
 
@@ -171,28 +165,14 @@ func CreateResourceProviderFromResource(ctx context.Context, workload string) (*
 	version := parts[2]
 	name := parts[3]
 
-	dynamicInterface, err := dynamic.NewForConfig(kubeConf)
+	obj, err := getObject(ctx, namespace, kind, version, name, dynamicClient, restMapper)
 	if err != nil {
-		logrus.Errorf("Error connecting to dynamic interface: %v", err)
-		return nil, err
-	}
-	groupResources, err := restmapper.GetAPIGroupResources(kube.Discovery())
-	if err != nil {
-		logrus.Errorf("Error getting API Group resources: %v", err)
-		return nil, err
-	}
-	restMapper := restmapper.NewDiscoveryRESTMapper(groupResources)
-	obj, err := getObject(ctx, namespace, kind, version, name, dynamicInterface, restMapper)
-	if err != nil {
-		logrus.Errorf("Could not find workload %s: %v", workload, err)
-		return nil, err
+		return nil, fmt.Errorf("Could not find workload %s: %w", workload, err)
 	}
 	workloadObj, err := NewGenericResourceFromUnstructured(*obj, nil)
 	if err != nil {
-		logrus.Errorf("Could not parse workload %s: %v", workload, err)
-		return nil, err
+		return nil, fmt.Errorf("Could not parse workload %s: %w", workload, err)
 	}
-
 	resources.Resources.addResource(workloadObj)
 	return &resources, nil
 }
@@ -243,22 +223,37 @@ func CreateResourceProviderFromYaml(yamlContent string) *ResourceProvider {
 
 // CreateResourceProviderFromCluster creates a new ResourceProvider using live data from a cluster
 func CreateResourceProviderFromCluster(ctx context.Context, c conf.Configuration) (*ResourceProvider, error) {
-	kubeConf, configError := config.GetConfigWithContext(c.KubeContext)
-	if configError != nil {
-		logrus.Errorf("Error fetching KubeConfig: %v", configError)
-		return nil, configError
-	}
-	api, err := kubernetes.NewForConfig(kubeConf)
+	dynamicClient, _, clientSet, clusterHost, err := GetKubeClient(ctx, c.KubeContext)
 	if err != nil {
-		logrus.Errorf("Error creating Kubernetes client: %v", err)
 		return nil, err
 	}
-	dynamicInterface, err := dynamic.NewForConfig(kubeConf)
-	if err != nil {
-		logrus.Errorf("Error connecting to dynamic interface: %v", err)
-		return nil, err
+	return CreateResourceProviderFromAPI(ctx, clientSet, clusterHost, dynamicClient, c)
+}
+
+func GetKubeClient(ctx context.Context, kubeContext string) (dynamic.Interface, meta.RESTMapper, kubernetes.Interface, string, error) {
+	var kubeConf *rest.Config
+	var err error
+	if len(kubeContext) > 0 {
+		kubeConf, err = config.GetConfigWithContext(kubeContext)
+	} else {
+		kubeConf, err = config.GetConfig()
 	}
-	return CreateResourceProviderFromAPI(ctx, api, kubeConf.Host, dynamicInterface, c)
+	if err != nil {
+		return nil, nil, nil, "", fmt.Errorf("Error fetching KubeConfig: %v", err)
+	}
+	clientSet, err := kubernetes.NewForConfig(kubeConf)
+	if err != nil {
+		return nil, nil, nil, "", fmt.Errorf("Error creating Kubernetes client: %v", err)
+	}
+	dynamicClient, err := dynamic.NewForConfig(kubeConf)
+	if err != nil {
+		return nil, nil, nil, "", fmt.Errorf("Error connecting to dynamic interface: %v", err)
+	}
+	resources, err := restmapper.GetAPIGroupResources(clientSet.Discovery())
+	if err != nil {
+		return nil, nil, nil, "", fmt.Errorf("Error getting API Group resources: %v", err)
+	}
+	return dynamicClient, restmapper.NewDiscoveryRESTMapper(resources), clientSet, kubeConf.Host, nil
 }
 
 // CreateResourceProviderFromAPI creates a new ResourceProvider from an existing k8s interface
