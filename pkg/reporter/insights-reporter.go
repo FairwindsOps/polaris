@@ -141,6 +141,7 @@ func (ir InsightsReporter) sendReport(cluster *insightsCluster, reportType, repo
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+cluster.AuthToken)
 	req.Header.Set("X-Fairwinds-Report-Version", reportVersion)
+	req.Header.Set("X-Fairwinds-Report-Priority", "4") // should have higher priority than the default 5
 
 	// TODO: Vitor - ?!
 	req.Header.Set("X-Fairwinds-Agent-Version", "")
