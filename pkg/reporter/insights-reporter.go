@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	workloads "github.com/fairwindsops/insights-plugins/plugins/workloads/pkg"
 	"github.com/fairwindsops/polaris/pkg/auth"
@@ -13,62 +14,103 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type InsightsReporter struct {
-	insightsURL      string
-	auth             auth.Host
-	polarisVersion   string
-	workloadsVersion string
+type insightsReporter struct {
+	insightsURL string
+	auth        auth.Host
 }
 
-func NewInsightsReporter(insightsURL string, auth auth.Host, polarisVersion, workloadsVersion string) *InsightsReporter {
-	return &InsightsReporter{
-		insightsURL:      insightsURL,
-		auth:             auth,
-		polarisVersion:   polarisVersion,
-		workloadsVersion: workloadsVersion,
+func NewInsightsReporter(insightsURL string, auth auth.Host) *insightsReporter {
+	return &insightsReporter{
+		insightsURL: insightsURL,
+		auth:        auth,
 	}
 }
 
 type insightsCluster struct {
-	Name         string `json:"Name" yaml:"Name"`
-	AuthToken    string `json:"AuthToken" yaml:"AuthToken"`
-	Organization string `json:"Organization" yaml:"Organization"`
-	Status       string `json:"Status" yaml:"Status"`
+	Name         string `json:"Name"`
+	AuthToken    string `json:"AuthToken"`
+	Organization string `json:"Organization"`
+	Status       string `json:"Status"`
+}
+
+type insightsReportJob struct {
+	ID            int    `json:"id"`
+	Status        string `json:"status"`
+	TimeTakenInMs int    `json:"timeTaken"`
+}
+
+type WorkloadsReport struct {
+	Version string
+	Payload workloads.ClusterWorkloadReport
+}
+
+type PolarisReport struct {
+	Version string
+	Payload validator.AuditData
 }
 
 // ReportAuditToFairwindsInsights report audit to insights
 // 1 - check if cluster exists, otherwise create it
 // 2 - send workload report
 // 3 - send polaris report
-// 4 - results?!
-func (ir InsightsReporter) ReportAuditToFairwindsInsights(clusterName string, k8sResources workloads.ClusterWorkloadReport, auditData validator.AuditData) error {
-	// 1
+// 4 - checks if report job is completed for 30 seconds
+// 5 - display link to Fairwinds Insights
+func (ir insightsReporter) ReportAuditToFairwindsInsights(clusterName string, wr WorkloadsReport, pr PolarisReport) error {
 	cluster, err := ir.upsertCluster(clusterName)
 	if err != nil {
 		return err
 	}
-	// 2
-	workloadsPayload, err := json.MarshalIndent(k8sResources, "", "  ")
+	logrus.Infof("Sending workloads and polaris reports to cluster %q", clusterName)
+
+	workloadsPayload, err := json.MarshalIndent(wr.Payload, "", "  ")
 	if err != nil {
 		return fmt.Errorf("marshaling data: %w", err)
 	}
-	err = ir.sendReport(cluster, "workloads", ir.workloadsVersion, workloadsPayload)
+	_, err = ir.sendReport(cluster, "workloads", wr.Version, workloadsPayload)
 	if err != nil {
 		return err
 	}
-	// 3
-	polarisPayload, err := json.MarshalIndent(auditData, "", "  ")
+
+	polarisPayload, err := json.MarshalIndent(pr.Payload, "", "  ")
 	if err != nil {
 		return fmt.Errorf("marshaling data: %w", err)
 	}
-	err = ir.sendReport(cluster, "polaris", ir.polarisVersion, polarisPayload)
+	reportJob, err := ir.sendReport(cluster, "polaris", pr.Version, polarisPayload)
 	if err != nil {
 		return err
 	}
+
+	success, err := verifyReportJobCompletion(&ir, cluster.Name, reportJob.ID)
+	if err != nil {
+		return err
+	}
+
+	if !success {
+		return fmt.Errorf("timed out waiting for report job to complete")
+	}
+
+	fmt.Printf("Please visit %s/orgs/%s/clusters/%s/overview to see your cluster health\n", ir.insightsURL, ir.auth.Organization, cluster.Name)
 	return nil
 }
 
-func (ir InsightsReporter) upsertCluster(clusterName string) (*insightsCluster, error) {
+// verifyReportJobCompletion checks Insights for reportJob completion (timeout after 30 seconds)
+func verifyReportJobCompletion(ir *insightsReporter, clusterName string, reportJobID int) (bool, error) {
+	defer func() { fmt.Println() }()
+	for i := 0; i < 30; i++ {
+		reportJob, err := ir.getReportJob(clusterName, reportJobID)
+		if err != nil {
+			return false, err
+		}
+		if reportJob.Status == "completed" {
+			return true, nil
+		}
+		fmt.Print(".")
+		time.Sleep(1 * time.Second)
+	}
+	return false, nil
+}
+
+func (ir insightsReporter) upsertCluster(clusterName string) (*insightsCluster, error) {
 	clusterURL := fmt.Sprintf("%s/v0/organizations/%s/clusters/%s?showToken=true", ir.insightsURL, ir.auth.Organization, clusterName)
 	req, err := http.NewRequest("GET", clusterURL, nil)
 	if err != nil {
@@ -132,11 +174,11 @@ func (ir InsightsReporter) upsertCluster(clusterName string) (*insightsCluster, 
 	return &c, nil
 }
 
-func (ir InsightsReporter) sendReport(cluster *insightsCluster, reportType, reportVersion string, payload []byte) error {
+func (ir insightsReporter) sendReport(cluster *insightsCluster, reportType, reportVersion string, payload []byte) (*insightsReportJob, error) {
 	uploadReportURL := fmt.Sprintf("%s/v0/organizations/%s/clusters/%s/data/%s", ir.insightsURL, ir.auth.Organization, cluster.Name, reportType)
 	req, err := http.NewRequest("POST", uploadReportURL, bytes.NewBuffer(payload))
 	if err != nil {
-		return fmt.Errorf("building request for output: %w", err)
+		return nil, fmt.Errorf("building request for output: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+cluster.AuthToken)
@@ -148,20 +190,56 @@ func (ir InsightsReporter) sendReport(cluster *insightsCluster, reportType, repo
 	req.Header.Set("X-Fairwinds-Agent-Chart-Version", "")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("making request for output: %w", err)
+		return nil, fmt.Errorf("making request for output: %w", err)
 	}
 	defer resp.Body.Close()
-	if !isSuccessful2XX(resp.StatusCode) {
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return fmt.Errorf("reading response body: %w", err)
-		}
-		return fmt.Errorf("sending %s report, expected 2xx received %d: %v", reportType, resp.StatusCode, string(body))
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("reading response body: %w", err)
 	}
-	logrus.Infof("%s report sent to fairwinds insights", reportType)
-	return nil
+	if !isSuccessful2XX(resp.StatusCode) {
+		return nil, fmt.Errorf("sending %s report, expected 2xx received %d: %v", reportType, resp.StatusCode, string(body))
+	}
+
+	var rj insightsReportJob
+	err = json.Unmarshal(body, &rj)
+	if err != nil {
+		return nil, fmt.Errorf("unmarshaling response body: %w", err)
+	}
+	logrus.Debugf("%s report sent to fairwinds insights", reportType)
+
+	return &rj, nil
 }
 
 func isSuccessful2XX(statusCode int) bool {
 	return statusCode >= 200 && statusCode < 300
+}
+
+func (ir insightsReporter) getReportJob(clusterName string, reportJobID int) (*insightsReportJob, error) {
+	reportJobsURL := fmt.Sprintf("%s/v0/organizations/%s/clusters/%s/report-jobs/%d", ir.insightsURL, ir.auth.Organization, clusterName, reportJobID)
+	req, err := http.NewRequest("GET", reportJobsURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("building request for fetching report-job: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+ir.auth.Token)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("making request fetching report-job: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if !isSuccessful2XX(resp.StatusCode) {
+		return nil, fmt.Errorf("fetching report-job, expected 2xx received %d", resp.StatusCode)
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("reading response body: %w", err)
+	}
+	var rj insightsReportJob
+	err = json.Unmarshal(body, &rj)
+	if err != nil {
+		return nil, fmt.Errorf("unmarshaling response body: %w", err)
+	}
+	return &rj, nil
 }

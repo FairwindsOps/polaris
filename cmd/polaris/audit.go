@@ -160,14 +160,14 @@ var auditCmd = &cobra.Command{
 				logrus.Errorf("creating resource provider: %v", err)
 				os.Exit(1)
 			}
-			workloadsVersion := getDependencyModuleVersion("github.com/fairwindsops/insights-plugins/plugins/workloads")
-			insightsReporter := reporter.NewInsightsReporter(insightsURL, *auth, version, workloadsVersion)
-			err = insightsReporter.ReportAuditToFairwindsInsights(clusterName, *k8sResources, auditData)
+			insightsReporter := reporter.NewInsightsReporter(insightsURL, *auth)
+			wr := reporter.WorkloadsReport{Version: getDependencyModuleVersion("github.com/fairwindsops/insights-plugins/plugins/workloads"), Payload: *k8sResources}
+			pr := reporter.PolarisReport{Version: version, Payload: auditData}
+			err = insightsReporter.ReportAuditToFairwindsInsights(clusterName, wr, pr)
 			if err != nil {
 				logrus.Errorf("reporting audit file to insights: %v", err)
 				os.Exit(1)
 			}
-			logrus.Infof("sent workloads and polaris reports to fairwinds insights")
 		} else {
 			outputAudit(auditData, auditOutputFile, auditOutputURL, auditOutputFormat, useColor, onlyShowFailedTests)
 		}
