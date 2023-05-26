@@ -53,14 +53,14 @@ type PolarisReport struct {
 // 1 - check if cluster exists, otherwise create it
 // 2 - send workload report
 // 3 - send polaris report
-// 4 - checks if report job is completed for 30 seconds
+// 4 - checks if report job is completed for 3 minutes
 // 5 - display link to Fairwinds Insights
 func (ir insightsReporter) ReportAuditToFairwindsInsights(clusterName string, wr WorkloadsReport, pr PolarisReport) error {
 	cluster, err := ir.upsertCluster(clusterName)
 	if err != nil {
 		return err
 	}
-	logrus.Infof("Sending workloads and polaris reports to cluster %q", clusterName)
+	logrus.Infof("Uploading to Fairwinds Insights organization '%s/%s'...", ir.auth.Organization, clusterName)
 
 	workloadsPayload, err := json.MarshalIndent(wr.Payload, "", "  ")
 	if err != nil {
@@ -88,15 +88,16 @@ func (ir insightsReporter) ReportAuditToFairwindsInsights(clusterName string, wr
 	if !success {
 		return fmt.Errorf("timed out waiting for report job to complete")
 	}
-
-	fmt.Printf("Please visit %s/orgs/%s/clusters/%s/overview to see your cluster health\n", ir.insightsURL, ir.auth.Organization, cluster.Name)
+	fmt.Println("Success! You can see your results at:")
+	fmt.Printf("%s/orgs/%s/clusters/%s\n", ir.insightsURL, ir.auth.Organization, cluster.Name)
 	return nil
 }
 
-// verifyReportJobCompletion checks Insights for reportJob completion (timeout after 30 seconds)
+// verifyReportJobCompletion checks Insights for reportJob completion (timeout after 3 minutes)
 func verifyReportJobCompletion(ir *insightsReporter, clusterName string, reportJobID int) (bool, error) {
 	defer func() { fmt.Println() }()
-	for i := 0; i < 30; i++ {
+	fmt.Println("Processing (this usually takes 1-3 minutes)...")
+	for i := 0; i < 60; i++ {
 		reportJob, err := ir.getReportJob(clusterName, reportJobID)
 		if err != nil {
 			return false, err
@@ -105,7 +106,7 @@ func verifyReportJobCompletion(ir *insightsReporter, clusterName string, reportJ
 			return true, nil
 		}
 		fmt.Print(".")
-		time.Sleep(1 * time.Second)
+		time.Sleep(3 * time.Second)
 	}
 	return false, nil
 }
