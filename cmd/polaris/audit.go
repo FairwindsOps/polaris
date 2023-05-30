@@ -118,7 +118,7 @@ var auditCmd = &cobra.Command{
 		}
 		if uploadInsights {
 			if auditPath != "" {
-				logrus.Errorf("upload-insights and audit-path are not supported when used simultaneously") // TODO: should we support it?
+				logrus.Errorf("upload-insights and audit-path are not supported when used simultaneously")
 				os.Exit(1)
 			}
 			if !auth.IsLoggedIn() {
