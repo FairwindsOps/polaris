@@ -88,15 +88,15 @@ func (ir insightsReporter) ReportAuditToFairwindsInsights(clusterName string, wr
 	if !success {
 		return fmt.Errorf("timed out waiting for report job to complete")
 	}
-	fmt.Println("Success! You can see your results at:")
-	fmt.Printf("%s/orgs/%s/clusters/%s\n", ir.insightsURL, ir.auth.Organization, cluster.Name)
+	logrus.Println("Success! You can see your results at:")
+	logrus.Printf("%s/orgs/%s/clusters/%s\n", ir.insightsURL, ir.auth.Organization, cluster.Name)
 	return nil
 }
 
 // verifyReportJobCompletion checks Insights for reportJob completion (timeout after 3 minutes)
 func verifyReportJobCompletion(ir *insightsReporter, clusterName string, reportJobID int) (bool, error) {
 	defer func() { fmt.Println() }()
-	fmt.Println("Processing (this usually takes 1-3 minutes)...")
+	logrus.Println("Processing (this usually takes 1-3 minutes)...")
 	for i := 0; i < 60; i++ {
 		reportJob, err := ir.getReportJob(clusterName, reportJobID)
 		if err != nil {
