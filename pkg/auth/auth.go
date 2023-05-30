@@ -38,7 +38,7 @@ func readPolarisHostsFile() (map[string]Host, error) {
 	return content, err
 }
 
-func GetAuth(insightsURL string) (*Host, error) {
+func GetAuth(insightsHost string) (*Host, error) {
 	hosts, err := readPolarisHostsFile()
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func GetAuth(insightsURL string) (*Host, error) {
 	if len(hosts) == 0 {
 		return nil, ErrNotLoggedIn
 	}
-	if h, ok := hosts[insightsURL]; ok {
+	if h, ok := hosts[insightsHost]; ok {
 		return &h, nil
 	}
 	return nil, ErrNotLoggedIn

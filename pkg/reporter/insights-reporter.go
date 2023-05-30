@@ -15,14 +15,14 @@ import (
 )
 
 type insightsReporter struct {
-	insightsURL string
-	auth        auth.Host
+	insightsHost string
+	auth         auth.Host
 }
 
-func NewInsightsReporter(insightsURL string, auth auth.Host) *insightsReporter {
+func NewInsightsReporter(insightsHost string, auth auth.Host) *insightsReporter {
 	return &insightsReporter{
-		insightsURL: insightsURL,
-		auth:        auth,
+		insightsHost: insightsHost,
+		auth:         auth,
 	}
 }
 
@@ -89,7 +89,7 @@ func (ir insightsReporter) ReportAuditToFairwindsInsights(clusterName string, wr
 		return fmt.Errorf("timed out waiting for report job to complete")
 	}
 	logrus.Println("Success! You can see your results at:")
-	logrus.Printf("%s/orgs/%s/clusters/%s\n", ir.insightsURL, ir.auth.Organization, cluster.Name)
+	logrus.Printf("%s/orgs/%s/clusters/%s\n", ir.insightsHost, ir.auth.Organization, cluster.Name)
 	return nil
 }
 
@@ -112,7 +112,7 @@ func verifyReportJobCompletion(ir *insightsReporter, clusterName string, reportJ
 }
 
 func (ir insightsReporter) upsertCluster(clusterName string) (*insightsCluster, error) {
-	clusterURL := fmt.Sprintf("%s/v0/organizations/%s/clusters/%s?showToken=true", ir.insightsURL, ir.auth.Organization, clusterName)
+	clusterURL := fmt.Sprintf("%s/v0/organizations/%s/clusters/%s?showToken=true", ir.insightsHost, ir.auth.Organization, clusterName)
 	req, err := http.NewRequest("GET", clusterURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("building request for fetching cluster: %w", err)
@@ -176,7 +176,7 @@ func (ir insightsReporter) upsertCluster(clusterName string) (*insightsCluster, 
 }
 
 func (ir insightsReporter) sendReport(cluster *insightsCluster, reportType, reportVersion string, payload []byte) (*insightsReportJob, error) {
-	uploadReportURL := fmt.Sprintf("%s/v0/organizations/%s/clusters/%s/data/%s", ir.insightsURL, ir.auth.Organization, cluster.Name, reportType)
+	uploadReportURL := fmt.Sprintf("%s/v0/organizations/%s/clusters/%s/data/%s", ir.insightsHost, ir.auth.Organization, cluster.Name, reportType)
 	req, err := http.NewRequest("POST", uploadReportURL, bytes.NewBuffer(payload))
 	if err != nil {
 		return nil, fmt.Errorf("building request for output: %w", err)
@@ -217,7 +217,7 @@ func isSuccessful2XX(statusCode int) bool {
 }
 
 func (ir insightsReporter) getReportJob(clusterName string, reportJobID int) (*insightsReportJob, error) {
-	reportJobsURL := fmt.Sprintf("%s/v0/organizations/%s/clusters/%s/report-jobs/%d", ir.insightsURL, ir.auth.Organization, clusterName, reportJobID)
+	reportJobsURL := fmt.Sprintf("%s/v0/organizations/%s/clusters/%s/report-jobs/%d", ir.insightsHost, ir.auth.Organization, clusterName, reportJobID)
 	req, err := http.NewRequest("GET", reportJobsURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("building request for fetching report-job: %w", err)

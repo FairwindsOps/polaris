@@ -41,7 +41,7 @@ type Host struct {
 
 var paramsOrErrorChan = make(chan paramsOrError)
 
-func HandleLogin(insightsURL string) error {
+func HandleLogin(insightsHost string) error {
 	if _, err := os.Stat(polarisHostsFilepath); err == nil {
 		content, err := readPolarisHostsFile()
 		if err != nil {
@@ -50,7 +50,7 @@ func HandleLogin(insightsURL string) error {
 
 		if len(content) > 0 {
 			var reAuthenticate bool
-			err = survey.AskOne(&survey.Confirm{Message: fmt.Sprintf("You're already logged into %s. Do you want to re-authenticate?", insightsURL)}, &reAuthenticate)
+			err = survey.AskOne(&survey.Confirm{Message: fmt.Sprintf("You're already logged into %s. Do you want to re-authenticate?", insightsHost)}, &reAuthenticate)
 			if err != nil {
 				return fmt.Errorf("prompting re-authenticate: %w", err)
 			}
@@ -80,7 +80,7 @@ func HandleLogin(insightsURL string) error {
 			panic(err)
 		}
 		localServerPort := listener.Addr().(*net.TCPAddr).Port
-		err = openBrowser(fmt.Sprintf(insightsURL + registerPath + "?source=polaris&callbackUrl=" + fmt.Sprintf("http://localhost:%d/auth/login/callback", localServerPort)))
+		err = openBrowser(fmt.Sprintf(insightsHost + registerPath + "?source=polaris&callbackUrl=" + fmt.Sprintf("http://localhost:%d/auth/login/callback", localServerPort)))
 		if err != nil {
 			logrus.Fatal(err)
 		}
@@ -88,7 +88,7 @@ func HandleLogin(insightsURL string) error {
 		var router *mux.Router
 		go func() {
 			router = mux.NewRouter()
-			router.HandleFunc("/auth/login/callback", callbackHandler(insightsURL, localServerPort))
+			router.HandleFunc("/auth/login/callback", callbackHandler(insightsHost, localServerPort))
 			if err := http.Serve(listener, router); err != nil {
 				paramsOrErrorChan <- paramsOrError{err: fmt.Errorf("starting the local http server: %w", err)}
 			}
@@ -107,7 +107,7 @@ func HandleLogin(insightsURL string) error {
 	} else {
 		var answer string
 		var bot bot
-		err := survey.AskOne(&survey.Password{Message: "Paste your authentication token:"}, &answer, survey.WithValidator(validateToken(insightsURL, &bot)))
+		err := survey.AskOne(&survey.Password{Message: "Paste your authentication token:"}, &answer, survey.WithValidator(validateToken(insightsHost, &bot)))
 		if err != nil {
 			return fmt.Errorf("asking how to authenticate: %w", err)
 		}
@@ -132,7 +132,7 @@ func HandleLogin(insightsURL string) error {
 		}
 	}()
 
-	content := map[string]Host{insightsURL: {Token: token, User: user, Organization: organization}}
+	content := map[string]Host{insightsHost: {Token: token, User: user, Organization: organization}}
 	b, err := yaml.Marshal(content)
 	if err != nil {
 		return fmt.Errorf("marshalling yaml data: %w", err)
@@ -150,8 +150,8 @@ func HandleLogin(insightsURL string) error {
 	return nil
 }
 
-func fetchAuthToken(insightsURL, organization, code string) (string, error) {
-	authTokenURL := fmt.Sprintf("%s/v0/organizations/%s/auth/token", insightsURL, organization)
+func fetchAuthToken(insightsHost, organization, code string) (string, error) {
+	authTokenURL := fmt.Sprintf("%s/v0/organizations/%s/auth/token", insightsHost, organization)
 	body := map[string]any{"grantType": "authorization_code", "code": code}
 	b, err := json.Marshal(body)
 	if err != nil {
@@ -188,7 +188,7 @@ func fetchAuthToken(insightsURL, organization, code string) (string, error) {
 	return token, nil
 }
 
-func callbackHandler(insightsURL string, localServerPort int) func(w http.ResponseWriter, r *http.Request) {
+func callbackHandler(insightsHost string, localServerPort int) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// checks for error in the params
 		errMsg := r.URL.Query().Get("error")
@@ -212,7 +212,7 @@ func callbackHandler(insightsURL string, localServerPort int) func(w http.Respon
 		if len(organization) == 0 {
 			err = errors.New("organization query param is required in callback")
 		}
-		token, err := fetchAuthToken(insightsURL, organization, code)
+		token, err := fetchAuthToken(insightsHost, organization, code)
 		if err != nil {
 			err = fmt.Errorf("fetching auth token: %w", err)
 		}
@@ -228,7 +228,7 @@ func callbackHandler(insightsURL string, localServerPort int) func(w http.Respon
 	}
 }
 
-func validateToken(insightsURL string, bot *bot) func(args any) error {
+func validateToken(insightsHost string, bot *bot) func(args any) error {
 	return func(args any) error {
 		token, ok := args.(string)
 		if !ok {
@@ -237,7 +237,7 @@ func validateToken(insightsURL string, bot *bot) func(args any) error {
 		if len(strings.TrimSpace(token)) <= 0 {
 			return errors.New("token is required")
 		}
-		return fetchOrganizationBot(insightsURL, token, bot)
+		return fetchOrganizationBot(insightsHost, token, bot)
 	}
 }
 
@@ -250,8 +250,8 @@ type bot struct {
 	CreatedAt    time.Time
 }
 
-func fetchOrganizationBot(insightsURL, authToken string, bot *bot) error {
-	authTokenURL := fmt.Sprintf("%s/v0/bots/from-request", insightsURL)
+func fetchOrganizationBot(insightsHost, authToken string, bot *bot) error {
+	authTokenURL := fmt.Sprintf("%s/v0/bots/from-request", insightsHost)
 	r, err := http.NewRequest("GET", authTokenURL, nil)
 	if err != nil {
 		return err
