@@ -32,7 +32,7 @@ var (
 	auditPath                    string
 	displayName                  string
 	kubeContext                  string
-	insightsURL                  string
+	insightsHost                 string
 )
 
 var (
@@ -47,7 +47,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&disallowConfigExemptions, "disallow-config-exemptions", "", false, "Disallow exemptions set within the configuration file.")
 	rootCmd.PersistentFlags().BoolVarP(&disallowAnnotationExemptions, "disallow-annotation-exemptions", "", false, "Disallow any exemption defined as a controller annotation.")
 	rootCmd.PersistentFlags().StringVarP(&logLevel, "log-level", "", logrus.InfoLevel.String(), "Logrus log level to be output (trace, debug, info, warning, error, fatal, panic).")
-	rootCmd.PersistentFlags().StringVar(&insightsURL, "insights-host", "https://insights.fairwinds.com", "Fairwinds Insights host URL")
+	rootCmd.PersistentFlags().StringVar(&insightsHost, "insights-host", "https://insights.fairwinds.com", "Fairwinds Insights host URL")
 }
 
 var config conf.Configuration

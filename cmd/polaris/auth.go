@@ -25,7 +25,7 @@ var loginCmd = &cobra.Command{
 	Short: "Authenticate polaris with Fairwinds Insights.",
 	Long:  `Authenticate polaris with Fairwinds Insights.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := auth.HandleLogin(insightsURL)
+		err := auth.HandleLogin(insightsHost)
 		if err != nil {
 			logrus.Fatal(err)
 		}

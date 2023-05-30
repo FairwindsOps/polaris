@@ -122,7 +122,7 @@ var auditCmd = &cobra.Command{
 				os.Exit(1)
 			}
 			if !auth.IsLoggedIn() {
-				err := auth.HandleLogin(insightsURL)
+				err := auth.HandleLogin(insightsHost)
 				if err != nil {
 					logrus.Errorf("error handling logging: %v", err)
 					os.Exit(1)
@@ -144,7 +144,7 @@ var auditCmd = &cobra.Command{
 		}
 
 		if uploadInsights {
-			auth, err := auth.GetAuth(insightsURL)
+			auth, err := auth.GetAuth(insightsHost)
 			if err != nil {
 				logrus.Errorf("getting auth: %v", err)
 				os.Exit(1)
@@ -160,7 +160,7 @@ var auditCmd = &cobra.Command{
 				logrus.Errorf("creating resource provider: %v", err)
 				os.Exit(1)
 			}
-			insightsReporter := reporter.NewInsightsReporter(insightsURL, *auth)
+			insightsReporter := reporter.NewInsightsReporter(insightsHost, *auth)
 			wr := reporter.WorkloadsReport{Version: getDependencyModuleVersion("github.com/fairwindsops/insights-plugins/plugins/workloads"), Payload: *k8sResources}
 			pr := reporter.PolarisReport{Version: version, Payload: auditData}
 			err = insightsReporter.ReportAuditToFairwindsInsights(clusterName, wr, pr)
