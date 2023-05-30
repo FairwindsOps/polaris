@@ -55,7 +55,28 @@ the deployment.
 To enable the mutating webhook, add `--set webhook.mutate=true` to your
 Helm instlallation command.
 
-By default, the only mutation enabled is `pullPolicyNotAlways`. If you'd like to
+The following default checks currently have mutation support enabled:
+* `hostPIDSet`
+* `hostNetworkSet`
+* `hostIPCSet`
+* `priorityClassNotSet`
+* `hostPortSet`
+* `pullPolicyNotAlways`
+* `deploymentMissingReplicas`
+* `dangerousCapabilities`
+* `cpuLimitsMissing`
+* `memoryLimitsMissing`
+* `livenessProbeMissing`
+* `memoryRequestsMissing`
+* `cpuRequestsMissing`
+* `runAsPrivileged`
+* `readinessProbeMissing`
+* `privilegeEscalationAllowed`
+* `notReadOnlyRootFilesystem`
+* `insecureCapabilities`
+* `runAsRootAllowed`
+
+If you'd like to
 enable other mutations, you can set the `webhook.mutations` flag.
 
 
