@@ -1,14 +1,14 @@
 checks:
   # reliability
   deploymentMissingReplicas: warning
-  priorityClassNotSet: ignore
+  priorityClassNotSet: warning
   tagNotSpecified: danger
   pullPolicyNotAlways: warning
   readinessProbeMissing: warning
   livenessProbeMissing: warning
-  metadataAndNameMismatched: ignore
+  metadataAndNameMismatched: warning
   pdbDisruptionsIsZero: warning
-  missingPodDisruptionBudget: ignore
+  missingPodDisruptionBudget: warning
   topologySpreadConstraint: warning
 
   # efficiency
@@ -18,11 +18,11 @@ checks:
   memoryLimitsMissing: warning
   
   # security
-  automountServiceAccountToken: ignore
+  automountServiceAccountToken: warning
   hostIPCSet: danger
   hostPIDSet: danger
   linuxHardening: warning
-  missingNetworkPolicy: ignore
+  missingNetworkPolicy: warning
   notReadOnlyRootFilesystem: warning
   privilegeEscalationAllowed: danger
   runAsRootAllowed: danger
