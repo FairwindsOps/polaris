@@ -5,6 +5,25 @@ meta:
     content: "Fairwinds Polaris | Changelog"
 
 ---
+
+## 8.0.0
+* Change default severity from `ignore` to `warning` for `priorityClassNotSet`, `metadataAndNameMismatched`, `missingPodDisruptionBudget`, `automountServiceAccountToken`, `missingNetworkPolicy` checks.
+* Change default severity from `warning` to `danger` for `sensitiveContainerEnvVar`, `sensitiveConfigmapContent`, `clusterrolePodExecAttach`, `rolePodExecAttach`, `clusterrolebindingPodExecAttach`, `rolebindingClusterRolePodExecAttach`, `rolebindingRolePodExecAttach`,`clusterrolebindingClusterAdmin`,`rolebindingClusterAdminClusterRole`,`rolebindingClusterAdminRole` checks.
+
+## 7.4.0
+* Skip https certificate verification (#920)
+
+## 7.3.0
+* Add a check for `topologySpreadConstraint` (#879)
+
+## 7.2.0
+* Enable new RBAC / sensitive content / Pod exec checks, add `hasPrefix` and `hasSuffix` functions to the GO template, exempt `system:` name prefixes for RBAC checks, sensitive content checks ignore `valueFrom`, (#832)
+
+## 7.1.0
+* Let Polaris modify YAML without losing comments/formatting (#821)
+* Add checks for RBAC allowing exec or attaching to a Pod (#820)
+* Add `clusterrolebindingClusterAdmin`, `rolebindingClusterAdminRole`, and `rolebindingClusterAdminClusterRole` checks + schema tests (#823)
+
 ## 7.0.2
 * Fixes for pretty CLI output
 * Some new checks (disabled by default)

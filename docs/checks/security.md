@@ -24,17 +24,17 @@ key | default | description
 `hostNetworkSet` | `warning` | Fails when `hostNetwork` attribute is configured.
 `hostPortSet` | `warning` | Fails when `hostPort` attribute is configured.
 `tlsSettingsMissing` | `warning` | Fails when an Ingress lacks TLS settings.
-`sensitiveContainerEnvVar` | `warning` | Fails when the container sets potentially sensitive environment variables.
-`sensitiveConfigmapContent` | `warning` | Fails when potentially sensitive content is detected in the ConfigMap keys or values.
-`missingNetworkPolicy` | `ignore`
-`clusterrolePodExecAttach` | `warning` | Fails when the ClusterRole allows Pods/exec or pods/attach.
-`rolePodExecAttach` | `warning` | Fails when the Role allows Pods/exec or pods/attach.
-`clusterrolebindingPodExecAttach` | `warning` | Fails when the ClusterRoleBinding references a ClusterRole that allows Pods/exec, allows pods/attach, or that does not exist.
-`rolebindingRolePodExecAttach` | `warning` | Fails when the RoleBinding references a Role that allows Pods/exec, allows pods/attach, or that does not exist.
-`rolebindingClusterRolePodExecAttach` | `warning` | Fails when the RoleBinding references a ClusterRole that allows Pods/exec, allows pods/attach, or that does not exist.
-`clusterrolebindingClusterAdmin` | `warning` | Fails when the ClusterRoleBinding references the default cluster-admin ClusterRole or one with wildcard permissions.
-`rolebindingClusterAdminClusterRole` | `warning` | Fails when the RoleBinding references the default cluster-admin ClusterRole or one with wildcard permissions.
-`rolebindingClusterAdminRole` | `warning` | Fails when the RoleBinding references a Role with wildcard permissions.
+`sensitiveContainerEnvVar` | `danger` | Fails when the container sets potentially sensitive environment variables.
+`sensitiveConfigmapContent` | `danger` | Fails when potentially sensitive content is detected in the ConfigMap keys or values.
+`missingNetworkPolicy` | `warning`
+`clusterrolePodExecAttach` | `danger` | Fails when the ClusterRole allows Pods/exec or pods/attach.
+`rolePodExecAttach` | `danger` | Fails when the Role allows Pods/exec or pods/attach.
+`clusterrolebindingPodExecAttach` | `danger` | Fails when the ClusterRoleBinding references a ClusterRole that allows Pods/exec, allows pods/attach, or that does not exist.
+`rolebindingRolePodExecAttach` | `danger` | Fails when the RoleBinding references a Role that allows Pods/exec, allows pods/attach, or that does not exist.
+`rolebindingClusterRolePodExecAttach` | `danger` | Fails when the RoleBinding references a ClusterRole that allows Pods/exec, allows pods/attach, or that does not exist.
+`clusterrolebindingClusterAdmin` | `danger` | Fails when the ClusterRoleBinding references the default cluster-admin ClusterRole or one with wildcard permissions.
+`rolebindingClusterAdminClusterRole` | `danger` | Fails when the RoleBinding references the default cluster-admin ClusterRole or one with wildcard permissions.
+`rolebindingClusterAdminRole` | `danger` | Fails when the RoleBinding references a Role with wildcard permissions.
 
 ## Background
 

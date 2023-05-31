@@ -14,10 +14,10 @@ key | default | description
 `livenessProbeMissing` | `warning` | Fails when a liveness probe is not configured for a pod.
 `tagNotSpecified` | `danger` | Fails when an image tag is either not specified or `latest`.
 `pullPolicyNotAlways` | `warning` | Fails when an image pull policy is not `always`.
-`priorityClassNotSet` | `ignore` | Fails when a priorityClassName is not set for a pod.
+`priorityClassNotSet` | `warning` | Fails when a priorityClassName is not set for a pod.
 `deploymentMissingReplicas` | `warning` | Fails when there is only one replica for a deployment.
-`missingPodDisruptionBudget` | `ignore`
-`metadataAndNameMismatched` | `ignore`
+`missingPodDisruptionBudget` | `warning`
+`metadataAndNameMismatched` | `warning`
 `topologySpreadConstraint` | `warning` | Fails when there is no topology spread constraint on the pod
 
 ## Background
