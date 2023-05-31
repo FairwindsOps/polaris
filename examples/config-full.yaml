@@ -8,8 +8,8 @@ checks:
   livenessProbeMissing: warning
   topologySpreadConstraint: warning
   pdbDisruptionsIsZero: warning
-  missingPodDisruptionBudget: ignore
-  metadataAndNameMismatched: ignore
+  missingPodDisruptionBudget: warning
+  metadataAndNameMismatched: warning
 
   # efficiency
   cpuRequestsMissing: warning
@@ -22,7 +22,7 @@ checks:
   hostIPCSet: danger
   hostPIDSet: danger
   linuxHardening: danger
-  missingNetworkPolicy: ignore
+  missingNetworkPolicy: warning
   notReadOnlyRootFilesystem: warning
   privilegeEscalationAllowed: danger
   runAsRootAllowed: danger
