@@ -6,7 +6,7 @@ meta:
 
 ---
 
-## 7.4.0
+## 8.0.0
 * Change default severity from `ignore` to `warning` for `priorityClassNotSet`, `metadataAndNameMismatched`, `missingPodDisruptionBudget`, `automountServiceAccountToken`, `missingNetworkPolicy` checks.
 * Change default severity from `warning` to `danger` for `sensitiveContainerEnvVar`, `sensitiveConfigmapContent`, `clusterrolePodExecAttach`, `rolePodExecAttach`, `clusterrolebindingPodExecAttach`, `rolebindingClusterRolePodExecAttach`, `rolebindingRolePodExecAttach`,`clusterrolebindingClusterAdmin`,`rolebindingClusterAdminClusterRole`,`rolebindingClusterAdminRole` checks.
 
