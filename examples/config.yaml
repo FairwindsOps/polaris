@@ -32,17 +32,16 @@ checks:
   hostNetworkSet: danger
   hostPortSet: warning
   tlsSettingsMissing: warning
-  # These are initially warning and will later be promoted to danger.
-  sensitiveContainerEnvVar: warning
-  sensitiveConfigmapContent: warning
-  clusterrolePodExecAttach: warning
-  rolePodExecAttach: warning
-  clusterrolebindingPodExecAttach: warning
-  rolebindingClusterRolePodExecAttach: warning
-  rolebindingRolePodExecAttach: warning
-  clusterrolebindingClusterAdmin: warning
-  rolebindingClusterAdminClusterRole: warning
-  rolebindingClusterAdminRole: warning
+  sensitiveContainerEnvVar: danger
+  sensitiveConfigmapContent: danger
+  clusterrolePodExecAttach: danger
+  rolePodExecAttach: danger
+  clusterrolebindingPodExecAttach: danger
+  rolebindingClusterRolePodExecAttach: danger
+  rolebindingRolePodExecAttach: danger
+  clusterrolebindingClusterAdmin: danger
+  rolebindingClusterAdminClusterRole: danger
+  rolebindingClusterAdminRole: danger
 
 
 mutations:
