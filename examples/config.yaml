@@ -1,14 +1,14 @@
 checks:
   # reliability
   deploymentMissingReplicas: warning
-  priorityClassNotSet: ignore
+  priorityClassNotSet: warning
   tagNotSpecified: danger
   pullPolicyNotAlways: warning
   readinessProbeMissing: warning
   livenessProbeMissing: warning
-  metadataAndNameMismatched: ignore
+  metadataAndNameMismatched: warning
   pdbDisruptionsIsZero: warning
-  missingPodDisruptionBudget: ignore
+  missingPodDisruptionBudget: warning
   topologySpreadConstraint: warning
 
   # efficiency
@@ -18,11 +18,11 @@ checks:
   memoryLimitsMissing: warning
   
   # security
-  automountServiceAccountToken: ignore
+  automountServiceAccountToken: warning
   hostIPCSet: danger
   hostPIDSet: danger
   linuxHardening: warning
-  missingNetworkPolicy: ignore
+  missingNetworkPolicy: warning
   notReadOnlyRootFilesystem: warning
   privilegeEscalationAllowed: danger
   runAsRootAllowed: danger
@@ -32,17 +32,16 @@ checks:
   hostNetworkSet: danger
   hostPortSet: warning
   tlsSettingsMissing: warning
-  # These are initially warning and will later be promoted to danger.
-  sensitiveContainerEnvVar: warning
-  sensitiveConfigmapContent: warning
-  clusterrolePodExecAttach: warning
-  rolePodExecAttach: warning
-  clusterrolebindingPodExecAttach: warning
-  rolebindingClusterRolePodExecAttach: warning
-  rolebindingRolePodExecAttach: warning
-  clusterrolebindingClusterAdmin: warning
-  rolebindingClusterAdminClusterRole: warning
-  rolebindingClusterAdminRole: warning
+  sensitiveContainerEnvVar: danger
+  sensitiveConfigmapContent: danger
+  clusterrolePodExecAttach: danger
+  rolePodExecAttach: danger
+  clusterrolebindingPodExecAttach: danger
+  rolebindingClusterRolePodExecAttach: danger
+  rolebindingRolePodExecAttach: danger
+  clusterrolebindingClusterAdmin: danger
+  rolebindingClusterAdminClusterRole: danger
+  rolebindingClusterAdminRole: danger
 
 
 mutations:
