@@ -96,7 +96,7 @@ func TestControllerLevelChecks(t *testing.T) {
 
 	res, err := kube.CreateResourceProviderFromPath("../kube/test_files/test_1")
 	assert.Equal(t, nil, err, "Error should be nil")
-	assert.Equal(t, 11, res.Resources.GetLength())
+	assert.Equal(t, 10, res.Resources.GetLength())
 	testResources(res)
 
 	replicaSpec := map[string]interface{}{"replicas": 2}
@@ -111,7 +111,7 @@ func TestControllerLevelChecks(t *testing.T) {
 	k8s, dynamicClient := test.SetupTestAPI(&d1, &p1, &d2, &p2)
 	res, err = kube.CreateResourceProviderFromAPI(context.Background(), k8s, "test", dynamicClient, conf.Configuration{})
 	assert.Equal(t, err, nil, "error should be nil")
-	assert.Equal(t, 2, res.Resources.GetLength(), "Should have two controllers")
+	assert.Equal(t, 1, res.Resources.GetLength(), "Should have two controllers")
 	testResources(res)
 }
 

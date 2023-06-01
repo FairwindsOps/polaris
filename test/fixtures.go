@@ -20,6 +20,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -72,6 +73,13 @@ func MockPod() corev1.Pod {
 func MockNakedPod() corev1.Pod {
 	return corev1.Pod{
 		Spec: MockPod().Spec,
+	}
+}
+
+// MockIngress creates an ingress object
+func MockIngress() networkingv1.Ingress {
+	return networkingv1.Ingress{
+		Spec: networkingv1.IngressSpec{},
 	}
 }
 
@@ -189,7 +197,6 @@ func SetupTestAPI(objects ...runtime.Object) (kubernetes.Interface, dynamic.Inte
 			GroupVersion: corev1.SchemeGroupVersion.String(),
 			APIResources: []metav1.APIResource{
 				{Name: "pods", Namespaced: true, Kind: "Pod"},
-				{Name: "replicationcontrollers", Namespaced: true, Kind: "ReplicationController"},
 				{Name: "serviceaccounts", Namespaced: true, Kind: "ServiceAccount"},
 				{Name: "configmaps", Namespaced: true, Kind: "ConfigMap"},
 			},
@@ -200,6 +207,12 @@ func SetupTestAPI(objects ...runtime.Object) (kubernetes.Interface, dynamic.Inte
 				{Name: "deployments", Namespaced: true, Kind: "Deployment"},
 				{Name: "daemonsets", Namespaced: true, Kind: "DaemonSet"},
 				{Name: "statefulsets", Namespaced: true, Kind: "StatefulSet"},
+			},
+		},
+		{
+			GroupVersion: batchv1.SchemeGroupVersion.String(),
+			APIResources: []metav1.APIResource{
+				{Name: "cronjobs", Namespaced: true, Kind: "CronJob"},
 			},
 		},
 		{
