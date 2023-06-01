@@ -24,9 +24,10 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"runtime/debug"
 
-	workloads "github.com/fairwindsops/insights-plugins/plugins/workloads/pkg"
+	workloads "github.com/fairwindsops/insights-plugins/plugins/workloads"
+	workloadsPkg "github.com/fairwindsops/insights-plugins/plugins/workloads/pkg"
+
 	"github.com/fairwindsops/polaris/pkg/auth"
 	cfg "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
@@ -155,13 +156,13 @@ var auditCmd = &cobra.Command{
 				logrus.Errorf("getting the kubernetes client: %v", err)
 				os.Exit(1)
 			}
-			k8sResources, err := workloads.CreateResourceProviderFromAPI(ctx, dynamicClient, restMapper, clientSet, host)
+			k8sResources, err := workloadsPkg.CreateResourceProviderFromAPI(ctx, dynamicClient, restMapper, clientSet, host)
 			if err != nil {
 				logrus.Errorf("creating resource provider: %v", err)
 				os.Exit(1)
 			}
 			insightsReporter := reporter.NewInsightsReporter(insightsHost, *auth)
-			wr := reporter.WorkloadsReport{Version: getDependencyModuleVersion("github.com/fairwindsops/insights-plugins/plugins/workloads"), Payload: *k8sResources}
+			wr := reporter.WorkloadsReport{Version: workloads.Version, Payload: *k8sResources}
 			pr := reporter.PolarisReport{Version: version, Payload: auditData}
 			err = insightsReporter.ReportAuditToFairwindsInsights(clusterName, wr, pr)
 			if err != nil {
@@ -290,18 +291,4 @@ func outputAudit(auditData validator.AuditData, outputFile, outputURL, outputFor
 			}
 		}
 	}
-}
-
-func getDependencyModuleVersion(path string) string {
-	bi, ok := debug.ReadBuildInfo()
-	if !ok {
-		logrus.Warn("Failed to read build info")
-		return ""
-	}
-	for _, dep := range bi.Deps {
-		if dep.Path == path {
-			return dep.Version
-		}
-	}
-	return ""
 }

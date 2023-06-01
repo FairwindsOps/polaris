@@ -3,14 +3,14 @@ module github.com/fairwindsops/polaris
 go 1.19
 
 require (
-	github.com/fatih/color v1.14.1
+	github.com/fatih/color v1.15.0
 	github.com/gobuffalo/packr/v2 v2.8.3
 	github.com/gorilla/mux v1.8.0
 	github.com/qri-io/jsonschema v0.1.1
-	github.com/sirupsen/logrus v1.9.0
+	github.com/sirupsen/logrus v1.9.2
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.4
 	github.com/thoas/go-funk v0.9.3
 	golang.org/x/text v0.8.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
@@ -24,7 +24,7 @@ require (
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.6
-	github.com/fairwindsops/insights-plugins/plugins/workloads v0.0.0-20230524151258-486d54748535
+	github.com/fairwindsops/insights-plugins/plugins/workloads v0.0.0-20230601204422-5c789e15990c
 	github.com/pkg/errors v0.9.1
 	gomodules.xyz/jsonpatch/v2 v2.2.0
 )
