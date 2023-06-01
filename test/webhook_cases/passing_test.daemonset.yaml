@@ -15,7 +15,7 @@ spec:
     spec:
       tolerations:
       - key: node-role.kubernetes.io/master
-        effect: 
+        effect:
       containers:
       - name: fluentd-elasticsearch
         image: gcr.io/fluentd-elasticsearch/fluentd:v2.5.1
@@ -30,7 +30,7 @@ spec:
           readOnly: true
         securityContext:
           allowPrivilegeEscalation: false
-          privileged: false 
+          privileged: false
           readOnlyRootFilesystem: true
           runAsNonRoot: true
           capabilities:
@@ -44,4 +44,4 @@ spec:
       - name: varlibdockercontainers
         hostPath:
           path: /var/lib/docker/containers
-        
+

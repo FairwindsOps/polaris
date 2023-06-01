@@ -18,13 +18,9 @@ import (
 	"encoding/json"
 
 	appsv1 "k8s.io/api/apps/v1"
-	appsv1beta1 "k8s.io/api/apps/v1beta1"
-	appsv1beta2 "k8s.io/api/apps/v1beta2"
 	batchv1 "k8s.io/api/batch/v1"
-	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
-	extv1beta1 "k8s.io/api/extensions/v1beta1"
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -76,13 +72,6 @@ func MockPod() corev1.Pod {
 func MockNakedPod() corev1.Pod {
 	return corev1.Pod{
 		Spec: MockPod().Spec,
-	}
-}
-
-// MockIngress creates an ingress object
-func MockIngress() extv1beta1.Ingress {
-	return extv1beta1.Ingress{
-		Spec: extv1beta1.IngressSpec{},
 	}
 }
 
@@ -161,11 +150,11 @@ func MockJob(namespace, name string) (batchv1.Job, corev1.Pod) {
 }
 
 // MockCronJob creates a CronJob object.
-func MockCronJob(namespace, name string) (batchv1beta1.CronJob, corev1.Pod) {
-	cj := batchv1beta1.CronJob{}
+func MockCronJob(namespace, name string) (batchv1.CronJob, corev1.Pod) {
+	cj := batchv1.CronJob{}
 	p := MockPod()
 	spec := map[string]interface{}{}
-	pod := MockController("batch/v1beta1", "CronJob", namespace, name, spec, p.Spec, &cj)
+	pod := MockController("batch/v1", "CronJob", namespace, name, spec, p.Spec, &cj)
 	cj.Spec.JobTemplate.Spec.Template.Spec = pod.Spec
 
 	return cj, pod
@@ -192,7 +181,6 @@ func SetupTestAPI(objects ...runtime.Object) (kubernetes.Interface, dynamic.Inte
 	scheme := runtime.NewScheme()
 	appsv1.AddToScheme(scheme)
 	corev1.AddToScheme(scheme)
-	policyv1beta1.AddToScheme(scheme)
 	fake.AddToScheme(scheme)
 	dynamicClient := dynamicFake.NewSimpleDynamicClient(scheme, objects...)
 	k := fake.NewSimpleClientset(objects...)
@@ -221,23 +209,17 @@ func SetupTestAPI(objects ...runtime.Object) (kubernetes.Interface, dynamic.Inte
 			},
 		},
 		{
-			GroupVersion: batchv1beta1.SchemeGroupVersion.String(),
-			APIResources: []metav1.APIResource{
-				{Name: "cronjobs", Namespaced: true, Kind: "CronJob"},
-			},
-		},
-		{
-			GroupVersion: appsv1beta2.SchemeGroupVersion.String(),
+			GroupVersion: appsv1.SchemeGroupVersion.String(),
 			APIResources: []metav1.APIResource{
 				{Name: "deployments", Namespaced: true, Kind: "Deployment"},
-				{Name: "deployments/scale", Namespaced: true, Kind: "Scale", Group: "apps", Version: "v1beta2"},
+				{Name: "deployments/scale", Namespaced: true, Kind: "Scale", Group: "apps", Version: "v1"},
 			},
 		},
 		{
-			GroupVersion: appsv1beta1.SchemeGroupVersion.String(),
+			GroupVersion: appsv1.SchemeGroupVersion.String(),
 			APIResources: []metav1.APIResource{
 				{Name: "statefulsets", Namespaced: true, Kind: "StatefulSet"},
-				{Name: "statefulsets/scale", Namespaced: true, Kind: "Scale", Group: "apps", Version: "v1beta1"},
+				{Name: "statefulsets/scale", Namespaced: true, Kind: "Scale", Group: "apps", Version: "v1"},
 			},
 		},
 		{
@@ -248,7 +230,7 @@ func SetupTestAPI(objects ...runtime.Object) (kubernetes.Interface, dynamic.Inte
 			},
 		},
 		{
-			GroupVersion: policyv1beta1.SchemeGroupVersion.String(),
+			GroupVersion: policyv1.SchemeGroupVersion.String(),
 			APIResources: []metav1.APIResource{
 				{Name: "poddisruptionbudgets", Namespaced: true, Kind: "PodDisruptionBudget", Version: "v1"},
 			},

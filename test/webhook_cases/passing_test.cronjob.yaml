@@ -1,4 +1,4 @@
-apiVersion: batch/v1beta1
+apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: test
@@ -15,7 +15,7 @@ spec:
             - whoami
             securityContext:
               allowPrivilegeEscalation: false
-              privileged: false 
+              privileged: false
               readOnlyRootFilesystem: true
               runAsNonRoot: true
               capabilities:

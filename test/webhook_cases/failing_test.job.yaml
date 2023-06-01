@@ -7,12 +7,12 @@ spec:
   template:
     spec:
       containers:
-      - name: pi
-        image: perl:5.3
-        command: ["perl",  "-Mbignum=bpi", "-wle", "print bpi(2000)"]
-        securityContext:
-          allowPrivilegeEscalation: true
-          privileged: false 
+        - name: pi
+          image: perl:5.3
+          command: ["perl",  "-Mbignum=bpi", "-wle", "print bpi(2000)"]
+          securityContext:
+            allowPrivilegeEscalation: true
+          privileged: false
           readOnlyRootFilesystem: true
           runAsNonRoot: true
           capabilities:
