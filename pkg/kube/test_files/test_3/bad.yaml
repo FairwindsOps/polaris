@@ -1,5 +1,5 @@
 --
 # Source: polaris/templates/dashboard.deployment.yaml
-apiVersion: app/v1
+apiVersion: apps/v1
 kind: Deployment
 ::::
