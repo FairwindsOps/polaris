@@ -187,8 +187,6 @@ func MockNamespace(name string) corev1.Namespace {
 // SetupTestAPI creates a test kube API struct.
 func SetupTestAPI(objects ...runtime.Object) (kubernetes.Interface, dynamic.Interface) {
 	scheme := runtime.NewScheme()
-	appsv1.AddToScheme(scheme)
-	corev1.AddToScheme(scheme)
 	fake.AddToScheme(scheme)
 	dynamicClient := dynamicFake.NewSimpleDynamicClient(scheme, objects...)
 	k := fake.NewSimpleClientset(objects...)
@@ -204,35 +202,16 @@ func SetupTestAPI(objects ...runtime.Object) (kubernetes.Interface, dynamic.Inte
 		{
 			GroupVersion: appsv1.SchemeGroupVersion.String(),
 			APIResources: []metav1.APIResource{
-				{Name: "deployments", Namespaced: true, Kind: "Deployment"},
-				{Name: "daemonsets", Namespaced: true, Kind: "DaemonSet"},
-				{Name: "statefulsets", Namespaced: true, Kind: "StatefulSet"},
+				{Name: "deployments", Namespaced: true, Kind: "Deployment", Version: "v1"},
+				{Name: "daemonsets", Namespaced: true, Kind: "DaemonSet", Version: "v1"},
+				{Name: "statefulsets", Namespaced: true, Kind: "StatefulSet", Version: "v1"},
 			},
 		},
 		{
 			GroupVersion: batchv1.SchemeGroupVersion.String(),
 			APIResources: []metav1.APIResource{
-				{Name: "cronjobs", Namespaced: true, Kind: "CronJob"},
-			},
-		},
-		{
-			GroupVersion: batchv1.SchemeGroupVersion.String(),
-			APIResources: []metav1.APIResource{
-				{Name: "jobs", Namespaced: true, Kind: "Job"},
-			},
-		},
-		{
-			GroupVersion: appsv1.SchemeGroupVersion.String(),
-			APIResources: []metav1.APIResource{
-				{Name: "deployments", Namespaced: true, Kind: "Deployment"},
-				{Name: "deployments/scale", Namespaced: true, Kind: "Scale", Group: "apps", Version: "v1"},
-			},
-		},
-		{
-			GroupVersion: appsv1.SchemeGroupVersion.String(),
-			APIResources: []metav1.APIResource{
-				{Name: "statefulsets", Namespaced: true, Kind: "StatefulSet"},
-				{Name: "statefulsets/scale", Namespaced: true, Kind: "Scale", Group: "apps", Version: "v1"},
+				{Name: "cronjobs", Namespaced: true, Kind: "CronJob", Version: "v1"},
+				{Name: "jobs", Namespaced: true, Kind: "Job", Version: "v1"},
 			},
 		},
 		{
