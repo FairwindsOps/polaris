@@ -171,7 +171,7 @@ func fetchAuthToken(insightsHost, organization, code string) (string, error) {
 	defer res.Body.Close()
 
 	if res.StatusCode < 200 || res.StatusCode >= 400 {
-		return "", fmt.Errorf("expected 200 (OK) - received %d", res.StatusCode)
+		return "", fmt.Errorf("expected 200 OK - received %s", res.Status)
 	}
 
 	var rBody map[string]any
@@ -222,7 +222,7 @@ func callbackHandler(insightsHost string, localServerPort int) func(w http.Respo
 			return
 		}
 
-		fmt.Fprint(w, "integration finished successfully, you can safely close this tab now.")
+		fmt.Fprint(w, "Polaris and Fairwinds Insights integration has finished successfully, your credentials are set! You can safely close this tab now.")
 		paramsOrErrorChan <- paramsOrError{token: token, user: user, organization: organization}
 		return
 	}

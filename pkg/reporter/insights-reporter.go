@@ -162,7 +162,7 @@ func (ir insightsReporter) upsertCluster(clusterName string) (*insightsCluster, 
 	}
 
 	if !isSuccessful2XX(resp.StatusCode) {
-		return nil, fmt.Errorf("creating cluster, expected 2xx received %d: %v", resp.StatusCode, string(body))
+		return nil, fmt.Errorf("creating cluster, expected 200 OK received %s: %v", resp.Status, string(body))
 	}
 
 	var c insightsCluster
@@ -199,7 +199,7 @@ func (ir insightsReporter) sendReport(cluster *insightsCluster, reportType, repo
 		return nil, fmt.Errorf("reading response body: %w", err)
 	}
 	if !isSuccessful2XX(resp.StatusCode) {
-		return nil, fmt.Errorf("sending %s report, expected 2xx received %d: %v", reportType, resp.StatusCode, string(body))
+		return nil, fmt.Errorf("sending %s report, expected 200 OK received %s: %v", reportType, resp.Status, string(body))
 	}
 
 	var rj insightsReportJob
@@ -231,7 +231,7 @@ func (ir insightsReporter) getReportJob(clusterName string, reportJobID int) (*i
 	defer resp.Body.Close()
 
 	if !isSuccessful2XX(resp.StatusCode) {
-		return nil, fmt.Errorf("fetching report-job, expected 2xx received %d", resp.StatusCode)
+		return nil, fmt.Errorf("fetching report-job, expected 200 OK received %s", resp.Status)
 	}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
