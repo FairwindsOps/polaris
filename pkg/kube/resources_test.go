@@ -16,6 +16,7 @@ package kube
 
 import (
 	"bytes"
+	"fmt"
 	"context"
 	"os"
 	"testing"
@@ -151,20 +152,24 @@ func TestGetResourceFromAPI(t *testing.T) {
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, tt.want.SourceType, resources.SourceType)
-				assert.Equal(t, tt.want.SourceName, resources.SourceName)
-				assert.IsType(t, tt.want.CreationTime, resources.CreationTime)
-				assert.Equal(t, 0, len(resources.Nodes), "Should not have any nodes")
-				assert.Equal(t, 5, len(resources.Resources), "Should have 5 controllers")
-
-				for _, controllers := range resources.Resources {
-					for _, ctrl := range controllers {
-						expectedNames[ctrl.ObjectMeta.GetName()] = true
+				if assert.NoError(t, err) {
+					assert.Equal(t, tt.want.SourceType, resources.SourceType)
+					assert.Equal(t, tt.want.SourceName, resources.SourceName)
+					assert.IsType(t, tt.want.CreationTime, resources.CreationTime)
+					assert.Equal(t, 0, len(resources.Nodes), "Should not have any nodes")
+					for k, v := range resources.Resources {
+						fmt.Println("cont", k, v)
 					}
-				}
-				for name, val := range expectedNames {
-					assert.Equal(t, true, val, name)
+					assert.Equal(t, 5, len(resources.Resources), "Should have 5 controllers")
+
+					for _, controllers := range resources.Resources {
+						for _, ctrl := range controllers {
+							expectedNames[ctrl.ObjectMeta.GetName()] = true
+						}
+					}
+					for name, val := range expectedNames {
+						assert.Equal(t, true, val, name)
+					}
 				}
 			}
 		})
