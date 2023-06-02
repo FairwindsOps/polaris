@@ -134,12 +134,12 @@ type k8sResource struct {
 var podSpecFields = []string{"jobTemplate", "spec", "template"}
 
 // CreateResourceProvider returns a new ResourceProvider object to interact with k8s resources
-func CreateResourceProvider(ctx context.Context, auditPath, resourceToAudit string, c conf.Configuration) (*ResourceProvider, error) {
-	if resourceToAudit != "" {
-		return CreateResourceProviderFromResource(ctx, resourceToAudit)
+func CreateResourceProvider(ctx context.Context, directory, workload string, c conf.Configuration) (*ResourceProvider, error) {
+	if workload != "" {
+		return CreateResourceProviderFromResource(ctx, workload)
 	}
-	if auditPath != "" {
-		return CreateResourceProviderFromPath(auditPath)
+	if directory != "" {
+		return CreateResourceProviderFromPath(directory)
 	}
 	return CreateResourceProviderFromCluster(ctx, c)
 }
