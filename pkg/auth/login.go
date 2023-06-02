@@ -80,9 +80,12 @@ func HandleLogin(insightsHost string) error {
 			panic(err)
 		}
 		localServerPort := listener.Addr().(*net.TCPAddr).Port
-		err = openBrowser(fmt.Sprintf(insightsHost + registerPath + "?source=polaris&callbackUrl=" + fmt.Sprintf("http://localhost:%d/auth/login/callback", localServerPort)))
+		url := fmt.Sprintf(insightsHost + registerPath + "?source=polaris&callbackUrl=" + fmt.Sprintf("http://localhost:%d/auth/login/callback", localServerPort))
+		err = openBrowser(url)
 		if err != nil {
-			logrus.Fatal(err)
+			logrus.Warnf("could not open browser: %v", err)
+			logrus.Infoln("paste the link below into your browser:")
+			os.Stdout.Write([]byte(url + "\n"))
 		}
 
 		var router *mux.Router
