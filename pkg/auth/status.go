@@ -22,6 +22,7 @@ func PrintStatus(insightsHost string) error {
 				}
 				fmt.Printf("✓ Logged in to %s as %s\n", insightsHost, h.User)
 				fmt.Printf("✓ Token: %s\n", hideToken(h.Token, 3))
+				return nil
 			}
 		}
 		fmt.Printf("✕ No authentication found for host %s. Run polaris auth login to authenticate.\n", insightsHost)
