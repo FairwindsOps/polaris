@@ -125,23 +125,13 @@ func HandleLogin(insightsHost string) error {
 		return fmt.Errorf("creating polaris config dir: %w", err)
 	}
 
-	f, err := os.Create(polarisHostsFilepath)
-	if err != nil {
-		return fmt.Errorf("opening user polaris hosts file: %w", err)
-	}
-	defer func() {
-		if err := f.Close(); err != nil {
-			logrus.Fatalf("closing user polaris hosts file: %v", err)
-		}
-	}()
-
 	content := map[string]Host{insightsHost: {Token: token, User: user, Organization: organization}}
 	b, err := yaml.Marshal(content)
 	if err != nil {
 		return fmt.Errorf("marshalling yaml data: %w", err)
 	}
 
-	_, err = f.Write(b)
+	err = os.WriteFile(polarisHostsFilepath, b, os.ModePerm)
 	if err != nil {
 		return fmt.Errorf("writing data to file: %w", err)
 	}

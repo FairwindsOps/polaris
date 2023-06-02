@@ -3,8 +3,6 @@ package auth
 import (
 	"fmt"
 	"os"
-
-	"github.com/sirupsen/logrus"
 )
 
 func HandleLogout() error {
@@ -27,17 +25,7 @@ func performLogout() error {
 	}
 
 	if len(content) > 0 {
-		f, err := os.Create(polarisHostsFilepath)
-		if err != nil {
-			return nil
-		}
-		defer func() {
-			if err := f.Close(); err != nil {
-				logrus.Fatalf("closing user polaris hosts file: %v", err)
-			}
-		}()
-
-		_, err = f.Write([]byte("{}"))
+		err = os.WriteFile(polarisHostsFilepath, []byte("{}"), os.ModePerm)
 		if err != nil {
 			return fmt.Errorf("writing data to file: %w", err)
 		}
