@@ -55,9 +55,9 @@ var statusCmd = &cobra.Command{
 	Short: "View authentication status.",
 	Long:  `View authentication status.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := auth.PrintStatus()
+		err := auth.PrintStatus(insightsHost)
 		if err != nil {
-			logrus.Fatalf("printing status")
+			logrus.Fatalf("printing status: %v", err)
 		}
 	},
 	PersistentPostRunE: func(cmd *cobra.Command, args []string) error {

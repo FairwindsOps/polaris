@@ -37,7 +37,7 @@ type PolarisReport struct {
 // 4 - checks if report job is completed for 3 minutes
 // 5 - display link to Fairwinds Insights
 func (ir insightsReporter) ReportAuditToFairwindsInsights(clusterName string, wr WorkloadsReport, pr PolarisReport) error {
-	cluster, err := ir.client.upsertCluster(clusterName)
+	cluster, err := ir.client.UpsertCluster(clusterName)
 	if err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func (ir insightsReporter) ReportAuditToFairwindsInsights(clusterName string, wr
 	if err != nil {
 		return fmt.Errorf("marshaling data: %w", err)
 	}
-	_, err = ir.client.sendReport(*cluster, "workloads", wr.Version, workloadsPayload)
+	_, err = ir.client.SendReport(*cluster, "workloads", wr.Version, workloadsPayload)
 	if err != nil {
 		return err
 	}
@@ -54,7 +54,7 @@ func (ir insightsReporter) ReportAuditToFairwindsInsights(clusterName string, wr
 	if err != nil {
 		return fmt.Errorf("marshaling data: %w", err)
 	}
-	reportJob, err := ir.client.sendReport(*cluster, "polaris", pr.Version, polarisPayload)
+	reportJob, err := ir.client.SendReport(*cluster, "polaris", pr.Version, polarisPayload)
 	if err != nil {
 		return err
 	}
@@ -75,7 +75,7 @@ func verifyReportJobCompletion(ir *insightsReporter, clusterName string, reportJ
 	defer func() { fmt.Println() }()
 	logrus.Println("Processing (this usually takes 1-3 minutes)...")
 	for i := 0; i < 60; i++ {
-		reportJob, err := ir.client.getReportJob(clusterName, reportJobID)
+		reportJob, err := ir.client.GetReportJob(clusterName, reportJobID)
 		if err != nil {
 			return false, err
 		}

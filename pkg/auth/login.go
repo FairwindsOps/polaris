@@ -275,9 +275,7 @@ func IsLoggedIn() bool {
 		if err != nil {
 			return false
 		}
-		if len(content) > 0 {
-			return true
-		}
+		return len(content) > 0
 	}
 	return false
 }

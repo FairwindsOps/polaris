@@ -162,7 +162,7 @@ var auditCmd = &cobra.Command{
 				os.Exit(1)
 			}
 
-			insightsClient := insights.NewHTTPClient(insightsHost, *auth)
+			insightsClient := insights.NewHTTPClient(insightsHost, auth.Organization, auth.Token)
 			insightsReporter := insights.NewInsightsReporter(insightsClient)
 			wr := insights.WorkloadsReport{Version: workloads.Version, Payload: *k8sResources}
 			pr := insights.PolarisReport{Version: version, Payload: auditData}

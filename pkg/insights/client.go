@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/fairwindsops/polaris/pkg/auth"
 	"github.com/sirupsen/logrus"
 )
 
@@ -25,28 +24,30 @@ type reportJob struct {
 }
 
 type Client interface {
-	upsertCluster(clusterName string) (*cluster, error)
-	sendReport(cluster cluster, reportType, reportVersion string, payload []byte) (*reportJob, error)
-	getReportJob(clusterName string, reportJobID int) (*reportJob, error)
+	UpsertCluster(clusterName string) (*cluster, error)
+	SendReport(cluster cluster, reportType, reportVersion string, payload []byte) (*reportJob, error)
+	GetReportJob(clusterName string, reportJobID int) (*reportJob, error)
+	IsTokenValid() (bool, error)
 }
 
 type HTTPClient struct {
 	insightsHost string
-	auth         auth.Host
+	organization string
+	token        string
 }
 
-func NewHTTPClient(host string, auth auth.Host) Client {
-	return HTTPClient{host, auth}
+func NewHTTPClient(host, organization, token string) Client {
+	return HTTPClient{host, organization, token}
 }
 
-func (ic HTTPClient) upsertCluster(clusterName string) (*cluster, error) {
-	clusterURL := fmt.Sprintf("%s/v0/organizations/%s/clusters/%s?showToken=true", ic.insightsHost, ic.auth.Organization, clusterName)
+func (ic HTTPClient) UpsertCluster(clusterName string) (*cluster, error) {
+	clusterURL := fmt.Sprintf("%s/v0/organizations/%s/clusters/%s?showToken=true", ic.insightsHost, ic.organization, clusterName)
 	req, err := http.NewRequest("GET", clusterURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("building request for fetching cluster: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+ic.auth.Token)
+	req.Header.Set("Authorization", "Bearer "+ic.token)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("making request fetching cluster: %w", err)
@@ -77,7 +78,7 @@ func (ic HTTPClient) upsertCluster(clusterName string) (*cluster, error) {
 		return nil, fmt.Errorf("building request for creating cluster: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+ic.auth.Token)
+	req.Header.Set("Authorization", "Bearer "+ic.token)
 	resp, err = http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("making request for creating cluster: %w", err)
@@ -103,8 +104,8 @@ func (ic HTTPClient) upsertCluster(clusterName string) (*cluster, error) {
 	return &c, nil
 }
 
-func (ic HTTPClient) sendReport(cluster cluster, reportType, reportVersion string, payload []byte) (*reportJob, error) {
-	uploadReportURL := fmt.Sprintf("%s/v0/organizations/%s/clusters/%s/data/%s", ic.insightsHost, ic.auth.Organization, cluster.Name, reportType)
+func (ic HTTPClient) SendReport(cluster cluster, reportType, reportVersion string, payload []byte) (*reportJob, error) {
+	uploadReportURL := fmt.Sprintf("%s/v0/organizations/%s/clusters/%s/data/%s", ic.insightsHost, ic.organization, cluster.Name, reportType)
 	req, err := http.NewRequest("POST", uploadReportURL, bytes.NewBuffer(payload))
 	if err != nil {
 		return nil, fmt.Errorf("building request for output: %w", err)
@@ -142,14 +143,14 @@ func isSuccessful2XX(statusCode int) bool {
 	return statusCode >= 200 && statusCode < 300
 }
 
-func (ic HTTPClient) getReportJob(clusterName string, reportJobID int) (*reportJob, error) {
-	reportJobsURL := fmt.Sprintf("%s/v0/organizations/%s/clusters/%s/report-jobs/%d", ic.insightsHost, ic.auth.Organization, clusterName, reportJobID)
+func (ic HTTPClient) GetReportJob(clusterName string, reportJobID int) (*reportJob, error) {
+	reportJobsURL := fmt.Sprintf("%s/v0/organizations/%s/clusters/%s/report-jobs/%d", ic.insightsHost, ic.organization, clusterName, reportJobID)
 	req, err := http.NewRequest("GET", reportJobsURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("building request for fetching report-job: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+ic.auth.Token)
+	req.Header.Set("Authorization", "Bearer "+ic.token)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("making request fetching report-job: %w", err)
@@ -169,4 +170,31 @@ func (ic HTTPClient) getReportJob(clusterName string, reportJobID int) (*reportJ
 		return nil, fmt.Errorf("unmarshaling response body: %w", err)
 	}
 	return &rj, nil
+}
+
+// IsTokenValid checks if the token is valid by fetching the organization
+func (ic HTTPClient) IsTokenValid() (bool, error) {
+	organizationURL := fmt.Sprintf("%s/v0/organizations/%s", ic.insightsHost, ic.organization)
+	req, err := http.NewRequest("GET", organizationURL, nil)
+	if err != nil {
+		return false, fmt.Errorf("building request for fetching organization: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+ic.token)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return false, fmt.Errorf("making request fetching organization: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if isSuccessful2XX(resp.StatusCode) {
+		return true, nil // token is valid
+	}
+
+	if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
+		return false, nil // token is invalid
+	}
+
+	// unexpected error
+	return false, fmt.Errorf("fetching organization, expected 200 OK - received %s", resp.Status)
 }
