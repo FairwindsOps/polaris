@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/fairwindsops/polaris/pkg/insights"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
@@ -49,14 +50,23 @@ func HandleLogin(insightsHost string) error {
 		}
 
 		if len(content) > 0 {
-			var reAuthenticate bool
-			err = survey.AskOne(&survey.Confirm{Message: fmt.Sprintf("You're already logged into %s. Do you want to re-authenticate?", insightsHost)}, &reAuthenticate)
-			if err != nil {
-				return fmt.Errorf("prompting re-authenticate: %w", err)
-			}
-			if !reAuthenticate {
-				// bail-out
-				return nil
+			if h, ok := content[insightsHost]; ok {
+				c := insights.NewHTTPClient(insightsHost, h.Organization, h.Token)
+				isValid, err := c.IsTokenValid()
+				if err != nil {
+					return err
+				}
+				if isValid {
+					var reAuthenticate bool
+					err = survey.AskOne(&survey.Confirm{Message: fmt.Sprintf("You're already logged into %s. Do you want to re-authenticate?", insightsHost)}, &reAuthenticate)
+					if err != nil {
+						return fmt.Errorf("prompting re-authenticate: %w", err)
+					}
+					if !reAuthenticate {
+						// bail-out
+						return nil
+					}
+				}
 			}
 		}
 	}
