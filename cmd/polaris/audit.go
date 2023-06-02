@@ -30,8 +30,8 @@ import (
 
 	"github.com/fairwindsops/polaris/pkg/auth"
 	cfg "github.com/fairwindsops/polaris/pkg/config"
+	"github.com/fairwindsops/polaris/pkg/insights"
 	"github.com/fairwindsops/polaris/pkg/kube"
-	"github.com/fairwindsops/polaris/pkg/reporter"
 	"github.com/fairwindsops/polaris/pkg/validator"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -161,14 +161,19 @@ var auditCmd = &cobra.Command{
 				logrus.Errorf("creating resource provider: %v", err)
 				os.Exit(1)
 			}
-			insightsReporter := reporter.NewInsightsReporter(insightsHost, *auth)
-			wr := reporter.WorkloadsReport{Version: workloads.Version, Payload: *k8sResources}
-			pr := reporter.PolarisReport{Version: version, Payload: auditData}
+
+			insightsClient := insights.NewHTTPClient(insightsHost, *auth)
+			insightsReporter := insights.NewInsightsReporter(insightsClient)
+			wr := insights.WorkloadsReport{Version: workloads.Version, Payload: *k8sResources}
+			pr := insights.PolarisReport{Version: version, Payload: auditData}
+			logrus.Infof("Uploading to Fairwinds Insights organization '%s/%s'...", auth.Organization, clusterName)
 			err = insightsReporter.ReportAuditToFairwindsInsights(clusterName, wr, pr)
 			if err != nil {
 				logrus.Errorf("reporting audit file to insights: %v", err)
 				os.Exit(1)
 			}
+			logrus.Println("Success! You can see your results at:")
+			logrus.Printf("%s/orgs/%s/clusters/%s\n", insightsHost, auth.Organization, clusterName)
 		} else {
 			outputAudit(auditData, auditOutputFile, auditOutputURL, auditOutputFormat, useColor, onlyShowFailedTests)
 		}
