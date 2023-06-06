@@ -25,7 +25,12 @@ import (
 	"os"
 	"os/exec"
 
+	workloads "github.com/fairwindsops/insights-plugins/plugins/workloads"
+	workloadsPkg "github.com/fairwindsops/insights-plugins/plugins/workloads/pkg"
+
+	"github.com/fairwindsops/polaris/pkg/auth"
 	cfg "github.com/fairwindsops/polaris/pkg/config"
+	"github.com/fairwindsops/polaris/pkg/insights"
 	"github.com/fairwindsops/polaris/pkg/kube"
 	"github.com/fairwindsops/polaris/pkg/validator"
 	"github.com/sirupsen/logrus"
@@ -47,6 +52,8 @@ var (
 	checks              []string
 	auditNamespace      string
 	skipSslValidation   bool
+	uploadInsights      bool
+	clusterName         string
 )
 
 func init() {
@@ -66,6 +73,8 @@ func init() {
 	auditCmd.PersistentFlags().StringSliceVar(&checks, "checks", []string{}, "Optional flag to specify specific checks to check")
 	auditCmd.PersistentFlags().StringVar(&auditNamespace, "namespace", "", "Namespace to audit. Only applies to in-cluster audits")
 	auditCmd.PersistentFlags().BoolVar(&skipSslValidation, "skip-ssl-validation", false, "Skip https certificate verification")
+	auditCmd.PersistentFlags().BoolVar(&uploadInsights, "upload-insights", false, "Upload scan results to Fairwinds Insights")
+	auditCmd.PersistentFlags().StringVar(&clusterName, "cluster-name", "", "Cluster name")
 }
 
 var auditCmd = &cobra.Command{
@@ -100,12 +109,30 @@ var auditCmd = &cobra.Command{
 			var err error
 			auditPath, err = ProcessHelmTemplates(helmChart, helmValues)
 			if err != nil {
-				logrus.Infof("Couldn't process helm chart: %v", err)
+				logrus.Errorf("Couldn't process helm chart: %v", err)
 				os.Exit(1)
 			}
 		}
+		if uploadInsights && len(clusterName) == 0 {
+			logrus.Error("cluster-name is required when using --upload-insights")
+			os.Exit(1)
+		}
+		if uploadInsights {
+			if auditPath != "" {
+				logrus.Errorf("upload-insights and audit-path are not supported when used simultaneously")
+				os.Exit(1)
+			}
+			if !auth.IsLoggedIn() {
+				err := auth.HandleLogin(insightsHost)
+				if err != nil {
+					logrus.Errorf("error handling logging: %v", err)
+					os.Exit(1)
+				}
+			}
+		}
 
-		k, err := kube.CreateResourceProvider(context.TODO(), auditPath, resourceToAudit, config)
+		ctx := context.TODO()
+		k, err := kube.CreateResourceProvider(ctx, auditPath, resourceToAudit, config)
 		if err != nil {
 			logrus.Errorf("Error fetching Kubernetes resources %v", err)
 			os.Exit(1)
@@ -117,7 +144,39 @@ var auditCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		outputAudit(auditData, auditOutputFile, auditOutputURL, auditOutputFormat, useColor, onlyShowFailedTests)
+		if uploadInsights {
+			auth, err := auth.GetAuth(insightsHost)
+			if err != nil {
+				logrus.Errorf("getting auth: %v", err)
+				os.Exit(1)
+			}
+			// fetch workloads using workload plugin... or should we adapt the workloads from above?
+			dynamicClient, restMapper, clientSet, host, err := kube.GetKubeClient(ctx, "")
+			if err != nil {
+				logrus.Errorf("getting the kubernetes client: %v", err)
+				os.Exit(1)
+			}
+			k8sResources, err := workloadsPkg.CreateResourceProviderFromAPI(ctx, dynamicClient, restMapper, clientSet, host)
+			if err != nil {
+				logrus.Errorf("creating resource provider: %v", err)
+				os.Exit(1)
+			}
+
+			insightsClient := insights.NewHTTPClient(insightsHost, auth.Organization, auth.Token)
+			insightsReporter := insights.NewInsightsReporter(insightsClient)
+			wr := insights.WorkloadsReport{Version: workloads.Version, Payload: *k8sResources}
+			pr := insights.PolarisReport{Version: version, Payload: auditData}
+			logrus.Infof("Uploading to Fairwinds Insights organization '%s/%s'...", auth.Organization, clusterName)
+			err = insightsReporter.ReportAuditToFairwindsInsights(clusterName, wr, pr)
+			if err != nil {
+				logrus.Errorf("reporting audit file to insights: %v", err)
+				os.Exit(1)
+			}
+			logrus.Println("Success! You can see your results at:")
+			logrus.Printf("%s/orgs/%s/clusters/%s\n", insightsHost, auth.Organization, clusterName)
+		} else {
+			outputAudit(auditData, auditOutputFile, auditOutputURL, auditOutputFormat, useColor, onlyShowFailedTests)
+		}
 
 		summary := auditData.GetSummary()
 		score := summary.GetScore()

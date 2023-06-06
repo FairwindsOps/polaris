@@ -139,7 +139,7 @@ func NewGenericResourceFromBytes(contentBytes []byte) (GenericResource, error) {
 }
 
 // ResolveControllerFromPod builds a new workload for a given Pod
-func ResolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod, dynamicClient dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) (GenericResource, error) {
+func ResolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod, dynamicClient dynamic.Interface, restMapper meta.RESTMapper, objectCache map[string]unstructured.Unstructured) (GenericResource, error) {
 	workload, err := resolveControllerFromPod(ctx, podResource, dynamicClient, restMapper, objectCache)
 	if err != nil {
 		return workload, err
@@ -150,7 +150,7 @@ func ResolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod
 	return workload, err
 }
 
-func resolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod, dynamicClient dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) (GenericResource, error) {
+func resolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod, dynamicClient dynamic.Interface, restMapper meta.RESTMapper, objectCache map[string]unstructured.Unstructured) (GenericResource, error) {
 	podWorkload, err := NewGenericResourceFromPod(podResource, nil)
 	if err != nil {
 		return podWorkload, err
@@ -217,7 +217,7 @@ func resolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod
 	return workload, nil
 }
 
-func cacheSingleObject(ctx context.Context, apiVersion, kind, namespace, name string, dynamicClient dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) error {
+func cacheSingleObject(ctx context.Context, apiVersion, kind, namespace, name string, dynamicClient dynamic.Interface, restMapper meta.RESTMapper, objectCache map[string]unstructured.Unstructured) error {
 	logrus.Debugf("Caching a single %s", kind)
 	object, err := getObject(ctx, namespace, kind, apiVersion, name, dynamicClient, restMapper)
 	if err != nil {
@@ -230,10 +230,10 @@ func cacheSingleObject(ctx context.Context, apiVersion, kind, namespace, name st
 	return nil
 }
 
-func cacheAllObjectsOfKind(ctx context.Context, apiVersion, kind string, dynamicClient dynamic.Interface, restMapper *meta.RESTMapper, objectCache map[string]unstructured.Unstructured) error {
+func cacheAllObjectsOfKind(ctx context.Context, apiVersion, kind string, dynamicClient dynamic.Interface, restMapper meta.RESTMapper, objectCache map[string]unstructured.Unstructured) error {
 	logrus.Debugf("Caching all %s", kind)
 	fqKind := schema.FromAPIVersionAndKind(apiVersion, kind)
-	mapping, err := (*restMapper).RESTMapping(fqKind.GroupKind(), fqKind.Version)
+	mapping, err := restMapper.RESTMapping(fqKind.GroupKind(), fqKind.Version)
 	if err != nil {
 		logrus.Warnf("Error retrieving mapping of API %s and Kind %s because of error: %v", apiVersion, kind, err)
 		return err
@@ -252,9 +252,9 @@ func cacheAllObjectsOfKind(ctx context.Context, apiVersion, kind string, dynamic
 	return nil
 }
 
-func getObject(ctx context.Context, namespace, kind, version, name string, dynamicClient dynamic.Interface, restMapper *meta.RESTMapper) (*unstructured.Unstructured, error) {
+func getObject(ctx context.Context, namespace, kind, version, name string, dynamicClient dynamic.Interface, restMapper meta.RESTMapper) (*unstructured.Unstructured, error) {
 	fqKind := schema.FromAPIVersionAndKind(version, kind)
-	mapping, err := (*restMapper).RESTMapping(fqKind.GroupKind(), fqKind.Version)
+	mapping, err := restMapper.RESTMapping(fqKind.GroupKind(), fqKind.Version)
 	if err != nil {
 		return nil, err
 	}
