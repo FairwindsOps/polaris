@@ -6,6 +6,18 @@ meta:
 
 ---
 
+## 8.1.0
+* Add `insights-host` global flag to configure Fairwinds Insights host (defaults to `https://insights.fairwinds.com`).
+* Add new `auth` sub-commands be able to authenticate on Polaris using Fairwinds Insights credentials
+  - `login` - login using Fairwinds Insights credentials via the web interface or provide a token
+  - `logout` - logout from Fairwinds Insights
+  - `status` - show relevant information regarding login state
+  - `token` - prints the token from local storage
+* Add new `audit` flags to be able to upload Workloads and Polaris results to Fairwinds Insights
+  - `upload-insights` - indicates that the results should be uploaded to Fairwinds Insights. (defaults to `false`)
+  - `cluster-name`  - cluster name that the results belongs to. Creates the cluster if it does not exist. (required if `upload-insights` is used) 
+
+
 ## 8.0.0
 * Change default severity from `ignore` to `warning` for `priorityClassNotSet`, `metadataAndNameMismatched`, `missingPodDisruptionBudget`, `automountServiceAccountToken`, `missingNetworkPolicy` checks.
 * Change default severity from `warning` to `danger` for `sensitiveContainerEnvVar`, `sensitiveConfigmapContent`, `clusterrolePodExecAttach`, `rolePodExecAttach`, `clusterrolebindingPodExecAttach`, `rolebindingClusterRolePodExecAttach`, `rolebindingRolePodExecAttach`,`clusterrolebindingClusterAdmin`,`rolebindingClusterAdminClusterRole`,`rolebindingClusterAdminRole` checks.
