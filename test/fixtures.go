@@ -18,13 +18,10 @@ import (
 	"encoding/json"
 
 	appsv1 "k8s.io/api/apps/v1"
-	appsv1beta1 "k8s.io/api/apps/v1beta1"
-	appsv1beta2 "k8s.io/api/apps/v1beta2"
 	batchv1 "k8s.io/api/batch/v1"
-	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
-	extv1beta1 "k8s.io/api/extensions/v1beta1"
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
+	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -80,9 +77,9 @@ func MockNakedPod() corev1.Pod {
 }
 
 // MockIngress creates an ingress object
-func MockIngress() extv1beta1.Ingress {
-	return extv1beta1.Ingress{
-		Spec: extv1beta1.IngressSpec{},
+func MockIngress() networkingv1.Ingress {
+	return networkingv1.Ingress{
+		Spec: networkingv1.IngressSpec{},
 	}
 }
 
@@ -161,11 +158,11 @@ func MockJob(namespace, name string) (batchv1.Job, corev1.Pod) {
 }
 
 // MockCronJob creates a CronJob object.
-func MockCronJob(namespace, name string) (batchv1beta1.CronJob, corev1.Pod) {
-	cj := batchv1beta1.CronJob{}
+func MockCronJob(namespace, name string) (batchv1.CronJob, corev1.Pod) {
+	cj := batchv1.CronJob{}
 	p := MockPod()
 	spec := map[string]interface{}{}
-	pod := MockController("batch/v1beta1", "CronJob", namespace, name, spec, p.Spec, &cj)
+	pod := MockController("batch/v1", "CronJob", namespace, name, spec, p.Spec, &cj)
 	cj.Spec.JobTemplate.Spec.Template.Spec = pod.Spec
 
 	return cj, pod
@@ -190,9 +187,6 @@ func MockNamespace(name string) corev1.Namespace {
 // SetupTestAPI creates a test kube API struct.
 func SetupTestAPI(objects ...runtime.Object) (kubernetes.Interface, dynamic.Interface) {
 	scheme := runtime.NewScheme()
-	appsv1.AddToScheme(scheme)
-	corev1.AddToScheme(scheme)
-	policyv1beta1.AddToScheme(scheme)
 	fake.AddToScheme(scheme)
 	dynamicClient := dynamicFake.NewSimpleDynamicClient(scheme, objects...)
 	k := fake.NewSimpleClientset(objects...)
@@ -201,7 +195,6 @@ func SetupTestAPI(objects ...runtime.Object) (kubernetes.Interface, dynamic.Inte
 			GroupVersion: corev1.SchemeGroupVersion.String(),
 			APIResources: []metav1.APIResource{
 				{Name: "pods", Namespaced: true, Kind: "Pod"},
-				{Name: "replicationcontrollers", Namespaced: true, Kind: "ReplicationController"},
 				{Name: "serviceaccounts", Namespaced: true, Kind: "ServiceAccount"},
 				{Name: "configmaps", Namespaced: true, Kind: "ConfigMap"},
 			},
@@ -209,35 +202,16 @@ func SetupTestAPI(objects ...runtime.Object) (kubernetes.Interface, dynamic.Inte
 		{
 			GroupVersion: appsv1.SchemeGroupVersion.String(),
 			APIResources: []metav1.APIResource{
-				{Name: "deployments", Namespaced: true, Kind: "Deployment"},
-				{Name: "daemonsets", Namespaced: true, Kind: "DaemonSet"},
-				{Name: "statefulsets", Namespaced: true, Kind: "StatefulSet"},
+				{Name: "deployments", Namespaced: true, Kind: "Deployment", Version: "v1"},
+				{Name: "daemonsets", Namespaced: true, Kind: "DaemonSet", Version: "v1"},
+				{Name: "statefulsets", Namespaced: true, Kind: "StatefulSet", Version: "v1"},
 			},
 		},
 		{
 			GroupVersion: batchv1.SchemeGroupVersion.String(),
 			APIResources: []metav1.APIResource{
-				{Name: "jobs", Namespaced: true, Kind: "Job"},
-			},
-		},
-		{
-			GroupVersion: batchv1beta1.SchemeGroupVersion.String(),
-			APIResources: []metav1.APIResource{
-				{Name: "cronjobs", Namespaced: true, Kind: "CronJob"},
-			},
-		},
-		{
-			GroupVersion: appsv1beta2.SchemeGroupVersion.String(),
-			APIResources: []metav1.APIResource{
-				{Name: "deployments", Namespaced: true, Kind: "Deployment"},
-				{Name: "deployments/scale", Namespaced: true, Kind: "Scale", Group: "apps", Version: "v1beta2"},
-			},
-		},
-		{
-			GroupVersion: appsv1beta1.SchemeGroupVersion.String(),
-			APIResources: []metav1.APIResource{
-				{Name: "statefulsets", Namespaced: true, Kind: "StatefulSet"},
-				{Name: "statefulsets/scale", Namespaced: true, Kind: "Scale", Group: "apps", Version: "v1beta1"},
+				{Name: "cronjobs", Namespaced: true, Kind: "CronJob", Version: "v1"},
+				{Name: "jobs", Namespaced: true, Kind: "Job", Version: "v1"},
 			},
 		},
 		{
@@ -248,7 +222,7 @@ func SetupTestAPI(objects ...runtime.Object) (kubernetes.Interface, dynamic.Inte
 			},
 		},
 		{
-			GroupVersion: policyv1beta1.SchemeGroupVersion.String(),
+			GroupVersion: policyv1.SchemeGroupVersion.String(),
 			APIResources: []metav1.APIResource{
 				{Name: "poddisruptionbudgets", Namespaced: true, Kind: "PodDisruptionBudget", Version: "v1"},
 			},

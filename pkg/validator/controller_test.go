@@ -96,7 +96,7 @@ func TestControllerLevelChecks(t *testing.T) {
 
 	res, err := kube.CreateResourceProviderFromPath("../kube/test_files/test_1")
 	assert.Equal(t, nil, err, "Error should be nil")
-	assert.Equal(t, 11, res.Resources.GetLength())
+	assert.Equal(t, 10, res.Resources.GetLength())
 	testResources(res)
 
 	replicaSpec := map[string]interface{}{"replicas": 2}

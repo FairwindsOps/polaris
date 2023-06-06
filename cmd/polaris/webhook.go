@@ -24,6 +24,7 @@ import (
 	k8sConfig "sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
 var webhookPort int
@@ -51,6 +52,10 @@ var webhookCmd = &cobra.Command{
 		mgr, err := manager.New(k8sConfig.GetConfigOrDie(), manager.Options{
 			CertDir: certDir,
 			Port:    webhookPort,
+			WebhookServer: webhook.NewServer(webhook.Options{
+				CertName: "tls.crt",
+				KeyName:  "tls.key",
+			}),
 		})
 		if err != nil {
 			logrus.Errorf("Unable to set up overall controller manager: %v", err)
@@ -61,9 +66,6 @@ var webhookCmd = &cobra.Command{
 		if os.IsNotExist(err) {
 			panic("Cert does not exist")
 		}
-		server := mgr.GetWebhookServer()
-		server.CertName = "tls.crt"
-		server.KeyName = "tls.key"
 
 		if !enableMutations && !enableValidations {
 			logrus.Errorf("One of --mutate or --validate must be set to true")
