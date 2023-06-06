@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  rok8s: fairwinds/rok8s-scripts@11
+  rok8s: fairwinds/rok8s-scripts@12
   oss-docs: fairwinds/oss-docs@0
 
 executors:
@@ -44,20 +44,20 @@ references:
         sudo apt-get install -yqq jq git
 
         echo "Installing KIND"
-        curl -sLO https://github.com/kubernetes-sigs/kind/releases/download/v0.14.0/kind-linux-amd64
+        curl -sLO https://github.com/kubernetes-sigs/kind/releases/download/v0.19.0/kind-linux-amd64
         chmod 0755 kind-linux-amd64
         sudo mv kind-linux-amd64 /usr/local/bin/kind
         kind version
 
         echo "Installing Kubectl"
-        curl -sLO https://storage.googleapis.com/kubernetes-release/release/v1.21.12/bin/linux/amd64/kubectl
+        curl -sLO https://storage.googleapis.com/kubernetes-release/release/v1.25.10/bin/linux/amd64/kubectl
         chmod 0755 kubectl
         sudo mv kubectl /usr/local/bin/
         kubectl version --client
 
 
         echo "Creating Kubernetes Cluster with Kind"
-        kind create cluster --wait=90s --image kindest/node:v1.21.12
+        kind create cluster --wait=90s --image kindest/node:v1.25.9@sha256:c08d6c52820aa42e533b70bce0c2901183326d86dcdcbedecc9343681db45161
         docker ps -a
 
         kubectl version
@@ -68,11 +68,10 @@ references:
         ./get_helm.sh
 
         echo "Installing cert-manager"
-        kubectl create namespace cert-manager
         helm repo add jetstack https://charts.jetstack.io
         helm repo update
         echo "Helm install"
-        helm install cert-manager jetstack/cert-manager --namespace cert-manager --version 0.16.1 --set "installCRDs=true" --wait
+        helm install cert-manager jetstack/cert-manager --namespace cert-manager --version v1.12.1 --set "installCRDs=true" --wait --create-namespace
         echo "Install cert-manager successful"
 
   test_binary_dashboard: &test_binary_dashboard
@@ -104,10 +103,10 @@ references:
       command: |
         apk --update add curl yq
         cd /tmp
-        curl -LO https://releases.hashicorp.com/vault/1.9.3/vault_1.9.3_linux_amd64.zip
-        unzip vault_1.9.3_linux_amd64.zip
+        curl -LO https://releases.hashicorp.com/vault/1.13.2/vault_1.13.2_linux_amd64.zip
+        sha256sum vault_1.13.2_linux_amd64.zip | grep f7930279de8381de7c532164b4a4408895d9606c0d24e2e9d2f9acb5dfe99b3c
+        unzip vault_1.13.2_linux_amd64.zip
         mv vault /usr/bin/vault
-
 jobs:
   test_k8s:
     working_directory: ~/polaris
@@ -136,7 +135,7 @@ jobs:
       # The goreleaser image tag determins the version of Go.
       # Manually check goreleaser images for their version of Go.
       # Ref: https://hub.docker.com/r/goreleaser/goreleaser/tags
-      - image: goreleaser/goreleaser:v1.11.4
+      - image: goreleaser/goreleaser:v1.18.2
     steps:
       - checkout
       - setup_remote_docker:
