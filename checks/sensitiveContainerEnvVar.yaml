@@ -10,7 +10,9 @@ schemaString: |
       type: array
       items:
         type: object
-        oneOf:
+        anyOf:
+          - not:
+              required: ["value"]
           - required: ["name", "value"]
             properties:
               name:
