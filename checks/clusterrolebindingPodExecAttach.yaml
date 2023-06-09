@@ -37,6 +37,7 @@ additionalSchemaStrings:
   rbac.authorization.k8s.io/ClusterRole: |
     type: object
     # Do not alert on default ClusterRoleBindings.
+    {{ if (ne .roleRef.name "view") }}
     {{ if and (ne .metadata.name "cluster-admin") (not (hasPrefix .metadata.name "system:")) (ne .metadata.name "gce:podsecuritypolicy:calico-sa") }}
     required: ["metadata", "rules"]
     allOf:
@@ -79,4 +80,5 @@ additionalSchemaStrings:
                         # An exec is also possible by `get`ing a web socket.
                         - const: 'get'
                         - const: 'create'
+    {{ end }}
     {{ end }}

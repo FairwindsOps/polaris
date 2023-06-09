@@ -236,11 +236,15 @@ func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, err
 		if err != nil {
 			return nil, err
 		}
+		templated := w.String()
+		if strings.TrimSpace(templated) == "" {
+			continue
+		}
 
 		if kind == "" {
-			newCheck.SchemaString = w.String()
+			newCheck.SchemaString = templated
 		} else {
-			newCheck.AdditionalSchemaStrings[kind] = w.String()
+			newCheck.AdditionalSchemaStrings[kind] = templated
 		}
 	}
 
