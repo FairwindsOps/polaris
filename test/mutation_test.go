@@ -27,6 +27,7 @@ checks:
   memoryLimitsMissing: warning
   readinessProbeMissing: warning
   livenessProbeMissing: warning
+  insecureCapabilities: warning
 `
 
 func TestMutations(t *testing.T) {
