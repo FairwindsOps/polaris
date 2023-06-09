@@ -173,7 +173,7 @@ var auditCmd = &cobra.Command{
 				os.Exit(1)
 			}
 			logrus.Println("Success! You can see your results at:")
-			logrus.Printf("%s/orgs/%s/clusters/%s\n", insightsHost, auth.Organization, clusterName)
+			logrus.Printf("%s/orgs/%s/clusters/%s/action-items\n", insightsHost, auth.Organization, clusterName)
 		} else {
 			outputAudit(auditData, auditOutputFile, auditOutputURL, auditOutputFormat, useColor, onlyShowFailedTests)
 		}
