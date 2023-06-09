@@ -74,7 +74,7 @@ func init() {
 	auditCmd.PersistentFlags().StringVar(&auditNamespace, "namespace", "", "Namespace to audit. Only applies to in-cluster audits")
 	auditCmd.PersistentFlags().BoolVar(&skipSslValidation, "skip-ssl-validation", false, "Skip https certificate verification")
 	auditCmd.PersistentFlags().BoolVar(&uploadInsights, "upload-insights", false, "Upload scan results to Fairwinds Insights")
-	auditCmd.PersistentFlags().StringVar(&clusterName, "cluster-name", "", "Cluster name")
+	auditCmd.PersistentFlags().StringVar(&clusterName, "cluster-name", "", "Set --cluster-name to a descriptive name for the cluster you're auditing")
 }
 
 var auditCmd = &cobra.Command{
