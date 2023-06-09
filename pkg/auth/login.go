@@ -85,7 +85,7 @@ func HandleLogin(insightsHost string) error {
 
 	var user, token, organization string
 	if answer == loginUsingBrowser {
-		listener, err := net.Listen("tcp", ":0")
+		listener, err := net.Listen("tcp", "localhost:0")
 		if err != nil {
 			panic(err)
 		}
