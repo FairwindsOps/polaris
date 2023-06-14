@@ -53,6 +53,7 @@ var webhookCmd = &cobra.Command{
 			CertDir: certDir,
 			Port:    webhookPort,
 			WebhookServer: webhook.NewServer(webhook.Options{
+				CertDir: certDir,
 				CertName: "tls.crt",
 				KeyName:  "tls.key",
 			}),
