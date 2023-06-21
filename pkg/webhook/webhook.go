@@ -38,19 +38,14 @@ type Validator struct {
 	Config  config.Configuration
 }
 
-// InjectDecoder injects the decoder.
-func (v *Validator) InjectDecoder(d *admission.Decoder) error {
-	logrus.Info("Injecting decoder")
-	v.decoder = d
-	return nil
-}
-
-var _ admission.Handler = &Validator{}
-
 // NewValidateWebhook creates a validating admission webhook for the apiType.
-func NewValidateWebhook(mgr manager.Manager, validator Validator) {
+func NewValidateWebhook(mgr manager.Manager, c config.Configuration) {
 	path := "/validate"
-
+	validator := Validator{
+		Client: mgr.GetClient(),
+		decoder: &admission.Decoder{},
+		Config: c,
+	}
 	mgr.GetWebhookServer().Register(path, &webhook.Admission{Handler: &validator})
 }
 

@@ -30,17 +30,20 @@ import (
 
 // Mutator mutate k8s resources.
 type Mutator struct {
-	Client  client.Client
-	Config  config.Configuration
-	decoder *admission.Decoder
+       Client  client.Client
+       Config  config.Configuration
+       decoder *admission.Decoder
 }
 
-var _ admission.Handler = &Mutator{}
-
 // NewMutateWebhook creates a mutating admission webhook for the apiType.
-func NewMutateWebhook(mgr manager.Manager, mutator Mutator) {
+func NewMutateWebhook(mgr manager.Manager, c config.Configuration) {
 	path := "/mutate"
 
+	mutator := Mutator{
+		Client: mgr.GetClient(),
+		decoder: &admission.Decoder{},
+		Config: c,
+	}
 	mgr.GetWebhookServer().Register(path, &webhook.Admission{Handler: &mutator})
 }
 
