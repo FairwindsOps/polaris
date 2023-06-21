@@ -19,7 +19,7 @@ checks:
   hostNetworkSet: danger
   hostPortSet: warning
   deploymentMissingReplicas: warning
-  priorityClassNotSet: ignore
+  priorityClassNotSet: warning
   runAsRootAllowed: danger
   cpuRequestsMissing: warning
   cpuLimitsMissing: warning

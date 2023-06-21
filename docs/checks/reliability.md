@@ -16,8 +16,8 @@ key | default | description
 `pullPolicyNotAlways` | `warning` | Fails when an image pull policy is not `always`.
 `priorityClassNotSet` | `warning` | Fails when a priorityClassName is not set for a pod.
 `deploymentMissingReplicas` | `warning` | Fails when there is only one replica for a deployment.
-`missingPodDisruptionBudget` | `warning`
-`metadataAndNameMismatched` | `warning`
+`missingPodDisruptionBudget` | `warning` | Fails when PDB is missing.
+`metadataAndNameMismatched` | `warning` | Fails when label `app.kubernetes.io/name` and `metadata.name` mismatch
 `topologySpreadConstraint` | `warning` | Fails when there is no topology spread constraint on the pod
 
 ## Background
