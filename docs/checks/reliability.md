@@ -16,8 +16,8 @@ key | default | description
 `pullPolicyNotAlways` | `warning` | Fails when an image pull policy is not `always`.
 `priorityClassNotSet` | `warning` | Fails when a priorityClassName is not set for a pod.
 `deploymentMissingReplicas` | `warning` | Fails when there is only one replica for a deployment.
-`missingPodDisruptionBudget` | `warning`
-`metadataAndNameMismatched` | `warning`
+`missingPodDisruptionBudget` | `warning` | Fails when PDB is missing.
+`metadataAndNameMismatched` | `warning` | Fails when label `app.kubernetes.io/name` and `metadata.name` mismatch
 `topologySpreadConstraint` | `warning` | Fails when there is no topology spread constraint on the pod
 
 ## Background
@@ -70,4 +70,4 @@ spec:
 - [Kubernetes Docs: Configure Liveness and Readiness Probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/)
 - [Utilizing Kubernetes Liveness and Readiness Probes to Automatically Recover From Failure](https://medium.com/spire-labs/utilizing-kubernetes-liveness-and-readiness-probes-to-automatically-recover-from-failure-2fe0314f2b2e)
 - [Kubernetes Liveness and Readiness Probes: How to Avoid Shooting Yourself in the Foot](https://blog.colinbreck.com/kubernetes-liveness-and-readiness-probes-how-to-avoid-shooting-yourself-in-the-foot/)
-- [Topology Spread Cosntraints](https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/)
+- [Topology Spread Constraints](https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/)
