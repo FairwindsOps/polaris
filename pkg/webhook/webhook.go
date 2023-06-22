@@ -65,7 +65,7 @@ func GetValidatedResults(kind string, decoder *admission.Decoder, req admission.
 			logrus.Errorf("Failed to decode pod: %v", err)
 			return nil, resource, err
 		}
-		if pod.ObjectMeta != nil && len(pod.ObjectMeta.OwnerReferences) > 0 {
+		if len(pod.ObjectMeta.OwnerReferences) > 0 {
 			logrus.Infof("Allowing owned pod %s/%s to pass through webhook", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name)
 			return nil, resource, nil
 		}
