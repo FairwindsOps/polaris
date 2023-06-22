@@ -161,8 +161,6 @@ workflows:
               only: /.*/
       - build_and_push:
           context: org-global
-          requires:
-            - test
           filters:
             branches:
               ignore: /pull\/[0-9]+/
