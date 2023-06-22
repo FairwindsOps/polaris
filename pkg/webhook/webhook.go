@@ -50,11 +50,13 @@ func NewValidateWebhook(mgr manager.Manager, c config.Configuration) {
 }
 
 func (v *Validator) handleInternal(req admission.Request) (*validator.Result, kube.GenericResource, error) {
+	fmt.Println("handleInternal", v.decoder)
 	return GetValidatedResults(req.AdmissionRequest.Kind.Kind, v.decoder, req, v.Config)
 }
 
 // GetValidatedResults returns the validated results.
 func GetValidatedResults(kind string, decoder *admission.Decoder, req admission.Request, config config.Configuration) (*validator.Result, kube.GenericResource, error) {
+	fmt.Println("gvr", decodoer)
 	var controller kube.GenericResource
 	var err error
 	if kind == "Pod" {
@@ -83,7 +85,7 @@ func GetValidatedResults(kind string, decoder *admission.Decoder, req admission.
 
 // Handle for Validator to run validation checks.
 func (v *Validator) Handle(ctx context.Context, req admission.Request) admission.Response {
-	logrus.Info("Starting request")
+	logrus.Info("Starting request", v.decoder)
 	result, _, err := v.handleInternal(req)
 	if err != nil {
 		logrus.Errorf("Error validating request: %v", err)
