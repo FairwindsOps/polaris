@@ -25,6 +25,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -43,7 +44,7 @@ func NewValidateWebhook(mgr manager.Manager, c config.Configuration) {
 	path := "/validate"
 	validator := Validator{
 		Client: mgr.GetClient(),
-		decoder: &admission.Decoder{},
+		decoder: admission.NewDecoder(runtime.NewScheme()),
 		Config: c,
 	}
 	mgr.GetWebhookServer().Register(path, &webhook.Admission{Handler: &validator})
