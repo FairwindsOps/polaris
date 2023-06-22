@@ -16,8 +16,8 @@ package kube
 
 import (
 	"bytes"
-	"fmt"
 	"context"
+	"fmt"
 	"os"
 	"testing"
 	"time"

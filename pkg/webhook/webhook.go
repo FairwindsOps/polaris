@@ -43,9 +43,9 @@ type Validator struct {
 func NewValidateWebhook(mgr manager.Manager, c config.Configuration) {
 	path := "/validate"
 	validator := Validator{
-		Client: mgr.GetClient(),
+		Client:  mgr.GetClient(),
 		decoder: admission.NewDecoder(runtime.NewScheme()),
-		Config: c,
+		Config:  c,
 	}
 	mgr.GetWebhookServer().Register(path, &webhook.Admission{Handler: &validator})
 }
