@@ -86,13 +86,16 @@ func (m *Mutator) mutate(req admission.Request) ([]jsonpatch.Operation, error) {
 
 // Handle for Validator to run validation checks.
 func (m *Mutator) Handle(ctx context.Context, req admission.Request) admission.Response {
-	logrus.Info("Starting request")
+	logrus.Info("Starting mutation request")
 	patches, err := m.mutate(req)
 	if err != nil {
+		logrus.Errorf("Error while getting mutations: %v", err)
 		return admission.Errored(403, err)
 	}
 	if patches == nil {
+		logrus.Infof("No patches generated")
 		return admission.Allowed("Allowed")
 	}
+	logrus.Infof("Generated %d patches", len(patches))
 	return admission.Patched("", patches...)
 }

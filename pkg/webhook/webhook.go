@@ -86,7 +86,7 @@ func GetValidatedResults(kind string, decoder *admission.Decoder, req admission.
 
 // Handle for Validator to run validation checks.
 func (v *Validator) Handle(ctx context.Context, req admission.Request) admission.Response {
-	logrus.Info("Starting request")
+	logrus.Info("Starting admission request")
 	result, _, err := v.handleInternal(req)
 	if err != nil {
 		logrus.Errorf("Error validating request: %v", err)
