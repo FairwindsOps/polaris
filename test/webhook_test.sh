@@ -87,6 +87,7 @@ helm repo add fairwinds-stable https://charts.fairwinds.com/stable
 helm install polaris fairwinds-stable/polaris --namespace polaris --create-namespace \
   --set dashboard.enable=false \
   --set webhook.enable=true \
+  --set webhook.mutate=true \
   --set image.tag=$CI_SHA1
 
 echo "Waiting for the webhook to come online"
