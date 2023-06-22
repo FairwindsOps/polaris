@@ -59,6 +59,9 @@ func GetValidatedResults(kind string, decoder *admission.Decoder, req admission.
 	var resource kube.GenericResource
 	var err error
 	if kind == "Pod" {
+		if decoder == nil {
+			panic("Decoder is nil!")
+		}
 		pod := corev1.Pod{}
 		err := decoder.Decode(req, &pod)
 		if err != nil {

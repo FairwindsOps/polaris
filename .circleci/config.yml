@@ -114,6 +114,7 @@ jobs:
     executor: vm
     steps:
       - checkout
+      - *set_environment_variables
       - *install_k8s
       - *test_k8s
 
