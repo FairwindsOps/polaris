@@ -56,30 +56,32 @@ func (v *Validator) handleInternal(req admission.Request) (*validator.Result, ku
 
 // GetValidatedResults returns the validated results.
 func GetValidatedResults(kind string, decoder *admission.Decoder, req admission.Request, config config.Configuration) (*validator.Result, kube.GenericResource, error) {
-	var controller kube.GenericResource
+	var resource kube.GenericResource
 	var err error
 	if kind == "Pod" {
 		pod := corev1.Pod{}
 		err := decoder.Decode(req, &pod)
 		if err != nil {
-			return nil, controller, err
+			logrus.Errorf("Failed to decode pod: %v", err)
+			return nil, resource, err
 		}
-		if len(pod.ObjectMeta.OwnerReferences) > 0 {
+		if pod.ObjectMeta != nil && len(pod.ObjectMeta.OwnerReferences) > 0 {
 			logrus.Infof("Allowing owned pod %s/%s to pass through webhook", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name)
-			return nil, controller, nil
+			return nil, resource, nil
 		}
-		controller, err = kube.NewGenericResourceFromPod(pod, pod)
+		resource, err = kube.NewGenericResourceFromPod(pod, pod)
 	} else {
-		controller, err = kube.NewGenericResourceFromBytes(req.Object.Raw)
+		resource, err = kube.NewGenericResourceFromBytes(req.Object.Raw)
 	}
 	if err != nil {
-		return nil, controller, err
+		logrus.Errorf("Failed to create resource: %v", err)
+		return nil, resource, err
 	}
-	controllerResult, err := validator.ApplyAllSchemaChecks(&config, nil, controller)
+	resourceResult, err := validator.ApplyAllSchemaChecks(&config, nil, resource)
 	if err != nil {
-		return nil, controller, err
+		return nil, resource, err
 	}
-	return &controllerResult, controller, nil
+	return &resourceResult, resource, nil
 }
 
 // Handle for Validator to run validation checks.
