@@ -51,21 +51,30 @@ func NewMutateWebhook(mgr manager.Manager, c config.Configuration) {
 func (m *Mutator) mutate(req admission.Request) ([]jsonpatch.Operation, error) {
 	results, kubeResources, err := GetValidatedResults(req.AdmissionRequest.Kind.Kind, m.decoder, req, m.Config)
 	if err != nil {
+		logrus.Errorf("Error while validating resource: %v", err)
 		return nil, err
 	}
 	if results == nil {
+		logrus.Infof("Not mutating owned pod")
 		return nil, nil
 	}
 	patches := mutation.GetMutationsFromResult(results)
 	originalYaml, err := yaml.JSONToYAML(kubeResources.OriginalObjectJSON)
 	if err != nil {
+		logrus.Errorf("Failed to convert JSON to YAML: %v", err)
 		return nil, err
 	}
 	mutatedYamlStr, err := mutation.ApplyAllMutations(string(originalYaml), patches)
 	if err != nil {
+		logrus.Errorf("Failed to apply mutations: %v", err)
 		return nil, err
 	}
-	return jsonpatch.CreatePatch(originalYaml, []byte(mutatedYamlStr))
+	ops, err := jsonpatch.CreatePatch(originalYaml, []byte(mutatedYamlStr))
+	if err != nil {
+		logrus.Errorf("Failed to create patch from mutation: %v", err)
+		return nil, err
+	}
+	return ops, nil
 }
 
 // Handle for Validator to run validation checks.
