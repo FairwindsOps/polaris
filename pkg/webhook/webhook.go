@@ -25,6 +25,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -38,19 +39,14 @@ type Validator struct {
 	Config  config.Configuration
 }
 
-// InjectDecoder injects the decoder.
-func (v *Validator) InjectDecoder(d *admission.Decoder) error {
-	logrus.Info("Injecting decoder")
-	v.decoder = d
-	return nil
-}
-
-var _ admission.Handler = &Validator{}
-
 // NewValidateWebhook creates a validating admission webhook for the apiType.
-func NewValidateWebhook(mgr manager.Manager, validator Validator) {
+func NewValidateWebhook(mgr manager.Manager, c config.Configuration) {
 	path := "/validate"
-
+	validator := Validator{
+		Client:  mgr.GetClient(),
+		decoder: admission.NewDecoder(runtime.NewScheme()),
+		Config:  c,
+	}
 	mgr.GetWebhookServer().Register(path, &webhook.Admission{Handler: &validator})
 }
 
@@ -60,35 +56,40 @@ func (v *Validator) handleInternal(req admission.Request) (*validator.Result, ku
 
 // GetValidatedResults returns the validated results.
 func GetValidatedResults(kind string, decoder *admission.Decoder, req admission.Request, config config.Configuration) (*validator.Result, kube.GenericResource, error) {
-	var controller kube.GenericResource
+	var resource kube.GenericResource
 	var err error
 	if kind == "Pod" {
+		if decoder == nil {
+			panic("Decoder is nil!")
+		}
 		pod := corev1.Pod{}
 		err := decoder.Decode(req, &pod)
 		if err != nil {
-			return nil, controller, err
+			logrus.Errorf("Failed to decode pod: %v", err)
+			return nil, resource, err
 		}
 		if len(pod.ObjectMeta.OwnerReferences) > 0 {
 			logrus.Infof("Allowing owned pod %s/%s to pass through webhook", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name)
-			return nil, controller, nil
+			return nil, resource, nil
 		}
-		controller, err = kube.NewGenericResourceFromPod(pod, pod)
+		resource, err = kube.NewGenericResourceFromPod(pod, pod)
 	} else {
-		controller, err = kube.NewGenericResourceFromBytes(req.Object.Raw)
+		resource, err = kube.NewGenericResourceFromBytes(req.Object.Raw)
 	}
 	if err != nil {
-		return nil, controller, err
+		logrus.Errorf("Failed to create resource: %v", err)
+		return nil, resource, err
 	}
-	controllerResult, err := validator.ApplyAllSchemaChecks(&config, nil, controller)
+	resourceResult, err := validator.ApplyAllSchemaChecks(&config, nil, resource)
 	if err != nil {
-		return nil, controller, err
+		return nil, resource, err
 	}
-	return &controllerResult, controller, nil
+	return &resourceResult, resource, nil
 }
 
 // Handle for Validator to run validation checks.
 func (v *Validator) Handle(ctx context.Context, req admission.Request) admission.Response {
-	logrus.Info("Starting request")
+	logrus.Info("Starting admission request")
 	result, _, err := v.handleInternal(req)
 	if err != nil {
 		logrus.Errorf("Error validating request: %v", err)

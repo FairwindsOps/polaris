@@ -60,7 +60,7 @@ function clean_up() {
     echo "Uninstalling webhook and webhook config"
     kubectl delete validatingwebhookconfigurations polaris-webhook --wait=false || true
     kubectl delete validatingwebhookconfigurations polaris-validate-webhook --wait=false || true
-    kubectl delete validatingwebhookconfigurations polaris-mutate-webhook --wait=false || true
+    kubectl delete mutatingwebhookconfigurations polaris-mutate-webhook --wait=false || true
     kubectl -n polaris delete deploy -l app=polaris --wait=false || true
     echo -e "\n\nDone cleaning up\n\n"
 }
@@ -82,11 +82,12 @@ kubectl create ns tests
 echo "Installing a bad deployment"
 kubectl apply -n scale-test -f ./test/webhook_cases/failing_test.deployment.yaml
 
-echo "Installing the webhook"
+echo "Installing the webhook at version $CI_SHA1"
 helm repo add fairwinds-stable https://charts.fairwinds.com/stable
 helm install polaris fairwinds-stable/polaris --namespace polaris --create-namespace \
   --set dashboard.enable=false \
   --set webhook.enable=true \
+  --set webhook.mutate=true \
   --set image.tag=$CI_SHA1
 
 echo "Waiting for the webhook to come online"
@@ -105,6 +106,7 @@ for filename in test/webhook_cases/passing_test.*.yaml; do
     if ! kubectl apply -n tests -f $filename; then
         ALL_TESTS_PASSED=0
         echo -e "${RED}****Test Failed: Polaris prevented a resource with no configuration issues****${NC}"
+        kubectl logs -n polaris deploy/polaris-webhook
     else
         echo -e "${GREEN}****Test Passed: Polaris correctly allowed this resource****${NC}"
     fi
@@ -118,7 +120,7 @@ for filename in test/webhook_cases/failing_test.*.yaml; do
     if kubectl apply -n tests -f $filename; then
         ALL_TESTS_PASSED=0
         echo -e "${RED}****Test Failed: Polaris should have prevented this resource due to configuration issues.****${NC}"
-        kubectl logs -n polaris $(kubectl get po -oname -n polaris | grep webhook)
+        kubectl logs -n polaris deploy/polaris-webhook
     else
       echo -e "${GREEN}****Test Passed: Polaris correctly prevented this resource****${NC}"
     fi
