@@ -6,3 +6,11 @@ spec:
   containers:
   - name: nginx
     image: nginx:latest
+    securityContext:
+      allowPrivilegeEscalation: false
+      privileged: false
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
+      capabilities:
+        drop:
+          - ALL
