@@ -69,7 +69,14 @@ func (m *Mutator) mutate(req admission.Request) ([]jsonpatch.Operation, error) {
 		logrus.Errorf("Failed to apply mutations: %v", err)
 		return nil, err
 	}
-	ops, err := jsonpatch.CreatePatch(originalYaml, []byte(mutatedYamlStr))
+
+	mutatedJson, err := yaml.YAMLToJSON([]byte(mutatedYamlStr))
+	if err != nil {
+		logrus.Errorf("Failed to convert YAML to JSON: %v", err)
+		return nil, err
+	}
+
+	ops, err := jsonpatch.CreatePatch(kubeResources.OriginalObjectJSON, mutatedJson)
 	if err != nil {
 		logrus.Errorf("Failed to create patch from mutation: %v", err)
 		return nil, err
