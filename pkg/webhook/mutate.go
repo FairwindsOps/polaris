@@ -21,6 +21,7 @@ import (
 	"github.com/fairwindsops/polaris/pkg/mutation"
 	"github.com/sirupsen/logrus"
 	"gomodules.xyz/jsonpatch/v2"
+	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -41,7 +42,7 @@ func NewMutateWebhook(mgr manager.Manager, c config.Configuration) {
 
 	mutator := Mutator{
 		Client: mgr.GetClient(),
-		decoder: &admission.Decoder{},
+		decoder: admission.NewDecoder(runtime.NewScheme()),
 		Config: c,
 	}
 	mgr.GetWebhookServer().Register(path, &webhook.Admission{Handler: &mutator})
