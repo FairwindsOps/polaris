@@ -56,7 +56,7 @@ func (v *Validator) handleInternal(req admission.Request) (*validator.Result, ku
 
 // GetValidatedResults returns the validated results.
 func GetValidatedResults(kind string, decoder *admission.Decoder, req admission.Request, config config.Configuration) (*validator.Result, kube.GenericResource, error) {
-	fmt.Println("gvr", decodoer)
+	fmt.Println("gvr", decoder)
 	var controller kube.GenericResource
 	var err error
 	if kind == "Pod" {
