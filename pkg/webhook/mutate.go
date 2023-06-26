@@ -21,6 +21,7 @@ import (
 	"github.com/fairwindsops/polaris/pkg/mutation"
 	"github.com/sirupsen/logrus"
 	"gomodules.xyz/jsonpatch/v2"
+	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -35,41 +36,66 @@ type Mutator struct {
 	decoder *admission.Decoder
 }
 
-var _ admission.Handler = &Mutator{}
-
 // NewMutateWebhook creates a mutating admission webhook for the apiType.
-func NewMutateWebhook(mgr manager.Manager, mutator Mutator) {
+func NewMutateWebhook(mgr manager.Manager, c config.Configuration) {
 	path := "/mutate"
 
+	mutator := Mutator{
+		Client:  mgr.GetClient(),
+		decoder: admission.NewDecoder(runtime.NewScheme()),
+		Config:  c,
+	}
 	mgr.GetWebhookServer().Register(path, &webhook.Admission{Handler: &mutator})
 }
 
 func (m *Mutator) mutate(req admission.Request) ([]jsonpatch.Operation, error) {
 	results, kubeResources, err := GetValidatedResults(req.AdmissionRequest.Kind.Kind, m.decoder, req, m.Config)
 	if err != nil {
+		logrus.Errorf("Error while validating resource: %v", err)
 		return nil, err
+	}
+	if results == nil {
+		logrus.Infof("Not mutating owned pod")
+		return nil, nil
 	}
 	patches := mutation.GetMutationsFromResult(results)
 	originalYaml, err := yaml.JSONToYAML(kubeResources.OriginalObjectJSON)
 	if err != nil {
+		logrus.Errorf("Failed to convert JSON to YAML: %v", err)
 		return nil, err
 	}
 	mutatedYamlStr, err := mutation.ApplyAllMutations(string(originalYaml), patches)
 	if err != nil {
+		logrus.Errorf("Failed to apply mutations: %v", err)
 		return nil, err
 	}
-	return jsonpatch.CreatePatch(originalYaml, []byte(mutatedYamlStr))
+
+	mutatedJson, err := yaml.YAMLToJSON([]byte(mutatedYamlStr))
+	if err != nil {
+		logrus.Errorf("Failed to convert YAML to JSON: %v", err)
+		return nil, err
+	}
+
+	ops, err := jsonpatch.CreatePatch(kubeResources.OriginalObjectJSON, mutatedJson)
+	if err != nil {
+		logrus.Errorf("Failed to create patch from mutation: %v", err)
+		return nil, err
+	}
+	return ops, nil
 }
 
 // Handle for Validator to run validation checks.
 func (m *Mutator) Handle(ctx context.Context, req admission.Request) admission.Response {
-	logrus.Info("Starting request")
+	logrus.Info("Starting mutation request")
 	patches, err := m.mutate(req)
 	if err != nil {
+		logrus.Errorf("Error while getting mutations: %v", err)
 		return admission.Errored(403, err)
 	}
 	if patches == nil {
+		logrus.Infof("No patches generated")
 		return admission.Allowed("Allowed")
 	}
+	logrus.Infof("Generated %d patches", len(patches))
 	return admission.Patched("", patches...)
 }
