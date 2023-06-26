@@ -6,6 +6,10 @@ meta:
 
 ---
 
+## 8.1.1
+* Add category for `metadataAndNameMismatched`.
+* Fix category for `priorityClassNotSet`.
+
 ## 8.1.0
 * Add `insights-host` global flag to configure Fairwinds Insights host (defaults to `https://insights.fairwinds.com`).
 * Add new `auth` sub-commands be able to authenticate on Polaris using Fairwinds Insights credentials

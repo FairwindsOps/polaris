@@ -22,7 +22,6 @@ import (
 var (
 	// BuiltInChecks contains the checks that come pre-installed w/ Polaris
 	BuiltInChecks = map[string]SchemaCheck{}
-	schemaBox     = (*packr.Box)(nil)
 	// We explicitly set the order to avoid thrash in the
 	// tests as we migrate toward JSON schema
 	checkOrder = []string{
@@ -72,7 +71,7 @@ var (
 )
 
 func init() {
-	schemaBox = packr.New("Schemas", "../../checks")
+	schemaBox := packr.New("Schemas", "../../checks")
 	for _, checkID := range checkOrder {
 		contents, err := schemaBox.Find(checkID + ".yaml")
 		if err != nil {

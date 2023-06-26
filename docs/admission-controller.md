@@ -53,7 +53,7 @@ This means Polaris will remediate the issue it finds, rather than rejecting
 the deployment.
 
 To enable the mutating webhook, add `--set webhook.mutate=true` to your
-Helm instlallation command.
+Helm installation command.
 
 The following default checks currently have mutation support enabled:
 * `hostPIDSet`
