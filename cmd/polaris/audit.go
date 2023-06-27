@@ -173,8 +173,8 @@ var auditCmd = &cobra.Command{
 				logrus.Errorf("reporting audit file to insights: %v", err)
 				os.Exit(1)
 			}
-			fmt.Println("Success! You can see your results at:")
-			fmt.Printf("%s/orgs/%s/clusters/%s/action-items\n", insightsHost, auth.Organization, clusterName)
+			os.Stderr.WriteString("\n\nSuccess! You can see your results at:")
+			os.Stderr.WriteString(fmt.Sprintf("\n\n%s/orgs/%s/clusters/%s/action-items\n\n", insightsHost, auth.Organization, clusterName))
 		} else {
 			outputAudit(auditData, auditOutputFile, auditOutputURL, auditOutputFormat, useColor, onlyShowFailedTests)
 			os.Stderr.WriteString("\n\n🚀 Want more? Upload your Polaris findings to Fairwinds Insights by running the command below! 🚀")
