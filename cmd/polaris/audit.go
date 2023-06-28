@@ -52,6 +52,7 @@ var (
 	helmValues          string
 	checks              []string
 	auditNamespace      string
+	severityLevel       string
 	skipSslValidation   bool
 	uploadInsights      bool
 	clusterName         string
@@ -73,6 +74,7 @@ func init() {
 	auditCmd.PersistentFlags().StringVar(&helmValues, "helm-values", "", "Optional flag to add helm values")
 	auditCmd.PersistentFlags().StringSliceVar(&checks, "checks", []string{}, "Optional flag to specify specific checks to check")
 	auditCmd.PersistentFlags().StringVar(&auditNamespace, "namespace", "", "Namespace to audit. Only applies to in-cluster audits")
+	auditCmd.PersistentFlags().StringVar(&severityLevel, "severity", "", "Severity level used to filter results. Behaves like log levels. 'danger' is the least verbose (warning, danger)")
 	auditCmd.PersistentFlags().BoolVar(&skipSslValidation, "skip-ssl-validation", false, "Skip https certificate verification")
 	auditCmd.PersistentFlags().BoolVar(&uploadInsights, "upload-insights", false, "Upload scan results to Fairwinds Insights")
 	auditCmd.PersistentFlags().StringVar(&clusterName, "cluster-name", "", "Set --cluster-name to a descriptive name for the cluster you're auditing")
@@ -176,7 +178,7 @@ var auditCmd = &cobra.Command{
 			os.Stderr.WriteString("\n\nSuccess! You can see your results at:")
 			os.Stderr.WriteString(fmt.Sprintf("\n\n%s/orgs/%s/clusters/%s/action-items\n\n", insightsHost, auth.Organization, clusterName))
 		} else {
-			outputAudit(auditData, auditOutputFile, auditOutputURL, auditOutputFormat, useColor, onlyShowFailedTests)
+			outputAudit(auditData, auditOutputFile, auditOutputURL, auditOutputFormat, useColor, onlyShowFailedTests, severityLevel)
 			os.Stderr.WriteString("\n\n🚀 Want more? Upload your Polaris findings to Fairwinds Insights by running the command below! 🚀")
 			os.Stderr.WriteString("\n\npolaris " + strings.Join(os.Args[1:], " ") + " --upload-insights --cluster-name=my-cluster\n\n")
 		}
@@ -226,10 +228,20 @@ func ProcessHelmTemplates(helmChart, helmValues string) (string, error) {
 	return dir, nil
 }
 
-func outputAudit(auditData validator.AuditData, outputFile, outputURL, outputFormat string, useColor bool, onlyShowFailedTests bool) {
+func outputAudit(auditData validator.AuditData, outputFile, outputURL, outputFormat string, useColor bool, onlyShowFailedTests bool, severityLevel string) {
 	if onlyShowFailedTests {
 		auditData = auditData.RemoveSuccessfulResults()
 	}
+
+	if severityLevel != "" {
+		switch severityLevel {
+		case "danger":
+			auditData = auditData.FilterResultsBySeverityLevel(cfg.SeverityDanger)
+		case "warning":
+			auditData = auditData.FilterResultsBySeverityLevel(cfg.SeverityWarning)
+		}
+	}
+
 	var outputBytes []byte
 	var err error
 	if outputFormat == "score" {
