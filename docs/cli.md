@@ -52,6 +52,9 @@ webhook
     --resource string                 Audit a specific resource, in the format namespace/kind/version/name, e.g. nginx-ingress/Deployment.apps/v1/default-backend.
     --set-exit-code-below-score int   Set an exit code of 4 when the score is below this threshold (1-100).
     --set-exit-code-on-danger         Set an exit code of 3 when the audit contains danger-level issues.
+    --severity string                 Severity level used to filter results. Behaves like log levels. 'danger' is the least verbose (warning, danger)
+    --skip-ssl-validation             Skip https certificate verification
+    --upload-insights                 Upload scan results to Fairwinds Insights
 
 # webhook flags
     --disable-webhook-config-installer   disable the installer in the webhook server, so it won't install webhook configuration resources during bootstrapping.
