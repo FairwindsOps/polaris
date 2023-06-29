@@ -179,8 +179,8 @@ var auditCmd = &cobra.Command{
 			os.Stderr.WriteString(fmt.Sprintf("\n\n%s/orgs/%s/clusters/%s/action-items\n\n", insightsHost, auth.Organization, clusterName))
 		} else {
 			outputAudit(auditData, auditOutputFile, auditOutputURL, auditOutputFormat, useColor, onlyShowFailedTests, severityLevel)
-			os.Stderr.WriteString("\n\n🚀 Want more? Upload your Polaris findings to Fairwinds Insights by running the command below! 🚀")
-			os.Stderr.WriteString("\n\npolaris " + strings.Join(os.Args[1:], " ") + " --upload-insights --cluster-name=my-cluster\n\n")
+			os.Stderr.WriteString("\n\n🚀 Upload your Polaris findings to Fairwinds Insights to add team members, integrate with Slack or Jira, and more:")
+			os.Stderr.WriteString("\n\n❯ polaris " + strings.Join(os.Args[1:], " ") + " --upload-insights --cluster-name=my-cluster\n\n")
 		}
 
 		summary := auditData.GetSummary()
