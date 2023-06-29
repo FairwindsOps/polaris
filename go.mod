@@ -3,7 +3,7 @@ module github.com/fairwindsops/polaris
 go 1.20
 
 require (
-	github.com/AlecAivazis/survey/v2 v2.3.6
+	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/fairwindsops/insights-plugins/plugins/workloads v0.0.0-20230601204422-5c789e15990c
 	github.com/fatih/color v1.15.0
 	github.com/gobuffalo/packr/v2 v2.8.3
