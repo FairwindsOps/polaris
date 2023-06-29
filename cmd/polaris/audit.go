@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strings"
 
 	workloads "github.com/fairwindsops/insights-plugins/plugins/workloads"
 	workloadsPkg "github.com/fairwindsops/insights-plugins/plugins/workloads/pkg"
@@ -174,10 +175,12 @@ var auditCmd = &cobra.Command{
 				logrus.Errorf("reporting audit file to insights: %v", err)
 				os.Exit(1)
 			}
-			logrus.Println("Success! You can see your results at:")
-			logrus.Printf("%s/orgs/%s/clusters/%s/action-items\n", insightsHost, auth.Organization, clusterName)
+			os.Stderr.WriteString("\n\nSuccess! You can see your results at:")
+			os.Stderr.WriteString(fmt.Sprintf("\n\n%s/orgs/%s/clusters/%s/action-items\n\n", insightsHost, auth.Organization, clusterName))
 		} else {
 			outputAudit(auditData, auditOutputFile, auditOutputURL, auditOutputFormat, useColor, onlyShowFailedTests, severityLevel)
+			os.Stderr.WriteString("\n\n🚀 Upload your Polaris findings to Fairwinds Insights to see remediation advice, add teammates, integrate with Slack or Jira, and more:")
+			os.Stderr.WriteString("\n\n❯ polaris " + strings.Join(os.Args[1:], " ") + " --upload-insights --cluster-name=my-cluster\n\n")
 		}
 
 		summary := auditData.GetSummary()
