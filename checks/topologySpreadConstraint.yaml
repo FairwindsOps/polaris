@@ -14,12 +14,4 @@ schema:
   properties:
     topologySpreadConstraints:
       type: array
-      items:
-        type: object
-        properties:
-          topologyKey:
-            anyOf:
-              - type: string
-                const: "kubernetes.io/hostname"
-              - type: string
-                const: "topology.kubernetes.io/zone"
+      minItems: 1
