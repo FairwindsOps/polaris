@@ -55,7 +55,7 @@ var (
 		// Other checks
 		"tlsSettingsMissing",
 		"pdbDisruptionsIsZero",
-		"metadataAndNameMismatched",
+		"metadataAndInstanceMismatched",
 		"missingPodDisruptionBudget",
 		"missingNetworkPolicy",
 		"sensitiveConfigmapContent",
