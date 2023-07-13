@@ -6,7 +6,7 @@ checks:
   pullPolicyNotAlways: warning
   readinessProbeMissing: warning
   livenessProbeMissing: warning
-  metadataAndNameMismatched: warning
+  metadataAndInstanceMismatched: warning
   pdbDisruptionsIsZero: warning
   missingPodDisruptionBudget: warning
   topologySpreadConstraint: warning
