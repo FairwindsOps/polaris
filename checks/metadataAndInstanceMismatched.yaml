@@ -14,5 +14,5 @@ schema:
           type: object
           required: ["app.kubernetes.io/instance"]
           properties:
-            app.kubernetes.io/name:
+            app.kubernetes.io/instance:
               const: "{{ .metadata.name }}"
