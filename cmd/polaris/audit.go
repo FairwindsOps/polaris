@@ -49,7 +49,7 @@ var (
 	resourceToAudit     string
 	useColor            bool
 	helmChart           string
-	helmValues          string
+	helmValues          []string
 	checks              []string
 	auditNamespace      string
 	severityLevel       string
@@ -71,7 +71,7 @@ func init() {
 	auditCmd.PersistentFlags().StringVar(&displayName, "display-name", "", "An optional identifier for the audit.")
 	auditCmd.PersistentFlags().StringVar(&resourceToAudit, "resource", "", "Audit a specific resource, in the format namespace/kind/version/name, e.g. nginx-ingress/Deployment.apps/v1/default-backend.")
 	auditCmd.PersistentFlags().StringVar(&helmChart, "helm-chart", "", "Will fill out Helm template")
-	auditCmd.PersistentFlags().StringVar(&helmValues, "helm-values", "", "Optional flag to add helm values")
+	auditCmd.PersistentFlags().StringSliceVar(&helmValues, "helm-values", []string{}, "Optional flag to add helm values")
 	auditCmd.PersistentFlags().StringSliceVar(&checks, "checks", []string{}, "Optional flag to specify specific checks to check")
 	auditCmd.PersistentFlags().StringVar(&auditNamespace, "namespace", "", "Namespace to audit. Only applies to in-cluster audits")
 	auditCmd.PersistentFlags().StringVar(&severityLevel, "severity", "", "Severity level used to filter results. Behaves like log levels. 'danger' is the least verbose (warning, danger)")
@@ -196,7 +196,7 @@ var auditCmd = &cobra.Command{
 }
 
 // ProcessHelmTemplates turns helm into yaml to be processed by Polaris or the other tools.
-func ProcessHelmTemplates(helmChart, helmValues string) (string, error) {
+func ProcessHelmTemplates(helmChart string, helmValues []string) (string, error) {
 	cmd := exec.Command("helm", "dependency", "update", helmChart)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -214,8 +214,8 @@ func ProcessHelmTemplates(helmChart, helmValues string) (string, error) {
 		"--output-dir",
 		dir,
 	}
-	if helmValues != "" {
-		params = append(params, "--values", helmValues)
+	for _, v := range helmValues {
+		params = append(params, "--values", v)
 	}
 
 	cmd = exec.Command("helm", params...)
