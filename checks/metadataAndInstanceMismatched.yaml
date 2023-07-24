@@ -1,5 +1,5 @@
-successMessage: Label app.kubernetes.io/name matches metadata.name
-failureMessage: Label app.kubernetes.io/name must match metadata.name
+successMessage: Label app.kubernetes.io/instance matches metadata.name
+failureMessage: Label app.kubernetes.io/instance must match metadata.name
 category: Reliability
 target: Controller
 schema:
@@ -12,7 +12,7 @@ schema:
       properties:
         labels:
           type: object
-          required: ["app.kubernetes.io/name"]
+          required: ["app.kubernetes.io/instance"]
           properties:
-            app.kubernetes.io/name:
+            app.kubernetes.io/instance:
               const: "{{ .metadata.name }}"
