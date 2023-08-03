@@ -9,14 +9,18 @@ meta:
 # top-level commands
 audit
       Runs a one-time audit.
+auth
+      Authenticate polaris with Fairwinds Insights
 dashboard
       Runs the webserver for Polaris dashboard.
+fix
+      Fix Infrastructure as code files.
 help
       Prints help, if you give it a command then it will print help for that command. Same as -h
 version
       Prints the version of Polaris
 webhook
-      Runs the webhook webserver
+      Runs the webhook webserver.
 
 # global flags
 -c, --config string                    Location of Polaris configuration file.
@@ -25,6 +29,7 @@ webhook
     --disallow-config-exemptions       Disallow exemptions set within the configuration file.
     --disallow-annotation-exemptions   Disallow any exemption defined as a controller annotation.
     --kubeconfig string                Paths to a kubeconfig. Only required if out-of-cluster.
+    --insights-host string             Fairwinds Insights host URL. (default "https://insights.fairwinds.com")
     --log-level string                 Logrus log level. (default "info")
 
 # dashboard flags
@@ -38,7 +43,8 @@ webhook
 
 # audit flags
     --audit-path string               If specified, audits one or more YAML files instead of a cluster.
-    --checks stringArray              Optional flag to specify specific checks to check
+    --checks strings                  Optional flag to specify specific checks to check
+    --cluster-name string             Set --cluster-name to a descriptive name for the cluster you're auditing
     --color                           Whether to use color in pretty format. (default true)
     --display-name string             An optional identifier for the audit.
 -f, --format string                   Output format for results - json, yaml, pretty, or score. (default "json")
@@ -56,9 +62,22 @@ webhook
     --skip-ssl-validation             Skip https certificate verification
     --upload-insights                 Upload scan results to Fairwinds Insights
 
+# fix flags
+    --checks strings      Optional flag to specify specific checks to fix eg. checks=hostIPCSet,hostPIDSet and checks=all applies fix to all defined checks mutations
+    --files-path string   mutate and fix one or more YAML files in a specified folder
+-h, --help                help for fix
+    --template            set to true when modifyng a YAML template, like a Helm chart (experimental)
+
+
 # webhook flags
     --disable-webhook-config-installer   disable the installer in the webhook server, so it won't install webhook configuration resources during bootstrapping.
 -h, --help                               help for webhook
 -p, --port int                           Port for the dashboard webserver. (default 9876)
+
+# auth sub-commands
+  login       Authenticate polaris with Fairwinds Insights.
+  logout      Log out of a Fairwinds Insights.
+  status      View authentication status.
+  token       Print the auth token gh is configured to use.
 ```
 
