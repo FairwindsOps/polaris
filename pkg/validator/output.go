@@ -53,6 +53,26 @@ type AuditData struct {
 	Score                uint
 }
 
+// FilterResultsBySeverityLevel includes results according to the provided severity level:
+// 'danger' is the least verbose, 'warning' is medium verbosity, default behavior will
+// include all results, which currently also includes 'ignore'
+func (res AuditData) FilterResultsBySeverityLevel(severityLevel config.Severity) AuditData {
+	resCopy := res
+	resCopy.Results = []Result{}
+
+	filteredResults := funk.Map(res.Results, func(auditDataResult Result) Result {
+		return auditDataResult.filterResultsBySeverityLevel(severityLevel)
+	}).([]Result)
+
+	for _, result := range filteredResults {
+		if result.isNotEmpty() {
+			resCopy.Results = append(resCopy.Results, result)
+		}
+	}
+
+	return resCopy
+}
+
 // RemoveSuccessfulResults removes all tests that have passed
 func (res AuditData) RemoveSuccessfulResults() AuditData {
 	resCopy := res
@@ -108,6 +128,25 @@ func (res ResultSet) removeSuccessfulResults() ResultSet {
 	return newResults
 }
 
+func (res ResultSet) filterResultsBySeverityLevel(severityLevel config.Severity) ResultSet {
+	newResults := ResultSet{}
+	for k, resultMessage := range res {
+		switch severityLevel {
+		case config.SeverityDanger:
+			if resultMessage.Severity == config.SeverityDanger {
+				newResults[k] = resultMessage
+			}
+		case config.SeverityWarning:
+			if resultMessage.Severity == config.SeverityDanger || resultMessage.Severity == config.SeverityWarning {
+				newResults[k] = resultMessage
+			}
+		default:
+			return res
+		}
+	}
+	return newResults
+}
+
 // Result provides results for a Kubernetes object
 type Result struct {
 	Name        string
@@ -123,6 +162,16 @@ func (res Result) removeSuccessfulResults() Result {
 	resCopy.Results = res.Results.removeSuccessfulResults()
 	if res.PodResult != nil {
 		podCopy := res.PodResult.removeSuccessfulResults()
+		resCopy.PodResult = &podCopy
+	}
+	return resCopy
+}
+
+func (res Result) filterResultsBySeverityLevel(severityLevel config.Severity) Result {
+	resCopy := res
+	resCopy.Results = res.Results.filterResultsBySeverityLevel(severityLevel)
+	if res.PodResult != nil {
+		podCopy := res.PodResult.filterResultsBySeverityLevel(severityLevel)
 		resCopy.PodResult = &podCopy
 	}
 	return resCopy
@@ -151,6 +200,15 @@ func (res PodResult) removeSuccessfulResults() PodResult {
 	return resCopy
 }
 
+func (res PodResult) filterResultsBySeverityLevel(severityLevel config.Severity) PodResult {
+	resCopy := PodResult{}
+	resCopy.Results = res.Results.filterResultsBySeverityLevel(severityLevel)
+	resCopy.ContainerResults = funk.Map(res.ContainerResults, func(containerResult ContainerResult) ContainerResult {
+		return containerResult.filterResultsBySeverityLevel(severityLevel)
+	}).([]ContainerResult)
+	return resCopy
+}
+
 func (res PodResult) isNotEmpty() bool {
 	for _, cr := range res.ContainerResults {
 		if cr.isNotEmpty() {
@@ -169,6 +227,12 @@ type ContainerResult struct {
 func (res ContainerResult) removeSuccessfulResults() ContainerResult {
 	resCopy := res
 	resCopy.Results = res.Results.removeSuccessfulResults()
+	return resCopy
+}
+
+func (res ContainerResult) filterResultsBySeverityLevel(severityLevel config.Severity) ContainerResult {
+	resCopy := res
+	resCopy.Results = res.Results.filterResultsBySeverityLevel(severityLevel)
 	return resCopy
 }
 

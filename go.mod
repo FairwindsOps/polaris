@@ -3,7 +3,7 @@ module github.com/fairwindsops/polaris
 go 1.20
 
 require (
-	github.com/AlecAivazis/survey/v2 v2.3.6
+	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/fairwindsops/insights-plugins/plugins/workloads v0.0.0-20230601204422-5c789e15990c
 	github.com/fatih/color v1.15.0
 	github.com/gobuffalo/packr/v2 v2.8.3
@@ -17,7 +17,7 @@ require (
 	gomodules.xyz/jsonpatch/v2 v2.3.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.27.3
-	k8s.io/apimachinery v0.27.3
+	k8s.io/apimachinery v0.27.4
 	k8s.io/client-go v0.27.3
 	sigs.k8s.io/controller-runtime v0.15.0
 	sigs.k8s.io/yaml v1.3.0

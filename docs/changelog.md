@@ -6,6 +6,9 @@ meta:
 
 ---
 
+## Unreleased
+* Change `metadataAndNameMismatched` to `metadataAndInstanceMismatched`
+
 ## 8.1.1
 * Add category for `metadataAndNameMismatched`.
 * Fix category for `priorityClassNotSet`.
