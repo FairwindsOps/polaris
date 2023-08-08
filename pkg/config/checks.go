@@ -38,6 +38,7 @@ var (
 		"memoryRequestsMissing",
 		"cpuLimitsMissing",
 		"cpuRequestsMissing",
+		"cpuLimitsRange",
 		"readinessProbeMissing",
 		"livenessProbeMissing",
 		"pullPolicyNotAlways",

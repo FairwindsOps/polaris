@@ -1,0 +1,25 @@
+successMessage: CPU limits are within the required range
+failureMessage: CPU limits should be within the required range
+category: Efficiency
+target: Container
+containers:
+  exclude:
+  - initContainer
+schema:
+  '$schema': http://json-schema.org/draft-07/schema
+  type: object
+  required:
+  - resources
+  properties:
+    resources:
+      type: object
+      required:
+      - limits
+      properties:
+        limits:
+          required:
+          - cpu
+          properties:
+            cpu:
+              resourceMinimum: 200m
+              resourceMaximum: "2"
