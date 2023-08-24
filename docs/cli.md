@@ -50,6 +50,7 @@ webhook
 -f, --format string                   Output format for results - json, yaml, pretty, or score. (default "json")
     --helm-chart string               Will fill out Helm template
     --helm-values string              Optional flag to add helm values
+    --helm-skip-tests bool            Corresponds to --skip-tests of helm template
 -h, --help                            help for audit
     --namespace string                Namespace to audit. Only applies to in-cluster audits
     --only-show-failed-tests          If specified, audit output will only show failed tests.
@@ -80,4 +81,3 @@ webhook
   status      View authentication status.
   token       Print the auth token gh is configured to use.
 ```
-
