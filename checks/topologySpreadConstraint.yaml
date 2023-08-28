@@ -2,6 +2,10 @@ successMessage: Pod has a valid topology spread constraint
 failureMessage: Pod should be configured with a valid topology spread constraint
 category: Reliability
 target: PodSpec
+controllers:
+  exclude:
+  - Job
+  - CronJob
 schema:
   '$schema': http://json-schema.org/draft-07/schema
   type: object
@@ -10,12 +14,4 @@ schema:
   properties:
     topologySpreadConstraints:
       type: array
-      items:
-        type: object
-        properties:
-          topologyKey:
-            anyOf:
-              - type: string
-                const: "kubernetes.io/hostname"
-              - type: string
-                const: "topology.kubernetes.io/zone"
+      minItems: 1
