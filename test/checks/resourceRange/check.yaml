@@ -1,0 +1,32 @@
+containers:
+  exclude:
+  - initContainer
+successMessage: Resource limits are within the required range
+failureMessage: Resource limits should be within the required range
+category: Resources
+target: Container
+schema:
+  '$schema': http://json-schema.org/draft-07/schema
+  type: object
+  required:
+  - resources
+  properties:
+    resources:
+      type: object
+      required:
+      - limits
+      properties:
+        limits:
+          type: object
+          required:
+          - memory
+          - cpu
+          properties:
+            memory:
+              type: string
+              resourceMinimum: 100Mi # 104857600 bytes
+              resourceMaximum: 6G
+            cpu:
+              type: string
+              resourceMinimum: 100m
+              resourceMaximum: "2"
