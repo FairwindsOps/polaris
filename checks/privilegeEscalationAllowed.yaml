@@ -26,22 +26,13 @@ schema:
     properties:
       securityContext:
         $ref: "#/definitions/goodSecurityContext"
+  - properties:
       containers:
         type: array
         items:
           properties:
             securityContext:
               $ref: "#/definitions/notBadSecurityContext"
-  - properties:
-      containers:
-        type: array
-        items:
-          required:
-          - securityContext
-          properties:
-            securityContext:
-              $ref: "#/definitions/goodSecurityContext"
-
 mutations:
   - op: add
     path: /securityContext/allowPrivilegeEscalation
