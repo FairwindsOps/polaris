@@ -143,6 +143,9 @@ func (max resourceMaximum) Validate(path string, data interface{}, errs *[]jsons
 }
 
 func parseQuantity(i interface{}) (resource.Quantity, *[]jsonschema.ValError) {
+	if resNum, ok := i.(float64); ok {
+		i = fmt.Sprintf("%f", resNum)
+	}
 	resStr, ok := i.(string)
 	if !ok {
 		return resource.Quantity{}, &[]jsonschema.ValError{

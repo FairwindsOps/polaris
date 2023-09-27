@@ -50,6 +50,7 @@ var (
 	useColor            bool
 	helmChart           string
 	helmValues          []string
+	helmSkipTests       bool
 	checks              []string
 	auditNamespace      string
 	severityLevel       string
@@ -72,6 +73,7 @@ func init() {
 	auditCmd.PersistentFlags().StringVar(&resourceToAudit, "resource", "", "Audit a specific resource, in the format namespace/kind/version/name, e.g. nginx-ingress/Deployment.apps/v1/default-backend.")
 	auditCmd.PersistentFlags().StringVar(&helmChart, "helm-chart", "", "Will fill out Helm template")
 	auditCmd.PersistentFlags().StringSliceVar(&helmValues, "helm-values", []string{}, "Optional flag to add helm values")
+	auditCmd.PersistentFlags().BoolVar(&helmSkipTests, "helm-skip-tests", false, "Corresponds to --skip-tests of helm template")
 	auditCmd.PersistentFlags().StringSliceVar(&checks, "checks", []string{}, "Optional flag to specify specific checks to check")
 	auditCmd.PersistentFlags().StringVar(&auditNamespace, "namespace", "", "Namespace to audit. Only applies to in-cluster audits")
 	auditCmd.PersistentFlags().StringVar(&severityLevel, "severity", "", "Severity level used to filter results. Behaves like log levels. 'danger' is the least verbose (warning, danger)")
@@ -110,7 +112,7 @@ var auditCmd = &cobra.Command{
 		}
 		if helmChart != "" {
 			var err error
-			auditPath, err = ProcessHelmTemplates(helmChart, helmValues)
+			auditPath, err = ProcessHelmTemplates(helmChart, helmValues, helmSkipTests)
 			if err != nil {
 				logrus.Errorf("Couldn't process helm chart: %v", err)
 				os.Exit(1)
@@ -196,7 +198,7 @@ var auditCmd = &cobra.Command{
 }
 
 // ProcessHelmTemplates turns helm into yaml to be processed by Polaris or the other tools.
-func ProcessHelmTemplates(helmChart string, helmValues []string) (string, error) {
+func ProcessHelmTemplates(helmChart string, helmValues []string, helmSkipTests bool) (string, error) {
 	cmd := exec.Command("helm", "dependency", "update", helmChart)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -216,6 +218,10 @@ func ProcessHelmTemplates(helmChart string, helmValues []string) (string, error)
 	}
 	for _, v := range helmValues {
 		params = append(params, "--values", v)
+	}
+
+	if helmSkipTests {
+		params = append(params, "--skip-tests")
 	}
 
 	cmd = exec.Command("helm", params...)

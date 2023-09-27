@@ -19,10 +19,7 @@ spec:
         app.kubernetes.io/name: basic-demo
         app.kubernetes.io/instance: demo
     spec:
-      topologySpreadConstraints:
-        - maxSkew: 1
-          topologyKey: farglebargle
-          whenUnsatisfiable: ScheduleAnyway
+      topologySpreadConstraints: []
       containers:
         - name: basic-demo
           image: "quay.io/fairwinds/docker-demo:latest"
