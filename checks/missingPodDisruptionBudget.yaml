@@ -29,7 +29,7 @@ additionalSchemaStrings:
             properties:
               matchLabels:
                 type: object
-                anyOf:
+                allOf:
                 {{ range $key, $value := .metadata.labels }}
                 - properties:
                     "{{ $key }}":
