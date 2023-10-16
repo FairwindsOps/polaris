@@ -129,7 +129,7 @@ func getCategoryInfo(category string) string {
 	switch category {
 	case "Reliability":
 		return fmt.Sprintf(`
-			Kubernetes is built to reliabily run highly available applications.
+			Kubernetes is built to reliability run highly available applications.
 			Polaris includes a number of checks to ensure that you are maximizing
 			the reliability potential of Kubernetes.
 		`)
