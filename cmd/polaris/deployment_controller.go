@@ -1,10 +1,11 @@
-package controllers
+package cmd
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -12,6 +13,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/scheme"
+
+	"github.com/fairwindsops/insights-plugins/plugins/admission/pkg/polaris"
 )
 
 var (
@@ -50,7 +53,17 @@ func (r *DeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, err
 	}
 
+	bytes, err := yaml.Marshal(&deployment)
+
+	if err != nil {
+		logrus.Error(err, "unable to marshal Deployment")
+	}
+
 	logrus.Info(fmt.Sprintf("deployment=%s", deployment.Name))
+
+	reportInfo, err := polaris.GetPolarisReport(ctx, config, bytes)
+
+	logrus.Info(string(reportInfo.Contents))
 
 	return ctrl.Result{}, nil
 }

@@ -6,23 +6,16 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	k8sConfig "sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
-
-	"github.com/fairwindsops/polaris/pkg/controllers"
-)
-
-var (
-	scheme = runtime.NewScheme()
 )
 
 func init() {
 	rootCmd.AddCommand(reportControllerCommand)
-	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+	utilruntime.Must(clientgoscheme.AddToScheme(clientgoscheme.Scheme))
 }
 
 var reportControllerCommand = &cobra.Command{
@@ -32,7 +25,7 @@ var reportControllerCommand = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		mgr, err := ctrl.NewManager(k8sConfig.GetConfigOrDie(), ctrl.Options{
-			Scheme:                 scheme,
+			Scheme:                 clientgoscheme.Scheme,
 			MetricsBindAddress:     ":8080",
 			Port:                   9443,
 			HealthProbeBindAddress: ":8081",
@@ -47,7 +40,7 @@ var reportControllerCommand = &cobra.Command{
 
 		logrus.Infof("Polaris report controller running")
 
-		if err = (&controllers.DeploymentReconciler{
+		if err = (&DeploymentReconciler{
 			Client: mgr.GetClient(),
 			Scheme: mgr.GetScheme(),
 		}).SetupWithManager(mgr); err != nil {
