@@ -31,3 +31,4 @@ dist
 
 node_modules
 /dist
+docs/README.md
