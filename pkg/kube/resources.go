@@ -26,6 +26,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fairwindsops/controller-utils/pkg/controller"
 	conf "github.com/fairwindsops/polaris/pkg/config"
 
 	"github.com/sirupsen/logrus"
@@ -33,7 +34,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	k8sYaml "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/dynamic"
@@ -297,13 +297,6 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		}
 		namespaces = nsList
 	}
-	logrus.Info("Loading pods")
-	pods, err := kube.CoreV1().Pods(c.Namespace).List(ctx, listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching Pods: %v", err)
-		return nil, err
-	}
-
 	logrus.Info("Setting up restmapper")
 	resources, err := restmapper.GetAPIGroupResources(kube.Discovery())
 	if err != nil {
@@ -358,66 +351,30 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 			kubernetesResources = append(kubernetesResources, res)
 		}
 	}
-
-	objectCache := map[string]unstructured.Unstructured{}
-
 	logrus.Info("Loading controllers")
-	controllers, err := LoadControllers(ctx, pods.Items, dynamic, restMapper, objectCache)
-	if err != nil {
-		logrus.Errorf("Error loading controllers from pods: %v", err)
-		return nil, err
+	client := controller.Client{
+		Context:    ctx,
+		Dynamic:    dynamic,
+		RESTMapper: restMapper,
 	}
-	// resources loaded from custom checks can also contain controllers and thus would be added twice to the provider
-	kubernetesResources = deduplicateControllers(append(kubernetesResources, controllers...))
+	topControllers, err := client.GetAllTopControllersSummary("")
+	if err != nil {
+		return nil, fmt.Errorf("error while getting all TopControllers: %v", err)
+	}
+	for _, workload := range topControllers {
+		topController := workload.TopController
+		workloadObj, err := NewGenericResourceFromUnstructured(topController, nil)
+		if err != nil {
+			return nil, fmt.Errorf("could not parse workload %v: %w", workload, err)
+		}
+		kubernetesResources = append(kubernetesResources, workloadObj)
+	}
 
 	provider.Nodes = nodes.Items
 	provider.Namespaces = namespaces.Items
 	provider.Resources.addResources(kubernetesResources)
 	logrus.Info("Done loading Kubernetes resources")
 	return &provider, nil
-}
-
-// LoadControllers loads a list of controllers from the kubeResources Pods
-func LoadControllers(ctx context.Context, pods []corev1.Pod, dynamicClient dynamic.Interface, restMapperPointer meta.RESTMapper, objectCache map[string]unstructured.Unstructured) ([]GenericResource, error) {
-	interfaces := []GenericResource{}
-	deduped := map[string]*corev1.Pod{}
-	for idx, pod := range pods {
-		owners := pod.ObjectMeta.OwnerReferences
-		if len(owners) == 0 {
-			deduped[pod.ObjectMeta.Namespace+"/Pod/"+pod.ObjectMeta.Name] = &pods[idx]
-			continue
-		}
-		deduped[pod.ObjectMeta.Namespace+"/"+owners[0].Kind+"/"+owners[0].Name] = &pods[idx]
-	}
-	for key, pod := range deduped {
-		logrus.Debugf("Resolving controller from pod %s", key)
-		workload, err := ResolveControllerFromPod(ctx, *pod, dynamicClient, restMapperPointer, objectCache)
-		if err != nil {
-			return nil, err
-		}
-		interfaces = append(interfaces, workload)
-	}
-	return interfaces, nil
-}
-
-// Because the controllers with an Owner take on the name of the Owner, this eliminates any duplicates.
-// In cases like CronJobs older children can hang around, so this takes the most recent.
-func deduplicateControllers(inputResources []GenericResource) []GenericResource {
-	controllerMap := make(map[string]GenericResource)
-	for _, controller := range inputResources {
-		key := controller.ObjectMeta.GetNamespace() + "/" + controller.Kind + "/" + controller.ObjectMeta.GetName()
-		oldController, ok := controllerMap[key]
-		if !ok || controller.ObjectMeta.GetCreationTimestamp().Time.After(oldController.ObjectMeta.GetCreationTimestamp().Time) {
-			controllerMap[key] = controller
-		}
-	}
-	results := make([]GenericResource, len(controllerMap))
-	idx := 0
-	for _, controller := range controllerMap {
-		results[idx] = controller
-		idx++
-	}
-	return results
 }
 
 func (resources *ResourceProvider) addResourcesFromReader(reader io.Reader) error {
