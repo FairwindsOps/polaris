@@ -26,6 +26,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fairwindsops/controller-utils/pkg/controller"
 	conf "github.com/fairwindsops/polaris/pkg/config"
 
 	"github.com/sirupsen/logrus"
@@ -297,13 +298,6 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		}
 		namespaces = nsList
 	}
-	logrus.Info("Loading pods")
-	pods, err := kube.CoreV1().Pods(c.Namespace).List(ctx, listOpts)
-	if err != nil {
-		logrus.Errorf("Error fetching Pods: %v", err)
-		return nil, err
-	}
-
 	logrus.Info("Setting up restmapper")
 	resources, err := restmapper.GetAPIGroupResources(kube.Discovery())
 	if err != nil {
@@ -358,17 +352,28 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 			kubernetesResources = append(kubernetesResources, res)
 		}
 	}
-
-	objectCache := map[string]unstructured.Unstructured{}
-
 	logrus.Info("Loading controllers")
-	controllers, err := LoadControllers(ctx, pods.Items, dynamic, restMapper, objectCache)
-	if err != nil {
-		logrus.Errorf("Error loading controllers from pods: %v", err)
-		return nil, err
+	client := controller.Client{
+		Context:    ctx,
+		Dynamic:    dynamic,
+		RESTMapper: restMapper,
 	}
+	topControllers, err := client.GetAllTopControllersSummary("")
+	if err != nil {
+		return nil, fmt.Errorf("error while getting all TopControllers: %v", err)
+	}
+	workloads := []GenericResource{}
+	for _, workload := range topControllers {
+		topController := workload.TopController
+		workloadObj, err := NewGenericResourceFromUnstructured(topController, nil)
+		if err != nil {
+			return nil, fmt.Errorf("could not parse workload %v: %w", workload, err)
+		}
+		workloads = append(workloads, workloadObj)
+	}
+
 	// resources loaded from custom checks can also contain controllers and thus would be added twice to the provider
-	kubernetesResources = deduplicateControllers(append(kubernetesResources, controllers...))
+	kubernetesResources = deduplicateControllers(append(kubernetesResources, workloads...))
 
 	provider.Nodes = nodes.Items
 	provider.Namespaces = namespaces.Items
