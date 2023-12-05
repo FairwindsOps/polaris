@@ -57,6 +57,7 @@ var (
 	skipSslValidation   bool
 	uploadInsights      bool
 	clusterName         string
+	quiet               bool
 )
 
 func init() {
@@ -80,6 +81,7 @@ func init() {
 	auditCmd.PersistentFlags().BoolVar(&skipSslValidation, "skip-ssl-validation", false, "Skip https certificate verification")
 	auditCmd.PersistentFlags().BoolVar(&uploadInsights, "upload-insights", false, "Upload scan results to Fairwinds Insights")
 	auditCmd.PersistentFlags().StringVar(&clusterName, "cluster-name", "", "Set --cluster-name to a descriptive name for the cluster you're auditing")
+	auditCmd.PersistentFlags().BoolVar(&quiet, "quiet", false, "Suppress the 'upload to Insights' prompt.")
 }
 
 var auditCmd = &cobra.Command{
@@ -181,8 +183,10 @@ var auditCmd = &cobra.Command{
 			os.Stderr.WriteString(fmt.Sprintf("\n\n%s/orgs/%s/clusters/%s/action-items\n\n", insightsHost, auth.Organization, clusterName))
 		} else {
 			outputAudit(auditData, auditOutputFile, auditOutputURL, auditOutputFormat, useColor, onlyShowFailedTests, severityLevel)
-			os.Stderr.WriteString("\n\n🚀 Upload your Polaris findings to Fairwinds Insights to see remediation advice, add teammates, integrate with Slack or Jira, and more:")
-			os.Stderr.WriteString("\n\n❯ polaris " + strings.Join(os.Args[1:], " ") + " --upload-insights --cluster-name=my-cluster\n\n")
+			if !quiet {
+				os.Stderr.WriteString("\n\n🚀 Upload your Polaris findings to Fairwinds Insights to see remediation advice, add teammates, integrate with Slack or Jira, and more:")
+				os.Stderr.WriteString("\n\n❯ polaris " + strings.Join(os.Args[1:], " ") + " --upload-insights --cluster-name=my-cluster\n\n")
+			}
 		}
 
 		summary := auditData.GetSummary()
