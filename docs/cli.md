@@ -56,6 +56,7 @@ webhook
     --only-show-failed-tests          If specified, audit output will only show failed tests.
     --output-file string              Destination file for audit results.
     --output-url string               Destination URL to send audit results.
+    --quiet                           Suppress the 'upload to Insights' prompt.
     --resource string                 Audit a specific resource, in the format namespace/kind/version/name, e.g. nginx-ingress/Deployment.apps/v1/default-backend.
     --set-exit-code-below-score int   Set an exit code of 4 when the score is below this threshold (1-100).
     --set-exit-code-on-danger         Set an exit code of 3 when the audit contains danger-level issues.
@@ -81,3 +82,9 @@ webhook
   status      View authentication status.
   token       Print the auth token gh is configured to use.
 ```
+
+#### Suppressing 'upload to Insights' output
+
+When running the `polaris audit` subcommand, you can suppress the following output using the `--quiet flag`:
+
+> 🚀 Upload your Polaris findings to Fairwinds Insights to see remediation advice, add teammates, integrate with Slack or Jira, and more:
