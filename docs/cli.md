@@ -82,3 +82,9 @@ webhook
   status      View authentication status.
   token       Print the auth token gh is configured to use.
 ```
+
+#### Suppressing 'upload to Insights' output
+
+When running the `polaris audit` subcommand, you can suppress the following output using the `--quiet flag`:
+
+> 🚀 Upload your Polaris findings to Fairwinds Insights to see remediation advice, add teammates, integrate with Slack or Jira, and more:
