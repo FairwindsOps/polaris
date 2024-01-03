@@ -43,10 +43,10 @@ schemaString: |
               minLength: 1
 additionalSchemaStrings:
   rbac.authorization.k8s.io/ClusterRole: |
-    type: object
-    # This schema is validated for all roleBindings, regardless of their roleRef.
     {{ if eq .roleRef.kind "ClusterRole" }}
     {{ if and (not (hasPrefix .metadata.name "system:")) (ne .metadata.name "gce:podsecuritypolicy:calico-sa") }}
+    # This schema is validated for all roleBindings, regardless of their roleRef.
+    type: object
     required: ["metadata", "rules"]
     allOf:
       - properties:
