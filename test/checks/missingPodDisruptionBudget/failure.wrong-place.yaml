@@ -2,12 +2,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: zookeeper
+  labels:
+    app.kubernetes.io/name: zookeeper
+    foo: bar
 spec:
   template:
-    metadata:
-      labels:
-        app.kubernetes.io/name: zookeeper
-        foo: bar
     spec:
       containers:
       - name: zookeeper

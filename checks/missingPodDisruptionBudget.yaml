@@ -9,12 +9,18 @@ schema:
   '$schema': http://json-schema.org/draft-07/schema
   type: object
   properties:
-    metadata:
+    spec:
       type: object
       properties:
-        labels:
+        template:
           type: object
-          minProperties: 1
+          properites:
+            metadata:
+              type: object
+              properties:
+                labels:
+                  type: object
+                  minProperties: 1
 additionalSchemaStrings:
   policy/PodDisruptionBudget: |
     type: object
@@ -30,7 +36,7 @@ additionalSchemaStrings:
               matchLabels:
                 type: object
                 anyOf:
-                {{ range $key, $value := .metadata.labels }}
+                {{ range $key, $value := .spec.template.metadata.labels }}
                 - properties:
                     "{{ $key }}":
                       type: string
