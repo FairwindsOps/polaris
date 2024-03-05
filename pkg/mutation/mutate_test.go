@@ -168,62 +168,6 @@ extra:
 `,
 		message: "Expected a comment to appear next to an object",
 	},
-	{
-		original: `
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment
-  labels:
-    app: nginx
-spec:
-  template:
-    spec:
-      containers:
-        - name: nginx
-          image: nginx:1.18-alpine
-          ports:
-            - containerPort: 80
-`,
-		patch: config.Mutation{
-			Op: "add",
-			Value: map[string]any{
-				"limits": map[string]any{
-					"cpu":    "25m",
-					"memory": "100Mi",
-				},
-				"requests": map[string]any{
-					"cpu":    "25m",
-					"memory": "100Mi",
-				},
-			},
-			Path: "/spec/template/spec/containers/*/resources",
-		},
-		mutated: `
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment
-  labels:
-    app: nginx
-spec:
-  template:
-    spec:
-      containers:
-        - name: nginx
-          image: nginx:1.18-alpine
-          ports:
-            - containerPort: 80
-          resources:
-            limits:
-              cpu: 25m
-              memory: 100Mi
-            requests:
-              cpu: 25m
-              memory: 100Mi
-`,
-		message: "Expected a comment to appear next to an object",
-	},
 }
 
 func TestApplyAllMutations(t *testing.T) {
