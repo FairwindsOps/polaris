@@ -215,10 +215,13 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 }
 
 // CreateResourceProviderFromYaml returns a new ResourceProvider using the yaml
-func CreateResourceProviderFromYaml(yamlContent string) *ResourceProvider {
+func CreateResourceProviderFromYaml(yamlContent string) (*ResourceProvider, error) {
 	resources := newResourceProvider("unknown", "Content", "unknown")
-	resources.addResourcesFromYaml(string(yamlContent))
-	return &resources
+	err := resources.addResourcesFromYaml(string(yamlContent))
+	if err != nil {
+		return nil, err
+	}
+	return &resources, nil
 }
 
 // CreateResourceProviderFromCluster creates a new ResourceProvider using live data from a cluster
