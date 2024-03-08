@@ -35,7 +35,7 @@ import (
 type schemaTestCase struct {
 	Target           config.TargetKind
 	Resource         kube.GenericResource
-	IsInitContianer  bool
+	IsInitContainer  bool
 	Container        *corev1.Container
 	ResourceProvider *kube.ResourceProvider
 }
@@ -80,7 +80,7 @@ func resolveCheck(conf *config.Configuration, checkID string, test schemaTestCas
 	if !conf.IsActionable(check.ID, test.Resource.ObjectMeta, containerName) {
 		return nil, nil
 	}
-	if !check.IsActionable(test.Target, test.Resource.Kind, test.IsInitContianer) {
+	if !check.IsActionable(test.Target, test.Resource.Kind, test.IsInitContainer) {
 		return nil, nil
 	}
 	templateInput, err := getTemplateInput(test)
@@ -306,7 +306,7 @@ func applyContainerSchemaChecks(conf *config.Configuration, resources *kube.Reso
 		ResourceProvider: resources,
 		Resource:         controller,
 		Container:        container,
-		IsInitContianer:  isInit,
+		IsInitContainer:  isInit,
 	}
 	return applySchemaChecks(conf, test)
 }
@@ -408,15 +408,13 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 
 	}
 	result := makeResult(conf, check, passes, issues)
-	if !passes {
-		if funk.Contains(conf.Mutations, checkID) && len(check.Mutations) > 0 {
-			mutations := funk.Map(check.Mutations, func(mutation config.Mutation) config.Mutation {
-				mutationCopy := deepCopyMutation(mutation)
-				mutationCopy.Path = prefix + mutationCopy.Path
-				return mutationCopy
-			}).([]config.Mutation)
-			result.Mutations = mutations
-		}
+	if funk.Contains(conf.Mutations, checkID) && len(check.Mutations) > 0 {
+		mutations := funk.Map(check.Mutations, func(mutation config.Mutation) config.Mutation {
+			mutationCopy := deepCopyMutation(mutation)
+			mutationCopy.Path = prefix + mutationCopy.Path
+			return mutationCopy
+		}).([]config.Mutation)
+		result.Mutations = mutations
 	}
 	return &result, nil
 }
