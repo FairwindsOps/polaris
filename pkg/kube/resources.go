@@ -339,6 +339,10 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 			logrus.Warnf("Error retrieving mapping of Kind %s because of error: %v", kind, err)
 			return nil, err
 		}
+		if c.Namespace != "" && mapping.Scope.Name() != meta.RESTScopeNameNamespace {
+			logrus.Infof("Skipping %s because of auditing specific namespace", mapping.GroupVersionKind)
+			continue
+		}
 
 		logrus.Info("Loading " + kind)
 		objects, err := dynamic.Resource(mapping.Resource).Namespace(c.Namespace).List(ctx, metav1.ListOptions{})
