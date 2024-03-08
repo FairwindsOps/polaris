@@ -36,7 +36,7 @@ archives:
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}"
 signs:
 - cmd: cosign
-  args: ["sign-blob", "--key=hashivault://cosign", "--output-signature=${signature}", "${artifact}"]
+  args: ["sign-blob", "--yes", "--key=hashivault://cosign", "--output-signature=${signature}", "${artifact}"]
   artifacts: checksum
 release:
   # This is replaced using `envsubst`, depending on the git branch.
