@@ -11,7 +11,6 @@ import (
 	"github.com/fairwindsops/polaris/pkg/kube"
 	"github.com/fairwindsops/polaris/pkg/mutation"
 	"github.com/fairwindsops/polaris/pkg/validator"
-	"github.com/sirupsen/logrus"
 )
 
 const templateLineMarker = "# POLARIS_FIX_TMPL"
@@ -84,8 +83,7 @@ func Execute(config config.Configuration, filesPath string, isTemplate bool, che
 					mutations := allMutations[key]
 					mutatedYamlContent, err := mutation.ApplyAllMutations(string(resource.OriginalObjectYAML), mutations)
 					if err != nil {
-						logrus.Errorf("error applying schema mutations to the resource %s: %v", key, err)
-						os.Exit(1)
+						return fmt.Errorf("error applying schema mutations to the resource %s: %v", key, err)
 					}
 					if updatedYamlContent != "" {
 						updatedYamlContent += "\n---\n"

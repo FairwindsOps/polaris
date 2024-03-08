@@ -45,13 +45,11 @@ var fixCommand = &cobra.Command{
 
 		err := fix.Execute(config, filesPath, isTemplate, checksToFix...)
 		if err != nil {
-
 			if errors.Is(err, fix.ErrFilesPathRequired) {
 				logrus.Error("Please specify a files-path flag")
 				cmd.Help()
 				os.Exit(1)
 			}
-
 			logrus.Fatal(err)
 		}
 	},
