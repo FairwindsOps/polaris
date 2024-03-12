@@ -54,7 +54,11 @@ var dashboardCmd = &cobra.Command{
 			auditData := validator.ReadAuditFromFile(loadAuditFile)
 			auditDataPtr = &auditData
 		}
-		router := dashboard.GetRouter(config, auditPath, serverPort, basePath, auditDataPtr)
+		router, err := dashboard.GetRouter(config, auditPath, serverPort, basePath, auditDataPtr)
+		if err != nil {
+			logrus.Fatalf("error creating router: %v", err)
+		}
+
 		router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("OK"))
 		})

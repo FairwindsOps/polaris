@@ -19,6 +19,7 @@ import (
 	"embed"
 	"encoding/json"
 	"html/template"
+	"io/fs"
 	"net/http"
 	"net/url"
 	"path"
@@ -139,9 +140,15 @@ func stripUnselectedNamespaces(data *validator.AuditData, selectedNamespaces []s
 }
 
 // GetRouter returns a mux router serving all routes necessary for the dashboard
-func GetRouter(c config.Configuration, auditPath string, port int, basePath string, auditData *validator.AuditData) *mux.Router {
+func GetRouter(c config.Configuration, auditPath string, port int, basePath string, auditData *validator.AuditData) (*mux.Router, error) {
 	router := mux.NewRouter().PathPrefix(basePath).Subrouter()
-	fileServer := http.FileServer(http.FS(assetsFS))
+
+	assetsSubFS, err := fs.Sub(assetsFS, "assets")
+	if err != nil {
+		return nil, err
+	}
+
+	fileServer := http.FileServer(http.FS(assetsSubFS))
 	router.PathPrefix("/static/").Handler(http.StripPrefix(path.Join(basePath, "/static/"), fileServer))
 
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -149,7 +156,7 @@ func GetRouter(c config.Configuration, auditPath string, port int, basePath stri
 	})
 
 	router.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
-		favicon, err := assetsFS.ReadFile("favicon-32x32.png")
+		favicon, err := assetsFS.ReadFile("assets/favicon-32x32.png")
 		if err != nil {
 			logrus.Errorf("Error getting favicon: %v", err)
 			http.Error(w, "Error getting favicon", http.StatusInternalServerError)
@@ -219,7 +226,7 @@ func GetRouter(c config.Configuration, auditPath string, port int, basePath stri
 		}
 
 	})
-	return router
+	return router, nil
 }
 
 // MainHandler gets template data and renders the dashboard with it.
