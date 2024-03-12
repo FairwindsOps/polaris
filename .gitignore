@@ -23,7 +23,6 @@ Tiltfile
 main
 .DS_Store
 
-*-packr.go
 dist
 .vscode
 

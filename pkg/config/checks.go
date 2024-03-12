@@ -15,13 +15,12 @@
 package config
 
 import (
-	"github.com/gobuffalo/packr/v2"
+	"embed"
+
 	"github.com/sirupsen/logrus"
 )
 
 var (
-	// BuiltInChecks contains the checks that come pre-installed w/ Polaris
-	BuiltInChecks = map[string]SchemaCheck{}
 	// We explicitly set the order to avoid thrash in the
 	// tests as we migrate toward JSON schema
 	checkOrder = []string{
@@ -68,12 +67,17 @@ var (
 		"rolebindingClusterAdminClusterRole",
 		"rolebindingClusterAdminRole",
 	}
+
+	// BuiltInChecks contains the checks that come pre-installed w/ Polaris
+	BuiltInChecks = map[string]SchemaCheck{}
+
+	// go:embed checks/*.yaml
+	checksFS embed.FS
 )
 
 func init() {
-	schemaBox := packr.New("Schemas", "../../checks")
 	for _, checkID := range checkOrder {
-		contents, err := schemaBox.Find(checkID + ".yaml")
+		contents, err := checksFS.ReadFile(checkID + ".yaml")
 		if err != nil {
 			panic(err)
 		}
