@@ -16,7 +16,7 @@ package config
 
 import (
 	"bytes"
-	"embed"
+	_ "embed"
 	"errors"
 	"fmt"
 	"io"
@@ -49,15 +49,15 @@ type Exemption struct {
 	Namespace       string   `json:"namespace"`
 }
 
-//go:embed all:examples
-var examplesFS embed.FS
+//go:embed default.yaml
+var defaultConfig []byte
 
 // ParseFile parses config from a file.
 func ParseFile(path string) (Configuration, error) {
 	var rawBytes []byte
 	var err error
 	if path == "" {
-		rawBytes, err = examplesFS.ReadFile("examples/config.yaml")
+		rawBytes = defaultConfig
 	} else if strings.HasPrefix(path, "https://") || strings.HasPrefix(path, "http://") {
 		// path is a url
 		response, err2 := http.Get(path)
