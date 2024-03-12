@@ -49,7 +49,7 @@ type Exemption struct {
 	Namespace       string   `json:"namespace"`
 }
 
-// go:embed examples/*
+//go:embed all:examples
 var examplesFS embed.FS
 
 // ParseFile parses config from a file.
@@ -57,7 +57,7 @@ func ParseFile(path string) (Configuration, error) {
 	var rawBytes []byte
 	var err error
 	if path == "" {
-		rawBytes, err = examplesFS.ReadFile("config.yaml")
+		rawBytes, err = examplesFS.ReadFile("examples/config.yaml")
 	} else if strings.HasPrefix(path, "https://") || strings.HasPrefix(path, "http://") {
 		// path is a url
 		response, err2 := http.Get(path)

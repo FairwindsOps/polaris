@@ -47,9 +47,9 @@ const (
 )
 
 var (
-	// go:embed templates
+	//go:embed all:templates
 	templatesFS embed.FS
-	// go:embed assets
+	//go:embed all:assets
 	assetsFS embed.FS
 )
 
@@ -89,7 +89,7 @@ func GetBaseTemplate(name string) (*template.Template, error) {
 
 func parseTemplateFiles(tmpl *template.Template, templateFileNames []string) (*template.Template, error) {
 	for _, fname := range templateFileNames {
-		templateFile, err := templatesFS.ReadFile(fname)
+		templateFile, err := templatesFS.ReadFile("templates/" + fname)
 		if err != nil {
 			return nil, err
 		}

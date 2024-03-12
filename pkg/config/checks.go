@@ -16,6 +16,7 @@ package config
 
 import (
 	"embed"
+	"fmt"
 
 	"github.com/sirupsen/logrus"
 )
@@ -71,13 +72,13 @@ var (
 	// BuiltInChecks contains the checks that come pre-installed w/ Polaris
 	BuiltInChecks = map[string]SchemaCheck{}
 
-	// go:embed checks/*.yaml
+	//go:embed all:checks
 	checksFS embed.FS
 )
 
 func init() {
 	for _, checkID := range checkOrder {
-		contents, err := checksFS.ReadFile(checkID + ".yaml")
+		contents, err := checksFS.ReadFile(fmt.Sprintf("checks/%s.yaml", checkID))
 		if err != nil {
 			panic(err)
 		}

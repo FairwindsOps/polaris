@@ -78,7 +78,7 @@ references:
     run:
       name: Test Dashboard
       command: |
-        go run main.go dashboard --port 3000 --audit-path ./examples &
+        go run main.go dashboard --port 3000 --audit-path ./pkg/config/examples &
         sleep 30
         curl -f http://localhost:3000 > /dev/null
         curl -f http://localhost:3000/health > /dev/null
