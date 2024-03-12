@@ -16,6 +16,7 @@ package config
 
 import (
 	"bytes"
+	_ "embed"
 	"errors"
 	"fmt"
 	"io"
@@ -23,7 +24,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gobuffalo/packr/v2"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
@@ -49,21 +49,15 @@ type Exemption struct {
 	Namespace       string   `json:"namespace"`
 }
 
-var configBox = (*packr.Box)(nil)
-
-func getConfigBox() *packr.Box {
-	if configBox == (*packr.Box)(nil) {
-		configBox = packr.New("Config", "../../examples")
-	}
-	return configBox
-}
+//go:embed default.yaml
+var defaultConfig []byte
 
 // ParseFile parses config from a file.
 func ParseFile(path string) (Configuration, error) {
 	var rawBytes []byte
 	var err error
 	if path == "" {
-		rawBytes, err = getConfigBox().Find("config.yaml")
+		rawBytes = defaultConfig
 	} else if strings.HasPrefix(path, "https://") || strings.HasPrefix(path, "http://") {
 		// path is a url
 		response, err2 := http.Get(path)

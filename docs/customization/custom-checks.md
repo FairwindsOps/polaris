@@ -7,7 +7,7 @@ meta:
 
 If you'd like to create your own checks, you can use [JSON Schema](https://json-schema.org/).
 This is how built-in Polaris checks are defined as well - you can see all the built-in checks
-in the [checks folder](https://github.com/FairwindsOps/polaris/tree/master/checks) for examples.
+in the [checks folder](https://github.com/FairwindsOps/polaris/tree/master/pkg/config/checks) for examples.
 
 If you write a check that could be useful for others, feel free to open a PR to add it in!
 

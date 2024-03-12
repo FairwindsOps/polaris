@@ -16,8 +16,10 @@ package dashboard
 
 import (
 	"bytes"
+	"embed"
 	"encoding/json"
 	"html/template"
+	"io/fs"
 	"net/http"
 	"net/url"
 	"path"
@@ -26,7 +28,6 @@ import (
 	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
 	"github.com/fairwindsops/polaris/pkg/validator"
-	packr "github.com/gobuffalo/packr/v2"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 )
@@ -47,26 +48,11 @@ const (
 )
 
 var (
-	templateBox = (*packr.Box)(nil)
-	assetBox    = (*packr.Box)(nil)
-	markdownBox = (*packr.Box)(nil)
+	//go:embed all:templates
+	templatesFS embed.FS
+	//go:embed all:assets
+	assetsFS embed.FS
 )
-
-// GetAssetBox returns a binary-friendly set of assets packaged from disk
-func GetAssetBox() *packr.Box {
-	if assetBox == (*packr.Box)(nil) {
-		assetBox = packr.New("Assets", "assets")
-	}
-	return assetBox
-}
-
-// GetTemplateBox returns a binary-friendly set of templates for rendering the dash
-func GetTemplateBox() *packr.Box {
-	if templateBox == (*packr.Box)(nil) {
-		templateBox = packr.New("Templates", "templates")
-	}
-	return templateBox
-}
 
 // templateData is passed to the dashboard HTML template
 type templateData struct {
@@ -103,9 +89,8 @@ func GetBaseTemplate(name string) (*template.Template, error) {
 }
 
 func parseTemplateFiles(tmpl *template.Template, templateFileNames []string) (*template.Template, error) {
-	templateBox := GetTemplateBox()
 	for _, fname := range templateFileNames {
-		templateFile, err := templateBox.Find(fname)
+		templateFile, err := templatesFS.ReadFile("templates/" + fname)
 		if err != nil {
 			return nil, err
 		}
@@ -155,9 +140,15 @@ func stripUnselectedNamespaces(data *validator.AuditData, selectedNamespaces []s
 }
 
 // GetRouter returns a mux router serving all routes necessary for the dashboard
-func GetRouter(c config.Configuration, auditPath string, port int, basePath string, auditData *validator.AuditData) *mux.Router {
+func GetRouter(c config.Configuration, auditPath string, port int, basePath string, auditData *validator.AuditData) (*mux.Router, error) {
 	router := mux.NewRouter().PathPrefix(basePath).Subrouter()
-	fileServer := http.FileServer(GetAssetBox())
+
+	assetsSubFS, err := fs.Sub(assetsFS, "assets")
+	if err != nil {
+		return nil, err
+	}
+
+	fileServer := http.FileServer(http.FS(assetsSubFS))
 	router.PathPrefix("/static/").Handler(http.StripPrefix(path.Join(basePath, "/static/"), fileServer))
 
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -165,7 +156,7 @@ func GetRouter(c config.Configuration, auditPath string, port int, basePath stri
 	})
 
 	router.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
-		favicon, err := GetAssetBox().Find("favicon-32x32.png")
+		favicon, err := assetsFS.ReadFile("assets/favicon-32x32.png")
 		if err != nil {
 			logrus.Errorf("Error getting favicon: %v", err)
 			http.Error(w, "Error getting favicon", http.StatusInternalServerError)
@@ -235,7 +226,7 @@ func GetRouter(c config.Configuration, auditPath string, port int, basePath stri
 		}
 
 	})
-	return router
+	return router, nil
 }
 
 // MainHandler gets template data and renders the dashboard with it.

@@ -195,7 +195,7 @@ JSON schema (see changes to `./checks/multipleReplicasForDeployment.yaml`)
 * Docker image now includes the default config
 
 ### Breaking Changes
-* Breaking changes in both input and output formats. See [Examples](https://github.com/FairwindsOps/polaris/tree/master/examples) for examples of the new formats.
+* Breaking changes in both input and output formats. See [Examples](https://github.com/FairwindsOps/polaris/tree/master/pkg/config/examples) for examples of the new formats.
     * removed config-level configuration for checks like max/min memory settings
     * changed severity `error` to `danger`
 * Breaking changes to the CLI

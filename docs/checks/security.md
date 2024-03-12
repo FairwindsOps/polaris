@@ -19,8 +19,8 @@ key | default | description
 `privilegeEscalationAllowed` | `danger` | Fails when `securityContext.allowPrivilegeEscalation` is true.
 `runAsRootAllowed` | `warning` | Fails when `securityContext.runAsNonRoot` is not true.
 `runAsPrivileged` | `danger` | Fails when `securityContext.privileged` is true.
-`insecureCapabilities` | `warning` | Fails when `securityContext.capabilities` includes one of the capabilities [listed here](https://github.com/FairwindsOps/polaris/tree/master/checks/insecureCapabilities.yaml)
-`dangerousCapabilities` | `danger` | Fails when `securityContext.capabilities` includes one of the capabilities [listed here](https://github.com/FairwindsOps/polaris/tree/master/checks/dangerousCapabilities.yaml)
+`insecureCapabilities` | `warning` | Fails when `securityContext.capabilities` includes one of the capabilities [listed here](https://github.com/FairwindsOps/polaris/tree/master/pkg/config/checks/insecureCapabilities.yaml)
+`dangerousCapabilities` | `danger` | Fails when `securityContext.capabilities` includes one of the capabilities [listed here](https://github.com/FairwindsOps/polaris/tree/master/pkg/config/checks/dangerousCapabilities.yaml)
 `hostNetworkSet` | `warning` | Fails when `hostNetwork` attribute is configured.
 `hostPortSet` | `warning` | Fails when `hostPort` attribute is configured.
 `tlsSettingsMissing` | `warning` | Fails when an Ingress lacks TLS settings.
