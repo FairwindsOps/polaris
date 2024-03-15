@@ -182,6 +182,9 @@ func addOrReplaceValue(node *yaml.Node, splits []string, value *yaml.Node) error
 	}
 	for _, node := range nodes {
 		if node.Kind == yaml.ScalarNode {
+			if value.LineComment == "" {
+				value.LineComment = node.LineComment // keep the original comment if override is not provided
+			}
 			// Overwrite an existing scalar value with a new value (whatever kind).
 			*node = *value
 		} else if node.Kind == yaml.MappingNode && value.Kind == yaml.MappingNode {
