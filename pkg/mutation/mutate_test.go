@@ -107,7 +107,8 @@ obj:
 			},
 			Path: "/obj/foo",
 		},
-		mutated: `obj:
+		mutated: `
+obj:
   foo:
     bar:
       - c
@@ -115,23 +116,17 @@ obj:
   baz: quux
 `,
 	}, {
-		original: `
-foo: bar
-`,
+		original: `foo: bar`,
 		patch: config.Mutation{
 			Op:      "replace",
 			Value:   "baz",
 			Path:    "/foo",
 			Comment: "# We set this to baz",
 		},
-		mutated: `
-foo: baz # We set this to baz
-`,
+		mutated: `foo: baz # We set this to baz`,
 		message: "Expected a comment to appear",
 	}, {
-		original: `
-foo: bar
-`,
+		original: `foo: bar`,
 		patch: config.Mutation{
 			Op: "add",
 			Value: map[string]interface{}{
@@ -167,6 +162,25 @@ extra:
   baz: quux
 `,
 		message: "Expected a comment to appear next to an object",
+	}, {
+		original: `foo: bar # we should keep this comment`,
+		patch: config.Mutation{
+			Op:    "replace",
+			Value: "baz",
+			Path:  "/foo",
+		},
+		mutated: `foo: baz # we should keep this comment`,
+		message: "Expected a comment to be kept",
+	}, {
+		original: `foo: bar # we should override this comment`,
+		patch: config.Mutation{
+			Op:      "replace",
+			Value:   "baz",
+			Path:    "/foo",
+			Comment: "override",
+		},
+		mutated: `foo: baz # override`,
+		message: "Expected a comment to overridden",
 	},
 }
 
