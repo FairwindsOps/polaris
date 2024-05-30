@@ -5,5 +5,5 @@ metadata:
   labels:
     env: test
 spec:
-  minAvaiable: 5
+  minAvailable: 5
   maxUnavailable: 10%
