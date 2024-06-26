@@ -7,6 +7,14 @@ import (
 	"github.com/qri-io/jsonschema"
 )
 
+type customValidator func(data interface{}) (bool, []jsonschema.ValError, error)
+
+// customValidators is a map of validation functions that can be used in schema checks
+// sometimes we need to validate things that aren't covered by the JSON validation schema
+var customValidators = map[string]customValidator{
+	"hpaMaxAvailability": validateHPAMaxAvailability,
+}
+
 type HorizontalPodAutoscalerView struct {
 	Spec struct {
 		MinReplicas *int `json:"minReplicas"`
@@ -30,9 +38,9 @@ func validateHPAMaxAvailability(data any) (bool, []jsonschema.ValError, error) {
 		return true, []jsonschema.ValError{}, nil
 	}
 
-	if hpa.Spec.MaxReplicas > *hpa.Spec.MinReplicas {
+	if hpa.Spec.MaxReplicas != *hpa.Spec.MinReplicas {
 		return true, []jsonschema.ValError{}, nil
 	}
 
-	return false, []jsonschema.ValError{{PropertyPath: "spec.maxReplicas", Message: fmt.Sprintf("maxReplicas (%d) must be greater than minReplicas (%d)", hpa.Spec.MaxReplicas, *hpa.Spec.MinReplicas)}}, nil
+	return false, []jsonschema.ValError{{PropertyPath: "spec.maxReplicas", Message: fmt.Sprintf("maxReplicas (%d) and minReplicas (%d) should be different", hpa.Spec.MaxReplicas, *hpa.Spec.MinReplicas)}}, nil
 }
