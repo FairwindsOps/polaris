@@ -67,6 +67,8 @@ var (
 		"clusterrolebindingClusterAdmin",
 		"rolebindingClusterAdminClusterRole",
 		"rolebindingClusterAdminRole",
+		"hpaMaxAvailability",
+		"hpaMinAvailability",
 	}
 
 	// BuiltInChecks contains the checks that come pre-installed w/ Polaris

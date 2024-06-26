@@ -8,6 +8,7 @@ meta:
 
 ## Unreleased
 * Change `metadataAndNameMismatched` to `metadataAndInstanceMismatched`
+* Add `hpaMaxAvailability` and `hpaMinAvailability` check
 
 ## 8.1.1
 * Add category for `metadataAndNameMismatched`.

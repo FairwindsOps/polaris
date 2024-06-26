@@ -32,6 +32,14 @@ import (
 	"github.com/fairwindsops/polaris/pkg/kube"
 )
 
+type CustomValidator func(data interface{}) (bool, []jsonschema.ValError, error)
+
+// customValidators is a map of validation functions that can be used in schema checks
+// sometimes we need to validate things that aren't covered by the JSON validation schema
+var customValidators = map[string]CustomValidator{
+	"hpaMaxAvailability": validateHPAMaxAvailability,
+}
+
 type schemaTestCase struct {
 	Target           config.TargetKind
 	Resource         kube.GenericResource
@@ -367,8 +375,12 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 			prefix += "/containers/" + strconv.Itoa(containerIndex)
 		}
 		passes, issues, err = check.CheckContainer(test.Container)
-	} else {
+	} else if check.Validator.SchemaURI != "" {
 		passes, issues, err = check.CheckObject(test.Resource.Resource.Object)
+	} else if customValidators[checkID] != nil {
+		passes, issues, err = customValidators[checkID](test.Resource.Resource.Object)
+	} else {
+		passes, issues, err = true, []jsonschema.ValError{}, nil
 	}
 	if err != nil {
 		return nil, err

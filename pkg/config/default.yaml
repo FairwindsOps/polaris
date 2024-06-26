@@ -10,6 +10,8 @@ checks:
   pdbDisruptionsIsZero: warning
   missingPodDisruptionBudget: warning
   topologySpreadConstraint: warning
+  hpaMaxAvailability: warning
+  hpaMinAvailability: warning
 
   # efficiency
   cpuRequestsMissing: warning

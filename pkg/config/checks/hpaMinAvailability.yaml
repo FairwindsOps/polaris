@@ -1,0 +1,14 @@
+successMessage: HPA has a valid min replica configuration
+failureMessage: HPA maxReplicas should be greater than minReplicas
+category: Reliability
+target: autoscaling/HorizontalPodAutoscaler
+schema:
+  "$schema": http://json-schema.org/draft-07/schema#
+  type: object
+  properties:
+    spec:
+      type: object
+      properties:
+        minReplicas:
+          type: integer
+          minimum: 2

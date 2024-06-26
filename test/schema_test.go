@@ -44,7 +44,7 @@ var mutatedYamlContentMap = map[string]string{}
 var mutationTestCasesMap = map[string][]testCase{}
 
 func init() {
-	checkToTest := os.Getenv("POLARIS_CHECK_TEST")
+	checkToTest := os.Getenv("POLARIS_CHECK_TEST") // if set, only run tests for this check
 	_, baseDir, _, _ := runtime.Caller(0)
 	baseDir = filepath.Dir(baseDir) + "/checks"
 	dirs, err := os.ReadDir(baseDir)
@@ -55,6 +55,9 @@ func init() {
 		check := dir.Name()
 		if checkToTest != "" && checkToTest != check {
 			continue
+		}
+		if strings.HasPrefix(check, "_") {
+			continue // skip directories starting with _
 		}
 		checkDir := baseDir + "/" + check
 		cases, err := os.ReadDir(checkDir)
@@ -119,7 +122,7 @@ func TestChecks(t *testing.T) {
 	for _, tc := range testCases {
 		results, err := validator.ApplyAllSchemaChecksToResourceProvider(&tc.config, tc.resources)
 		if err != nil {
-			panic(err)
+			t.Fatalf("Error running checks: %v", err)
 		}
 		auditData := validator.AuditData{Results: results}
 		summary := auditData.GetSummary()
