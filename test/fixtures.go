@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 
 	appsv1 "k8s.io/api/apps/v1"
+	autoscalingV2 "k8s.io/api/autoscaling/v2"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -225,6 +226,12 @@ func SetupTestAPI(objects ...runtime.Object) (kubernetes.Interface, dynamic.Inte
 			GroupVersion: policyv1.SchemeGroupVersion.String(),
 			APIResources: []metav1.APIResource{
 				{Name: "poddisruptionbudgets", Namespaced: true, Kind: "PodDisruptionBudget", Version: "v1"},
+			},
+		},
+		{
+			GroupVersion: autoscalingV2.SchemeGroupVersion.String(),
+			APIResources: []metav1.APIResource{
+				{Name: "horizontalpodautoscalers", Namespaced: true, Kind: "HorizontalPodAutoscaler", Version: "v2"},
 			},
 		},
 		{
