@@ -19,6 +19,8 @@ key | default | description
 `missingPodDisruptionBudget` | `warning` | Fails when PDB is missing.
 `metadataAndInstanceMismatched` | `warning` | Fails when label `app.kubernetes.io/instance` and `metadata.name` mismatch
 `topologySpreadConstraint` | `warning` | Fails when there is no topology spread constraint on the pod
+`hpaMaxAvailability` | `warning` | Fails when `maxAvailable` lesser or equal than `minAvailable` (if defined) for a HorizontalPodAutoscaler
+`hpaMinAvailability` | `warning` | Fails when `minAvailable` (if defined) lesser or equal to one for a HorizontalPodAutoscaler
 
 ## Background
 

@@ -94,12 +94,16 @@ func (rkm resourceKindMap) GetNumberOfControllers() int {
 	return total
 }
 
+var kindRewrites = map[string]string{
+	"Ingress":                 "networking.k8s.io/Ingress",
+	"PodDisruptionBudget":     "policy/PodDisruptionBudget",
+	"HorizontalPodAutoscaler": "autoscaling/HorizontalPodAutoscaler",
+}
+
 // This is here for backward compatibility reasons
 func maybeTransformKindIntoGroupKind(k string) string {
-	if k == "Ingress" {
-		return "networking.k8s.io/Ingress"
-	} else if k == "PodDisruptionBudget" {
-		return "policy/PodDisruptionBudget"
+	if val, ok := kindRewrites[k]; ok {
+		return val
 	}
 	return k
 }

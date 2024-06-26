@@ -1,0 +1,4 @@
+successMessage: HPA has a valid max and min replica configuration
+failureMessage: HPA maxReplicas and minReplicas should be different 
+category: Reliability
+target: autoscaling/HorizontalPodAutoscaler
