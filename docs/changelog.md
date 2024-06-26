@@ -6,13 +6,63 @@ meta:
 
 ---
 
-## Unreleased
-* Change `metadataAndNameMismatched` to `metadataAndInstanceMismatched`
-* Add `hpaMaxAvailability` and `hpaMinAvailability` check
+## 9.1.0
+* Add HPA `minAvailable` and HPA `maxAvailable` checks 
+* Fix typo for PDB `minAvailable`
 
-## 8.1.1
+## 9.0.1
+* Fix comments handling in `addOrReplaceValue` function
+
+## 9.0.0
+* Expose issue fixer and mutations in the library
+* Remove `packr` in favor of `go:embed`
+
+## 8.5.6
+* Fix trying to list cluster-level resources
+
+## 8.5.5
+* Fix missing PDB check
+
+## 8.5.4
+* Fix conditional expressions should be at very top of `additionalSchemaStrings`
+* Update alpine to 3.19
+
+## 8.5.3
+* Add quiet flag to polaris audit CLI command to suppress 'upload to Insights' prompt
+
+## 8.5.2
+* Switch to `controller-utils` package to get workloads
+
+## 8.5.1
+* Update `topologySpreadConstraint` check
+
+## 8.5.0
+* Add helm-skip-tests flag
+* Update CLI docs
+* Handle multiple helm-values files
+
+## 8.4.0
+* Change kubernetes.io/ label from name to instance
+
+## 8.3.0
+* Add option to filter audit results by severity level
+* Add insights prompt
+
+## 8.2.4
+* Fix nil pointer issue with webhook
+
+## 8.2.3
 * Add category for `metadataAndNameMismatched`.
 * Fix category for `priorityClassNotSet`.
+
+## 8.2.2
+* Fix webhook server cert dir argument
+
+## 8.2.1
+* Fix on Insights integration
+
+## 8.2.0
+* Minor fixes for NSA checks
 
 ## 8.1.0
 * Add `insights-host` global flag to configure Fairwinds Insights host (defaults to `https://insights.fairwinds.com`).
