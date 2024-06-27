@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zookeeper
+spec:
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: zookeeper
+        foo: bar
+    spec:
+      containers:
+        - name: zookeeper
+          image: zookeeper
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: zookeeper-pdb
+spec:
+  minAvailable: 5
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: zookeeper
