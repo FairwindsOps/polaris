@@ -2,3 +2,34 @@ successMessage: HPA has a valid max and min replica configuration
 failureMessage: HPA maxReplicas and minReplicas should be different 
 category: Reliability
 target: autoscaling/HorizontalPodAutoscaler
+schemaString: |
+  "$schema": http://json-schema.org/draft-07/schema#
+  type: object
+  properties:
+    spec:
+      type: object
+      properties:
+        minReplicas:
+          type: integer
+          minimum: 1
+        maxReplicas:
+          type: integer
+          minimum: 1
+      required:
+      - maxReplicas
+      {{- if .spec.minReplicas }}
+      if:
+        properties:
+          minReplicas:
+            type: integer
+          maxReplicas:
+            type: integer
+      then:
+        properties:
+          maxReplicas:
+            exclusiveMinimum: {{ .spec.minReplicas }}
+      else:
+        properties:
+          maxReplicas:
+            minimum: 1
+      {{- end }}

@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: zookeeper
 spec:
-  template:
+  template: # missing metadata
     spec:
       containers:
         - name: zookeeper
