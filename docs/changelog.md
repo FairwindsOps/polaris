@@ -6,6 +6,10 @@ meta:
 
 ---
 
+## 9.1.1
+* Fix `hpaMinAvailability` failure message
+* Fix `missingPodDisruptionBudget` typo
+
 ## 9.1.0
 * Add HPA `minAvailable` and HPA `maxAvailable` checks 
 * Fix typo for PDB `minAvailable`
