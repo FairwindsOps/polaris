@@ -6,6 +6,9 @@ meta:
 
 ---
 
+## unreleased
+* Rewrite `hpaMaxAvailability` check to use go-template
+
 ## 9.1.0
 * Add HPA `minAvailable` and HPA `maxAvailable` checks 
 * Fix typo for PDB `minAvailable`
