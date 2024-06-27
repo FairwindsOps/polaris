@@ -1,5 +1,5 @@
 successMessage: HPA has a valid min replica configuration
-failureMessage: HPA maxReplicas should be greater than minReplicas
+failureMessage: HPA minReplicas should be 2 or more
 category: Reliability
 target: autoscaling/HorizontalPodAutoscaler
 schema:

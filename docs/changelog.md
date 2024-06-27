@@ -6,7 +6,9 @@ meta:
 
 ---
 
-## unreleased
+## 9.1.1
+* Fix `hpaMinAvailability` failure message
+* Fix `missingPodDisruptionBudget` typo
 * Rewrite `hpaMaxAvailability` check to use go-template
 
 ## 9.1.0
