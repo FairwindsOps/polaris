@@ -4,9 +4,9 @@ category: Reliability
 target: Controller
 controllers:
   include:
-  - Deployment
+    - Deployment
 schema:
-  '$schema': http://json-schema.org/draft-07/schema
+  "$schema": http://json-schema.org/draft-07/schema#
   type: object
   properties:
     spec:
@@ -21,6 +21,14 @@ schema:
                 labels:
                   type: object
                   minProperties: 1
+              required:
+                - labels
+          required:
+            - metadata
+      required:
+        - template
+  required:
+    - spec
 additionalSchemaStrings:
   policy/PodDisruptionBudget: |
     type: object
