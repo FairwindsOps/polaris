@@ -14,7 +14,7 @@ schema:
       properties:
         template:
           type: object
-          properites:
+          properties:
             metadata:
               type: object
               properties:
