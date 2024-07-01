@@ -12,6 +12,7 @@ checks:
   topologySpreadConstraint: warning
   hpaMaxAvailability: warning
   hpaMinAvailability: warning
+  pdbMinAvailableLessThanHPAMaxReplicas: warning
 
   # efficiency
   cpuRequestsMissing: warning

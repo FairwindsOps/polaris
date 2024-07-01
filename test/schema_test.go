@@ -29,8 +29,6 @@ import (
 	"github.com/fairwindsops/polaris/pkg/validator"
 )
 
-var testCases = []testCase{}
-
 type testCase struct {
 	check     string
 	filename  string
@@ -40,10 +38,7 @@ type testCase struct {
 	manifest  string
 }
 
-var mutatedYamlContentMap = map[string]string{}
-var mutationTestCasesMap = map[string][]testCase{}
-
-func init() {
+func initTestCases() ([]testCase, map[string]string, map[string][]testCase) {
 	checkToTest := os.Getenv("POLARIS_CHECK_TEST") // if set, only run tests for this check
 	_, baseDir, _, _ := runtime.Caller(0)
 	baseDir = filepath.Dir(baseDir) + "/checks"
@@ -51,6 +46,12 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+	if checkToTest != "" {
+		fmt.Printf("POLARIS_CHECK_TEST is set... Running tests for '%s' only\n", checkToTest)
+	}
+	var testCases = []testCase{}
+	var mutatedYamlContentMap = map[string]string{}
+	var mutationTestCasesMap = map[string][]testCase{}
 	for _, dir := range dirs {
 		check := dir.Name()
 		if checkToTest != "" && checkToTest != check {
@@ -116,9 +117,11 @@ func init() {
 			}
 		}
 	}
+	return testCases, mutatedYamlContentMap, mutationTestCasesMap
 }
 
 func TestChecks(t *testing.T) {
+	testCases, _, _ := initTestCases()
 	for _, tc := range testCases {
 		results, err := validator.ApplyAllSchemaChecksToResourceProvider(&tc.config, tc.resources)
 		if err != nil {

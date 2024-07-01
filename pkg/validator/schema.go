@@ -369,6 +369,8 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 		passes, issues, err = check.CheckContainer(test.Container)
 	} else if check.Validator.SchemaURI != "" {
 		passes, issues, err = check.CheckObject(test.Resource.Resource.Object)
+	} else if validatorMapper[checkID] != nil {
+		passes, issues, err = validatorMapper[checkID](test)
 	} else {
 		passes, issues, err = true, []jsonschema.ValError{}, nil
 	}
