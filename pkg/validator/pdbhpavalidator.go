@@ -16,10 +16,10 @@ import (
 )
 
 func init() {
-	registerCustomChecks("pdbMinAvailableLessThanHPAMaxReplicas", pdbMinAvailableLessThanHPAMaxReplicas)
+	registerCustomChecks("pdbMinAvailableGreaterThanHPAMaxReplicas", pdbMinAvailableGreaterThanHPAMaxReplicas)
 }
 
-func pdbMinAvailableLessThanHPAMaxReplicas(test schemaTestCase) (bool, []jsonschema.ValError, error) {
+func pdbMinAvailableGreaterThanHPAMaxReplicas(test schemaTestCase) (bool, []jsonschema.ValError, error) {
 	if test.ResourceProvider == nil {
 		logrus.Debug("ResourceProvider is nil")
 		return true, nil, nil
