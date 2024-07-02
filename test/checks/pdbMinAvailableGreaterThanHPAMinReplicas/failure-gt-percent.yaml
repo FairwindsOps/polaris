@@ -34,7 +34,7 @@ spec:
     kind: Deployment
     name: zookeeper
   minReplicas: 5
-  maxReplicas: 5
+  maxReplicas: 7
   metrics:
     - type: Resource
       resource:
