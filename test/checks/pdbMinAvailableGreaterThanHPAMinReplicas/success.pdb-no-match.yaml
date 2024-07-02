@@ -32,7 +32,8 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: zookeeper
-  maxReplicas: 5
+  minReplicas: 5
+  maxReplicas: 7
   metrics:
     - type: Resource
       resource:

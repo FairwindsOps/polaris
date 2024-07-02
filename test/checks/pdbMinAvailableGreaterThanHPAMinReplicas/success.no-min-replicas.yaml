@@ -18,10 +18,10 @@ kind: PodDisruptionBudget
 metadata:
   name: zookeeper-pdb
 spec:
-  minAvailable: 5
+  minAvailable: 2
   selector:
     matchLabels:
-      app.kubernetes.io/name: no-match
+      app.kubernetes.io/name: zookeeper
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
@@ -31,9 +31,8 @@ spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: no-match
-  minReplicas: 5
-  maxReplicas: 7
+    name: zookeeper
+  maxReplicas: 5
   metrics:
     - type: Resource
       resource:
