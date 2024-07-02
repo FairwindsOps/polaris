@@ -12,6 +12,7 @@ checks:
   metadataAndInstanceMismatched: warning
   hpaMaxAvailability: warning
   hpaMinAvailability: warning
+  pdbMinAvailableGreaterThanHPAMaxReplicas: warning
 
   # efficiency
   cpuRequestsMissing: warning

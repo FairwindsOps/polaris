@@ -34,6 +34,8 @@ func TestMutations(t *testing.T) {
 	c, err := config.Parse([]byte(configYaml))
 	assert.NoError(t, err)
 	assert.Len(t, c.Mutations, 0)
+
+	_, mutatedYamlContentMap, mutationTestCasesMap := initTestCases()
 	for mutationStr := range mutationTestCasesMap {
 		if len(mutationTestCasesMap[mutationStr]) == 0 {
 			panic("No test cases found for " + mutationStr)

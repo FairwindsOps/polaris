@@ -181,7 +181,7 @@ func resolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod
 				err = cacheAllObjectsOfKind(ctx, firstOwner.APIVersion, firstOwner.Kind, dynamicClient, restMapper, objectCache)
 			}
 			if err != nil {
-				logrus.Warnf("Error caching objects of Kind %s %v", firstOwner.Kind, err)
+				logrus.Warnf("error caching objects of Kind %s %v", firstOwner.Kind, err)
 				break
 			}
 			abstractObject, ok = objectCache[key]
@@ -193,7 +193,7 @@ func resolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod
 
 		objMeta, err := meta.Accessor(&abstractObject)
 		if err != nil {
-			logrus.Warnf("Error retrieving parent metadata %s of API %s and Kind %s because of error: %v ", firstOwner.Name, firstOwner.APIVersion, firstOwner.Kind, err)
+			logrus.Warnf("error retrieving parent metadata %s of API %s and Kind %s because of error: %v ", firstOwner.Name, firstOwner.APIVersion, firstOwner.Kind, err)
 			return GenericResource{}, err
 		}
 		podSpec := GetPodSpec(abstractObject.Object)
@@ -221,7 +221,7 @@ func cacheSingleObject(ctx context.Context, apiVersion, kind, namespace, name st
 	logrus.Debugf("Caching a single %s", kind)
 	object, err := getObject(ctx, namespace, kind, apiVersion, name, dynamicClient, restMapper)
 	if err != nil {
-		logrus.Warnf("Error retrieving object %s/%s/%s/%s because of error: %v", kind, apiVersion, namespace, name, err)
+		logrus.Warnf("error retrieving object %s/%s/%s/%s because of error: %v", kind, apiVersion, namespace, name, err)
 		return err
 	}
 	key := fmt.Sprintf("%s/%s/%s", object.GetKind(), object.GetNamespace(), object.GetName())
@@ -235,13 +235,13 @@ func cacheAllObjectsOfKind(ctx context.Context, apiVersion, kind string, dynamic
 	fqKind := schema.FromAPIVersionAndKind(apiVersion, kind)
 	mapping, err := restMapper.RESTMapping(fqKind.GroupKind(), fqKind.Version)
 	if err != nil {
-		logrus.Warnf("Error retrieving mapping of API %s and Kind %s because of error: %v", apiVersion, kind, err)
+		logrus.Warnf("error retrieving mapping of API %s and Kind %s because of error: %v", apiVersion, kind, err)
 		return err
 	}
 
 	objects, err := dynamicClient.Resource(mapping.Resource).Namespace("").List(ctx, kubeAPIMetaV1.ListOptions{})
 	if err != nil {
-		logrus.Warnf("Error retrieving parent object API %s and Kind %s because of error: %v", mapping.Resource.Version, mapping.Resource.Resource, err)
+		logrus.Warnf("error retrieving parent object API %s and Kind %s because of error: %v", mapping.Resource.Version, mapping.Resource.Resource, err)
 		return err
 	}
 	for idx, object := range objects.Items {
