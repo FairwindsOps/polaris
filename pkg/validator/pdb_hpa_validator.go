@@ -55,19 +55,19 @@ func pdbMinAvailableGreaterThanHPAMinReplicas(test schemaTestCase) (bool, []json
 
 		if isPercent {
 			// if the value is a percentage, we need to calculate the actual value
-			if deployment.Spec.Replicas == nil {
-				logrus.Debug("deployment.Spec.Replicas is nil")
+			if attachedHPA.Spec.MinReplicas == nil {
+				logrus.Debug("attachedHPA.Spec.MinReplicas is nil")
 				return true, nil, nil
 			}
 
-			pdbMinAvailable, err = intstr.GetScaledValueFromIntOrPercent(attachedPDB.Spec.MinAvailable, int(*deployment.Spec.Replicas), true)
+			pdbMinAvailable, err = intstr.GetScaledValueFromIntOrPercent(attachedPDB.Spec.MinAvailable, int(*attachedHPA.Spec.MinReplicas), true)
 			if err != nil {
 				logrus.Warnf("error getting minAvailable value from PodDisruptionBudget: %v", err)
 				return true, nil, nil
 			}
 		}
 
-		if attachedHPA.Spec.MinReplicas != nil && pdbMinAvailable > int(*attachedHPA.Spec.MinReplicas) {
+		if attachedHPA.Spec.MinReplicas != nil && pdbMinAvailable >= int(*attachedHPA.Spec.MinReplicas) {
 			return false, []jsonschema.ValError{
 				{
 					PropertyPath: "spec.minAvailable",
