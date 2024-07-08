@@ -1,0 +1,7 @@
+successMessage: PDB and HPA are correctly configured
+failureMessage: PDB minAvailable is greater than HPA minReplicas
+category: Reliability
+target: Controller
+controllers:
+  include:
+    - Deployment

@@ -369,6 +369,8 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 		passes, issues, err = check.CheckContainer(test.Container)
 	} else if check.Validator.SchemaURI != "" {
 		passes, issues, err = check.CheckObject(test.Resource.Resource.Object)
+	} else if validatorMapper[checkID] != nil {
+		passes, issues, err = validatorMapper[checkID](test)
 	} else {
 		passes, issues, err = true, []jsonschema.ValError{}, nil
 	}
@@ -380,7 +382,7 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 			break
 		}
 		if test.ResourceProvider == nil {
-			logrus.Warnf("No ResourceProvider available, check %s will not work in this context (e.g. admission control)", checkID)
+			logrus.Warnf("no ResourceProvider available, check %s will not work in this context (e.g. admission control)", checkID)
 			break
 		}
 		resources := test.ResourceProvider.Resources[groupkind]

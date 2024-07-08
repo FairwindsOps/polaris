@@ -206,7 +206,7 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 		}
 		err = resources.addResourcesFromYaml(string(contents))
 		if err != nil {
-			logrus.Warnf("Skipping %s: cannot add resource from YAML: %v", path, err)
+			logrus.Warnf("skipping %s: cannot add resource from YAML: %v", path, err)
 		}
 		return nil
 	}
@@ -340,7 +340,7 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		groupKind := parseGroupKind(maybeTransformKindIntoGroupKind(string(kind)))
 		mapping, err := restMapper.RESTMapping(groupKind)
 		if err != nil {
-			logrus.Warnf("Error retrieving mapping of Kind %s because of error: %v", kind, err)
+			logrus.Warnf("error retrieving mapping of Kind %s because of error: %v", kind, err)
 			return nil, err
 		}
 		if c.Namespace != "" && mapping.Scope.Name() != meta.RESTScopeNameNamespace {
@@ -351,7 +351,7 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		logrus.Info("Loading " + kind)
 		objects, err := dynamic.Resource(mapping.Resource).Namespace(c.Namespace).List(ctx, metav1.ListOptions{})
 		if err != nil {
-			logrus.Warnf("Error retrieving parent object API %s and Kind %s because of error: %v", mapping.Resource.Version, mapping.Resource.Resource, err)
+			logrus.Warnf("error retrieving parent object API %s and Kind %s because of error: %v", mapping.Resource.Version, mapping.Resource.Resource, err)
 			return nil, err
 		}
 		for _, obj := range objects.Items {
