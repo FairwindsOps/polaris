@@ -19,7 +19,7 @@ kind: PodDisruptionBudget
 metadata:
   name: zookeeper-pdb
 spec:
-  minAvailable: 150% # 1.5 * 10 = 15
+  minAvailable: 50% # 0.5 * 10 = 5
   selector:
     matchLabels:
       app.kubernetes.io/name: zookeeper
