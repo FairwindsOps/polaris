@@ -21,7 +21,6 @@ func init() {
 
 func pdbMinAvailableGreaterThanHPAMinReplicas(test schemaTestCase) (bool, []jsonschema.ValError, error) {
 	if test.ResourceProvider == nil {
-		logrus.Debug("ResourceProvider is nil")
 		return true, nil, nil
 	}
 
@@ -47,6 +46,10 @@ func pdbMinAvailableGreaterThanHPAMinReplicas(test schemaTestCase) (bool, []json
 	if attachedPDB != nil && attachedHPA != nil {
 		logrus.Debugf("both PDB and HPA are attached to deployment %s", deployment.Name)
 
+		if attachedPDB.Spec.MinAvailable == nil {
+			return true, nil, nil
+		}
+
 		pdbMinAvailable, isPercent, err := getIntOrPercentValueSafely(attachedPDB.Spec.MinAvailable)
 		if err != nil {
 			logrus.Warnf("error getting getIntOrPercentValueSafely: %v", err)
@@ -56,7 +59,6 @@ func pdbMinAvailableGreaterThanHPAMinReplicas(test schemaTestCase) (bool, []json
 		if isPercent {
 			// if the value is a percentage, we need to calculate the actual value
 			if attachedHPA.Spec.MinReplicas == nil {
-				logrus.Debug("attachedHPA.Spec.MinReplicas is nil")
 				return true, nil, nil
 			}
 
@@ -90,7 +92,6 @@ func hasPDBAttached(deployment appsv1.Deployment, pdbs []kube.GenericResource) (
 		}
 
 		if pdb.Spec.Selector == nil {
-			logrus.Debug("pdb.Spec.Selector is nil")
 			continue
 		}
 
