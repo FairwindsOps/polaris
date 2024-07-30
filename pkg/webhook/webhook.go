@@ -75,10 +75,14 @@ func GetValidatedResults(kind string, decoder *admission.Decoder, req admission.
 				return nil, resource, err
 			}
 			obj, err := kube.GetObject(context.Background(), pod.ObjectMeta.Namespace, pod.ObjectMeta.OwnerReferences[0].Kind, pod.APIVersion, pod.ObjectMeta.OwnerReferences[0].Name, dynamicClient, restMapper)
-			if err != nil || obj == nil {
-				logrus.Errorf("Failed to get owner pod: %v", err)
+			if err != nil {
+				logrus.Errorf("Failed to get pod owner: %v", err)
 				return nil, resource, err
 			}
+			if obj == nil {
+				logrus.Infof("Owner pod not found for %s/%s", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name)
+				return nil, resource, fmt.Error("Pod owner not found")
+			} else {
 			logrus.Infof("Allowing owned pod %s/%s to pass through webhook", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name)
 			return nil, resource, nil
 		}
