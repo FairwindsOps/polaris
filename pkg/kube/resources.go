@@ -169,7 +169,7 @@ func CreateResourceProviderFromResource(ctx context.Context, workload string) (*
 	version := parts[2]
 	name := parts[3]
 
-	obj, err := getObject(ctx, namespace, kind, version, name, dynamicClient, restMapper)
+	obj, err := GetObject(ctx, namespace, kind, version, name, dynamicClient, restMapper)
 	if err != nil {
 		return nil, fmt.Errorf("Could not find workload %s: %w", workload, err)
 	}

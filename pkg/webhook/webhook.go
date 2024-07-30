@@ -69,6 +69,16 @@ func GetValidatedResults(kind string, decoder *admission.Decoder, req admission.
 			return nil, resource, err
 		}
 		if len(pod.ObjectMeta.OwnerReferences) > 0 {
+			dynamicClient, restMapper, _, _, err := kube.GetKubeClient(context.Background(), "")
+			if err != nil {
+				logrus.Errorf("getting the kubernetes client: %v", err)
+				return nil, resource, err
+			}
+			obj, err := kube.GetObject(context.Background(), pod.ObjectMeta.Namespace, pod.ObjectMeta.OwnerReferences[0].Kind, pod.APIVersion, pod.ObjectMeta.OwnerReferences[0].Name, dynamicClient, restMapper)
+			if err != nil || obj == nil {
+				logrus.Errorf("Failed to get owner pod: %v", err)
+				return nil, resource, err
+			}
 			logrus.Infof("Allowing owned pod %s/%s to pass through webhook", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name)
 			return nil, resource, nil
 		}

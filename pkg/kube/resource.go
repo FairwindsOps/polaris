@@ -219,7 +219,7 @@ func resolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod
 
 func cacheSingleObject(ctx context.Context, apiVersion, kind, namespace, name string, dynamicClient dynamic.Interface, restMapper meta.RESTMapper, objectCache map[string]unstructured.Unstructured) error {
 	logrus.Debugf("Caching a single %s", kind)
-	object, err := getObject(ctx, namespace, kind, apiVersion, name, dynamicClient, restMapper)
+	object, err := GetObject(ctx, namespace, kind, apiVersion, name, dynamicClient, restMapper)
 	if err != nil {
 		logrus.Warnf("error retrieving object %s/%s/%s/%s because of error: %v", kind, apiVersion, namespace, name, err)
 		return err
@@ -252,7 +252,7 @@ func cacheAllObjectsOfKind(ctx context.Context, apiVersion, kind string, dynamic
 	return nil
 }
 
-func getObject(ctx context.Context, namespace, kind, version, name string, dynamicClient dynamic.Interface, restMapper meta.RESTMapper) (*unstructured.Unstructured, error) {
+func GetObject(ctx context.Context, namespace, kind, version, name string, dynamicClient dynamic.Interface, restMapper meta.RESTMapper) (*unstructured.Unstructured, error) {
 	fqKind := schema.FromAPIVersionAndKind(version, kind)
 	mapping, err := restMapper.RESTMapping(fqKind.GroupKind(), fqKind.Version)
 	if err != nil {
