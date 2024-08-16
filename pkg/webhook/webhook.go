@@ -16,15 +16,16 @@ package webhook
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
+	"github.com/fairwindsops/controller-utils/pkg/controller"
 	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
 	validator "github.com/fairwindsops/polaris/pkg/validator"
 
 	"github.com/sirupsen/logrus"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -58,38 +59,40 @@ func (v *Validator) handleInternal(req admission.Request) (*validator.Result, ku
 func GetValidatedResults(kind string, decoder *admission.Decoder, req admission.Request, config config.Configuration) (*validator.Result, kube.GenericResource, error) {
 	var resource kube.GenericResource
 	var err error
-	if kind == "Pod" {
-		if decoder == nil {
-			panic("Decoder is nil!")
-		}
-		pod := corev1.Pod{}
-		err := decoder.Decode(req, &pod)
+	rawBytes := req.Object.Raw
+	if req.Operation == "DELETE" {
+		rawBytes = req.OldObject.Raw // Object.Raw is empty for DELETEs
+	}
+	var decoded map[string]any
+	err = json.Unmarshal(rawBytes, &decoded)
+	if err != nil {
+		logrus.Errorf("Error unmarshaling JSON")
+		return nil, resource, err
+	}
+	if ownerReferences, ok := decoded["metadata"].(map[string]any)["ownerReferences"].([]any); ok && len(ownerReferences) > 0 {
+		ownerReference := ownerReferences[0].(map[string]any)
+		dynamicClient, restMapper, _, _, err := kube.GetKubeClient(context.Background(), "")
 		if err != nil {
-			logrus.Errorf("Failed to decode pod: %v", err)
+			logrus.Errorf("getting the kubernetes client: %v", err)
 			return nil, resource, err
 		}
-		if len(pod.ObjectMeta.OwnerReferences) > 0 {
-			dynamicClient, restMapper, _, _, err := kube.GetKubeClient(context.Background(), "")
+		ctrl, err := kube.GetObject(context.Background(), req.Namespace, ownerReference["kind"].(string), ownerReference["apiVersion"].(string), ownerReference["name"].(string), dynamicClient, restMapper)
+		if err != nil {
+			logrus.Infof("error retrieving owner for object %s - running checks: %v", req.Name, err)
+		} else {
+			err = controller.ValidateIfControllerMatches(decoded, ctrl.Object)
 			if err != nil {
-				logrus.Errorf("getting the kubernetes client: %v", err)
-				return nil, resource, err
-			}
-			obj, err := kube.GetObject(context.Background(), pod.ObjectMeta.Namespace, pod.ObjectMeta.OwnerReferences[0].Kind, pod.APIVersion, pod.ObjectMeta.OwnerReferences[0].Name, dynamicClient, restMapper)
-			if err != nil {
-				logrus.Errorf("Failed to get pod owner: %v", err)
-				return nil, resource, err
-			}
-			if obj == nil {
-				logrus.Infof("Owner pod not found for %s/%s", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name)
-				return nil, resource, fmt.Error("Pod owner not found")
+				logrus.Infof("object %s has an owner but the owner is invalid - running checks: %v", req.Name, err)
 			} else {
-			logrus.Infof("Allowing owned pod %s/%s to pass through webhook", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name)
-			return nil, resource, nil
+				logrus.Infof("object %s has an owner and the owner is valid - skipping", req.Name)
+				return nil, resource, nil
+			}
 		}
-		resource, err = kube.NewGenericResourceFromPod(pod, pod)
 	} else {
-		resource, err = kube.NewGenericResourceFromBytes(req.Object.Raw)
+		logrus.Infof("Object %s has no owner - running checks", req.Name)
 	}
+
+	resource, err = kube.NewGenericResourceFromBytes(req.Object.Raw)
 	if err != nil {
 		logrus.Errorf("Failed to create resource: %v", err)
 		return nil, resource, err
