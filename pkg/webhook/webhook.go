@@ -70,21 +70,29 @@ func GetValidatedResults(kind string, decoder *admission.Decoder, req admission.
 		return nil, resource, err
 	}
 	if ownerReferences, ok := decoded["metadata"].(map[string]any)["ownerReferences"].([]any); ok && len(ownerReferences) > 0 {
-		ownerReference := ownerReferences[0].(map[string]any)
+		allOwnersReferenceValid := true
 		dynamicClient, restMapper, _, _, err := kube.GetKubeClient(context.Background(), "")
 		if err != nil {
 			logrus.Errorf("getting the kubernetes client: %v", err)
 			return nil, resource, err
 		}
-		ctrl, err := kube.GetObject(context.Background(), req.Namespace, ownerReference["kind"].(string), ownerReference["apiVersion"].(string), ownerReference["name"].(string), dynamicClient, restMapper)
-		if err != nil {
-			logrus.Infof("error retrieving owner for object %s - running checks: %v", req.Name, err)
-		} else {
-			err = controller.ValidateIfControllerMatches(decoded, ctrl.Object)
+		for _, ownerReference := range ownerReferences {
+			ownerReference := ownerReference.(map[string]any)
+			ctrl, err := kube.GetObject(context.Background(), req.Namespace, ownerReference["kind"].(string), ownerReference["apiVersion"].(string), ownerReference["name"].(string), dynamicClient, restMapper)
 			if err != nil {
-				logrus.Infof("object %s has an owner but the owner is invalid - running checks: %v", req.Name, err)
+				logrus.Infof("error retrieving owner for object %s - running checks: %v", req.Name, err)
+				allOwnersReferenceValid = false
+				break
 			} else {
-				logrus.Infof("object %s has an owner and the owner is valid - skipping", req.Name)
+				err = controller.ValidateIfControllerMatches(decoded, ctrl.Object)
+				if err != nil {
+					logrus.Infof("object %s has an owner but the owner is invalid - running checks: %v", req.Name, err)
+					allOwnersReferenceValid = false
+					break
+				}
+			}
+			if allOwnersReferenceValid {
+				logrus.Infof("object %s has owner(s) and the owner(s) are valid - skipping", req.Name)
 				return nil, resource, nil
 			}
 		}
