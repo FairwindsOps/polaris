@@ -7,7 +7,7 @@ require (
 	github.com/fairwindsops/controller-utils v0.3.4
 	github.com/fairwindsops/insights-plugins/plugins/workloads v0.0.0-20230601204422-5c789e15990c
 	github.com/fatih/color v1.15.0
-	github.com/gorilla/mux v1.8.0
+	github.com/gorilla/mux v1.8.1
 	github.com/pkg/errors v0.9.1
 	github.com/qri-io/jsonschema v0.1.2
 	github.com/sirupsen/logrus v1.9.3
