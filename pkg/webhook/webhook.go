@@ -36,7 +36,7 @@ import (
 // Validator validates k8s resources.
 type Validator struct {
 	Client  client.Client
-	decoder *admission.Decoder
+	decoder admission.Decoder
 	Config  config.Configuration
 }
 
@@ -56,7 +56,7 @@ func (v *Validator) handleInternal(req admission.Request) (*validator.Result, ku
 }
 
 // GetValidatedResults returns the validated results.
-func GetValidatedResults(kind string, decoder *admission.Decoder, req admission.Request, config config.Configuration) (*validator.Result, kube.GenericResource, error) {
+func GetValidatedResults(kind string, decoder admission.Decoder, req admission.Request, config config.Configuration) (*validator.Result, kube.GenericResource, error) {
 	var resource kube.GenericResource
 	var err error
 	rawBytes := req.Object.Raw

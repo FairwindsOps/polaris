@@ -33,7 +33,7 @@ import (
 type Mutator struct {
 	Client  client.Client
 	Config  config.Configuration
-	decoder *admission.Decoder
+	decoder admission.Decoder
 }
 
 // NewMutateWebhook creates a mutating admission webhook for the apiType.

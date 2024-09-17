@@ -50,8 +50,6 @@ var webhookCmd = &cobra.Command{
 		logrus.Debug("Setting up controller manager")
 
 		mgr, err := manager.New(k8sConfig.GetConfigOrDie(), manager.Options{
-			CertDir: certDir,
-			Port:    webhookPort,
 			WebhookServer: webhook.NewServer(webhook.Options{
 				CertDir:  certDir,
 				Port:     webhookPort,
