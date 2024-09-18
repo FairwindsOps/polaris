@@ -63,6 +63,16 @@ jobs:
           password-variable: FAIRWINDS_QUAY_TOKEN
       - run: echo 'export GORELEASER_CURRENT_TAG="${CIRCLE_TAG}"' >> $BASH_ENV
       - run: goreleaser
+  test_k8s: &test_k8s
+    run:
+      name: Test Kubernetes Deployments
+      command: |
+        if [[ -z $CIRCLE_PR_NUMBER ]]; then
+          ./test/webhook_test.sh
+          ./test/kube_dashboard_test.sh
+        else
+          echo "Skipping Kubernetes tests for forked PR"
+        fi      
 workflows:
   version: 2
   test_and_build:
