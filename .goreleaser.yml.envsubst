@@ -40,6 +40,7 @@ signs:
   artifacts: checksum
 release:
   # This is replaced using `envsubst`, depending on the git branch.
+  disable: false
   prerelease: auto
   footer: |
     You can verify the signature of the checksums.txt file using [cosign](https://github.com/sigstore/cosign).
@@ -50,7 +51,7 @@ release:
 brews:
   - name: polaris
     # This is replaced using `envsubst`, depending on the git branch.
-    skip_upload: ${skip_release}  
+    skip_upload: false
     goarm: 6
     repository:
       owner: FairwindsOps
@@ -83,31 +84,31 @@ docker_manifests:
   - "quay.io/fairwinds/polaris:{{ .FullCommit }}-arm64"
 - name_template: quay.io/fairwinds/polaris:{{ .Env.feature_docker_tag }}
   # This is replaced using `envsubst`, depending on the git branch.
-  skip_push: ${skip_feature_docker_tags}
+  skip_push: false
   image_templates:
   - "quay.io/fairwinds/polaris:{{ .FullCommit }}-amd64"
   - "quay.io/fairwinds/polaris:{{ .FullCommit }}-arm64"
 - name_template: quay.io/fairwinds/polaris:latest
   # This is replaced using `envsubst`, depending on the git branch.
-  skip_push: ${skip_release}
+  skip_push: false
   image_templates:
   - "quay.io/fairwinds/polaris:{{ .FullCommit }}-amd64"
   - "quay.io/fairwinds/polaris:{{ .FullCommit }}-arm64"
 - name_template: quay.io/fairwinds/polaris:{{ .Tag }}
   # This is replaced using `envsubst`, depending on the git branch.
-  skip_push: ${skip_release}
+  skip_push: false
   image_templates:
   - "quay.io/fairwinds/polaris:{{ .FullCommit }}-amd64"
   - "quay.io/fairwinds/polaris:{{ .FullCommit }}-arm64"
 - name_template: quay.io/fairwinds/polaris:{{ .Major }}
   # This is replaced using `envsubst`, depending on the git branch.
-  skip_push: ${skip_release}
+  skip_push: false
   image_templates:
   - "quay.io/fairwinds/polaris:{{ .FullCommit }}-amd64"
   - "quay.io/fairwinds/polaris:{{ .FullCommit }}-arm64"
 - name_template: quay.io/fairwinds/polaris:{{ .Major }}.{{ .Minor }}
   # This is replaced using `envsubst`, depending on the git branch.
-  skip_push: ${skip_release}
+  skip_push: false
   image_templates:
   - "quay.io/fairwinds/polaris:{{ .FullCommit }}-amd64"
   - "quay.io/fairwinds/polaris:{{ .FullCommit }}-arm64"
