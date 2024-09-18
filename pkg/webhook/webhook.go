@@ -43,9 +43,10 @@ type Validator struct {
 // NewValidateWebhook creates a validating admission webhook for the apiType.
 func NewValidateWebhook(mgr manager.Manager, c config.Configuration) {
 	path := "/validate"
+	decoder := admission.NewDecoder(runtime.NewScheme())
 	validator := Validator{
 		Client:  mgr.GetClient(),
-		decoder: admission.NewDecoder(runtime.NewScheme()),
+		decoder: &decoder,
 		Config:  c,
 	}
 	mgr.GetWebhookServer().Register(path, &webhook.Admission{Handler: &validator})

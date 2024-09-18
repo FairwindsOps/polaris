@@ -120,7 +120,7 @@ jobs:
 
   test:
     docker:
-      - image: cimg/go:1.19
+      - image: cimg/go:1.22
     steps:
       - checkout
       - *set_environment_variables
@@ -136,11 +136,10 @@ jobs:
       # The goreleaser image tag determins the version of Go.
       # Manually check goreleaser images for their version of Go.
       # Ref: https://hub.docker.com/r/goreleaser/goreleaser/tags
-      - image: goreleaser/goreleaser:v1.18.2
+      - image: goreleaser/goreleaser:v1.20.0
     steps:
       - checkout
-      - setup_remote_docker:
-          version: 20.10.11
+      - setup_remote_docker
       - *install_vault_alpine
       - rok8s/get_vault_env:
           vault_path: repo/global/env
