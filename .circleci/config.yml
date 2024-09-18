@@ -120,7 +120,7 @@ jobs:
 
   test:
     docker:
-      - image: cimg/go:1.19
+      - image: cimg/go:1.22
     steps:
       - checkout
       - *set_environment_variables
