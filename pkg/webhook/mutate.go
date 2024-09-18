@@ -33,16 +33,16 @@ import (
 type Mutator struct {
 	Client  client.Client
 	Config  config.Configuration
-	decoder admission.Decoder
+	decoder *admission.Decoder
 }
 
 // NewMutateWebhook creates a mutating admission webhook for the apiType.
 func NewMutateWebhook(mgr manager.Manager, c config.Configuration) {
 	path := "/mutate"
-
+	decoder := admission.NewDecoder(runtime.NewScheme())
 	mutator := Mutator{
 		Client:  mgr.GetClient(),
-		decoder: admission.NewDecoder(runtime.NewScheme()),
+		decoder: &decoder,
 		Config:  c,
 	}
 	mgr.GetWebhookServer().Register(path, &webhook.Admission{Handler: &mutator})
