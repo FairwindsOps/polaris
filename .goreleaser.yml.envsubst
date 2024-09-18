@@ -40,7 +40,6 @@ signs:
   artifacts: checksum
 release:
   # This is replaced using `envsubst`, depending on the git branch.
-  disable: ${skip_release}
   prerelease: auto
   footer: |
     You can verify the signature of the checksums.txt file using [cosign](https://github.com/sigstore/cosign).
