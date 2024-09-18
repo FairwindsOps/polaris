@@ -129,6 +129,8 @@ jobs:
       - *test_binary_dashboard
 
   build_and_push:
+    docker:
+      - image: cimg/go:1.22
     working_directory: /go/src/github.com/fairwindsops/polaris/
     resource_class: large
     shell: /bin/bash
