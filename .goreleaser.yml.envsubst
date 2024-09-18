@@ -50,8 +50,6 @@ release:
     ```
 brews:
   - name: polaris
-    # This is replaced using `envsubst`, depending on the git branch.
-    skip_upload: ${skip_release}  
     goarm: 6
     repository:
       owner: FairwindsOps
