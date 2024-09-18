@@ -110,4 +110,3 @@ docker_manifests:
   image_templates:
   - "quay.io/fairwinds/polaris:{{ .FullCommit }}-amd64"
   - "quay.io/fairwinds/polaris:{{ .FullCommit }}-arm64"
-  
