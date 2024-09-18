@@ -50,6 +50,8 @@ release:
     ```
 brews:
   - name: polaris
+    # This is replaced using `envsubst`, depending on the git branch.
+    skip_upload: ${skip_release}  
     repository:
       owner: FairwindsOps
       name: homebrew-tap
