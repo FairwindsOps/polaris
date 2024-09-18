@@ -33,7 +33,6 @@ jobs:
             go test -v --bench --benchmem -coverprofile=coverage.txt -covermode=atomic ./pkg/...
             go vet 2> govet-report.out
             go tool cover -html=coverage.txt -o cover-report.html
-      - *install_k8s
       - *test_k8s            
   snapshot:
     working_directory: /go/src/github.com/fairwindsops/polaris
