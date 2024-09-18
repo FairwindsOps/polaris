@@ -50,7 +50,6 @@ release:
     ```
 brews:
   - name: polaris
-    goarm: 6
     repository:
       owner: FairwindsOps
       name: homebrew-tap
