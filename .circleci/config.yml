@@ -139,7 +139,7 @@ jobs:
       - image: goreleaser/goreleaser:v2.2.0
     steps:
       - checkout
-      - setup_remote_docker:
+      - setup_remote_docker
       - *install_vault_alpine
       - rok8s/get_vault_env:
           vault_path: repo/global/env
