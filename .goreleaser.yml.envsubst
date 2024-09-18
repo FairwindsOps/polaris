@@ -1,4 +1,3 @@
-version: 2
 checksum:
   name_template: 'checksums.txt'
 changelog:
@@ -52,10 +51,10 @@ brews:
   - name: polaris
     # This is replaced using `envsubst`, depending on the git branch.
     skip_upload: ${skip_release}
-    repository:
+    tap:
       owner: FairwindsOps
       name: homebrew-tap
-    directory: Formula
+    folder: Formula
     description: Open Source Best Practices for Kubernetes
     test: |
       system "#{bin}/polaris version"
