@@ -146,12 +146,9 @@ jobs:
       - rok8s/get_vault_env:
           vault_path: repo/polaris/env
       - *set_environment_variables
-      - rok8s/docker_login:
-          registry: "quay.io"
-          username: $FAIRWINDS_QUAY_USER
-          password-variable: FAIRWINDS_QUAY_TOKEN
-      - run: echo 'export GORELEASER_CURRENT_TAG="${CIRCLE_TAG}"' >> $BASH_ENV
-      - run: goreleaser
+      - run: docker login quay.io -u="${FAIRWINDS_QUAY_USER}" -p="${FAIRWINDS_QUAY_TOKEN}"
+      - install_goreleaser_dependencies
+      - run: scripts/goreleaser.sh
 
 workflows:
   version: 2
