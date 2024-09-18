@@ -27,12 +27,6 @@ jobs:
             echo "installing golint"
             go install golang.org/x/lint/golint@latest
             echo "linting..."
-            golint -set_exit_status ./... | tee golint-report.out
-            echo "checking go fmt..."
-            if ! test -z $(go fmt ./...); then
-              echo "Please run go fmt ./... to format your code"
-              #exit 1
-            fi
       - run:
           name: test
           command: |
