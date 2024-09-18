@@ -140,7 +140,6 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker:
-          version: 20.10.11
       - *install_vault_alpine
       - rok8s/get_vault_env:
           vault_path: repo/global/env
