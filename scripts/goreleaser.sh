@@ -56,7 +56,7 @@ echo "${this_script} using git tag ${GORELEASER_CURRENT_TAG}"
 # for its `signs` section `signature` and `artifact` variables.
 cat .goreleaser.yml.envsubst |envsubst '${skip_release} ${skip_feature_docker_tags} ${feature_docker_tag}' >.goreleaser.yml
 cat .goreleaser.yml
-goreleaser --skip=sign $@
+goreleaser --snapshot --skip=sign $@
 if [ $? -eq 0 ] ; then
   echo "${this_script} removing the temporary .goreleaser.yml since goreleaser was successful"
   rm .goreleaser.yml # Keep git clean for additional goreleaser runs
