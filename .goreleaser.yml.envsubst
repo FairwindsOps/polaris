@@ -39,7 +39,7 @@ signs:
   args: ["sign-blob", "--key=hashivault://cosign", "-output-signature=${signature}", "${artifact}"]
   artifacts: checksum
 release:
- # This is replaced using `envsubst`, depending on the git branch.
+  # This is replaced using `envsubst`, depending on the git branch.
   disable: ${skip_release}
   prerelease: auto
   footer: |
@@ -50,7 +50,7 @@ release:
     ```
 brews:
   - name: polaris
- # This is replaced using `envsubst`, depending on the git branch.
+  # This is replaced using `envsubst`, depending on the git branch.
     skip_upload: ${skip_release}  
     goarm: 6
     repository:
