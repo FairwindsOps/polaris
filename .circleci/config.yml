@@ -63,7 +63,7 @@ jobs:
           password-variable: FAIRWINDS_QUAY_TOKEN
       - run: echo 'export GORELEASER_CURRENT_TAG="${CIRCLE_TAG}"' >> $BASH_ENV
       - run: goreleaser
-  test_k8s: &test_k8s
+  test_k8s:
     run:
       name: Test Kubernetes Deployments
       command: |
