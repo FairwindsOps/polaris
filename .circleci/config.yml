@@ -86,6 +86,9 @@ workflows:
               only: /.*/
             tags:
               ignore: /.*/
+      - test_k8s:
+          requires:
+            - snapshot      
   release:
     jobs:
       - oss-docs/publish-docs:
