@@ -52,10 +52,10 @@ brews:
   - name: polaris
     # This is replaced using `envsubst`, depending on the git branch.
     skip_upload: ${skip_release}
-    tap:
+    repository:
       owner: FairwindsOps
       name: homebrew-tap
-    folder: Formula
+    directory: Formula
     description: Open Source Best Practices for Kubernetes
     test: |
       system "#{bin}/polaris version"
