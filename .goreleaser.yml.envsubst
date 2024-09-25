@@ -57,6 +57,7 @@ brews:
       name: homebrew-tap
     directory: Formula
     description: Open Source Best Practices for Kubernetes
+    url_template: "https://github.com/FairwindsOps/polaris/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
     test: |
       system "#{bin}/polaris version"
 dockers:
