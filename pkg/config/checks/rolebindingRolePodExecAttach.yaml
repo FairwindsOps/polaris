@@ -17,7 +17,7 @@ schemaString: |
               const: "rbac.authorization.k8s.io"
             kind:
               type: string
-              const: "Role"
+              const: "ClusterRole"
     # Do not alert on default RoleBindings.
     - required: ["metadata"]
       properties:
