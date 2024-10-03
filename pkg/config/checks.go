@@ -72,7 +72,7 @@ var (
 		"rolebindingClusterAdminRole",
 		"hpaMaxAvailability",
 		"hpaMinAvailability",
-		"pdbMinAvailableGreaterThanHPAMinReplicas",
+		"pdbMinAvailableGreaterThanOrEqualToHPAMinReplicas",
 	}
 
 	// BuiltInChecks contains the checks that come pre-installed w/ Polaris
