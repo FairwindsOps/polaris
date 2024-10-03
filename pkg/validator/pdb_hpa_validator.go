@@ -16,10 +16,10 @@ import (
 )
 
 func init() {
-	registerCustomChecks("pdbMinAvailableGreaterThanHPAMinReplicas", pdbMinAvailableGreaterThanHPAMinReplicas)
+	registerCustomChecks("pdbMinAvailableGreaterThanOrEqualToHPAMinReplicas", pdbMinAvailableGreaterThanOrEqualToHPAMinReplicas)
 }
 
-func pdbMinAvailableGreaterThanHPAMinReplicas(test schemaTestCase) (bool, []jsonschema.ValError, error) {
+func pdbMinAvailableGreaterThanOrEqualToHPAMinReplicas(test schemaTestCase) (bool, []jsonschema.ValError, error) {
 	if test.ResourceProvider == nil {
 		return true, nil, nil
 	}
