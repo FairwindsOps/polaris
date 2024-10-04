@@ -22,6 +22,7 @@ key | default | description
 `hpaMaxAvailability` | `warning` | Fails when `maxAvailable` lesser or equal than `minAvailable` (if defined) for a HorizontalPodAutoscaler
 `hpaMinAvailability` | `warning` | Fails when `minAvailable` (if defined) lesser or equal to one for a HorizontalPodAutoscaler
 `pdbMinAvailableGreaterThanHPAMinReplicas` | `warning` |  Fails when PDB `minAvailable` is greater than HPA `minReplicas`
+`pdbMinAvailableEqualToHPAMinReplicas` | `warning` |  Fails when PDB `minAvailable` is equal to HPA `minReplicas`
 
 ## Background
 

@@ -17,6 +17,7 @@ import (
 
 func init() {
 	registerCustomChecks("pdbMinAvailableGreaterThanHPAMinReplicas", pdbMinAvailableGreaterThanHPAMinReplicas)
+	registerCustomChecks("pdbMinAvailableEqualToHPAMinReplicas", pdbMinAvailableEqualToHPAMinReplicas)
 }
 
 func pdbMinAvailableGreaterThanHPAMinReplicas(test schemaTestCase) (bool, []jsonschema.ValError, error) {
@@ -75,6 +76,70 @@ func pdbMinAvailableGreaterThanHPAMinReplicas(test schemaTestCase) (bool, []json
 					PropertyPath: "spec.minAvailable",
 					InvalidValue: pdbMinAvailable,
 					Message:      fmt.Sprintf("The minAvailable value in the PodDisruptionBudget(%s) is %d, which is greater than the minReplicas value in the HorizontalPodAutoscaler(%s) (%d)", attachedPDB.Name, pdbMinAvailable, attachedHPA.Name, *attachedHPA.Spec.MinReplicas),
+				},
+			}, nil
+		}
+	}
+
+	return true, nil, nil
+}
+
+func pdbMinAvailableEqualToHPAMinReplicas(test schemaTestCase) (bool, []jsonschema.ValError, error) {
+	if test.ResourceProvider == nil {
+		return true, nil, nil
+	}
+
+	deployment := &appsv1.Deployment{}
+	err := runtime.DefaultUnstructuredConverter.FromUnstructured(test.Resource.Resource.Object, deployment)
+	if err != nil {
+		logrus.Warnf("error converting unstructured to Deployment: %v", err)
+		return true, nil, nil
+	}
+
+	attachedPDB, err := hasPDBAttached(*deployment, test.ResourceProvider.Resources["policy/PodDisruptionBudget"])
+	if err != nil {
+		logrus.Warnf("error getting PodDisruptionBudget: %v", err)
+		return true, nil, nil
+	}
+
+	attachedHPA, err := hasHPAAttached(*deployment, test.ResourceProvider.Resources["autoscaling/HorizontalPodAutoscaler"])
+	if err != nil {
+		logrus.Warnf("error getting HorizontalPodAutoscaler: %v", err)
+		return true, nil, nil
+	}
+
+	if attachedPDB != nil && attachedHPA != nil {
+		logrus.Debugf("both PDB and HPA are attached to deployment %s", deployment.Name)
+
+		if attachedPDB.Spec.MinAvailable == nil {
+			return true, nil, nil
+		}
+
+		pdbMinAvailable, isPercent, err := getIntOrPercentValueSafely(attachedPDB.Spec.MinAvailable)
+		if err != nil {
+			logrus.Warnf("error getting getIntOrPercentValueSafely: %v", err)
+			return true, nil, nil
+		}
+
+		if isPercent {
+			// if the value is a percentage, we need to calculate the actual value
+			if attachedHPA.Spec.MinReplicas == nil {
+				return true, nil, nil
+			}
+
+			pdbMinAvailable, err = intstr.GetScaledValueFromIntOrPercent(attachedPDB.Spec.MinAvailable, int(*attachedHPA.Spec.MinReplicas), true)
+			if err != nil {
+				logrus.Warnf("error getting minAvailable value from PodDisruptionBudget: %v", err)
+				return true, nil, nil
+			}
+		}
+
+		if attachedHPA.Spec.MinReplicas != nil && pdbMinAvailable == int(*attachedHPA.Spec.MinReplicas) {
+			return false, []jsonschema.ValError{
+				{
+					PropertyPath: "spec.minAvailable",
+					InvalidValue: pdbMinAvailable,
+					Message:      fmt.Sprintf("The minAvailable value in the PodDisruptionBudget(%s) is %d, which is equal to the minReplicas value in the HorizontalPodAutoscaler(%s) (%d)", attachedPDB.Name, pdbMinAvailable, attachedHPA.Name, *attachedHPA.Spec.MinReplicas),
 				},
 			}, nil
 		}
