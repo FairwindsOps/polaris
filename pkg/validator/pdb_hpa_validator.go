@@ -69,12 +69,12 @@ func pdbMinAvailableGreaterThanHPAMinReplicas(test schemaTestCase) (bool, []json
 			}
 		}
 
-		if attachedHPA.Spec.MinReplicas != nil && pdbMinAvailable >= int(*attachedHPA.Spec.MinReplicas) {
+		if attachedHPA.Spec.MinReplicas != nil && pdbMinAvailable > int(*attachedHPA.Spec.MinReplicas) {
 			return false, []jsonschema.ValError{
 				{
 					PropertyPath: "spec.minAvailable",
 					InvalidValue: pdbMinAvailable,
-					Message:      fmt.Sprintf("The minAvailable value in the PodDisruptionBudget(%s) is %d, which is greater or equal than the minReplicas value in the HorizontalPodAutoscaler(%s) (%d)", attachedPDB.Name, pdbMinAvailable, attachedHPA.Name, *attachedHPA.Spec.MinReplicas),
+					Message:      fmt.Sprintf("The minAvailable value in the PodDisruptionBudget(%s) is %d, which is greater than the minReplicas value in the HorizontalPodAutoscaler(%s) (%d)", attachedPDB.Name, pdbMinAvailable, attachedHPA.Name, *attachedHPA.Spec.MinReplicas),
 				},
 			}, nil
 		}
