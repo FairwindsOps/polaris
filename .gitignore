@@ -17,6 +17,8 @@ polaris
 *.test
 
 # Output of the go coverage tool
+coverage.txt
+
 /*.out
 
 Tiltfile
