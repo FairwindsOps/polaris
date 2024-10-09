@@ -52,27 +52,50 @@ type Exemption struct {
 //go:embed default.yaml
 var defaultConfig []byte
 
-// ParseFile parses config from a file.
-func ParseFile(path string) (Configuration, error) {
-	var rawBytes []byte
-	var err error
-	if path == "" {
-		rawBytes = defaultConfig
-	} else if strings.HasPrefix(path, "https://") || strings.HasPrefix(path, "http://") {
-		// path is a url
-		response, err2 := http.Get(path)
-		if err2 != nil {
-			return Configuration{}, err2
-		}
-		rawBytes, err = io.ReadAll(response.Body)
-	} else {
-		// path is local
-		rawBytes, err = os.ReadFile(path)
-	}
+// MergeConfigAndParseFile parses config from a file.
+func MergeConfigAndParseFile(customConfigPath string, mergeConfig bool) (Configuration, error) {
+	rawBytes, err := mergeConfigFile(customConfigPath, mergeConfig)
 	if err != nil {
 		return Configuration{}, err
 	}
+
 	return Parse(rawBytes)
+}
+
+func mergeConfigFile(customConfigPath string, mergeConfig bool) ([]byte, error) {
+	if customConfigPath == "" {
+		return defaultConfig, nil
+	}
+
+	var customConfigContent []byte
+	var err error
+	if strings.HasPrefix(customConfigPath, "https://") || strings.HasPrefix(customConfigPath, "http://") {
+		// path is a url
+		response, err := http.Get(customConfigPath)
+		if err != nil {
+			return nil, err
+		}
+		customConfigContent, err = io.ReadAll(response.Body)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// path is local
+		customConfigContent, err = os.ReadFile(customConfigPath)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if mergeConfig {
+		mergedConfig, err := mergeYaml(defaultConfig, customConfigContent)
+		if err != nil {
+			return nil, err
+		}
+		return mergedConfig, nil
+	}
+
+	return customConfigContent, nil
 }
 
 // Parse parses config from a byte array.

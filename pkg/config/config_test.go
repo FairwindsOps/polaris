@@ -125,7 +125,7 @@ func TestConfigFromURL(t *testing.T) {
 	}()
 	time.Sleep(time.Second)
 
-	parsedConf, err = ParseFile("http://localhost:8081/exampleURL")
+	parsedConf, err = MergeConfigAndParseFile("http://localhost:8081/exampleURL", false)
 	assert.NoError(t, err, "Expected no error when parsing YAML from URL")
 	if err := srv.Shutdown(context.TODO()); err != nil {
 		panic(err)
@@ -136,7 +136,7 @@ func TestConfigFromURL(t *testing.T) {
 
 func TestConfigNoServerError(t *testing.T) {
 	var err error
-	_, err = ParseFile("http://localhost:8081/exampleURL")
+	_, err = MergeConfigAndParseFile("http://localhost:8081/exampleURL", false)
 	assert.Error(t, err)
 	assert.Regexp(t, regexp.MustCompile("connection refused"), err.Error())
 }
