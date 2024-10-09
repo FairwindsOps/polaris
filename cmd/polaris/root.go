@@ -24,6 +24,7 @@ import (
 )
 
 var (
+	mergeConfig                  bool
 	configPath                   string
 	disallowExemptions           bool
 	disallowConfigExemptions     bool
@@ -42,6 +43,7 @@ var (
 
 func init() {
 	// Flags
+	rootCmd.PersistentFlags().BoolVarP(&mergeConfig, "merge-config", "m", false, "Custom configuration should be merged with default configuration instead of replacing it.")
 	rootCmd.PersistentFlags().StringVarP(&configPath, "config", "c", "", "Location of Polaris configuration file.")
 	rootCmd.PersistentFlags().StringVarP(&kubeContext, "context", "x", "", "Set the kube context.")
 	rootCmd.PersistentFlags().BoolVarP(&disallowExemptions, "disallow-exemptions", "", false, "Disallow any configured exemption.")
@@ -65,7 +67,7 @@ var rootCmd = &cobra.Command{
 			logrus.SetLevel(parsedLevel)
 		}
 
-		config, err = conf.ParseFile(configPath)
+		config, err = conf.MergeConfigAndParseFile(configPath, mergeConfig)
 		if err != nil {
 			logrus.Errorf("Error parsing config at %s: %v", configPath, err)
 			os.Exit(1)
