@@ -8,24 +8,24 @@ import (
 
 var defaults = `
 checks:
-    deploymentMissingReplicas: warning
-    priorityClassNotSet: warning
-    tagNotSpecified: danger
+  deploymentMissingReplicas: warning
+  priorityClassNotSet: warning
+  tagNotSpecified: danger
 existing:
-    sub:
-      key: value
+  sub:
+    key: value
 `
 
 var overrides = `
 checks:
-    pullPolicyNotAlways: ignore
-    tagNotSpecified: overrides
+  pullPolicyNotAlways: ignore
+  tagNotSpecified: overrides
 existing:
-    sub:
-      key1: value1
-    new: value
+  sub:
+    key1: value1
+  new: value
 new:
-    key: value
+  key: value
 `
 
 func TestMergeYaml(t *testing.T) {
