@@ -70,6 +70,7 @@ var (
 		"hpaMaxAvailability",
 		"hpaMinAvailability",
 		"pdbMinAvailableGreaterThanHPAMinReplicas",
+		"pdbMinAvailableEqualToHPAMinReplicas",
 	}
 
 	// BuiltInChecks contains the checks that come pre-installed w/ Polaris

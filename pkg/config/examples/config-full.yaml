@@ -13,6 +13,7 @@ checks:
   hpaMaxAvailability: warning
   hpaMinAvailability: warning
   pdbMinAvailableGreaterThanHPAMinReplicas: warning
+  pdbMinAvailableEqualToHPAMinReplicas: warning
 
   # efficiency
   cpuRequestsMissing: warning
