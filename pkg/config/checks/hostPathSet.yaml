@@ -13,4 +13,4 @@ schema:
         properties:
           hostPath:
             type: string
-            pattern: ^$
+            const: ''
