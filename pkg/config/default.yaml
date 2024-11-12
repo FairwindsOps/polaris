@@ -24,6 +24,7 @@ checks:
   automountServiceAccountToken: warning
   hostIPCSet: danger
   hostPathSet: warning
+  hostProcess: warning
   hostPIDSet: danger
   linuxHardening: warning
   missingNetworkPolicy: warning

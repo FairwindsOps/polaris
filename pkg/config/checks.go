@@ -30,6 +30,7 @@ var (
 		// Pod checks
 		"hostIPCSet",
 		"hostPathSet",
+		"hostProcess",
 		"hostPIDSet",
 		"hostNetworkSet",
 		"automountServiceAccountToken",
@@ -93,8 +94,5 @@ func init() {
 			panic(err)
 		}
 		BuiltInChecks[checkID] = check
-		if check.ID == "procMount" {
-			fmt.Println("check===", check)
-		}
 	}
 }
