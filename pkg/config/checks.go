@@ -29,6 +29,7 @@ var (
 		"deploymentMissingReplicas",
 		// Pod checks
 		"hostIPCSet",
+		"hostPathSet",
 		"hostPIDSet",
 		"hostNetworkSet",
 		"automountServiceAccountToken",

@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	conf "github.com/fairwindsops/polaris/pkg/config"
@@ -32,6 +33,7 @@ func TestValidatePod(t *testing.T) {
 			"hostPIDSet":     conf.SeverityDanger,
 			"hostNetworkSet": conf.SeverityWarning,
 			"hostPortSet":    conf.SeverityDanger,
+			"hostPathSet":    conf.SeverityDanger,
 		},
 	}
 
@@ -39,7 +41,7 @@ func TestValidatePod(t *testing.T) {
 	deployment, err := kube.NewGenericResourceFromPod(p, nil)
 	assert.NoError(t, err)
 	expectedSum := CountSummary{
-		Successes: uint(4),
+		Successes: uint(5),
 		Warnings:  uint(0),
 		Dangers:   uint(0),
 	}
@@ -48,6 +50,7 @@ func TestValidatePod(t *testing.T) {
 		"hostIPCSet":     {ID: "hostIPCSet", Message: "Host IPC is not configured", Success: true, Severity: "danger", Category: "Security"},
 		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Success: true, Severity: "warning", Category: "Security"},
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
+		"hostPathSet":    {ID: "hostPathSet", Message: "HostPath volumes are not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
 	actualPodResult, err := applyControllerSchemaChecks(&c, nil, deployment)
@@ -67,22 +70,33 @@ func TestInvalidIPCPod(t *testing.T) {
 			"hostPIDSet":     conf.SeverityDanger,
 			"hostNetworkSet": conf.SeverityWarning,
 			"hostPortSet":    conf.SeverityDanger,
+			"hostPathSet":    conf.SeverityDanger,
 		},
 	}
 
 	p := test.MockPod()
 	p.Spec.HostIPC = true
+	p.Spec.Volumes = append(p.Spec.Volumes, v1.Volume{
+		Name: "hostpath",
+		VolumeSource: v1.VolumeSource{
+			HostPath: &v1.HostPathVolumeSource{
+				Path: "/var/run/docker.sock",
+			},
+		},
+	})
+
 	workload, err := kube.NewGenericResourceFromPod(p, nil)
 	assert.NoError(t, err)
 	expectedSum := CountSummary{
 		Successes: uint(3),
 		Warnings:  uint(0),
-		Dangers:   uint(1),
+		Dangers:   uint(2),
 	}
 	expectedResults := ResultSet{
 		"hostIPCSet":     {ID: "hostIPCSet", Message: "Host IPC should not be configured", Success: false, Severity: "danger", Category: "Security"},
 		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Success: true, Severity: "warning", Category: "Security"},
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
+		"hostPathSet":    {ID: "hostPathSet", Message: "HostPath volumes must be forbidden", Success: false, Severity: "danger", Category: "Security"},
 	}
 
 	actualPodResult, err := applyControllerSchemaChecks(&c, nil, workload)
