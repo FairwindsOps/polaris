@@ -23,7 +23,7 @@ checks:
   # security
   automountServiceAccountToken: warning
   hostIPCSet: danger
-  hostPathSet: danger
+  hostPathSet: warning
   hostPIDSet: danger
   linuxHardening: warning
   missingNetworkPolicy: warning
