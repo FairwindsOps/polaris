@@ -35,6 +35,7 @@ var (
 		"automountServiceAccountToken",
 		"topologySpreadConstraint",
 		// Container checks
+		"procMount",
 		"memoryLimitsMissing",
 		"memoryRequestsMissing",
 		"cpuLimitsMissing",
@@ -71,7 +72,6 @@ var (
 		"hpaMaxAvailability",
 		"hpaMinAvailability",
 		"pdbMinAvailableGreaterThanHPAMinReplicas",
-		"procMount",
 	}
 
 	// BuiltInChecks contains the checks that come pre-installed w/ Polaris
@@ -93,5 +93,8 @@ func init() {
 			panic(err)
 		}
 		BuiltInChecks[checkID] = check
+		if check.ID == "procMount" {
+			fmt.Println("check===", check)
+		}
 	}
 }
