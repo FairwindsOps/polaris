@@ -17,4 +17,26 @@ schema:
               procMount:
                 type: string
                 const: Default
+    initContainers:
+      type: array
+      items:
+        type: object
+        properties:
+          securityContext:
+            type: object
+            properties:
+              procMount:
+                type: string
+                const: Default
+    ephemeralContainers:
+      type: array
+      items:
+        type: object
+        properties:
+          securityContext:
+            type: object
+            properties:
+              procMount:
+                type: string
+                const: Default
               
