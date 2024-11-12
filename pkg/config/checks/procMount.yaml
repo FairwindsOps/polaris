@@ -1,7 +1,7 @@
 successMessage: The default /proc masks are set up to reduce attack surface, and should be required
 failureMessage: Proc mount must not be changed from the default
 category: Security
-target: PodSpec
+target: Container
 schema:
   '$schema': http://json-schema.org/draft-07/schema
   type: object
@@ -17,26 +17,3 @@ schema:
               procMount:
                 type: string
                 const: Default
-    initContainers:
-      type: array
-      items:
-        type: object
-        properties:
-          securityContext:
-            type: object
-            properties:
-              procMount:
-                type: string
-                const: Default
-    ephemeralContainers:
-      type: array
-      items:
-        type: object
-        properties:
-          securityContext:
-            type: object
-            properties:
-              procMount:
-                type: string
-                const: Default
-              
