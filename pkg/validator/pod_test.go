@@ -34,6 +34,7 @@ func TestValidatePod(t *testing.T) {
 			"hostNetworkSet": conf.SeverityWarning,
 			"hostPortSet":    conf.SeverityDanger,
 			"hostPathSet":    conf.SeverityDanger,
+			"procMount":      conf.SeverityWarning,
 		},
 	}
 
@@ -41,7 +42,7 @@ func TestValidatePod(t *testing.T) {
 	deployment, err := kube.NewGenericResourceFromPod(p, nil)
 	assert.NoError(t, err)
 	expectedSum := CountSummary{
-		Successes: uint(5),
+		Successes: uint(6),
 		Warnings:  uint(0),
 		Dangers:   uint(0),
 	}
@@ -51,6 +52,7 @@ func TestValidatePod(t *testing.T) {
 		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Success: true, Severity: "warning", Category: "Security"},
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 		"hostPathSet":    {ID: "hostPathSet", Message: "HostPath volumes are not configured", Success: true, Severity: "danger", Category: "Security"},
+		"procMount":      {ID: "procMount", Message: "The default /proc masks are set up to reduce attack surface, and should be required", Success: true, Severity: "warning", Category: "Security"},
 	}
 
 	actualPodResult, err := applyControllerSchemaChecks(&c, nil, deployment)
@@ -71,6 +73,7 @@ func TestInvalidIPCPod(t *testing.T) {
 			"hostNetworkSet": conf.SeverityWarning,
 			"hostPortSet":    conf.SeverityDanger,
 			"hostPathSet":    conf.SeverityDanger,
+			"procMount":      conf.SeverityWarning,
 		},
 	}
 
@@ -84,12 +87,16 @@ func TestInvalidIPCPod(t *testing.T) {
 			},
 		},
 	})
+	procMount := v1.UnmaskedProcMount
+	p.Spec.Containers[0].SecurityContext = &v1.SecurityContext{
+		ProcMount: &procMount,
+	}
 
 	workload, err := kube.NewGenericResourceFromPod(p, nil)
 	assert.NoError(t, err)
 	expectedSum := CountSummary{
 		Successes: uint(3),
-		Warnings:  uint(0),
+		Warnings:  uint(1),
 		Dangers:   uint(2),
 	}
 	expectedResults := ResultSet{
@@ -97,6 +104,7 @@ func TestInvalidIPCPod(t *testing.T) {
 		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Success: true, Severity: "warning", Category: "Security"},
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 		"hostPathSet":    {ID: "hostPathSet", Message: "HostPath volumes must be forbidden", Success: false, Severity: "danger", Category: "Security"},
+		"procMount":      {ID: "procMount", Message: "Proc mount must not be changed from the default", Success: false, Severity: "warning", Category: "Security"},
 	}
 
 	actualPodResult, err := applyControllerSchemaChecks(&c, nil, workload)

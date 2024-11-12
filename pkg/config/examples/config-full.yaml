@@ -29,6 +29,7 @@ checks:
   missingNetworkPolicy: warning
   notReadOnlyRootFilesystem: warning
   privilegeEscalationAllowed: danger
+  procMount: warning
   runAsRootAllowed: danger
   runAsPrivileged: danger
   dangerousCapabilities: danger

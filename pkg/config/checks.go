@@ -71,6 +71,7 @@ var (
 		"hpaMaxAvailability",
 		"hpaMinAvailability",
 		"pdbMinAvailableGreaterThanHPAMinReplicas",
+		"procMount",
 	}
 
 	// BuiltInChecks contains the checks that come pre-installed w/ Polaris
