@@ -33,7 +33,7 @@ func TestValidatePod(t *testing.T) {
 			"hostPIDSet":     conf.SeverityDanger,
 			"hostNetworkSet": conf.SeverityWarning,
 			"hostPortSet":    conf.SeverityDanger,
-			"hostPathSet":    conf.SeverityDanger,
+			"hostPathSet":    conf.SeverityWarning,
 			"procMount":      conf.SeverityWarning,
 		},
 	}
@@ -51,7 +51,7 @@ func TestValidatePod(t *testing.T) {
 		"hostIPCSet":     {ID: "hostIPCSet", Message: "Host IPC is not configured", Success: true, Severity: "danger", Category: "Security"},
 		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Success: true, Severity: "warning", Category: "Security"},
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
-		"hostPathSet":    {ID: "hostPathSet", Message: "HostPath volumes are not configured", Success: true, Severity: "danger", Category: "Security"},
+		"hostPathSet":    {ID: "hostPathSet", Message: "HostPath volumes are not configured", Success: true, Severity: "warning", Category: "Security"},
 		"procMount":      {ID: "procMount", Message: "The default /proc masks are set up to reduce attack surface, and should be required", Success: true, Severity: "warning", Category: "Security"},
 	}
 
@@ -72,7 +72,7 @@ func TestInvalidIPCPod(t *testing.T) {
 			"hostPIDSet":     conf.SeverityDanger,
 			"hostNetworkSet": conf.SeverityWarning,
 			"hostPortSet":    conf.SeverityDanger,
-			"hostPathSet":    conf.SeverityDanger,
+			"hostPathSet":    conf.SeverityWarning,
 			"procMount":      conf.SeverityWarning,
 		},
 	}
@@ -96,14 +96,14 @@ func TestInvalidIPCPod(t *testing.T) {
 	assert.NoError(t, err)
 	expectedSum := CountSummary{
 		Successes: uint(3),
-		Warnings:  uint(1),
-		Dangers:   uint(2),
+		Warnings:  uint(2),
+		Dangers:   uint(1),
 	}
 	expectedResults := ResultSet{
 		"hostIPCSet":     {ID: "hostIPCSet", Message: "Host IPC should not be configured", Success: false, Severity: "danger", Category: "Security"},
 		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Success: true, Severity: "warning", Category: "Security"},
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
-		"hostPathSet":    {ID: "hostPathSet", Message: "HostPath volumes must be forbidden", Success: false, Severity: "danger", Category: "Security"},
+		"hostPathSet":    {ID: "hostPathSet", Message: "HostPath volumes must be forbidden", Success: false, Severity: "warning", Category: "Security"},
 		"procMount":      {ID: "procMount", Message: "Proc mount must not be changed from the default", Success: false, Severity: "warning", Category: "Security"},
 	}
 
