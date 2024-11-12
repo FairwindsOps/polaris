@@ -112,7 +112,7 @@ func TestInvalidIPCPod(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 		"hostPathSet":    {ID: "hostPathSet", Message: "HostPath volumes must be forbidden", Success: false, Severity: "warning", Category: "Security"},
 		"procMount":      {ID: "procMount", Message: "Proc mount must not be changed from the default", Success: false, Severity: "warning", Category: "Security"},
-		"hostProcess":    {ID: "hostProcess", Message: "Privileged access to the host is disallowed in the Baseline policy", Success: false, Severity: "warning", Category: "Security"},
+		"hostProcess":    {ID: "hostProcess", Message: "Privileged access to the host is disallowed", Success: false, Severity: "warning", Category: "Security"},
 	}
 
 	actualPodResult, err := applyControllerSchemaChecks(&c, nil, workload)
