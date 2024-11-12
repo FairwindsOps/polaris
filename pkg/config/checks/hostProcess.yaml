@@ -1,5 +1,5 @@
 successMessage: Privileged access to the host check is valid
-failureMessage: Privileged access to the host is disallowed in the Baseline policy
+failureMessage: Privileged access to the host is disallowed
 category: Security
 target: PodSpec
 schema:
