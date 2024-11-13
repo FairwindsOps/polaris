@@ -29,11 +29,14 @@ var (
 		"deploymentMissingReplicas",
 		// Pod checks
 		"hostIPCSet",
+		"hostPathSet",
+		"hostProcess",
 		"hostPIDSet",
 		"hostNetworkSet",
 		"automountServiceAccountToken",
 		"topologySpreadConstraint",
 		// Container checks
+		"procMount",
 		"memoryLimitsMissing",
 		"memoryRequestsMissing",
 		"cpuLimitsMissing",

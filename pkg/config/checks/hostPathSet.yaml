@@ -1,0 +1,16 @@
+successMessage: HostPath volumes are not configured
+failureMessage: HostPath volumes must be forbidden
+category: Security
+target: PodSpec
+schema:
+  '$schema': http://json-schema.org/draft-07/schema
+  type: object
+  properties:
+    volumes:
+      type: array
+      items:
+        type: object
+        properties:
+          hostPath:
+            type: string
+            const: ''

@@ -1,0 +1,31 @@
+successMessage: Privileged access to the host check is valid
+failureMessage: Privileged access to the host is disallowed
+category: Security
+target: PodSpec
+schema:
+  '$schema': http://json-schema.org/draft-07/schema
+  type: object
+  properties:
+    containers:
+      type: array
+      items:
+        type: object
+        properties:
+          securityContext:
+            type: object
+            properties:
+              windowsOptions:
+                type: object
+                properties:
+                  hostProcess:
+                    type: boolean
+                    const: false
+    securityContext:
+      type: object
+      properties:
+        windowsOptions:
+          type: object
+          properties:
+            hostProcess:
+              type: boolean
+              const: false                
