@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3" // do not change the yaml import
 )
 
@@ -12,6 +13,7 @@ func mergeYaml(defaultConfig, overridesConfig []byte) ([]byte, error) {
 		return nil, err
 	}
 
+	logrus.Infof("Default config: %v", string(overridesConfig))
 	err = yaml.Unmarshal([]byte(overridesConfig), &overrideConfig)
 	if err != nil {
 		return nil, err
