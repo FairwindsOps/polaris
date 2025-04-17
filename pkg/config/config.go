@@ -24,6 +24,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
@@ -63,6 +64,7 @@ func MergeConfigAndParseFile(customConfigPath string, mergeConfig bool) (Configu
 }
 
 func mergeConfigFile(customConfigPath string, mergeConfig bool) ([]byte, error) {
+	logrus.Infof("Loading config from %s", customConfigPath)
 	if customConfigPath == "" {
 		return defaultConfig, nil
 	}
@@ -83,6 +85,7 @@ func mergeConfigFile(customConfigPath string, mergeConfig bool) ([]byte, error) 
 		// path is local
 		customConfigContent, err = os.ReadFile(customConfigPath)
 		if err != nil {
+			logrus.Infof("Error reading config file %s: %v", customConfigPath, err)
 			return nil, err
 		}
 	}
