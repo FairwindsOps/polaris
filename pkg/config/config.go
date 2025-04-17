@@ -84,6 +84,7 @@ func mergeConfigFile(customConfigPath string, mergeConfig bool) ([]byte, error) 
 	} else {
 		// path is local
 		customConfigContent, err = os.ReadFile(customConfigPath)
+		logrus.Infof("Custom config: %v", string(customConfigContent))
 		if err != nil {
 			logrus.Infof("Error reading config file %s: %v", customConfigPath, err)
 			return nil, err
