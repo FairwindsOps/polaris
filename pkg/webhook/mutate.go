@@ -16,7 +16,6 @@ package webhook
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/mutation"
@@ -64,11 +63,6 @@ func (m *Mutator) mutate(req admission.Request) ([]jsonpatch.Operation, error) {
 	if err != nil {
 		logrus.Errorf("Failed to convert JSON to YAML: %v", err)
 		return nil, err
-	}
-
-	fmt.Println("Original YAML:", string(originalYaml))
-	for _, patch := range patches {
-		fmt.Println("Patch:", patch)
 	}
 
 	mutatedYamlStr, err := mutation.ApplyAllMutations(string(originalYaml), patches)
