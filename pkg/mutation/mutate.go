@@ -159,12 +159,13 @@ func createPathAndFindNodes(node *yaml.Node, selectors []string, create bool) ([
 			}
 		}
 	case yaml.ScalarNode:
+	case yaml.SequenceNode:
 		// Overwrite any existing nodes.
 		node.Kind = yaml.MappingNode
 		node.Tag = mapTag
 		node.Value = ""
-	case yaml.SequenceNode:
-		return nil, errors.Errorf("parent node is array, use /*/ or /0/../%v/ instead of .%v to access its item(s) first", len(node.Content)-1, currentSelector)
+	//case yaml.SequenceNode:
+	//return nil, errors.Errorf("parent node is array, use /*/ or /0/../%v/ instead of .%v to access its item(s) first", len(node.Content)-1, currentSelector)
 
 	default:
 		return nil, errors.Errorf("parent node is of unknown kind %v", node.Kind)
