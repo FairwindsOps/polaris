@@ -341,7 +341,7 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 			podCopy := *test.Resource.PodSpec
 			podCopy.InitContainers = []corev1.Container{}
 			podCopy.Containers = []corev1.Container{*test.Container}
-			containerIndex := -2
+			containerIndex := -1
 			if !test.IsInitContainer {
 				containerIndex = funk.IndexOf(test.Resource.PodSpec.Containers, func(value corev1.Container) bool {
 					return value.Name == test.Container.Name
@@ -374,7 +374,7 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 	} else if check.Target == config.TargetContainer {
 		fmt.Println(" test.Container.Name====", test.Container.Name, "test size ----", len(test.Resource.PodSpec.Containers))
 		fmt.Println("value.image", test.Container.Image)
-		containerIndex := -2
+		containerIndex := -1
 		if !test.IsInitContainer {
 			containerIndex = funk.IndexOf(test.Resource.PodSpec.Containers, func(value corev1.Container) bool {
 				fmt.Println("value.Name=======", value.Name)
