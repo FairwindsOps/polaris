@@ -7,8 +7,13 @@ schema:
   required:
   - imagePullPolicy
   properties:
-    imagePullPolicy:
-      const: Always
+    containers:
+      type: array
+      items:
+        type: object
+        properties:
+          imagePullPolicy:
+            const: Always
 mutations:
   - op: add
     path: /imagePullPolicy
