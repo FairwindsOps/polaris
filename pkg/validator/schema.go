@@ -348,11 +348,9 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 				})
 			} else {
 				containerIndex = funk.IndexOf(test.Resource.PodSpec.InitContainers, func(value corev1.Container) bool {
-					fmt.Println("INITI CONTANER NAME=======", value.Name)
 					return value.Name == test.Container.Name
 				})
 			}
-			fmt.Println("CONTATAINTER INDEX1=======", containerIndex)
 			prefix = getJSONSchemaPrefix(test.Resource.Kind)
 			if prefix != "" {
 				if test.IsInitContainer {
@@ -372,21 +370,16 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 		passes, issues, err = check.CheckPodTemplate(test.Resource.PodTemplate)
 		prefix = getJSONSchemaPrefix(test.Resource.Kind)
 	} else if check.Target == config.TargetContainer {
-		fmt.Println(" test.Container.Name====", test.Container.Name, "test size ----", len(test.Resource.PodSpec.Containers))
-		fmt.Println("value.image", test.Container.Image)
 		containerIndex := -1
 		if !test.IsInitContainer {
 			containerIndex = funk.IndexOf(test.Resource.PodSpec.Containers, func(value corev1.Container) bool {
-				fmt.Println("value.Name=======", value.Name)
 				return value.Name == test.Container.Name
 			})
 		} else {
 			containerIndex = funk.IndexOf(test.Resource.PodSpec.InitContainers, func(value corev1.Container) bool {
-				fmt.Println("value.Name INIT CONTAINER=======", value.Name)
 				return value.Name == test.Container.Name
 			})
 		}
-		fmt.Println("CONTATAINTER INDEX2=======", containerIndex)
 		prefix = getJSONSchemaPrefix(test.Resource.Kind)
 		if prefix != "" {
 			if test.IsInitContainer {
