@@ -341,12 +341,23 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 			podCopy := *test.Resource.PodSpec
 			podCopy.InitContainers = []corev1.Container{}
 			podCopy.Containers = []corev1.Container{*test.Container}
-			containerIndex := funk.IndexOf(test.Resource.PodSpec.Containers, func(value corev1.Container) bool {
-				return value.Name == test.Container.Name
-			})
+			containerIndex := -1
+			if !test.IsInitContainer {
+				containerIndex = funk.IndexOf(test.Resource.PodSpec.Containers, func(value corev1.Container) bool {
+					return value.Name == test.Container.Name
+				})
+			} else {
+				containerIndex = funk.IndexOf(test.Resource.PodSpec.InitContainers, func(value corev1.Container) bool {
+					return value.Name == test.Container.Name
+				})
+			}
 			prefix = getJSONSchemaPrefix(test.Resource.Kind)
 			if prefix != "" {
-				prefix += "/containers/" + strconv.Itoa(containerIndex)
+				if test.IsInitContainer {
+					prefix += "/initContainers/" + strconv.Itoa(containerIndex)
+				} else {
+					prefix += "/containers/" + strconv.Itoa(containerIndex)
+				}
 			}
 			passes, issues, err = check.CheckPodSpec(&podCopy)
 		} else {
@@ -359,12 +370,23 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 		passes, issues, err = check.CheckPodTemplate(test.Resource.PodTemplate)
 		prefix = getJSONSchemaPrefix(test.Resource.Kind)
 	} else if check.Target == config.TargetContainer {
-		containerIndex := funk.IndexOf(test.Resource.PodSpec.Containers, func(value corev1.Container) bool {
-			return value.Name == test.Container.Name
-		})
+		containerIndex := -1
+		if !test.IsInitContainer {
+			containerIndex = funk.IndexOf(test.Resource.PodSpec.Containers, func(value corev1.Container) bool {
+				return value.Name == test.Container.Name
+			})
+		} else {
+			containerIndex = funk.IndexOf(test.Resource.PodSpec.InitContainers, func(value corev1.Container) bool {
+				return value.Name == test.Container.Name
+			})
+		}
 		prefix = getJSONSchemaPrefix(test.Resource.Kind)
 		if prefix != "" {
-			prefix += "/containers/" + strconv.Itoa(containerIndex)
+			if test.IsInitContainer {
+				prefix += "/initContainers/" + strconv.Itoa(containerIndex)
+			} else {
+				prefix += "/containers/" + strconv.Itoa(containerIndex)
+			}
 		}
 		passes, issues, err = check.CheckContainer(test.Container)
 	} else if check.Validator.SchemaURI != "" {
