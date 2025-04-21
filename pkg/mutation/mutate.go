@@ -105,9 +105,12 @@ func GetMutationsFromResult(result *validator.Result) []config.Mutation {
 }
 
 func createPathAndFindNodes(node *yaml.Node, selectors []string, create bool) ([]*yaml.Node, error) {
+	fmt.Println("Node======", *node)
 	var nodes []*yaml.Node
 	currentSelector := selectors[0]
 	isLastSelector := len(selectors) == 1
+	fmt.Println("currentSelector======", currentSelector)
+	fmt.Println("isLastSelector======", isLastSelector)
 	// array[N] or array[*] selectors.
 	if i := strings.LastIndex(currentSelector, "["); i > 0 && strings.HasSuffix(currentSelector, "]") {
 		arrayIndex := currentSelector[i+1 : len(currentSelector)-1]
