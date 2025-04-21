@@ -166,6 +166,7 @@ func createPathAndFindNodes(node *yaml.Node, selectors []string, create bool) ([
 	case yaml.SequenceNode:
 		//return nil, errors.Errorf("parent node is array, use /*/ or /0/../%v/ instead of .%v to access its item(s) first", len(node.Content)-1, currentSelector)
 
+		break
 	default:
 		return nil, errors.Errorf("parent node is of unknown kind %v", node.Kind)
 	}
