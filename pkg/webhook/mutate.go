@@ -64,7 +64,6 @@ func (m *Mutator) mutate(req admission.Request) ([]jsonpatch.Operation, error) {
 		logrus.Errorf("Failed to convert JSON to YAML: %v", err)
 		return nil, err
 	}
-
 	mutatedYamlStr, err := mutation.ApplyAllMutations(string(originalYaml), patches)
 	if err != nil {
 		logrus.Errorf("Failed to apply mutations: %v", err)
