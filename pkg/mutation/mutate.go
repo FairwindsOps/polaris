@@ -34,6 +34,7 @@ func ApplyAllMutations(manifest string, mutations []config.Mutation) (string, er
 
 	for _, patch := range mutations {
 		splits := getSplitFromPath(patch.Path)
+		logrus.Info("Applying mutation to path: ", patch.Path)
 		valueNode, err := getNodeFromValue(patch.Value, patch.Comment)
 		if err != nil {
 			return mutated, err
