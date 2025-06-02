@@ -129,7 +129,7 @@ func newResourceMaximum() jsonschema.Keyword {
 }
 
 func (min resourceMinimum) ValidateKeyword(ctx context.Context, currentState *jsonschema.ValidationState, data interface{}) {
-	err := validateRange(path, string(min), data, true)
+	err := validateRange(string(min), data, true)
 	if err != nil {
 		errs := currentState.Errs
 		*errs = append(*errs, *err...)
@@ -137,7 +137,7 @@ func (min resourceMinimum) ValidateKeyword(ctx context.Context, currentState *js
 	}
 }
 func (max resourceMaximum) ValidateKeyword(ctx context.Context, currentState *jsonschema.ValidationState, data interface{}) {
-	err := validateRange(path, string(max), data, false)
+	err := validateRange(string(max), data, false)
 	if err != nil {
 		errs := currentState.Errs
 		*errs = append(*errs, *err...)
@@ -162,22 +162,6 @@ func (max resourceMaximum) Register(uri string, registry *jsonschema.SchemaRegis
 	// Not implemented
 }
 
-// Validate checks that a specified quanitity is not less than the minimum
-func (min resourceMinimum) Validate(path string, data interface{}, errs *[]jsonschema.KeyError) {
-	err := validateRange(path, string(min), data, true)
-	if err != nil {
-		*errs = append(*errs, *err...)
-	}
-}
-
-// Validate checks that a specified quanitity is not greater than the maximum
-func (max resourceMaximum) Validate(path string, data interface{}, errs *[]jsonschema.KeyError) {
-	err := validateRange(path, string(max), data, false)
-	if err != nil {
-		*errs = append(*errs, *err...)
-	}
-}
-
 func parseQuantity(i interface{}) (resource.Quantity, *[]jsonschema.KeyError) {
 	if resNum, ok := i.(float64); ok {
 		i = fmt.Sprintf("%f", resNum)
@@ -197,7 +181,7 @@ func parseQuantity(i interface{}) (resource.Quantity, *[]jsonschema.KeyError) {
 	return q, nil
 }
 
-func validateRange(path string, limit interface{}, data interface{}, isMinimum bool) *[]jsonschema.KeyError {
+func validateRange(limit interface{}, data interface{}, isMinimum bool) *[]jsonschema.KeyError {
 	limitQuantity, err := parseQuantity(limit)
 	if err != nil {
 		return err
@@ -210,13 +194,13 @@ func validateRange(path string, limit interface{}, data interface{}, isMinimum b
 	if isMinimum {
 		if cmp == 1 {
 			return &[]jsonschema.KeyError{
-				{Message: fmt.Sprintf("%s quantity %v is > %v", path, actualQuantity, limitQuantity)},
+				{Message: fmt.Sprintf("quantity %v is > %v", actualQuantity, limitQuantity)},
 			}
 		}
 	} else {
 		if cmp == -1 {
 			return &[]jsonschema.KeyError{
-				{Message: fmt.Sprintf("%s quantity %v is < %v", path, actualQuantity, limitQuantity)},
+				{Message: fmt.Sprintf("quantity %v is < %v", actualQuantity, limitQuantity)},
 			}
 		}
 	}
