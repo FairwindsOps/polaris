@@ -3,10 +3,10 @@ package validator
 import (
 	"sync"
 
-	"github.com/qri-io/jsonschema"
+	"github.com/fairwindsops/polaris/pkg/config"
 )
 
-type validatorFunction func(test schemaTestCase) (bool, []jsonschema.ValError, error)
+type validatorFunction func(test schemaTestCase) (bool, []config.ValError, error)
 
 var validatorMapper = map[string]validatorFunction{}
 var lock = &sync.Mutex{}

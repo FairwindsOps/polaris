@@ -16,6 +16,7 @@ package config
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -52,6 +53,12 @@ var HandledTargets = []TargetKind{
 	TargetPodTemplate,
 }
 
+type ValError struct {
+	Message      string
+	InvalidValue int
+	PropertyPath string
+}
+
 // Mutation defines how to change a YAML file, in the style of JSON Patch
 type Mutation struct {
 	Path    string
@@ -72,10 +79,10 @@ type SchemaCheck struct {
 	SchemaTarget            TargetKind                        `yaml:"schemaTarget" json:"schemaTarget"`
 	Schema                  map[string]interface{}            `yaml:"schema" json:"schema"`
 	SchemaString            string                            `yaml:"schemaString" json:"schemaString"`
-	Validator               jsonschema.RootSchema             `yaml:"-" json:"-"`
+	Validator               jsonschema.Schema                 `yaml:"-" json:"-"`
 	AdditionalSchemas       map[string]map[string]interface{} `yaml:"additionalSchemas" json:"additionalSchemas"`
 	AdditionalSchemaStrings map[string]string                 `yaml:"additionalSchemaStrings" json:"additionalSchemaStrings"`
-	AdditionalValidators    map[string]jsonschema.RootSchema  `yaml:"-" json:"-"`
+	AdditionalValidators    map[string]jsonschema.Schema      `yaml:"-" json:"-"`
 	Mutations               []Mutation                        `yaml:"mutations" json:"mutations"`
 }
 
@@ -109,8 +116,8 @@ func ParseCheck(id string, rawBytes []byte) (SchemaCheck, error) {
 }
 
 func init() {
-	jsonschema.RegisterValidator("resourceMinimum", newResourceMinimum)
-	jsonschema.RegisterValidator("resourceMaximum", newResourceMaximum)
+	jsonschema.RegisterKeyword("resourceMinimum", newResourceMinimum)
+	jsonschema.RegisterKeyword("resourceMaximum", newResourceMaximum)
 }
 
 type includeExcludeList struct {
@@ -118,16 +125,25 @@ type includeExcludeList struct {
 	Exclude []string `yaml:"exclude"`
 }
 
-func newResourceMinimum() jsonschema.Validator {
+func newResourceMinimum() jsonschema.Keyword {
 	return new(resourceMinimum)
 }
 
-func newResourceMaximum() jsonschema.Validator {
+func newResourceMaximum() jsonschema.Keyword {
 	return new(resourceMaximum)
 }
 
+func (min resourceMinimum) ValidateKeyword(ctx context.Context, currentState *jsonschema.ValidationState, data interface{}) {
+	err := validateRange(path, string(min), data, true)
+	if err != nil {
+		*errs = append(*errs, *err...)
+	}
+}
+func (max resourceMaximum) ValidateKeyword(ctx context.Context, currentState *jsonschema.ValidationState, data interface{}) {
+}
+
 // Validate checks that a specified quanitity is not less than the minimum
-func (min resourceMinimum) Validate(path string, data interface{}, errs *[]jsonschema.ValError) {
+func (min resourceMinimum) Validate(path string, data interface{}, errs *[]ValError) {
 	err := validateRange(path, string(min), data, true)
 	if err != nil {
 		*errs = append(*errs, *err...)
@@ -135,33 +151,33 @@ func (min resourceMinimum) Validate(path string, data interface{}, errs *[]jsons
 }
 
 // Validate checks that a specified quanitity is not greater than the maximum
-func (max resourceMaximum) Validate(path string, data interface{}, errs *[]jsonschema.ValError) {
+func (max resourceMaximum) Validate(path string, data interface{}, errs *[]ValError) {
 	err := validateRange(path, string(max), data, false)
 	if err != nil {
 		*errs = append(*errs, *err...)
 	}
 }
 
-func parseQuantity(i interface{}) (resource.Quantity, *[]jsonschema.ValError) {
+func parseQuantity(i interface{}) (resource.Quantity, *[]ValError) {
 	if resNum, ok := i.(float64); ok {
 		i = fmt.Sprintf("%f", resNum)
 	}
 	resStr, ok := i.(string)
 	if !ok {
-		return resource.Quantity{}, &[]jsonschema.ValError{
+		return resource.Quantity{}, &[]ValError{
 			{Message: fmt.Sprintf("Resource quantity %v is not a string", i)},
 		}
 	}
 	q, err := resource.ParseQuantity(resStr)
 	if err != nil {
-		return resource.Quantity{}, &[]jsonschema.ValError{
+		return resource.Quantity{}, &[]ValError{
 			{Message: fmt.Sprintf("Could not parse resource quantity: %s", resStr)},
 		}
 	}
 	return q, nil
 }
 
-func validateRange(path string, limit interface{}, data interface{}, isMinimum bool) *[]jsonschema.ValError {
+func validateRange(path string, limit interface{}, data interface{}, isMinimum bool) *[]ValError {
 	limitQuantity, err := parseQuantity(limit)
 	if err != nil {
 		return err
@@ -173,13 +189,13 @@ func validateRange(path string, limit interface{}, data interface{}, isMinimum b
 	cmp := limitQuantity.Cmp(actualQuantity)
 	if isMinimum {
 		if cmp == 1 {
-			return &[]jsonschema.ValError{
+			return &[]ValError{
 				{Message: fmt.Sprintf("%s quantity %v is > %v", path, actualQuantity, limitQuantity)},
 			}
 		}
 	} else {
 		if cmp == -1 {
-			return &[]jsonschema.ValError{
+			return &[]ValError{
 				{Message: fmt.Sprintf("%s quantity %v is < %v", path, actualQuantity, limitQuantity)},
 			}
 		}
@@ -251,9 +267,9 @@ func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, err
 		}
 	}
 
-	newCheck.AdditionalValidators = map[string]jsonschema.RootSchema{}
+	newCheck.AdditionalValidators = map[string]jsonschema.Schema{}
 	for kind, schemaStr := range newCheck.AdditionalSchemaStrings {
-		val := jsonschema.RootSchema{}
+		val := jsonschema.Schema{}
 		err := UnmarshalYAMLOrJSON([]byte(schemaStr), &val)
 		if err != nil {
 			return nil, err
@@ -268,28 +284,28 @@ func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, err
 }
 
 // CheckPodSpec checks a pod spec against the schema
-func (check SchemaCheck) CheckPodSpec(pod *corev1.PodSpec) (bool, []jsonschema.ValError, error) {
+func (check SchemaCheck) CheckPodSpec(pod *corev1.PodSpec) (bool, []ValError, error) {
 	return check.CheckObject(pod)
 }
 
 // CheckPodTemplate checks a pod template against the schema
-func (check SchemaCheck) CheckPodTemplate(podTemplate interface{}) (bool, []jsonschema.ValError, error) {
+func (check SchemaCheck) CheckPodTemplate(podTemplate interface{}) (bool, []ValError, error) {
 	return check.CheckObject(podTemplate)
 }
 
 // CheckController checks a controler's spec against the schema
-func (check SchemaCheck) CheckController(bytes []byte) (bool, []jsonschema.ValError, error) {
+func (check SchemaCheck) CheckController(bytes []byte) (bool, []ValError, error) {
 	errs, err := check.Validator.ValidateBytes(bytes)
 	return len(errs) == 0, errs, err
 }
 
 // CheckContainer checks a container spec against the schema
-func (check SchemaCheck) CheckContainer(container *corev1.Container) (bool, []jsonschema.ValError, error) {
+func (check SchemaCheck) CheckContainer(container *corev1.Container) (bool, []ValError, error) {
 	return check.CheckObject(container)
 }
 
 // CheckObject checks arbitrary data against the schema
-func (check SchemaCheck) CheckObject(obj interface{}) (bool, []jsonschema.ValError, error) {
+func (check SchemaCheck) CheckObject(obj interface{}) (bool, []ValError, error) {
 	bytes, err := json.Marshal(obj)
 	if err != nil {
 		return false, nil, err
