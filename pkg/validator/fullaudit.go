@@ -16,6 +16,7 @@ package validator
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -29,13 +30,13 @@ import (
 )
 
 // RunAudit runs a full Polaris audit and returns an AuditData object
-func RunAudit(config conf.Configuration, kubeResources *kube.ResourceProvider) (AuditData, error) {
+func RunAudit(ctx context.Context, config conf.Configuration, kubeResources *kube.ResourceProvider) (AuditData, error) {
 	displayName := config.DisplayName
 	if displayName == "" {
 		displayName = kubeResources.SourceName
 	}
 
-	results, err := ApplyAllSchemaChecksToResourceProvider(&config, kubeResources)
+	results, err := ApplyAllSchemaChecksToResourceProvider(ctx, &config, kubeResources)
 	if err != nil {
 		return AuditData{}, err
 	}

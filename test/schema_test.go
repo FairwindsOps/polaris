@@ -15,6 +15,7 @@
 package test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -123,7 +124,7 @@ func initTestCases() ([]testCase, map[string]string, map[string][]testCase) {
 func TestChecks(t *testing.T) {
 	testCases, _, _ := initTestCases()
 	for _, tc := range testCases {
-		results, err := validator.ApplyAllSchemaChecksToResourceProvider(&tc.config, tc.resources)
+		results, err := validator.ApplyAllSchemaChecksToResourceProvider(context.Background(), &tc.config, tc.resources)
 		if err != nil {
 			t.Fatalf("Error running checks: %v", err)
 		}

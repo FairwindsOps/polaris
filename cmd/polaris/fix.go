@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"os"
 
@@ -43,7 +44,7 @@ var fixCommand = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		logrus.Debug("Setting up controller manager")
 
-		err := fix.Execute(config, filesPath, isTemplate, checksToFix...)
+		err := fix.Execute(context.Background(), config, filesPath, isTemplate, checksToFix...)
 		if err != nil {
 			if errors.Is(err, fix.ErrFilesPathRequired) {
 				logrus.Error("Please specify a files-path flag")

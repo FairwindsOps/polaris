@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"context"
 	"os"
 
 	"github.com/sirupsen/logrus"
@@ -76,7 +77,7 @@ var webhookCmd = &cobra.Command{
 			fwebhook.NewValidateWebhook(mgr, config)
 		}
 		if enableMutations {
-			fwebhook.NewMutateWebhook(mgr, config)
+			fwebhook.NewMutateWebhook(context.Background(), mgr, config)
 		}
 		logrus.Infof("Polaris webhook server listening on port %d", webhookPort)
 		if err := mgr.Start(signals.SetupSignalHandler()); err != nil {

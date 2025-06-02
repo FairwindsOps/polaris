@@ -15,6 +15,7 @@
 package validator
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -57,7 +58,7 @@ func TestValidatePod(t *testing.T) {
 		"hostProcess":    {ID: "hostProcess", Message: "Privileged access to the host check is valid", Success: true, Severity: "warning", Category: "Security"},
 	}
 
-	actualPodResult, err := applyControllerSchemaChecks(&c, nil, deployment)
+	actualPodResult, err := applyControllerSchemaChecks(context.Background(), &c, nil, deployment)
 	if err != nil {
 		panic(err)
 	}
@@ -115,7 +116,7 @@ func TestInvalidIPCPod(t *testing.T) {
 		"hostProcess":    {ID: "hostProcess", Message: "Privileged access to the host is disallowed", Success: false, Severity: "warning", Category: "Security"},
 	}
 
-	actualPodResult, err := applyControllerSchemaChecks(&c, nil, workload)
+	actualPodResult, err := applyControllerSchemaChecks(context.Background(), &c, nil, workload)
 	if err != nil {
 		panic(err)
 	}
@@ -151,7 +152,7 @@ func TestInvalidNetworkPod(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
-	actualPodResult, err := applyControllerSchemaChecks(&c, nil, workload)
+	actualPodResult, err := applyControllerSchemaChecks(context.Background(), &c, nil, workload)
 	if err != nil {
 		panic(err)
 	}
@@ -187,7 +188,7 @@ func TestInvalidPIDPod(t *testing.T) {
 		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network is not configured", Success: true, Severity: "warning", Category: "Security"},
 	}
 
-	actualPodResult, err := applyControllerSchemaChecks(&c, nil, workload)
+	actualPodResult, err := applyControllerSchemaChecks(context.Background(), &c, nil, workload)
 	if err != nil {
 		panic(err)
 	}
@@ -230,7 +231,7 @@ func TestExemption(t *testing.T) {
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
-	actualPodResult, err := applyControllerSchemaChecks(&c, nil, workload)
+	actualPodResult, err := applyControllerSchemaChecks(context.Background(), &c, nil, workload)
 	if err != nil {
 		panic(err)
 	}

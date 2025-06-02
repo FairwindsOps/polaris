@@ -52,12 +52,12 @@ func NewValidateWebhook(mgr manager.Manager, c config.Configuration) {
 	mgr.GetWebhookServer().Register(path, &webhook.Admission{Handler: &validator})
 }
 
-func (v *Validator) handleInternal(req admission.Request) (*validator.Result, kube.GenericResource, error) {
-	return GetValidatedResults(req.AdmissionRequest.Kind.Kind, v.decoder, req, v.Config)
+func (v *Validator) handleInternal(ctx context.Context, req admission.Request) (*validator.Result, kube.GenericResource, error) {
+	return GetValidatedResults(ctx, req.AdmissionRequest.Kind.Kind, v.decoder, req, v.Config)
 }
 
 // GetValidatedResults returns the validated results.
-func GetValidatedResults(kind string, decoder *admission.Decoder, req admission.Request, config config.Configuration) (*validator.Result, kube.GenericResource, error) {
+func GetValidatedResults(ctx context.Context, kind string, decoder *admission.Decoder, req admission.Request, config config.Configuration) (*validator.Result, kube.GenericResource, error) {
 	var resource kube.GenericResource
 	var err error
 	rawBytes := req.Object.Raw
@@ -106,7 +106,7 @@ func GetValidatedResults(kind string, decoder *admission.Decoder, req admission.
 		logrus.Errorf("Failed to create resource: %v", err)
 		return nil, resource, err
 	}
-	resourceResult, err := validator.ApplyAllSchemaChecks(&config, nil, resource)
+	resourceResult, err := validator.ApplyAllSchemaChecks(ctx, &config, nil, resource)
 	if err != nil {
 		return nil, resource, err
 	}
@@ -116,7 +116,7 @@ func GetValidatedResults(kind string, decoder *admission.Decoder, req admission.
 // Handle for Validator to run validation checks.
 func (v *Validator) Handle(ctx context.Context, req admission.Request) admission.Response {
 	logrus.Info("Starting admission request")
-	result, _, err := v.handleInternal(req)
+	result, _, err := v.handleInternal(ctx, req)
 	if err != nil {
 		logrus.Errorf("Error validating request: %v", err)
 		return admission.Errored(http.StatusBadRequest, err)

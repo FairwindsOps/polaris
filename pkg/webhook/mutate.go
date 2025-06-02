@@ -34,22 +34,24 @@ type Mutator struct {
 	Client  client.Client
 	Config  config.Configuration
 	decoder *admission.Decoder
+	context context.Context
 }
 
 // NewMutateWebhook creates a mutating admission webhook for the apiType.
-func NewMutateWebhook(mgr manager.Manager, c config.Configuration) {
+func NewMutateWebhook(ctx context.Context, mgr manager.Manager, c config.Configuration) {
 	path := "/mutate"
 	decoder := admission.NewDecoder(runtime.NewScheme())
 	mutator := Mutator{
 		Client:  mgr.GetClient(),
 		decoder: &decoder,
 		Config:  c,
+		context: ctx,
 	}
 	mgr.GetWebhookServer().Register(path, &webhook.Admission{Handler: &mutator})
 }
 
 func (m *Mutator) mutate(req admission.Request) ([]jsonpatch.Operation, error) {
-	results, kubeResources, err := GetValidatedResults(req.AdmissionRequest.Kind.Kind, m.decoder, req, m.Config)
+	results, kubeResources, err := GetValidatedResults(m.context, req.AdmissionRequest.Kind.Kind, m.decoder, req, m.Config)
 	if err != nil {
 		logrus.Errorf("Error while validating resource: %v", err)
 		return nil, err

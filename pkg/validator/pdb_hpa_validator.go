@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
+	"github.com/qri-io/jsonschema"
 	"github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
@@ -19,7 +19,7 @@ func init() {
 	registerCustomChecks("pdbMinAvailableGreaterThanHPAMinReplicas", pdbMinAvailableGreaterThanHPAMinReplicas)
 }
 
-func pdbMinAvailableGreaterThanHPAMinReplicas(test schemaTestCase) (bool, []config.ValError, error) {
+func pdbMinAvailableGreaterThanHPAMinReplicas(test schemaTestCase) (bool, []jsonschema.KeyError, error) {
 	if test.ResourceProvider == nil {
 		return true, nil, nil
 	}
@@ -70,7 +70,7 @@ func pdbMinAvailableGreaterThanHPAMinReplicas(test schemaTestCase) (bool, []conf
 		}
 
 		if attachedHPA.Spec.MinReplicas != nil && pdbMinAvailable > int(*attachedHPA.Spec.MinReplicas) {
-			return false, []config.ValError{
+			return false, []jsonschema.KeyError{
 				{
 					PropertyPath: "spec.minAvailable",
 					InvalidValue: pdbMinAvailable,

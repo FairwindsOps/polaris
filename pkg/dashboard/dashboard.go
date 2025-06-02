@@ -16,6 +16,7 @@ package dashboard
 
 import (
 	"bytes"
+	"context"
 	"embed"
 	"encoding/json"
 	"html/template"
@@ -140,7 +141,7 @@ func stripUnselectedNamespaces(data *validator.AuditData, selectedNamespaces []s
 }
 
 // GetRouter returns a mux router serving all routes necessary for the dashboard
-func GetRouter(c config.Configuration, auditPath string, port int, basePath string, auditData *validator.AuditData) (*mux.Router, error) {
+func GetRouter(ctx context.Context, c config.Configuration, auditPath string, port int, basePath string, auditData *validator.AuditData) (*mux.Router, error) {
 	router := mux.NewRouter().PathPrefix(basePath).Subrouter()
 
 	assetsSubFS, err := fs.Sub(assetsFS, "assets")
@@ -176,7 +177,7 @@ func GetRouter(c config.Configuration, auditPath string, port int, basePath stri
 			}
 
 			var auditDataObj validator.AuditData
-			auditDataObj, err = validator.RunAudit(adjustedConf, k)
+			auditDataObj, err = validator.RunAudit(ctx, adjustedConf, k)
 			if err != nil {
 				http.Error(w, "Error Fetching Deployments", http.StatusInternalServerError)
 				return
@@ -212,7 +213,7 @@ func GetRouter(c config.Configuration, auditPath string, port int, basePath stri
 
 			logrus.Infof("Running audit")
 			var auditData validator.AuditData
-			auditData, err = validator.RunAudit(adjustedConf, k)
+			auditData, err = validator.RunAudit(ctx, adjustedConf, k)
 			if err != nil {
 				logrus.Errorf("Error getting audit data: %v", err)
 				http.Error(w, "Error running audit", 500)

@@ -1,6 +1,7 @@
 package fix
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -19,7 +20,7 @@ const templateCloseMarker = "POLARIS_CLOSE_TMPL"
 
 var ErrFilesPathRequired = errors.New("files-path flag is required")
 
-func Execute(config config.Configuration, filesPath string, isTemplate bool, checksToFix ...string) error {
+func Execute(ctx context.Context, config config.Configuration, filesPath string, isTemplate bool, checksToFix ...string) error {
 	if filesPath == "" {
 		return ErrFilesPathRequired
 	}
@@ -69,7 +70,7 @@ func Execute(config config.Configuration, filesPath string, isTemplate bool, che
 		if err != nil {
 			return fmt.Errorf("error creating resource provider from yaml: %v", err)
 		}
-		results, err := validator.ApplyAllSchemaChecksToResourceProvider(&config, kubeResources)
+		results, err := validator.ApplyAllSchemaChecksToResourceProvider(ctx, &config, kubeResources)
 		if err != nil {
 			return fmt.Errorf("error applying schema check to the resources %s: %v", fullFilePath, err)
 		}
