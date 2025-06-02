@@ -15,12 +15,14 @@
 package validator
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sort"
 	"strconv"
 	"strings"
 
+	"github.com/qri-io/jsonschema"
 	"github.com/sirupsen/logrus"
 	"github.com/thoas/go-funk"
 	corev1 "k8s.io/api/core/v1"
@@ -132,7 +134,7 @@ func getTemplateInput(test schemaTestCase) (map[string]interface{}, error) {
 	return templateInput, nil
 }
 
-func makeResult(conf *config.Configuration, check *config.SchemaCheck, passes bool, issues []config.ValError) ResultMessage {
+func makeResult(conf *config.Configuration, check *config.SchemaCheck, passes bool, issues []jsonschema.KeyError) ResultMessage {
 	details := []string{}
 	for _, issue := range issues {
 		details = append(details, issue.Message)
@@ -171,13 +173,13 @@ func hasExemptionAnnotation(objMeta metaV1.Object, checkID string) bool {
 }
 
 // ApplyAllSchemaChecksToResourceProvider applies all available checks to a ResourceProvider
-func ApplyAllSchemaChecksToResourceProvider(conf *config.Configuration, resourceProvider *kube.ResourceProvider) ([]Result, error) {
+func ApplyAllSchemaChecksToResourceProvider(ctx context.Context, conf *config.Configuration, resourceProvider *kube.ResourceProvider) ([]Result, error) {
 	results := []Result{}
 	if resourceProvider == nil {
 		return nil, errors.New("No resource provider set, cannot apply schema checks")
 	}
 	for _, resources := range resourceProvider.Resources {
-		kindResults, err := ApplyAllSchemaChecksToAllResources(conf, resourceProvider, resources)
+		kindResults, err := ApplyAllSchemaChecksToAllResources(ctx, conf, resourceProvider, resources)
 		if err != nil {
 			return results, err
 		}
@@ -187,10 +189,10 @@ func ApplyAllSchemaChecksToResourceProvider(conf *config.Configuration, resource
 }
 
 // ApplyAllSchemaChecksToAllResources applies available checks to a list of resources
-func ApplyAllSchemaChecksToAllResources(conf *config.Configuration, resourceProvider *kube.ResourceProvider, resources []kube.GenericResource) ([]Result, error) {
+func ApplyAllSchemaChecksToAllResources(ctx context.Context, conf *config.Configuration, resourceProvider *kube.ResourceProvider, resources []kube.GenericResource) ([]Result, error) {
 	results := []Result{}
 	for _, resource := range resources {
-		result, err := ApplyAllSchemaChecks(conf, resourceProvider, resource)
+		result, err := ApplyAllSchemaChecks(ctx, conf, resourceProvider, resource)
 		if err != nil {
 			return results, err
 		}
@@ -202,37 +204,37 @@ func ApplyAllSchemaChecksToAllResources(conf *config.Configuration, resourceProv
 }
 
 // ApplyAllSchemaChecks applies available checks to a single resource
-func ApplyAllSchemaChecks(conf *config.Configuration, resourceProvider *kube.ResourceProvider, resource kube.GenericResource) (Result, error) {
+func ApplyAllSchemaChecks(ctx context.Context, conf *config.Configuration, resourceProvider *kube.ResourceProvider, resource kube.GenericResource) (Result, error) {
 	if resource.PodSpec == nil {
-		return applyNonControllerSchemaChecks(conf, resourceProvider, resource)
+		return applyNonControllerSchemaChecks(ctx, conf, resourceProvider, resource)
 	}
-	return applyControllerSchemaChecks(conf, resourceProvider, resource)
+	return applyControllerSchemaChecks(ctx, conf, resourceProvider, resource)
 }
 
-func applyNonControllerSchemaChecks(conf *config.Configuration, resourceProvider *kube.ResourceProvider, resource kube.GenericResource) (Result, error) {
+func applyNonControllerSchemaChecks(ctx context.Context, conf *config.Configuration, resourceProvider *kube.ResourceProvider, resource kube.GenericResource) (Result, error) {
 	finalResult := Result{
 		Kind:      resource.Kind,
 		Name:      resource.ObjectMeta.GetName(),
 		Namespace: resource.ObjectMeta.GetNamespace(),
 	}
-	resultSet, err := applyTopLevelSchemaChecks(conf, resourceProvider, resource, false)
+	resultSet, err := applyTopLevelSchemaChecks(ctx, conf, resourceProvider, resource, false)
 	finalResult.Results = resultSet
 	return finalResult, err
 }
 
-func applyControllerSchemaChecks(conf *config.Configuration, resourceProvider *kube.ResourceProvider, resource kube.GenericResource) (Result, error) {
+func applyControllerSchemaChecks(ctx context.Context, conf *config.Configuration, resourceProvider *kube.ResourceProvider, resource kube.GenericResource) (Result, error) {
 	finalResult := Result{
 		Kind:      resource.Kind,
 		Name:      resource.ObjectMeta.GetName(),
 		Namespace: resource.ObjectMeta.GetNamespace(),
 	}
-	resultSet, err := applyTopLevelSchemaChecks(conf, resourceProvider, resource, true)
+	resultSet, err := applyTopLevelSchemaChecks(ctx, conf, resourceProvider, resource, true)
 	if err != nil {
 		return finalResult, err
 	}
 	finalResult.Results = resultSet
 
-	nonControllerResults, err := applyTopLevelSchemaChecks(conf, resourceProvider, resource, false)
+	nonControllerResults, err := applyTopLevelSchemaChecks(ctx, conf, resourceProvider, resource, false)
 	if err != nil {
 		return finalResult, err
 	}
@@ -243,7 +245,7 @@ func applyControllerSchemaChecks(conf *config.Configuration, resourceProvider *k
 		finalResult.Results[key] = val
 	}
 
-	podRS, err := applyPodSchemaChecks(conf, resourceProvider, resource)
+	podRS, err := applyPodSchemaChecks(ctx, conf, resourceProvider, resource)
 	if err != nil {
 		return finalResult, err
 	}
@@ -254,7 +256,7 @@ func applyControllerSchemaChecks(conf *config.Configuration, resourceProvider *k
 	finalResult.PodResult = &podRes
 
 	for _, container := range resource.PodSpec.InitContainers {
-		results, err := applyContainerSchemaChecks(conf, resourceProvider, resource, &container, true)
+		results, err := applyContainerSchemaChecks(ctx, conf, resourceProvider, resource, &container, true)
 		if err != nil {
 			return finalResult, err
 		}
@@ -265,7 +267,7 @@ func applyControllerSchemaChecks(conf *config.Configuration, resourceProvider *k
 		podRes.ContainerResults = append(podRes.ContainerResults, cRes)
 	}
 	for _, container := range resource.PodSpec.Containers {
-		results, err := applyContainerSchemaChecks(conf, resourceProvider, resource, &container, false)
+		results, err := applyContainerSchemaChecks(ctx, conf, resourceProvider, resource, &container, false)
 		if err != nil {
 			return finalResult, err
 		}
@@ -279,7 +281,7 @@ func applyControllerSchemaChecks(conf *config.Configuration, resourceProvider *k
 	return finalResult, nil
 }
 
-func applyTopLevelSchemaChecks(conf *config.Configuration, resources *kube.ResourceProvider, res kube.GenericResource, isController bool) (ResultSet, error) {
+func applyTopLevelSchemaChecks(ctx context.Context, conf *config.Configuration, resources *kube.ResourceProvider, res kube.GenericResource, isController bool) (ResultSet, error) {
 	test := schemaTestCase{
 		ResourceProvider: resources,
 		Resource:         res,
@@ -287,19 +289,19 @@ func applyTopLevelSchemaChecks(conf *config.Configuration, resources *kube.Resou
 	if isController {
 		test.Target = config.TargetController
 	}
-	return applySchemaChecks(conf, test)
+	return applySchemaChecks(ctx, conf, test)
 }
 
-func applyPodSchemaChecks(conf *config.Configuration, resources *kube.ResourceProvider, controller kube.GenericResource) (ResultSet, error) {
+func applyPodSchemaChecks(ctx context.Context, conf *config.Configuration, resources *kube.ResourceProvider, controller kube.GenericResource) (ResultSet, error) {
 	test := schemaTestCase{
 		Target:           config.TargetPodSpec,
 		ResourceProvider: resources,
 		Resource:         controller,
 	}
-	return applySchemaChecks(conf, test)
+	return applySchemaChecks(ctx, conf, test)
 }
 
-func applyContainerSchemaChecks(conf *config.Configuration, resources *kube.ResourceProvider, controller kube.GenericResource, container *corev1.Container, isInit bool) (ResultSet, error) {
+func applyContainerSchemaChecks(ctx context.Context, conf *config.Configuration, resources *kube.ResourceProvider, controller kube.GenericResource, container *corev1.Container, isInit bool) (ResultSet, error) {
 	test := schemaTestCase{
 		Target:           config.TargetContainer,
 		ResourceProvider: resources,
@@ -307,14 +309,14 @@ func applyContainerSchemaChecks(conf *config.Configuration, resources *kube.Reso
 		Container:        container,
 		IsInitContainer:  isInit,
 	}
-	return applySchemaChecks(conf, test)
+	return applySchemaChecks(ctx, conf, test)
 }
 
-func applySchemaChecks(conf *config.Configuration, test schemaTestCase) (ResultSet, error) {
+func applySchemaChecks(ctx context.Context, conf *config.Configuration, test schemaTestCase) (ResultSet, error) {
 	results := ResultSet{}
 	checkIDs := getSortedKeys(conf.Checks)
 	for _, checkID := range checkIDs {
-		result, err := applySchemaCheck(conf, checkID, test)
+		result, err := applySchemaCheck(ctx, conf, checkID, test)
 		if err != nil {
 			return results, err
 		}
@@ -325,7 +327,7 @@ func applySchemaChecks(conf *config.Configuration, test schemaTestCase) (ResultS
 	return results, nil
 }
 
-func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTestCase) (*ResultMessage, error) {
+func applySchemaCheck(ctx context.Context, conf *config.Configuration, checkID string, test schemaTestCase) (*ResultMessage, error) {
 	check, err := resolveCheck(conf, checkID, test)
 	if err != nil {
 		return nil, err
@@ -333,7 +335,7 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 		return nil, nil
 	}
 	var passes bool
-	var issues []config.ValError
+	var issues []jsonschema.KeyError
 	var prefix string
 	if check.SchemaTarget != "" {
 		if check.SchemaTarget == config.TargetPodSpec && check.Target == config.TargetContainer {
@@ -358,15 +360,15 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 					prefix += "/containers/" + strconv.Itoa(containerIndex)
 				}
 			}
-			passes, issues, err = check.CheckPodSpec(&podCopy)
+			passes, issues, err = check.CheckPodSpec(ctx, &podCopy)
 		} else {
 			return nil, fmt.Errorf("Unknown combination of target (%s) and schema target (%s)", check.Target, check.SchemaTarget)
 		}
 	} else if check.Target == config.TargetPodSpec {
-		passes, issues, err = check.CheckPodSpec(test.Resource.PodSpec)
+		passes, issues, err = check.CheckPodSpec(ctx, test.Resource.PodSpec)
 		prefix = getJSONSchemaPrefix(test.Resource.Kind)
 	} else if check.Target == config.TargetPodTemplate {
-		passes, issues, err = check.CheckPodTemplate(test.Resource.PodTemplate)
+		passes, issues, err = check.CheckPodTemplate(ctx, test.Resource.PodTemplate)
 		prefix = getJSONSchemaPrefix(test.Resource.Kind)
 	} else if check.Target == config.TargetContainer {
 		containerIndex := -1
@@ -387,13 +389,15 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 				prefix += "/containers/" + strconv.Itoa(containerIndex)
 			}
 		}
-		passes, issues, err = check.CheckContainer(test.Container)
-	} else if check.Validator.SchemaURI != "" {
-		passes, issues, err = check.CheckObject(test.Resource.Resource.Object)
+		passes, issues, err = check.CheckContainer(ctx, test.Container)
+
+		// FIXME NOT SURE WHAT TO DO WITH THIS
+	} else if check.Validator.TopLevelType() != "" {
+		passes, issues, err = check.CheckObject(ctx, test.Resource.Resource.Object)
 	} else if validatorMapper[checkID] != nil {
 		passes, issues, err = validatorMapper[checkID](test)
 	} else {
-		passes, issues, err = true, []config.ValError{}, nil
+		passes, issues, err = true, []jsonschema.KeyError{}, nil
 	}
 	if err != nil {
 		return nil, err
@@ -417,7 +421,7 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 		objects := funk.Map(resources, func(res kube.GenericResource) interface{} {
 			return res.Resource.Object
 		}).([]interface{})
-		passes, err = check.CheckAdditionalObjects(groupkind, objects)
+		passes, err = check.CheckAdditionalObjects(ctx, groupkind, objects)
 		if err != nil {
 			return nil, err
 		}
