@@ -31,12 +31,12 @@ func openBrowser(url string) error {
 		err := cmd.Start()
 		if err != nil {
 			logrus.Printf("Failed to open browser due to error %v", err)
-			return fmt.Errorf("Failed to open browser: " + err.Error())
+			return fmt.Errorf("failed to open browser: %v", err)
 		}
 		err = cmd.Wait()
 		if err != nil {
 			logrus.Printf("Failed to wait for open browser command to finish due to error %v", err)
-			return fmt.Errorf("Failed to wait for open browser command to finish: " + err.Error())
+			return fmt.Errorf("failed to wait for open browser command to finish: %v", err.Error())
 		}
 		return nil
 	} else {
