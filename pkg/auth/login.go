@@ -90,7 +90,7 @@ func HandleLogin(insightsHost string) error {
 			panic(err)
 		}
 		localServerPort := listener.Addr().(*net.TCPAddr).Port
-		url := fmt.Sprintf(insightsHost + registerPath + "?source=polaris&callbackUrl=" + fmt.Sprintf("http://localhost:%d/auth/login/callback", localServerPort))
+		url := fmt.Sprintf("%s%s?source=polaris&callbackUrl=http://localhost:%d/auth/login/callback", insightsHost, registerPath, localServerPort)
 		err = openBrowser(url)
 		if err != nil {
 			logrus.Warnf("could not open browser: %v", err)
