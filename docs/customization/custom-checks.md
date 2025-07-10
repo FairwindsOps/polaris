@@ -25,7 +25,7 @@ customChecks:
     category: Security
     target: Container
     schema:
-      '$schema': http://json-schema.org/draft-07/schema
+      "$schema": "http://json-schema.org/draft/2019-09/schema"
       type: object
       properties:
         image:
@@ -73,7 +73,7 @@ customChecks:
     category: Resources
     target: Container
     schema:
-      '$schema': http://json-schema.org/draft-07/schema
+      "$schema": "http://json-schema.org/draft/2019-09/schema"
       type: object
       required:
       - resources
@@ -120,7 +120,7 @@ successMessage: Label app.kubernetes.io/name matches metadata.name
 failureMessage: Label app.kubernetes.io/name must match metadata.name
 target: Controller
 schema:
-  '$schema': http://json-schema.org/draft-07/schema
+  "$schema": "http://json-schema.org/draft/2019-09/schema"
   type: object
   properties:
     metadata:
@@ -193,7 +193,7 @@ controllers:
   include:
   - Deployment
 schema:
-  '$schema': http://json-schema.org/draft-07/schema
+  "$schema": "http://json-schema.org/draft/2019-09/schema"
   type: object
   properties:
     metadata:
@@ -233,7 +233,7 @@ customChecks:
   foo:
     jsonSchema: |
       {
-        "$schema": "http://json-schema.org/draft-07/schema",
+        "$schema": "http://json-schema.org/draft/2019-09/schema",
         "type": "object"
       }
 ```

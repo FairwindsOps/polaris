@@ -3,7 +3,7 @@ failureMessage: The container sets potentially sensitive environment variables
 category: Security
 target: Container
 schemaString: |
-  '$schema': http://json-schema.org/draft-07/schema
+  "$schema": "http://json-schema.org/draft/2019-09/schema"
   type: object
   properties:
     env:

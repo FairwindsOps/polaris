@@ -58,7 +58,7 @@ customChecks:
     category: Efficiency
     target: Container
     schema:
-      '$schema': http://json-schema.org/draft-07/schema
+      "$schema": "http://json-schema.org/draft/2019-09/schema"
       type: object
       required:
       - resources
@@ -86,7 +86,7 @@ customChecks:
       exclude:
       - initContainer
     schema:
-      '$schema': http://json-schema.org/draft-07/schema
+      "$schema": "http://json-schema.org/draft/2019-09/schema"
       type: object
       required:
       - resources

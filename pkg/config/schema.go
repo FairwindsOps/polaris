@@ -277,13 +277,13 @@ func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, err
 	newCheck.AdditionalValidators = map[string]*jsonschema.Schema{}
 	for kind, schemaStr := range newCheck.AdditionalSchemaStrings {
 		// Replace draft-07 with draft 2019-09 for compatibility
-		schemaStr = strings.ReplaceAll(schemaStr, `"$schema": "http://json-schema.org/draft-07/schema"`, `"$schema": "http://json-schema.org/draft/2019-09/schema"`)
+		//schemaStr = strings.ReplaceAll(schemaStr, `"$schema": "http://json-schema.org/draft/2019-09/schema"`, `"$schema": "http://json-schema.org/draft/2019-09/schema"`)
 		val := jsonschema.Must(schemaStr)
 		val.Register("", jsonschema.GetSchemaRegistry())
 		newCheck.AdditionalValidators[kind] = val
 	}
 	// Replace draft-07 with draft 2019-09 for compatibility
-	newCheck.SchemaString = strings.ReplaceAll(newCheck.SchemaString, `"$schema": "http://json-schema.org/draft-07/schema"`, `"$schema": "http://json-schema.org/draft/2019-09/schema"`)
+	//newCheck.SchemaString = strings.ReplaceAll(newCheck.SchemaString, `"$schema": "http://json-schema.org/draft/2019-09/schema"`, `"$schema": "http://json-schema.org/draft/2019-09/schema"`)
 	fmt.Println("x======", newCheck.SchemaString)
 	newCheck.Validator = jsonschema.Must(newCheck.SchemaString)
 	newCheck.Validator.Register("", jsonschema.GetSchemaRegistry())
