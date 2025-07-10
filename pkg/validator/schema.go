@@ -133,7 +133,7 @@ func getTemplateInput(test schemaTestCase) (map[string]interface{}, error) {
 	return templateInput, nil
 }
 
-func makeResult(conf *config.Configuration, check *config.SchemaCheck, passes bool, issues []jsonschema.ValError) ResultMessage {
+func makeResult(conf *config.Configuration, check *config.SchemaCheck, passes bool, issues []jsonschema.KeyError) ResultMessage {
 	details := []string{}
 	for _, issue := range issues {
 		details = append(details, issue.Message)
@@ -334,7 +334,7 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 		return nil, nil
 	}
 	var passes bool
-	var issues []jsonschema.ValError
+	var issues []jsonschema.KeyError
 	var prefix string
 	if check.SchemaTarget != "" {
 		if check.SchemaTarget == config.TargetPodSpec && check.Target == config.TargetContainer {
@@ -389,12 +389,10 @@ func applySchemaCheck(conf *config.Configuration, checkID string, test schemaTes
 			}
 		}
 		passes, issues, err = check.CheckContainer(test.Container)
-	} else if check.Validator.SchemaURI != "" {
-		passes, issues, err = check.CheckObject(test.Resource.Resource.Object)
 	} else if validatorMapper[checkID] != nil {
 		passes, issues, err = validatorMapper[checkID](test)
 	} else {
-		passes, issues, err = true, []jsonschema.ValError{}, nil
+		passes, issues, err = true, []jsonschema.KeyError{}, nil
 	}
 	if err != nil {
 		return nil, err
