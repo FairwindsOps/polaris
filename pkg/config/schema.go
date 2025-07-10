@@ -113,6 +113,7 @@ func ParseCheck(id string, rawBytes []byte) (SchemaCheck, error) {
 func init() {
 	jsonschema.RegisterKeyword("resourceMinimum", newResourceMinimum)
 	jsonschema.RegisterKeyword("resourceMaximum", newResourceMaximum)
+	jsonschema.LoadDraft2019_09()
 }
 
 type includeExcludeList struct {
@@ -283,6 +284,7 @@ func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, err
 	}
 	// Replace draft-07 with draft 2019-09 for compatibility
 	newCheck.SchemaString = strings.ReplaceAll(newCheck.SchemaString, `"$schema": "http://json-schema.org/draft-07/schema"`, `"$schema": "http://json-schema.org/draft/2019-09/schema"`)
+	fmt.Println("x======", newCheck.SchemaString)
 	newCheck.Validator = jsonschema.Must(newCheck.SchemaString)
 	newCheck.Validator.Register("", jsonschema.GetSchemaRegistry())
 	return &newCheck, nil
