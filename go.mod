@@ -1,6 +1,6 @@
 module github.com/fairwindsops/polaris
 
-go 1.24.4
+go 1.24.0
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
@@ -9,7 +9,7 @@ require (
 	github.com/fatih/color v1.18.0
 	github.com/gorilla/mux v1.8.1
 	github.com/pkg/errors v0.9.1
-	github.com/qri-io/jsonschema v0.1.2
+	github.com/qri-io/jsonschema v0.2.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
