@@ -1,11 +1,13 @@
 module github.com/fairwindsops/polaris
 
-go 1.24.4
+go 1.24.0
+
+toolchain go1.24.2
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/fairwindsops/controller-utils v0.3.4
-	github.com/fairwindsops/insights-plugins/plugins/workloads v0.0.0-20250721190232-4b3eb9280583
+	github.com/fairwindsops/insights-plugins/plugins/workloads v0.0.0-20250516170732-21710c3468ac
 	github.com/fatih/color v1.18.0
 	github.com/gorilla/mux v1.8.1
 	github.com/pkg/errors v0.9.1
@@ -20,7 +22,7 @@ require (
 	k8s.io/apimachinery v0.33.1
 	k8s.io/client-go v0.33.1
 	sigs.k8s.io/controller-runtime v0.21.0
-	sigs.k8s.io/yaml v1.5.0
+	sigs.k8s.io/yaml v1.4.0
 )
 
 require (
