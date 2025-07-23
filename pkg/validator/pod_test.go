@@ -140,7 +140,7 @@ func TestInvalidNetworkPod(t *testing.T) {
 	workload, err := kube.NewGenericResourceFromPod(p, nil)
 	assert.NoError(t, err)
 	expectedSum := CountSummary{
-		Successes: uint(3),
+		Successes: uint(4),
 		Warnings:  uint(1),
 		Dangers:   uint(0),
 	}
@@ -149,6 +149,7 @@ func TestInvalidNetworkPod(t *testing.T) {
 		"hostNetworkSet": {ID: "hostNetworkSet", Message: "Host network should not be configured", Success: false, Severity: "warning", Category: "Security"},
 		"hostIPCSet":     {ID: "hostIPCSet", Message: "Host IPC is not configured", Success: true, Severity: "danger", Category: "Security"},
 		"hostPIDSet":     {ID: "hostPIDSet", Message: "Host PID is not configured", Success: true, Severity: "danger", Category: "Security"},
+		"hostPortSet":    {ID: "hostPortSet", Message: "Host port is not configured", Success: true, Severity: "danger", Category: "Security"},
 	}
 
 	actualPodResult, err := applyControllerSchemaChecks(&c, nil, workload)
