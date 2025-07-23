@@ -314,11 +314,7 @@ func (check SchemaCheck) CheckObject(ctx context.Context, obj interface{}) (bool
 	if err != nil {
 		return false, nil, err
 	}
-	fmt.Println("bytes11=======", string(bytes))
 	errs, err := check.Validator.ValidateBytes(ctx, bytes)
-	for _, err := range errs {
-		fmt.Println("err=======", err.PropertyPath, err.InvalidValue, err.Message)
-	}
 	return len(errs) == 0, errs, err
 }
 
