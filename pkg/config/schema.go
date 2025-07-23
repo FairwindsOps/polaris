@@ -111,11 +111,10 @@ func ParseCheck(id string, rawBytes []byte) (SchemaCheck, error) {
 	return check, nil
 }
 
-// TODO: Fix custom keywords - they are currently causing issues with the jsonschema library
-// func init() {
-// 	jsonschema.RegisterKeyword("resourceMinimum", newResourceMinimum)
-// 	jsonschema.RegisterKeyword("resourceMaximum", newResourceMaximum)
-// }
+func init() {
+	jsonschema.RegisterKeyword("resourceMinimum", newResourceMinimum)
+	jsonschema.RegisterKeyword("resourceMaximum", newResourceMaximum)
+}
 
 type includeExcludeList struct {
 	Include []string `yaml:"include"`
@@ -152,6 +151,16 @@ func (min resourceMinimum) Resolve(pointer jptr.Pointer, uri string) *jsonschema
 	return nil
 }
 
+// UnmarshalJSON implements json.Unmarshaler
+func (min *resourceMinimum) UnmarshalJSON(data []byte) error {
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	*min = resourceMinimum(s)
+	return nil
+}
+
 // ValidateKeyword checks that a specified quanitity is not greater than the maximum
 func (max resourceMaximum) ValidateKeyword(ctx context.Context, currentState *jsonschema.ValidationState, data interface{}) {
 	path := ""
@@ -171,6 +180,16 @@ func (max resourceMaximum) Register(uri string, registry *jsonschema.SchemaRegis
 
 // Resolve implements jsonschema.Keyword
 func (max resourceMaximum) Resolve(pointer jptr.Pointer, uri string) *jsonschema.Schema {
+	return nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler
+func (max *resourceMaximum) UnmarshalJSON(data []byte) error {
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	*max = resourceMaximum(s)
 	return nil
 }
 
@@ -209,24 +228,30 @@ func validateRange(path string, limit interface{}, data interface{}, isMinimum b
 	if err != nil {
 		return err
 	}
-	cmp := limitQuantity.Cmp(actualQuantity)
+	
 	if isMinimum {
-		if cmp == 1 {
+		// For minimum, the actual quantity should be >= limit
+		// If actual < limit, then it's an error
+		// actualQuantity.Cmp(limitQuantity) returns -1 if actual < limit
+		if actualQuantity.Cmp(limitQuantity) == -1 {
 			return &[]ValError{
 				{
 					PropertyPath: path,
 					InvalidValue: data,
-					Message:      fmt.Sprintf("%s quantity %v is > %v", path, actualQuantity, limitQuantity),
+					Message:      fmt.Sprintf("%s quantity %v is less than minimum %v", path, actualQuantity, limitQuantity),
 				},
 			}
 		}
 	} else {
-		if cmp == -1 {
+		// For maximum, the actual quantity should be <= limit
+		// If actual > limit, then it's an error
+		// actualQuantity.Cmp(limitQuantity) returns 1 if actual > limit
+		if actualQuantity.Cmp(limitQuantity) == 1 {
 			return &[]ValError{
 				{
 					PropertyPath: path,
 					InvalidValue: data,
-					Message:      fmt.Sprintf("%s quantity %v is < %v", path, actualQuantity, limitQuantity),
+					Message:      fmt.Sprintf("%s quantity %v is greater than maximum %v", path, actualQuantity, limitQuantity),
 				},
 			}
 		}
