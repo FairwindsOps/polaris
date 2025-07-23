@@ -8,11 +8,16 @@ schema:
   required:
   properties:
     ports:
-      type: array
-      items:
-        properties:
-          hostPort:
-            const: 0
+      oneOf:
+        - type: "null"
+        - type: "array"
+          items:
+            not:
+              properties:
+                hostPort:
+                  not:
+                    enum: [0, null]
+              required: ["hostPort"]
 mutations:
   - op: remove
     path: /ports/*/hostPort

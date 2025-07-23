@@ -112,6 +112,8 @@ func ParseCheck(id string, rawBytes []byte) (SchemaCheck, error) {
 }
 
 func init() {
+	// Set the schema version to draft-07 to maintain compatibility with existing schemas
+	jsonschema.LoadDraft2019_09()
 	jsonschema.RegisterKeyword("resourceMinimum", newResourceMinimum)
 	jsonschema.RegisterKeyword("resourceMaximum", newResourceMaximum)
 }
