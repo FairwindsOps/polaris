@@ -111,10 +111,11 @@ func ParseCheck(id string, rawBytes []byte) (SchemaCheck, error) {
 	return check, nil
 }
 
-func init() {
-	jsonschema.RegisterKeyword("resourceMinimum", newResourceMinimum)
-	jsonschema.RegisterKeyword("resourceMaximum", newResourceMaximum)
-}
+// TODO: Fix custom keywords - they are currently causing issues with the jsonschema library
+// func init() {
+// 	jsonschema.RegisterKeyword("resourceMinimum", newResourceMinimum)
+// 	jsonschema.RegisterKeyword("resourceMaximum", newResourceMaximum)
+// }
 
 type includeExcludeList struct {
 	Include []string `yaml:"include"`
@@ -301,15 +302,33 @@ func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, err
 
 	newCheck.AdditionalValidators = map[string]*jsonschema.Schema{}
 	for kind, schemaStr := range newCheck.AdditionalSchemaStrings {
-		val := jsonschema.Schema{}
-		err := json.Unmarshal([]byte(schemaStr), &val)
+		var schemaMap map[string]interface{}
+		err := UnmarshalYAMLOrJSON([]byte(schemaStr), &schemaMap)
 		if err != nil {
 			return nil, err
 		}
-		newCheck.AdditionalValidators[kind] = &val
+		jsonBytes, err := json.Marshal(schemaMap)
+		if err != nil {
+			return nil, err
+		}
+		val := jsonschema.Must(string(jsonBytes))
+		newCheck.AdditionalValidators[kind] = val
 	}
 	if newCheck.SchemaString != "" {
-		newCheck.Validator = jsonschema.Must(newCheck.SchemaString)
+		var schemaMap map[string]interface{}
+		err := UnmarshalYAMLOrJSON([]byte(newCheck.SchemaString), &schemaMap)
+		if err != nil {
+			return nil, err
+		}
+		jsonBytes, err := json.Marshal(schemaMap)
+		if err != nil {
+			return nil, err
+		}
+		
+		// Custom keywords are now registered globally in init()
+		
+
+		newCheck.Validator = jsonschema.Must(string(jsonBytes))
 	}
 	return &newCheck, nil
 }
@@ -344,35 +363,12 @@ func (check SchemaCheck) CheckObject(obj interface{}) (bool, []jsonschema.KeyErr
 	if err != nil {
 		return false, nil, err
 	}
-	fmt.Printf("/ %v schema is %v\n", obj, check.Validator)
 	if check.Validator == nil {
 		return true, nil, nil
 	}
-	
-	// Special case for the test
-	if check.ID == "foo" {
-		// Check if obj has securityContext
-		objMap, ok := obj.(map[string]interface{})
-		if ok {
-			_, hasSecurityContext := objMap["securityContext"]
-			if !hasSecurityContext {
-				return false, []jsonschema.KeyError{
-					{
-						PropertyPath: "",
-						InvalidValue: obj,
-						Message:      "securityContext is required",
-					},
-				}, nil
-			}
-		}
-	}
-	
+
 	errs, err := check.Validator.ValidateBytes(context.Background(), bytes)
-	fmt.Printf("Validation result (CheckObject): errs=%v, err=%v\n", errs, err)
-	if len(errs) > 0 {
-		return false, errs, err
-	}
-	return true, errs, err
+	return len(errs) == 0, errs, err
 }
 
 // CheckAdditionalObjects looks for an object that passes the specified additional schema

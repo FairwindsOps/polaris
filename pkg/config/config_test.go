@@ -158,9 +158,8 @@ func TestConfigWithCustomChecks(t *testing.T) {
 	isValid, _, err := check.CheckObject(valid)
 	assert.NoError(t, err)
 	assert.Equal(t, true, isValid)
-	isValid, issues, err := check.CheckObject(invalid)
+	isValid, _, err = check.CheckObject(invalid)
 	assert.NoError(t, err)
-	fmt.Printf("Invalid object check 1: isValid=%v, issues=%v\n", isValid, issues)
 	assert.Equal(t, false, isValid)
 
 	parsedConf, err = Parse([]byte(confCustomChecksWithJSONSchema))
@@ -171,9 +170,8 @@ func TestConfigWithCustomChecks(t *testing.T) {
 	if !assert.Equal(t, true, isValid) {
 		fmt.Println(problems[0].PropertyPath, problems[0].InvalidValue, problems[0].Message)
 	}
-	isValid, issues, err = check.CheckObject(invalid)
+	isValid, _, err = check.CheckObject(invalid)
 	assert.NoError(t, err)
-	fmt.Printf("Invalid object check 2: isValid=%v, issues=%v\n", isValid, issues)
 	assert.Equal(t, false, isValid)
 }
 
