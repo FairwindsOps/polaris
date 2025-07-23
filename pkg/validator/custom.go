@@ -6,7 +6,7 @@ import (
 	"github.com/qri-io/jsonschema"
 )
 
-type validatorFunction func(test schemaTestCase) (bool, []jsonschema.ValError, error)
+type validatorFunction func(test schemaTestCase) (bool, []jsonschema.KeyError, error)
 
 var validatorMapper = map[string]validatorFunction{}
 var lock = &sync.Mutex{}
