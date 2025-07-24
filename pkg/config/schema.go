@@ -111,9 +111,9 @@ func ParseCheck(id string, rawBytes []byte) (SchemaCheck, error) {
 }
 
 func init() {
-	jsonschema.LoadDraft2019_09()
 	jsonschema.RegisterKeyword("resourceMinimum", newResourceMinimum)
 	jsonschema.RegisterKeyword("resourceMaximum", newResourceMaximum)
+	jsonschema.LoadDraft2019_09()
 }
 
 type includeExcludeList struct {
