@@ -3,7 +3,7 @@ failureMessage: The ClusterRoleBinding references the default cluster-admin Clus
 category: Security
 target: rbac.authorization.k8s.io/ClusterRoleBinding
 schemaString: |
-  '$schema': http://json-schema.org/draft-07/schema
+  '$schema': http://json-schema.org/draft/2019-09/schema
   type: object
   anyOf:
     # Do not alert on default ClusterRoleBindings.
