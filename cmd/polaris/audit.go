@@ -116,7 +116,7 @@ var auditCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		auditData, err := validator.RunAudit(config, k)
+		auditData, err := validator.RunAudit(context.Background(), config, k)
 		if err != nil {
 			logrus.Errorf("Error while running audit on resources: %v", err)
 			os.Exit(1)

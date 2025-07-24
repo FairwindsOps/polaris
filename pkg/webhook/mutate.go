@@ -37,7 +37,7 @@ type Mutator struct {
 }
 
 // NewMutateWebhook creates a mutating admission webhook for the apiType.
-func NewMutateWebhook(mgr manager.Manager, c config.Configuration) {
+func NewMutateWebhook(ctx context.Context, mgr manager.Manager, c config.Configuration) {
 	path := "/mutate"
 	decoder := admission.NewDecoder(runtime.NewScheme())
 	mutator := Mutator{
@@ -48,8 +48,8 @@ func NewMutateWebhook(mgr manager.Manager, c config.Configuration) {
 	mgr.GetWebhookServer().Register(path, &webhook.Admission{Handler: &mutator})
 }
 
-func (m *Mutator) mutate(req admission.Request) ([]jsonpatch.Operation, error) {
-	results, kubeResources, err := GetValidatedResults(req.AdmissionRequest.Kind.Kind, m.decoder, req, m.Config)
+func (m *Mutator) mutate(ctx context.Context, req admission.Request) ([]jsonpatch.Operation, error) {
+	results, kubeResources, err := GetValidatedResults(ctx, req.AdmissionRequest.Kind.Kind, m.decoder, req, m.Config)
 	if err != nil {
 		logrus.Errorf("Error while validating resource: %v", err)
 		return nil, err
@@ -87,7 +87,7 @@ func (m *Mutator) mutate(req admission.Request) ([]jsonpatch.Operation, error) {
 // Handle for Validator to run validation checks.
 func (m *Mutator) Handle(ctx context.Context, req admission.Request) admission.Response {
 	logrus.Info("Starting mutation request")
-	patches, err := m.mutate(req)
+	patches, err := m.mutate(ctx, req)
 	if err != nil {
 		logrus.Errorf("Error while getting mutations: %v", err)
 		return admission.Errored(403, err)

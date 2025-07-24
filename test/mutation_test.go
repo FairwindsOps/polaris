@@ -1,6 +1,7 @@
 package test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -49,7 +50,7 @@ func TestMutations(t *testing.T) {
 			newConfig.Checks = map[string]config.Severity{}
 			newConfig.Checks[mutationStr] = config.SeverityDanger
 			newConfig.Mutations = []string{mutationStr}
-			results, err := validator.ApplyAllSchemaChecksToResourceProvider(&newConfig, tc.resources)
+			results, err := validator.ApplyAllSchemaChecksToResourceProvider(context.Background(), &newConfig, tc.resources)
 			assert.NoError(t, err)
 			assert.Len(t, results, 1)
 			allMutations := mutation.GetMutationsFromResults(results)

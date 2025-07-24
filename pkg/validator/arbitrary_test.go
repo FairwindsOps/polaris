@@ -15,6 +15,7 @@
 package validator
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
@@ -36,7 +37,7 @@ func TestValidatePDB(t *testing.T) {
 	res, err := kube.NewGenericResourceFromUnstructured(pdb, nil)
 	res.Kind = "PodDisruptionBudget"
 
-	actualResult, err := applyNonControllerSchemaChecks(&c, nil, res)
+	actualResult, err := applyNonControllerSchemaChecks(context.Background(), &c, nil, res)
 	if err != nil {
 		panic(err)
 	}
@@ -76,7 +77,7 @@ func TestValidateIngress(t *testing.T) {
 	}
 	res.Kind = "Ingress"
 
-	actualResult, err := applyNonControllerSchemaChecks(&c, nil, res)
+	actualResult, err := applyNonControllerSchemaChecks(context.Background(), &c, nil, res)
 	if err != nil {
 		panic(err)
 	}
