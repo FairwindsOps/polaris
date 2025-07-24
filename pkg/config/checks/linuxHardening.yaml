@@ -3,8 +3,8 @@ FailureMessage: Use one of AppArmor, Seccomp, SELinux, or dropping Linux Capabil
 category: Security
 target: Container
 schemaString: |
-  '$schema': http://json-schema.org/draft-07/schema
-  definitions:
+  '$schema': http://json-schema.org/draft/2019-09/schema
+  $defs:
     podOrContainerSeccompProfile:
       type: object
       {{ $podSeccompProfileType := .Polaris.PodSpec.securityContext.seccompProfile.type }}
@@ -83,7 +83,7 @@ schemaString: |
   type: object
   {{ else }}
   anyOf:
-  - $ref: "#/definitions/podOrContainerSeccompProfile"
-  - $ref: "#/definitions/podOrContainerSELinuxOptions"
-  - $ref: "#/definitions/containerDropCapabilities"
+  - $ref: "#/$defs/podOrContainerSeccompProfile"
+  - $ref: "#/$defs/podOrContainerSELinuxOptions"
+  - $ref: "#/$defs/containerDropCapabilities"
   {{ end}}

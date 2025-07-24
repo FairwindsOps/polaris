@@ -4,8 +4,8 @@ category: Security
 target: Container
 schemaTarget: PodSpec
 schema:
-  '$schema': http://json-schema.org/draft-07/schema
-  definitions:
+  '$schema': http://json-schema.org/draft/2019-09/schema
+  $defs:
     notBadSecurityContext:
       type: object
       properties:
@@ -15,13 +15,13 @@ schema:
   type: object
   properties:
     securityContext:
-      $ref: "#/definitions/notBadSecurityContext"
+      $ref: "#/$defs/notBadSecurityContext"
     containers:
       type: array
       items:
         properties:
           securityContext:
-            $ref: "#/definitions/notBadSecurityContext"
+            $ref: "#/$defs/notBadSecurityContext"
 mutations:
   - op: add
     path: /securityContext/privileged
