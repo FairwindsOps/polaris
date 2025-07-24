@@ -9,8 +9,6 @@ meta:
 # top-level commands
 audit
       Runs a one-time audit.
-auth
-      Authenticate polaris with Fairwinds Insights
 dashboard
       Runs the webserver for Polaris dashboard.
 fix
@@ -44,7 +42,6 @@ webhook
 # audit flags
     --audit-path string               If specified, audits one or more YAML files instead of a cluster.
     --checks strings                  Optional flag to specify specific checks to check
-    --cluster-name string             Set --cluster-name to a descriptive name for the cluster you're auditing
     --color                           Whether to use color in pretty format. (default true)
     --display-name string             An optional identifier for the audit.
 -f, --format string                   Output format for results - json, yaml, pretty, or score. (default "json")
@@ -56,13 +53,11 @@ webhook
     --only-show-failed-tests          If specified, audit output will only show failed tests.
     --output-file string              Destination file for audit results.
     --output-url string               Destination URL to send audit results.
-    --quiet                           Suppress the 'upload to Insights' prompt.
     --resource string                 Audit a specific resource, in the format namespace/kind/version/name, e.g. nginx-ingress/Deployment.apps/v1/default-backend.
     --set-exit-code-below-score int   Set an exit code of 4 when the score is below this threshold (1-100).
     --set-exit-code-on-danger         Set an exit code of 3 when the audit contains danger-level issues.
     --severity string                 Severity level used to filter results. Behaves like log levels. 'danger' is the least verbose (warning, danger)
     --skip-ssl-validation             Skip https certificate verification
-    --upload-insights                 Upload scan results to Fairwinds Insights
 
 # fix flags
     --checks strings      Optional flag to specify specific checks to fix eg. checks=hostIPCSet,hostPIDSet and checks=all applies fix to all defined checks mutations
@@ -76,15 +71,4 @@ webhook
 -h, --help                               help for webhook
 -p, --port int                           Port for the dashboard webserver. (default 9876)
 
-# auth sub-commands
-  login       Authenticate polaris with Fairwinds Insights.
-  logout      Log out of a Fairwinds Insights.
-  status      View authentication status.
-  token       Print the auth token gh is configured to use.
 ```
-
-#### Suppressing 'upload to Insights' output
-
-When running the `polaris audit` subcommand, you can suppress the following output using the `--quiet flag`:
-
-> 🚀 Upload your Polaris findings to Fairwinds Insights to see remediation advice, add teammates, integrate with Slack or Jira, and more:
