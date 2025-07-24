@@ -19,7 +19,7 @@ func init() {
 	registerCustomChecks("pdbMinAvailableGreaterThanHPAMinReplicas", pdbMinAvailableGreaterThanHPAMinReplicas)
 }
 
-func pdbMinAvailableGreaterThanHPAMinReplicas(test schemaTestCase) (bool, []jsonschema.ValError, error) {
+func pdbMinAvailableGreaterThanHPAMinReplicas(test schemaTestCase) (bool, []jsonschema.KeyError, error) {
 	if test.ResourceProvider == nil {
 		return true, nil, nil
 	}
@@ -70,7 +70,7 @@ func pdbMinAvailableGreaterThanHPAMinReplicas(test schemaTestCase) (bool, []json
 		}
 
 		if attachedHPA.Spec.MinReplicas != nil && pdbMinAvailable > int(*attachedHPA.Spec.MinReplicas) {
-			return false, []jsonschema.ValError{
+			return false, []jsonschema.KeyError{
 				{
 					PropertyPath: "spec.minAvailable",
 					InvalidValue: pdbMinAvailable,
