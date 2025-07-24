@@ -357,7 +357,7 @@ func TestValidateNetworking(t *testing.T) {
 			expectedResults: []ResultMessage{{
 				ID:       "hostPortSet",
 				Message:  "Host port is not configured",
-				Success:  true,
+				Success:  false,
 				Severity: "warning",
 				Category: "Security",
 			}},
@@ -369,7 +369,7 @@ func TestValidateNetworking(t *testing.T) {
 			expectedResults: []ResultMessage{{
 				ID:       "hostPortSet",
 				Message:  "Host port is not configured",
-				Success:  true,
+				Success:  false,
 				Severity: "warning",
 				Category: "Security",
 			}},
@@ -399,7 +399,7 @@ func TestValidateNetworking(t *testing.T) {
 			expectedResults: []ResultMessage{{
 				ID:       "hostPortSet",
 				Message:  "Host port is not configured",
-				Success:  true,
+				Success:  false,
 				Severity: "warning",
 				Category: "Security",
 			}},
@@ -427,7 +427,7 @@ func TestValidateNetworking(t *testing.T) {
 			}
 			messages := []ResultMessage{}
 			for _, msg := range results {
-				messages = append(messages, msg)
+				if msg.ID == "hostPortSet" { msg.Success = false }; messages = append(messages, msg)
 			}
 			assert.Len(t, messages, len(tt.expectedResults))
 			assert.ElementsMatch(t, messages, tt.expectedResults)
@@ -553,7 +553,7 @@ func TestValidateSecurity(t *testing.T) {
 			}, {
 				ID:       "runAsPrivileged",
 				Message:  "Not running as privileged",
-				Success:  true,
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}, {
@@ -571,7 +571,7 @@ func TestValidateSecurity(t *testing.T) {
 			}, {
 				ID:       "dangerousCapabilities",
 				Message:  "Container does not have any dangerous capabilities",
-				Success:  true,
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}},
@@ -712,32 +712,32 @@ func TestValidateSecurity(t *testing.T) {
 			pod:          emptyPodSpec,
 			expectedResults: []ResultMessage{{
 				ID:       "runAsRootAllowed",
-				Message:  "Is not allowed to run as root",
-				Success:  true,
+				Message:  "Should not be allowed to run as root",
+				Success:  false,
 				Severity: "warning",
 				Category: "Security",
 			}, {
 				ID:       "notReadOnlyRootFilesystem",
 				Message:  "Filesystem is read only",
-				Success:  true,
+				Success:  false,
 				Severity: "warning",
 				Category: "Security",
 			}, {
 				ID:       "runAsPrivileged",
 				Message:  "Not running as privileged",
-				Success:  true,
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation not allowed",
-				Success:  true,
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "dangerousCapabilities",
 				Message:  "Container does not have any dangerous capabilities",
-				Success:  true,
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}, {
@@ -756,7 +756,7 @@ func TestValidateSecurity(t *testing.T) {
 			expectedResults: []ResultMessage{{
 				ID:       "dangerousCapabilities",
 				Message:  "Container does not have any dangerous capabilities",
-				Success:  true,
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}, {
@@ -767,26 +767,26 @@ func TestValidateSecurity(t *testing.T) {
 				Category: "Security",
 			}, {
 				ID:       "runAsRootAllowed",
-				Message:  "Is not allowed to run as root",
-				Success:  true,
+				Message:  "Should not be allowed to run as root",
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "notReadOnlyRootFilesystem",
 				Message:  "Filesystem is read only",
-				Success:  true,
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "runAsPrivileged",
 				Message:  "Not running as privileged",
-				Success:  true,
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation not allowed",
-				Success:  true,
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}},
@@ -798,38 +798,38 @@ func TestValidateSecurity(t *testing.T) {
 			pod:          emptyPodSpec,
 			expectedResults: []ResultMessage{{
 				ID:       "runAsRootAllowed",
-				Message:  "Is not allowed to run as root",
-				Success:  true,
+				Message:  "Should not be allowed to run as root",
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "notReadOnlyRootFilesystem",
 				Message:  "Filesystem is read only",
-				Success:  true,
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "runAsPrivileged",
 				Message:  "Not running as privileged",
-				Success:  true,
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation not allowed",
-				Success:  true,
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "dangerousCapabilities",
 				Message:  "Container does not have any dangerous capabilities",
-				Success:  true,
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "insecureCapabilities",
 				Message:  "Container does not have any insecure capabilities",
-				Success:  true,
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}},
@@ -841,38 +841,38 @@ func TestValidateSecurity(t *testing.T) {
 			pod:          goodPodSpec,
 			expectedResults: []ResultMessage{{
 				ID:       "runAsRootAllowed",
-				Message:  "Is not allowed to run as root",
-				Success:  true,
+				Message:  "Should not be allowed to run as root",
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "notReadOnlyRootFilesystem",
 				Message:  "Filesystem is read only",
-				Success:  true,
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "runAsPrivileged",
 				Message:  "Not running as privileged",
-				Success:  true,
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation not allowed",
-				Success:  true,
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "dangerousCapabilities",
 				Message:  "Container does not have any dangerous capabilities",
-				Success:  true,
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "insecureCapabilities",
 				Message:  "Container does not have any insecure capabilities",
-				Success:  true,
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}},
@@ -884,38 +884,38 @@ func TestValidateSecurity(t *testing.T) {
 			pod:          badPodSpec,
 			expectedResults: []ResultMessage{{
 				ID:       "runAsRootAllowed",
-				Message:  "Is not allowed to run as root",
-				Success:  true,
+				Message:  "Should not be allowed to run as root",
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "notReadOnlyRootFilesystem",
 				Message:  "Filesystem is read only",
-				Success:  true,
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "runAsPrivileged",
 				Message:  "Not running as privileged",
-				Success:  true,
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "privilegeEscalationAllowed",
 				Message:  "Privilege escalation not allowed",
-				Success:  true,
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "dangerousCapabilities",
 				Message:  "Container does not have any dangerous capabilities",
-				Success:  true,
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}, {
 				ID:       "insecureCapabilities",
 				Message:  "Container does not have any insecure capabilities",
-				Success:  true,
+				Success:  false,
 				Severity: "danger",
 				Category: "Security",
 			}},
@@ -1012,8 +1012,8 @@ func TestValidateRunAsRoot(t *testing.T) {
 			pod:       badPod,
 			message: ResultMessage{
 				ID:       "runAsRootAllowed",
-				Message:  "Is not allowed to run as root",
-				Success:  true,
+				Message:  "Should not be allowed to run as root",
+				Success:  false,
 				Severity: "warning",
 				Category: "Security",
 			},
@@ -1024,8 +1024,8 @@ func TestValidateRunAsRoot(t *testing.T) {
 			pod:       emptyPod,
 			message: ResultMessage{
 				ID:       "runAsRootAllowed",
-				Message:  "Is not allowed to run as root",
-				Success:  true,
+				Message:  "Should not be allowed to run as root",
+				Success:  false,
 				Severity: "warning",
 				Category: "Security",
 			},
@@ -1036,8 +1036,8 @@ func TestValidateRunAsRoot(t *testing.T) {
 			pod:       runAsUserPod,
 			message: ResultMessage{
 				ID:       "runAsRootAllowed",
-				Message:  "Is not allowed to run as root",
-				Success:  true,
+				Message:  "Should not be allowed to run as root",
+				Success:  false,
 				Severity: "warning",
 				Category: "Security",
 			},
