@@ -16,6 +16,7 @@ package validator
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sort"
@@ -337,6 +338,14 @@ func applySchemaCheck(ctx context.Context, conf *config.Configuration, checkID s
 	var passes bool
 	var issues []jsonschema.KeyError
 	var prefix string
+	emptyValidator := true
+	validatorBytes, err := json.Marshal(check.Validator)
+	if err != nil {
+		return nil, err
+	}
+	if string(validatorBytes) != "" && string(validatorBytes) != "null" && string(validatorBytes) != "{}" {
+		emptyValidator = false
+	}
 	if check.SchemaTarget != "" {
 		if check.SchemaTarget == config.TargetPodSpec && check.Target == config.TargetContainer {
 			podCopy := *test.Resource.PodSpec
@@ -390,7 +399,7 @@ func applySchemaCheck(ctx context.Context, conf *config.Configuration, checkID s
 			}
 		}
 		passes, issues, err = check.CheckContainer(ctx, test.Container)
-	} else if check.Validator != nil {
+	} else if !emptyValidator {
 		passes, issues, err = check.CheckObject(ctx, test.Resource.Resource.Object)
 	} else if validatorMapper[checkID] != nil {
 		passes, issues, err = validatorMapper[checkID](test)
