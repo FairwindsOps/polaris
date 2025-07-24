@@ -52,7 +52,7 @@ customChecks:
     category: Security
     target: Container
     schema:
-      '$schema': http://json-schema.org/draft-07/schema
+      '$schema': https://json-schema.org/draft/2019-09/schema
       type: object
       required:
       - securityContext
@@ -69,7 +69,7 @@ customChecks:
     target: Container
     jsonSchema: >
       {
-        "$schema": "http://json-schema.org/draft-07/schema",
+        "$schema": "https://json-schema.org/draft/2019-09/schema",
         "type": "object",
         "required": ["securityContext"]
       }
@@ -83,7 +83,7 @@ customChecks:
     category: Security
     target: Container
     schema:
-      '$schema': http://json-schema.org/draft-07/schema
+      '$schema': https://json-schema.org/draft/2019-09/schema
       type: object
       required:
       - securityContext
@@ -155,22 +155,22 @@ func TestConfigWithCustomChecks(t *testing.T) {
 	assert.NoError(t, err, "Expected no error when parsing YAML config")
 	assert.Equal(t, 1, len(parsedConf.CustomChecks))
 	check, err := parsedConf.CustomChecks["foo"].TemplateForResource(map[string]interface{}{})
-	isValid, _, err := check.CheckObject(valid)
+	isValid, _, err := check.CheckObject(context.TODO(), valid)
 	assert.NoError(t, err)
 	assert.Equal(t, true, isValid)
-	isValid, _, err = check.CheckObject(invalid)
+	isValid, _, err = check.CheckObject(context.TODO(), invalid)
 	assert.NoError(t, err)
 	assert.Equal(t, false, isValid)
 
 	parsedConf, err = Parse([]byte(confCustomChecksWithJSONSchema))
 	assert.NoError(t, err, "Expected no error when parsing YAML config")
 	assert.Equal(t, 1, len(parsedConf.CustomChecks))
-	isValid, problems, err := parsedConf.CustomChecks["foo"].CheckObject(valid)
+	isValid, problems, err := parsedConf.CustomChecks["foo"].CheckObject(context.TODO(), valid)
 	assert.NoError(t, err)
 	if !assert.Equal(t, true, isValid) {
 		fmt.Println(problems[0].PropertyPath, problems[0].InvalidValue, problems[0].Message)
 	}
-	isValid, _, err = check.CheckObject(invalid)
+	isValid, _, err = check.CheckObject(context.TODO(), invalid)
 	assert.NoError(t, err)
 	assert.Equal(t, false, isValid)
 }

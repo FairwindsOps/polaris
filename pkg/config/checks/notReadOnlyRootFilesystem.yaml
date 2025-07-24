@@ -4,8 +4,8 @@ category: Security
 target: Container
 schemaTarget: PodSpec
 schema:
-  '$schema': http://json-schema.org/draft-07/schema
-  definitions:
+  '$schema': https://json-schema.org/draft/2019-09/schema
+  $defs:
     goodSecurityContext:
       type: object
       anyOf:
@@ -25,13 +25,13 @@ schema:
     - securityContext
     properties:
       securityContext:
-        $ref: "#/definitions/goodSecurityContext"
+        $ref: "#/$defs/goodSecurityContext"
       containers:
         type: array
         items:
           properties:
             securityContext:
-              $ref: "#/definitions/notBadSecurityContext"
+              $ref: "#/$defs/notBadSecurityContext"
   - properties:
       containers:
         type: array
@@ -40,7 +40,7 @@ schema:
           - securityContext
           properties:
             securityContext:
-              $ref: "#/definitions/goodSecurityContext"
+              $ref: "#/$defs/goodSecurityContext"
 mutations:
   - op: add
     path: /securityContext/readOnlyRootFilesystem

@@ -45,7 +45,7 @@ func TestGetTemplateData(t *testing.T) {
 	score := uint(0)
 
 	var actualAudit AuditData
-	actualAudit, err = RunAudit(c, resources)
+	actualAudit, err = RunAudit(context.Background(), c, resources)
 	assert.Equal(t, err, nil, "error should be nil")
 	assert.Equal(t, score, actualAudit.Score, "")
 	assert.EqualValues(t, sum, actualAudit.GetSummary())

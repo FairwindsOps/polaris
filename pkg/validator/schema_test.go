@@ -15,6 +15,7 @@
 package validator
 
 import (
+	"context"
 	"testing"
 
 	conf "github.com/fairwindsops/polaris/pkg/config"
@@ -58,7 +59,7 @@ customChecks:
     category: Efficiency
     target: Container
     schema:
-      '$schema': http://json-schema.org/draft-07/schema
+      '$schema': https://json-schema.org/draft/2019-09/schema
       type: object
       required:
       - resources
@@ -86,7 +87,7 @@ customChecks:
       exclude:
       - initContainer
     schema:
-      '$schema': http://json-schema.org/draft-07/schema
+      '$schema': https://json-schema.org/draft/2019-09/schema
       type: object
       required:
       - resources
@@ -158,14 +159,14 @@ func TestValidateResourcesInit(t *testing.T) {
 	assert.NoError(t, err, "Expected no error when parsing config")
 
 	var results ResultSet
-	results, err = applyContainerSchemaChecks(&parsedConf, nil, controller, emptyContainer, false)
+	results, err = applyContainerSchemaChecks(context.Background(), &parsedConf, nil, controller, emptyContainer, false)
 	if err != nil {
 		panic(err)
 	}
 	assert.Equal(t, uint(1), results.GetSummary().Dangers)
 	assert.Equal(t, uint(1), results.GetSummary().Warnings)
 
-	results, err = applyContainerSchemaChecks(&parsedConf, nil, controller, emptyContainer, true)
+	results, err = applyContainerSchemaChecks(context.Background(), &parsedConf, nil, controller, emptyContainer, true)
 	if err != nil {
 		panic(err)
 	}
