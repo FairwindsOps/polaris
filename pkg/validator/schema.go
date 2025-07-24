@@ -391,7 +391,8 @@ func applySchemaCheck(ctx context.Context, conf *config.Configuration, checkID s
 		}
 		passes, issues, err = check.CheckContainer(ctx, test.Container)
 
-		// FIXME NOT SURE WHAT TO DO WITH THIS
+	} else if check.Validator != nil {
+		passes, issues, err = check.CheckObject(ctx, test.Resource.Resource.Object)
 	} else if check.Validator.TopLevelType() != "" {
 		passes, issues, err = check.CheckObject(ctx, test.Resource.Resource.Object)
 	} else if validatorMapper[checkID] != nil {
