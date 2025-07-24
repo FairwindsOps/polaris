@@ -52,7 +52,7 @@ customChecks:
     category: Security
     target: Container
     schema:
-      '$schema': http://json-schema.org/draft/2019-09/schema
+      '$schema': https://json-schema.org/draft/2019-09/schema
       type: object
       required:
       - securityContext
@@ -69,7 +69,7 @@ customChecks:
     target: Container
     jsonSchema: >
       {
-        "$schema": "http://json-schema.org/draft/2019-09/schema",
+        "$schema": "https://json-schema.org/draft/2019-09/schema",
         "type": "object",
         "required": ["securityContext"]
       }
@@ -83,7 +83,7 @@ customChecks:
     category: Security
     target: Container
     schema:
-      '$schema': http://json-schema.org/draft/2019-09/schema
+      '$schema': https://json-schema.org/draft/2019-09/schema
       type: object
       required:
       - securityContext

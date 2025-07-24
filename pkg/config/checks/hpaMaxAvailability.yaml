@@ -3,7 +3,7 @@ failureMessage: HPA maxReplicas and minReplicas should be different
 category: Reliability
 target: autoscaling/HorizontalPodAutoscaler
 schemaString: |
-  "$schema": http://json-schema.org/draft/2019-09/schema#
+  "$schema": https://json-schema.org/draft/2019-09/schema#
   type: object
   properties:
     spec:

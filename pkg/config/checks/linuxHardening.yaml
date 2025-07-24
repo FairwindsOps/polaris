@@ -3,7 +3,7 @@ FailureMessage: Use one of AppArmor, Seccomp, SELinux, or dropping Linux Capabil
 category: Security
 target: Container
 schemaString: |
-  '$schema': http://json-schema.org/draft/2019-09/schema
+  '$schema': https://json-schema.org/draft/2019-09/schema
   $defs:
     podOrContainerSeccompProfile:
       type: object

@@ -3,7 +3,7 @@ failureMessage: Label app.kubernetes.io/instance must match metadata.name
 category: Reliability
 target: Controller
 schema:
-  '$schema': http://json-schema.org/draft/2019-09/schema
+  '$schema': https://json-schema.org/draft/2019-09/schema
   type: object
   properties:
     metadata:

@@ -3,7 +3,7 @@ failureMessage: Potentially sensitive content is detected in the ConfigMap keys 
 category: Security
 target: /ConfigMap
 schemaString: |
-  '$schema': http://json-schema.org/draft/2019-09/schema
+  '$schema': https://json-schema.org/draft/2019-09/schema
   type: object
   required: ["metadata"]
   properties:
