@@ -36,6 +36,7 @@ func openBrowser(url string) error {
 		err = cmd.Wait()
 		if err != nil {
 			logrus.Printf("Failed to wait for open browser command to finish due to error %v", err)
+			return fmt.Errorf("failed to wait for open browser command to finish: %v", err.Error())
 		}
 		return nil
 	} else {
