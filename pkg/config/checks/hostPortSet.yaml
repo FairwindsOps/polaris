@@ -1,33 +1,5 @@
 successMessage: Host port is not configured
 failureMessage: Host port should not be configured
-jsonSchema: |
-  {
-    "$schema": "http://json-schema.org/draft-07/schema",
-    "type": "object",
-    "required": [],
-    "properties": {
-      "ports": {
-        "oneOf": [
-          { "type": "null" },
-          {
-            "type": "array",
-            "items": {
-              "not": {
-                "properties": {
-                  "hostPort": {
-                    "not": {
-                      "enum": [0, null]
-                    }
-                  }
-                },
-                "required": ["hostPort"]
-              }
-            }
-          }
-        ]
-      }
-    }
-  }
 category: Security
 target: Container
 schema:
@@ -36,16 +8,11 @@ schema:
   required:
   properties:
     ports:
-      oneOf:
-        - type: "null"
-        - type: "array"
-          items:
-            not:
-              properties:
-                hostPort:
-                  not:
-                    enum: [0, null]
-              required: ["hostPort"]
+      type: array
+      items:
+        properties:
+          hostPort:
+            const: 0
 mutations:
   - op: remove
     path: /ports/*/hostPort
