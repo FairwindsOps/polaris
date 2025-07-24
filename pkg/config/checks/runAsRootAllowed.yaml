@@ -33,13 +33,15 @@ schema:
     - securityContext
     properties:
       securityContext:
-        $ref: "#/definitions/goodSecurityContext"
+        allOf:
+          - $ref: "#/definitions/goodSecurityContext"
       containers:
         type: array
         items:
           properties:
             securityContext:
-              $ref: "#/definitions/notBadSecurityContext"
+              allOf:
+                - $ref: "#/definitions/notBadSecurityContext"
   # non-root specified at container level
   - properties:
       containers:
@@ -49,7 +51,8 @@ schema:
           - securityContext
           properties:
             securityContext:
-              $ref: "#/definitions/goodSecurityContext"
+              allOf:
+                - $ref: "#/definitions/goodSecurityContext"
 mutations:
   - op: add
     path: /securityContext/runAsNonRoot
