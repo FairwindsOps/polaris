@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  rok8s: fairwinds/rok8s-scripts@14
+  rok8s: fairwinds/rok8s-scripts@12
   oss-docs: fairwinds/oss-docs@0
 
 executors:
@@ -120,7 +120,7 @@ jobs:
 
   test:
     docker:
-      - image: cimg/go:1.25.5
+      - image: cimg/go:1.24.9
     steps:
       - checkout
       - *set_environment_variables
