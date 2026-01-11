@@ -24,6 +24,10 @@ brew tap FairwindsOps/tap
 brew install FairwindsOps/tap/polaris
 polaris version
 ```
+or can be installed with [mise](https://mise.jdx.dev) on Linux/MacOS/Windows:
+```bash
+mise use -g polaris@latest
+```
 
 ## Checking Infrastructure as Code files
 You can audit Kubernetes YAML files by running:
