@@ -30,6 +30,10 @@ builds:
     goarm:
       - 6
       - 7
+    # Go does not support windows/arm (32-bit); only windows/arm64 is supported.
+    ignore:
+      - goos: windows
+        goarch: arm
 archives:
   - id: polaris
     builds: ["polaris"]
