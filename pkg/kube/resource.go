@@ -39,13 +39,13 @@ type GenericResource struct {
 	ObjectMeta         kubeAPIMetaV1.Object
 	Resource           unstructured.Unstructured
 	PodSpec            *kubeAPICoreV1.PodSpec
-	PodTemplate        interface{}
+	PodTemplate        any
 	OriginalObjectJSON []byte
 	OriginalObjectYAML []byte
 }
 
 // NewGenericResourceFromUnstructured creates a workload from an unstructured.Unstructured
-func NewGenericResourceFromUnstructured(unst unstructured.Unstructured, podSpecMap interface{}) (GenericResource, error) {
+func NewGenericResourceFromUnstructured(unst unstructured.Unstructured, podSpecMap any) (GenericResource, error) {
 	if unst.GetCreationTimestamp().Time.IsZero() {
 		unstructured.RemoveNestedField(unst.Object, "metadata", "creationTimestamp")
 		unstructured.RemoveNestedField(unst.Object, "status")
@@ -69,7 +69,7 @@ func NewGenericResourceFromUnstructured(unst unstructured.Unstructured, podSpecM
 		return workload, err
 	}
 	workload.OriginalObjectJSON = b
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 	err = json.Unmarshal(b, &m)
 	if err != nil {
 		return workload, err
@@ -93,7 +93,7 @@ func NewGenericResourceFromUnstructured(unst unstructured.Unstructured, podSpecM
 }
 
 // NewGenericResourceFromPod builds a new workload for a given Pod without looking at parents
-func NewGenericResourceFromPod(podResource kubeAPICoreV1.Pod, originalObject interface{}) (GenericResource, error) {
+func NewGenericResourceFromPod(podResource kubeAPICoreV1.Pod, originalObject any) (GenericResource, error) {
 	podMap, err := SerializePod(&podResource)
 	if err != nil {
 		return GenericResource{}, err
@@ -157,7 +157,7 @@ func resolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod
 	}
 	topKind := "Pod"
 	topMeta := podWorkload.ObjectMeta
-	var topPodSpec interface{}
+	var topPodSpec any
 	topPodSpec = podWorkload.Resource.Object
 	owners := podResource.ObjectMeta.GetOwnerReferences()
 	lastKey := ""
@@ -263,10 +263,10 @@ func GetObject(ctx context.Context, namespace, kind, version, name string, dynam
 }
 
 // GetPodSpec looks inside arbitrary YAML for a PodSpec
-func GetPodSpec(yaml map[string]interface{}) interface{} {
+func GetPodSpec(yaml map[string]any) any {
 	for _, child := range podSpecFields {
 		if childYaml, ok := yaml[child]; ok {
-			return GetPodSpec(childYaml.(map[string]interface{}))
+			return GetPodSpec(childYaml.(map[string]any))
 		}
 	}
 	if _, ok := yaml["containers"]; ok {
@@ -278,9 +278,9 @@ func GetPodSpec(yaml map[string]interface{}) interface{} {
 // GetPodTemplate looks inside arbitrary YAML for a Pod template, containing
 // fields `spec.containers`.
 // For example, it returns the `spec.template` level of a Kubernetes Deployment yaml.
-func GetPodTemplate(yaml map[string]interface{}) (podTemplate interface{}, err error) {
+func GetPodTemplate(yaml map[string]any) (podTemplate any, err error) {
 	if yamlSpec, ok := yaml["spec"]; ok {
-		if yamlSpecMap, ok := yamlSpec.(map[string]interface{}); ok {
+		if yamlSpecMap, ok := yamlSpec.(map[string]any); ok {
 			if _, ok := yamlSpecMap["containers"]; ok {
 				// This is a hack around unstructured.SetNestedField using DeepCopy which does
 				// not support the type int, and panics.
@@ -289,7 +289,7 @@ func GetPodTemplate(yaml map[string]interface{}) (podTemplate interface{}, err e
 				if err != nil {
 					return nil, err
 				}
-				podTemplateMap := make(map[string]interface{})
+				podTemplateMap := make(map[string]any)
 				err = json.Unmarshal(podTemplateJSON, &podTemplateMap)
 				if err != nil {
 					return nil, err
@@ -300,7 +300,7 @@ func GetPodTemplate(yaml map[string]interface{}) (podTemplate interface{}, err e
 	}
 	for _, podSpecField := range podSpecFields {
 		if childYaml, ok := yaml[podSpecField]; ok {
-			return GetPodTemplate(childYaml.(map[string]interface{}))
+			return GetPodTemplate(childYaml.(map[string]any))
 		}
 	}
 	return nil, nil

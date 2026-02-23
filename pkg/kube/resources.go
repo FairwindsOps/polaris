@@ -109,13 +109,13 @@ func maybeTransformKindIntoGroupKind(k string) string {
 }
 
 func parseGroupKind(gk string) schema.GroupKind {
-	i := strings.Index(gk, "/")
-	if i == -1 {
+	before, after, ok := strings.Cut(gk, "/")
+	if !ok {
 		return schema.GroupKind{Kind: gk}
 	}
 
-	group := gk[:i]
-	kind := gk[i+1:]
+	group := before
+	kind := after
 	return schema.GroupKind{Group: group, Kind: kind}
 }
 
@@ -454,12 +454,12 @@ func (resources *ResourceProvider) addResourceFromString(contents string) error 
 }
 
 // SerializePodSpec converts a typed PodSpec into a map[string]interface{}
-func SerializePodSpec(pod *corev1.PodSpec) (map[string]interface{}, error) {
+func SerializePodSpec(pod *corev1.PodSpec) (map[string]any, error) {
 	podJSON, err := json.Marshal(pod)
 	if err != nil {
 		return nil, err
 	}
-	podMap := make(map[string]interface{})
+	podMap := make(map[string]any)
 	err = json.Unmarshal(podJSON, &podMap)
 	if err != nil {
 		return nil, err
@@ -468,12 +468,12 @@ func SerializePodSpec(pod *corev1.PodSpec) (map[string]interface{}, error) {
 }
 
 // SerializePod converts a typed Pod into a map[string]interface{}
-func SerializePod(pod *corev1.Pod) (map[string]interface{}, error) {
+func SerializePod(pod *corev1.Pod) (map[string]any, error) {
 	podJSON, err := json.Marshal(pod)
 	if err != nil {
 		return nil, err
 	}
-	podMap := make(map[string]interface{})
+	podMap := make(map[string]any)
 	err = json.Unmarshal(podJSON, &podMap)
 	if err != nil {
 		return nil, err
@@ -482,12 +482,12 @@ func SerializePod(pod *corev1.Pod) (map[string]interface{}, error) {
 }
 
 // SerializeContainer converts a typed Container into a map[string]interface{}
-func SerializeContainer(container *corev1.Container) (map[string]interface{}, error) {
+func SerializeContainer(container *corev1.Container) (map[string]any, error) {
 	containerJSON, err := json.Marshal(container)
 	if err != nil {
 		return nil, err
 	}
-	containerMap := make(map[string]interface{})
+	containerMap := make(map[string]any)
 	err = json.Unmarshal(containerJSON, &containerMap)
 	if err != nil {
 		return nil, err

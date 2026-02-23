@@ -102,7 +102,7 @@ obj:
 `,
 		patch: config.Mutation{
 			Op: "replace",
-			Value: map[string]interface{}{
+			Value: map[string]any{
 				"bar": []string{"c", "d"},
 			},
 			Path: "/obj/foo",
@@ -129,7 +129,7 @@ obj:
 		original: `foo: bar`,
 		patch: config.Mutation{
 			Op: "add",
-			Value: map[string]interface{}{
+			Value: map[string]any{
 				"baz": "quux",
 			},
 			Path:    "/extra",
@@ -149,7 +149,7 @@ foo: bar
 `,
 		patch: config.Mutation{
 			Op: "replace",
-			Value: map[string]interface{}{
+			Value: map[string]any{
 				"baz": "quux",
 			},
 			Path:    "/extra",

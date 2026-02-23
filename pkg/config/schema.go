@@ -21,6 +21,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
+	"slices"
 	"strings"
 	"text/template"
 
@@ -58,34 +60,34 @@ var HandledTargets = []TargetKind{
 type Mutation struct {
 	Path    string
 	Op      string
-	Value   interface{}
+	Value   any
 	Comment string
 }
 
 // SchemaCheck is a Polaris check that runs using JSON Schema
 type SchemaCheck struct {
-	ID                      string                            `yaml:"id" json:"id"`
-	Category                string                            `yaml:"category" json:"category"`
-	SuccessMessage          string                            `yaml:"successMessage" json:"successMessage"`
-	FailureMessage          string                            `yaml:"failureMessage" json:"failureMessage"`
-	Controllers             includeExcludeList                `yaml:"controllers" json:"controllers"`
-	Containers              includeExcludeList                `yaml:"containers" json:"containers"`
-	Target                  TargetKind                        `yaml:"target" json:"target"`
-	SchemaTarget            TargetKind                        `yaml:"schemaTarget" json:"schemaTarget"`
-	Schema                  map[string]interface{}            `yaml:"schema" json:"schema"`
-	SchemaString            string                            `yaml:"schemaString" json:"schemaString"`
-	Validator               jsonschema.Schema                 `yaml:"-" json:"-"`
-	AdditionalSchemas       map[string]map[string]interface{} `yaml:"additionalSchemas" json:"additionalSchemas"`
-	AdditionalSchemaStrings map[string]string                 `yaml:"additionalSchemaStrings" json:"additionalSchemaStrings"`
-	AdditionalValidators    map[string]jsonschema.Schema      `yaml:"-" json:"-"`
-	Mutations               []Mutation                        `yaml:"mutations" json:"mutations"`
+	ID                      string                       `yaml:"id" json:"id"`
+	Category                string                       `yaml:"category" json:"category"`
+	SuccessMessage          string                       `yaml:"successMessage" json:"successMessage"`
+	FailureMessage          string                       `yaml:"failureMessage" json:"failureMessage"`
+	Controllers             includeExcludeList           `yaml:"controllers" json:"controllers"`
+	Containers              includeExcludeList           `yaml:"containers" json:"containers"`
+	Target                  TargetKind                   `yaml:"target" json:"target"`
+	SchemaTarget            TargetKind                   `yaml:"schemaTarget" json:"schemaTarget"`
+	Schema                  map[string]any               `yaml:"schema" json:"schema"`
+	SchemaString            string                       `yaml:"schemaString" json:"schemaString"`
+	Validator               jsonschema.Schema            `yaml:"-" json:"-"`
+	AdditionalSchemas       map[string]map[string]any    `yaml:"additionalSchemas" json:"additionalSchemas"`
+	AdditionalSchemaStrings map[string]string            `yaml:"additionalSchemaStrings" json:"additionalSchemaStrings"`
+	AdditionalValidators    map[string]jsonschema.Schema `yaml:"-" json:"-"`
+	Mutations               []Mutation                   `yaml:"mutations" json:"mutations"`
 }
 
 type resourceMinimum string
 type resourceMaximum string
 
 // UnmarshalYAMLOrJSON is a helper function to unmarshal data in an arbitrary format
-func UnmarshalYAMLOrJSON(raw []byte, dest interface{}) error {
+func UnmarshalYAMLOrJSON(raw []byte, dest any) error {
 	reader := bytes.NewReader(raw)
 	d := k8sYaml.NewYAMLOrJSONDecoder(reader, 4096)
 	for {
@@ -129,7 +131,7 @@ func newResourceMaximum() jsonschema.Keyword {
 	return new(resourceMaximum)
 }
 
-func (min resourceMinimum) ValidateKeyword(ctx context.Context, currentState *jsonschema.ValidationState, data interface{}) {
+func (min resourceMinimum) ValidateKeyword(ctx context.Context, currentState *jsonschema.ValidationState, data any) {
 	err := validateRange(string(min), data, true)
 	if err != nil {
 		errs := currentState.Errs
@@ -137,7 +139,7 @@ func (min resourceMinimum) ValidateKeyword(ctx context.Context, currentState *js
 		currentState.Errs = errs
 	}
 }
-func (max resourceMaximum) ValidateKeyword(ctx context.Context, currentState *jsonschema.ValidationState, data interface{}) {
+func (max resourceMaximum) ValidateKeyword(ctx context.Context, currentState *jsonschema.ValidationState, data any) {
 	err := validateRange(string(max), data, false)
 	if err != nil {
 		errs := currentState.Errs
@@ -163,7 +165,7 @@ func (max resourceMaximum) Register(uri string, registry *jsonschema.SchemaRegis
 	// Not implemented
 }
 
-func parseQuantity(i interface{}) (resource.Quantity, *[]jsonschema.KeyError) {
+func parseQuantity(i any) (resource.Quantity, *[]jsonschema.KeyError) {
 	if resNum, ok := i.(float64); ok {
 		i = fmt.Sprintf("%f", resNum)
 	}
@@ -182,7 +184,7 @@ func parseQuantity(i interface{}) (resource.Quantity, *[]jsonschema.KeyError) {
 	return q, nil
 }
 
-func validateRange(limit interface{}, data interface{}, isMinimum bool) *[]jsonschema.KeyError {
+func validateRange(limit any, data any, isMinimum bool) *[]jsonschema.KeyError {
 	limitQuantity, err := parseQuantity(limit)
 	if err != nil {
 		return err
@@ -228,21 +230,19 @@ func (check *SchemaCheck) Initialize(id string) error {
 		}
 		check.AdditionalSchemaStrings[kind] = string(jsonBytes)
 	}
-	check.Schema = map[string]interface{}{}
-	check.AdditionalSchemas = map[string]map[string]interface{}{}
+	check.Schema = map[string]any{}
+	check.AdditionalSchemas = map[string]map[string]any{}
 	return nil
 }
 
 // TemplateForResource fills out a check's templated fields given a particular resource
-func (check SchemaCheck) TemplateForResource(res interface{}) (*SchemaCheck, error) {
+func (check SchemaCheck) TemplateForResource(res any) (*SchemaCheck, error) {
 	newCheck := check // Make a copy of the check, since we're going to modify the schema
 
 	templateStrings := map[string]string{
 		"": newCheck.SchemaString,
 	}
-	for kind, schema := range newCheck.AdditionalSchemaStrings {
-		templateStrings[kind] = schema
-	}
+	maps.Copy(templateStrings, newCheck.AdditionalSchemaStrings)
 	newCheck.SchemaString = ""
 	newCheck.AdditionalSchemaStrings = map[string]string{}
 
@@ -294,7 +294,7 @@ func (check SchemaCheck) CheckPodSpec(ctx context.Context, pod *corev1.PodSpec) 
 }
 
 // CheckPodTemplate checks a pod template against the schema
-func (check SchemaCheck) CheckPodTemplate(ctx context.Context, podTemplate interface{}) (bool, []jsonschema.KeyError, error) {
+func (check SchemaCheck) CheckPodTemplate(ctx context.Context, podTemplate any) (bool, []jsonschema.KeyError, error) {
 	return check.CheckObject(ctx, podTemplate)
 }
 
@@ -310,7 +310,7 @@ func (check SchemaCheck) CheckContainer(ctx context.Context, container *corev1.C
 }
 
 // CheckObject checks arbitrary data against the schema
-func (check SchemaCheck) CheckObject(ctx context.Context, obj interface{}) (bool, []jsonschema.KeyError, error) {
+func (check SchemaCheck) CheckObject(ctx context.Context, obj any) (bool, []jsonschema.KeyError, error) {
 	bytes, err := json.Marshal(obj)
 	if err != nil {
 		return false, nil, err
@@ -320,7 +320,7 @@ func (check SchemaCheck) CheckObject(ctx context.Context, obj interface{}) (bool
 }
 
 // CheckAdditionalObjects looks for an object that passes the specified additional schema
-func (check SchemaCheck) CheckAdditionalObjects(ctx context.Context, groupkind string, objects []interface{}) (bool, error) {
+func (check SchemaCheck) CheckAdditionalObjects(ctx context.Context, groupkind string, objects []any) (bool, error) {
 	val, ok := check.AdditionalValidators[groupkind]
 	if !ok {
 		return false, errors.New("No validator found for " + groupkind)
@@ -356,19 +356,14 @@ func (check SchemaCheck) IsActionable(target TargetKind, kind string, isInit boo
 		return false
 	}
 	isIncluded := len(check.Controllers.Include) == 0
-	for _, inclusion := range check.Controllers.Include {
-		if inclusion == kind {
-			isIncluded = true
-			break
-		}
+	if slices.Contains(check.Controllers.Include, kind) {
+		isIncluded = true
 	}
 	if !isIncluded {
 		return false
 	}
-	for _, exclusion := range check.Controllers.Exclude {
-		if exclusion == kind {
-			return false
-		}
+	if slices.Contains(check.Controllers.Exclude, kind) {
+		return false
 	}
 	if check.Target == TargetContainer {
 		isIncluded := len(check.Containers.Include) == 0

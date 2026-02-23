@@ -16,6 +16,7 @@ package dashboard
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/fairwindsops/polaris/pkg/config"
@@ -157,10 +158,5 @@ func getCategoryInfo(category string) string {
 }
 
 func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(list, a)
 }

@@ -190,7 +190,7 @@ func outputAudit(auditData validator.AuditData, outputFile, outputURL, outputFor
 	var outputBytes []byte
 	var err error
 	if outputFormat == "score" {
-		outputBytes = []byte(fmt.Sprintf("%d\n", auditData.GetSummary().GetScore()))
+		outputBytes = fmt.Appendf(nil, "%d\n", auditData.GetSummary().GetScore())
 	} else if outputFormat == "yaml" {
 		var jsonBytes []byte
 		jsonBytes, err = json.Marshal(auditData)

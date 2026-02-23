@@ -142,19 +142,19 @@ func TestConfigNoServerError(t *testing.T) {
 }
 
 func TestConfigWithCustomChecks(t *testing.T) {
-	valid := map[string]interface{}{
-		"securityContext": map[string]interface{}{
+	valid := map[string]any{
+		"securityContext": map[string]any{
 			"foo": "bar",
 		},
 	}
-	invalid := map[string]interface{}{
-		"notSecurityContext": map[string]interface{}{},
+	invalid := map[string]any{
+		"notSecurityContext": map[string]any{},
 	}
 
 	parsedConf, err := Parse([]byte(confCustomChecks))
 	assert.NoError(t, err, "Expected no error when parsing YAML config")
 	assert.Equal(t, 1, len(parsedConf.CustomChecks))
-	check, err := parsedConf.CustomChecks["foo"].TemplateForResource(map[string]interface{}{})
+	check, err := parsedConf.CustomChecks["foo"].TemplateForResource(map[string]any{})
 	isValid, _, err := check.CheckObject(context.TODO(), valid)
 	assert.NoError(t, err)
 	assert.Equal(t, true, isValid)

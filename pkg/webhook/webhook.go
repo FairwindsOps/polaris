@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/fairwindsops/controller-utils/pkg/controller"
 	"github.com/fairwindsops/polaris/pkg/config"
@@ -135,11 +136,12 @@ func (v *Validator) Handle(ctx context.Context, req admission.Request) admission
 }
 
 func getFailureReason(result validator.Result) string {
-	reason := "\nPolaris prevented this deployment due to configuration problems:\n"
+	var reason strings.Builder
+	reason.WriteString("\nPolaris prevented this deployment due to configuration problems:\n")
 
 	for _, message := range result.Results {
 		if !message.Success && message.Severity == config.SeverityDanger {
-			reason += fmt.Sprintf("- %s: %s\n", result.Kind, message.Message)
+			reason.WriteString(fmt.Sprintf("- %s: %s\n", result.Kind, message.Message))
 		}
 	}
 
@@ -147,18 +149,18 @@ func getFailureReason(result validator.Result) string {
 	if podResult != nil {
 		for _, message := range podResult.Results {
 			if !message.Success && message.Severity == config.SeverityDanger {
-				reason += fmt.Sprintf("- Pod: %s\n", message.Message)
+				reason.WriteString(fmt.Sprintf("- Pod: %s\n", message.Message))
 			}
 		}
 
 		for _, containerResult := range podResult.ContainerResults {
 			for _, message := range containerResult.Results {
 				if !message.Success && message.Severity == config.SeverityDanger {
-					reason += fmt.Sprintf("- Container %s: %s\n", containerResult.Name, message.Message)
+					reason.WriteString(fmt.Sprintf("- Container %s: %s\n", containerResult.Name, message.Message))
 				}
 			}
 		}
 	}
 
-	return reason
+	return reason.String()
 }
