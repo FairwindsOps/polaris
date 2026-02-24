@@ -99,7 +99,7 @@ func resolveCheck(conf *config.Configuration, checkID string, test schemaTestCas
 // getTemplateInput augments a schemaTestCase.Resource.Resource.Object with
 // Polaris built-in variables. The result can be used as input for
 // CheckSchema.TemplateForResource().
-func getTemplateInput(test schemaTestCase) (map[string]interface{}, error) {
+func getTemplateInput(test schemaTestCase) (map[string]any, error) {
 	templateInput := test.Resource.Resource.Object
 	if templateInput == nil {
 		return nil, nil
@@ -113,7 +113,7 @@ func getTemplateInput(test schemaTestCase) (map[string]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		podTemplateMap, ok := test.Resource.PodTemplate.(map[string]interface{})
+		podTemplateMap, ok := test.Resource.PodTemplate.(map[string]any)
 		if ok {
 			err := unstructured.SetNestedMap(templateInput, podTemplateMap, "Polaris", "PodTemplate")
 			if err != nil {
@@ -425,9 +425,9 @@ func applySchemaCheck(ctx context.Context, conf *config.Configuration, checkID s
 		resources = funk.Filter(resources, func(res kube.GenericResource) bool {
 			return res.ObjectMeta.GetNamespace() == "" || res.ObjectMeta.GetNamespace() == namespace
 		}).([]kube.GenericResource)
-		objects := funk.Map(resources, func(res kube.GenericResource) interface{} {
+		objects := funk.Map(resources, func(res kube.GenericResource) any {
 			return res.Resource.Object
-		}).([]interface{})
+		}).([]any)
 		passes, err = check.CheckAdditionalObjects(ctx, groupkind, objects)
 		if err != nil {
 			return nil, err

@@ -250,15 +250,16 @@ func fillString(id string, l int) string {
 // GetPrettyOutput returns a human-readable string
 func (res AuditData) GetPrettyOutput(useColor bool) string {
 	color.NoColor = !useColor
-	str := titleColor.Sprint(fmt.Sprintf("Polaris audited %s %s at %s\n", res.SourceType, res.SourceName, res.AuditTime))
-	str += color.CyanString(fmt.Sprintf("    Nodes: %d | Namespaces: %d | Controllers: %d\n", res.ClusterInfo.Nodes, res.ClusterInfo.Namespaces, res.ClusterInfo.Controllers))
-	str += color.GreenString(fmt.Sprintf("    Final score: %d\n", res.Score))
-	str += "\n"
+	var str strings.Builder
+	str.WriteString(titleColor.Sprint(fmt.Sprintf("Polaris audited %s %s at %s\n", res.SourceType, res.SourceName, res.AuditTime)))
+	str.WriteString(color.CyanString(fmt.Sprintf("    Nodes: %d | Namespaces: %d | Controllers: %d\n", res.ClusterInfo.Nodes, res.ClusterInfo.Namespaces, res.ClusterInfo.Controllers)))
+	str.WriteString(color.GreenString(fmt.Sprintf("    Final score: %d\n", res.Score)))
+	str.WriteString("\n")
 	for _, result := range res.Results {
-		str += result.GetPrettyOutput() + "\n"
+		str.WriteString(result.GetPrettyOutput() + "\n")
 	}
 	color.NoColor = false
-	return str
+	return str.String()
 }
 
 // GetPrettyOutput returns a human-readable string
@@ -277,11 +278,12 @@ func (res Result) GetPrettyOutput() string {
 
 // GetPrettyOutput returns a human-readable string
 func (res PodResult) GetPrettyOutput() string {
-	str := res.Results.GetPrettyOutput()
+	var str strings.Builder
+	str.WriteString(res.Results.GetPrettyOutput())
 	for _, cont := range res.ContainerResults {
-		str += cont.GetPrettyOutput()
+		str.WriteString(cont.GetPrettyOutput())
 	}
-	return str
+	return str.String()
 }
 
 // GetPrettyOutput returns a human-readable string
@@ -296,7 +298,7 @@ const minIDLength = 40
 // GetPrettyOutput returns a human-readable string
 func (res ResultSet) GetPrettyOutput() string {
 	indent := "    "
-	str := ""
+	var str strings.Builder
 	for _, msg := range res {
 		status := color.GreenString(successMessage)
 		if !msg.Success {
@@ -309,8 +311,8 @@ func (res ResultSet) GetPrettyOutput() string {
 		if color.NoColor {
 			status = strings.Fields(status)[1] // remove emoji
 		}
-		str += fmt.Sprintf("%s%s %s\n", indent, checkColor.Sprint(fillString(msg.ID, minIDLength-len(indent))), status)
-		str += fmt.Sprintf("%s    %s - %s\n", indent, msg.Category, msg.Message)
+		str.WriteString(fmt.Sprintf("%s%s %s\n", indent, checkColor.Sprint(fillString(msg.ID, minIDLength-len(indent))), status))
+		str.WriteString(fmt.Sprintf("%s    %s - %s\n", indent, msg.Category, msg.Message))
 	}
-	return str
+	return str.String()
 }

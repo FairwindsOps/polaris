@@ -99,7 +99,7 @@ func TestControllerLevelChecks(t *testing.T) {
 	assert.Equal(t, 10, res.Resources.GetLength())
 	testResources(res)
 
-	replicaSpec := map[string]interface{}{"replicas": 2}
+	replicaSpec := map[string]any{"replicas": 2}
 	b, err := json.Marshal(replicaSpec)
 	assert.NoError(t, err)
 	err = json.Unmarshal(b, &replicaSpec)

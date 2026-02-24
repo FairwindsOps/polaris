@@ -32,12 +32,12 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
-func newUnstructured(apiVersion, kind, namespace, name string, spec map[string]interface{}) unstructured.Unstructured {
+func newUnstructured(apiVersion, kind, namespace, name string, spec map[string]any) unstructured.Unstructured {
 	return unstructured.Unstructured{
-		Object: map[string]interface{}{
+		Object: map[string]any{
 			"apiVersion": apiVersion,
 			"kind":       kind,
-			"metadata": map[string]interface{}{
+			"metadata": map[string]any{
 				"namespace": namespace,
 				"name":      name,
 			},
@@ -85,7 +85,7 @@ func MockIngress() networkingv1.Ingress {
 }
 
 // MockController creates a mock controller and pod
-func MockController(apiVersion, kind, namespace, name string, spec map[string]interface{}, podSpec corev1.PodSpec, dest interface{}) corev1.Pod {
+func MockController(apiVersion, kind, namespace, name string, spec map[string]any, podSpec corev1.PodSpec, dest any) corev1.Pod {
 	unst := newUnstructured(apiVersion, kind, namespace, name, spec)
 	pod := corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -111,19 +111,19 @@ func MockController(apiVersion, kind, namespace, name string, spec map[string]in
 }
 
 // MockControllerWithNormalSpec mocks a controller with podspec at spec.template.spec
-func MockControllerWithNormalSpec(apiVersion, kind, namespace, name string, dest interface{}) corev1.Pod {
+func MockControllerWithNormalSpec(apiVersion, kind, namespace, name string, dest any) corev1.Pod {
 	p := MockPod()
 	b, err := json.Marshal(p.Spec)
 	if err != nil {
 		panic(err)
 	}
-	pSpec := map[string]interface{}{}
+	pSpec := map[string]any{}
 	err = json.Unmarshal(b, &pSpec)
 	if err != nil {
 		panic(err)
 	}
-	spec := map[string]interface{}{
-		"template": map[string]interface{}{
+	spec := map[string]any{
+		"template": map[string]any{
 			"spec": pSpec,
 		},
 	}
@@ -162,7 +162,7 @@ func MockJob(namespace, name string) (batchv1.Job, corev1.Pod) {
 func MockCronJob(namespace, name string) (batchv1.CronJob, corev1.Pod) {
 	cj := batchv1.CronJob{}
 	p := MockPod()
-	spec := map[string]interface{}{}
+	spec := map[string]any{}
 	pod := MockController("batch/v1", "CronJob", namespace, name, spec, p.Spec, &cj)
 	cj.Spec.JobTemplate.Spec.Template.Spec = pod.Spec
 

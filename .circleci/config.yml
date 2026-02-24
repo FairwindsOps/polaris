@@ -120,7 +120,7 @@ jobs:
 
   test:
     docker:
-      - image: cimg/go:1.25.5
+      - image: cimg/go:1.26.0
     steps:
       - checkout
       - *set_environment_variables
@@ -136,7 +136,7 @@ jobs:
       # The goreleaser image tag determins the version of Go.
       # Manually check goreleaser images for their version of Go.
       # Ref: https://hub.docker.com/r/goreleaser/goreleaser/tags
-      - image: goreleaser/goreleaser:v2.13.1
+      - image: goreleaser/goreleaser:v2.14.0
     steps:
       - checkout
       - setup_remote_docker

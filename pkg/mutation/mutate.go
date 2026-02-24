@@ -224,7 +224,7 @@ func addOrReplaceValue(node *yaml.Node, splits []string, value *yaml.Node) error
 	return nil
 }
 
-func getNodeFromValue(value interface{}, comment string) (*yaml.Node, error) {
+func getNodeFromValue(value any, comment string) (*yaml.Node, error) {
 	bytes, err := yaml.Marshal(value)
 	if err != nil {
 		return nil, err
