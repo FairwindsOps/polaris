@@ -10,7 +10,7 @@ LABEL org.opencontainers.image.authors="FairwindsOps, Inc." \
       org.opencontainers.image.licenses="Apache License 2.0"
 
 WORKDIR /usr/local/bin
-RUN apk update && apk upgrade && \
+RUN apk -U upgrade && \
     apk --no-cache add ca-certificates
 
 RUN addgroup -S polaris && adduser -u 1200 -S polaris -G polaris
