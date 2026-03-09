@@ -11,5 +11,11 @@ LABEL org.opencontainers.image.authors="FairwindsOps, Inc." \
 
 WORKDIR /usr/local/bin
 RUN apk update && apk -U upgrade --no-cache && apk add ca-certificates
+
+RUN addgroup -S polaris && adduser -u 1200 -S polaris -G polaris
+USER 1200
 COPY polaris .
+
+WORKDIR /opt/app
+
 CMD ["polaris"]
