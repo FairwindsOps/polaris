@@ -4,7 +4,7 @@ go 1.26
 
 require (
 	github.com/fairwindsops/controller-utils v0.3.4
-	github.com/fatih/color v1.18.0
+	github.com/fatih/color v1.19.0
 	github.com/gorilla/mux v1.8.1
 	github.com/pkg/errors v0.9.1
 	github.com/qri-io/jsonpointer v0.1.1
