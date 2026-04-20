@@ -14,8 +14,6 @@ commands:
     description: Installs dependencies for CI scripts
     steps:
     - run: apk update
-    # gettext provides envsubst
-    - run: apk add gettext
     # Register other docker platforms, to build arm64.
     # This shouldn't be needed, why TBD.
     - run: docker run --privileged --rm tonistiigi/binfmt --install all
