@@ -145,6 +145,10 @@ jobs:
           vault_path: repo/polaris/env
       - *set_environment_variables
       - run: docker login quay.io -u="${FAIRWINDS_QUAY_USER}" -p="${FAIRWINDS_QUAY_TOKEN}"
+      - run:
+          name: docker login Google Artifact Registry
+          command: |
+            docker login -u _json_key -p "$(echo $GCP_ARTIFACTREADWRITE_JSON_KEY | base64 -d)" us-docker.pkg.dev
       - install_goreleaser_dependencies
       - run: scripts/goreleaser.sh
 
