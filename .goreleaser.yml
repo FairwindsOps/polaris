@@ -85,7 +85,7 @@ docker_manifests:
   image_templates:
   - "quay.io/fairwinds/polaris:{{ .FullCommit }}-amd64"
   - "quay.io/fairwinds/polaris:{{ .FullCommit }}-arm64"
-- name_template: 'quay.io/fairwinds/polaris:{{ .Env.FEATURE_DOCKER_TAG | default "none" }}'
+- name_template: 'quay.io/fairwinds/polaris:{{ envOrDefault "FEATURE_DOCKER_TAG" "none" }}'
   # Tag builds set GORELEASER_SKIP_FEATURE_DOCKER_TAGS=true; feature branches set false.
   skip_push: '{{ eq .Env.GORELEASER_SKIP_FEATURE_DOCKER_TAGS "true" }}'
   image_templates:
