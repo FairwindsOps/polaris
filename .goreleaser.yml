@@ -68,11 +68,13 @@ dockers:
   # combinations of `GOOS`, `GOARCH`, and `GOARM`
 - image_templates:
   - "quay.io/fairwinds/polaris:{{ .FullCommit }}-amd64"
+  - "us-docker.pkg.dev/fairwinds-ops/oss/polaris:{{ .FullCommit }}-amd64"
   use: buildx
   build_flag_templates:
   - "--platform=linux/amd64"
 - image_templates:
   - "quay.io/fairwinds/polaris:{{ .FullCommit }}-arm64"
+  - "us-docker.pkg.dev/fairwinds-ops/oss/polaris:{{ .FullCommit }}-arm64"
   use: buildx
   goarch: arm64
   goos: linux
@@ -111,3 +113,33 @@ docker_manifests:
   image_templates:
   - "quay.io/fairwinds/polaris:{{ .FullCommit }}-amd64"
   - "quay.io/fairwinds/polaris:{{ .FullCommit }}-arm64"
+- name_template: us-docker.pkg.dev/fairwinds-ops/oss/polaris:{{ .FullCommit }}
+  image_templates:
+  - "us-docker.pkg.dev/fairwinds-ops/oss/polaris:{{ .FullCommit }}-amd64"
+  - "us-docker.pkg.dev/fairwinds-ops/oss/polaris:{{ .FullCommit }}-arm64"
+- name_template: 'us-docker.pkg.dev/fairwinds-ops/oss/polaris:{{ envOrDefault "FEATURE_DOCKER_TAG" "none" }}'
+  # Tag builds set GORELEASER_SKIP_FEATURE_DOCKER_TAGS=true; feature branches set false.
+  skip_push: '{{ eq .Env.GORELEASER_SKIP_FEATURE_DOCKER_TAGS "true" }}'
+  image_templates:
+  - "us-docker.pkg.dev/fairwinds-ops/oss/polaris:{{ .FullCommit }}-amd64"
+  - "us-docker.pkg.dev/fairwinds-ops/oss/polaris:{{ .FullCommit }}-arm64"
+- name_template: us-docker.pkg.dev/fairwinds-ops/oss/polaris:latest
+  skip_push: '{{ eq .Env.GORELEASER_SKIP_RELEASE "true" }}'
+  image_templates:
+  - "us-docker.pkg.dev/fairwinds-ops/oss/polaris:{{ .FullCommit }}-amd64"
+  - "us-docker.pkg.dev/fairwinds-ops/oss/polaris:{{ .FullCommit }}-arm64"
+- name_template: us-docker.pkg.dev/fairwinds-ops/oss/polaris:{{ .Tag }}
+  skip_push: '{{ eq .Env.GORELEASER_SKIP_RELEASE "true" }}'
+  image_templates:
+  - "us-docker.pkg.dev/fairwinds-ops/oss/polaris:{{ .FullCommit }}-amd64"
+  - "us-docker.pkg.dev/fairwinds-ops/oss/polaris:{{ .FullCommit }}-arm64"
+- name_template: us-docker.pkg.dev/fairwinds-ops/oss/polaris:{{ .Major }}
+  skip_push: '{{ eq .Env.GORELEASER_SKIP_RELEASE "true" }}'
+  image_templates:
+  - "us-docker.pkg.dev/fairwinds-ops/oss/polaris:{{ .FullCommit }}-amd64"
+  - "us-docker.pkg.dev/fairwinds-ops/oss/polaris:{{ .FullCommit }}-arm64"
+- name_template: us-docker.pkg.dev/fairwinds-ops/oss/polaris:{{ .Major }}.{{ .Minor }}
+  skip_push: '{{ eq .Env.GORELEASER_SKIP_RELEASE "true" }}'
+  image_templates:
+  - "us-docker.pkg.dev/fairwinds-ops/oss/polaris:{{ .FullCommit }}-amd64"
+  - "us-docker.pkg.dev/fairwinds-ops/oss/polaris:{{ .FullCommit }}-arm64"
