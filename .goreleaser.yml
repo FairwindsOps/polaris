@@ -33,7 +33,7 @@ builds:
         goarch: arm64
 brews:
   - name: polaris
-    skip_upload: "{{ eq .Env.GORELEASER_SKIP_RELEASE \"true\" }}"
+    skip_upload: '{{ eq (envOrDefault "GORELEASER_SKIP_RELEASE" "false") "true" }}'
     repository:
       owner: FairwindsOps
       name: homebrew-tap
@@ -43,7 +43,7 @@ brews:
     test: |
       system "#{bin}/polaris version"
 release:
-  disable: '{{ eq .Env.GORELEASER_SKIP_RELEASE "true" }}'
+  disable: '{{ eq (envOrDefault "GORELEASER_SKIP_RELEASE" "false") "true" }}'
   prerelease: auto
   github:
     owner: FairwindsOps
