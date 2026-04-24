@@ -3,8 +3,6 @@
 
 version: 2
 project_name: polaris
-env:
-  - GOBIN={{ .Env.TMPDIR }}/go-bin
 before:
   hooks:
     - go mod download
@@ -33,7 +31,6 @@ builds:
         goarch: arm64
 brews:
   - name: polaris
-    skip_upload: '{{ eq (envOrDefault "GORELEASER_SKIP_RELEASE" "false") "true" }}'
     repository:
       owner: FairwindsOps
       name: homebrew-tap
