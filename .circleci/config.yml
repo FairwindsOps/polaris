@@ -161,8 +161,22 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
+      - *install_vault_alpine
+      - rok8s/get_vault_env:
+          vault_path: repo/global/env
+      - rok8s/get_vault_env:
+          vault_path: repo/polaris/env
+      - *set_environment_variables
+      - run:
+          name: docker login Google Artifact Registry
+          command: |
+            docker login -u _json_key -p "$(echo $GCP_ARTIFACTREADWRITE_JSON_KEY | base64 -d)" us-docker.pkg.dev
       - install_goreleaser_dependencies
-      - run: goreleaser release --snapshot --skip=sign --clean
+      - run:
+          name: goreleaser release
+          environment:
+            GORELEASER_SKIP_RELEASE: "true"
+          command: goreleaser release --clean --skip=sign,homebrew
       - store_artifacts:
           path: dist
           destination: snapshot
@@ -173,6 +187,7 @@ workflows:
   branch:
     jobs:
       - snapshot:
+          context: org-global
           filters:
             branches:
               ignore: /pull\/[0-9]+/
