@@ -161,10 +161,6 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - run:
-          name: docker login Google Artifact Registry
-          command: |
-            docker login -u _json_key -p "$(echo $GCP_ARTIFACTREADWRITE_JSON_KEY | base64 -d)" us-docker.pkg.dev
       - install_goreleaser_dependencies
       - run: goreleaser release --snapshot --skip=sign --clean
       - store_artifacts:
