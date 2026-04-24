@@ -13,10 +13,10 @@ commands:
   install_goreleaser_dependencies:
     description: Installs dependencies for CI scripts
     steps:
-    - run: apk update
-    # Register other docker platforms, to build arm64.
-    # This shouldn't be needed, why TBD.
-    - run: docker run --privileged --rm tonistiigi/binfmt --install all
+      - run: apk update
+      # Register other docker platforms, to build arm64.
+      # This shouldn't be needed, why TBD.
+      - run: docker run --privileged --rm tonistiigi/binfmt --install all
 
 references:
   set_environment_variables: &set_environment_variables
@@ -126,7 +126,7 @@ jobs:
       - run: go test ./... -coverprofile=coverage.txt -covermode=count
       - *test_binary_dashboard
 
-  build_and_push:
+  release:
     working_directory: /go/src/github.com/fairwindsops/polaris/
     resource_class: large
     shell: /bin/bash
@@ -144,36 +144,74 @@ jobs:
       - rok8s/get_vault_env:
           vault_path: repo/polaris/env
       - *set_environment_variables
-      - run: docker login quay.io -u="${FAIRWINDS_QUAY_USER}" -p="${FAIRWINDS_QUAY_TOKEN}"
       - run:
           name: docker login Google Artifact Registry
           command: |
             docker login -u _json_key -p "$(echo $GCP_ARTIFACTREADWRITE_JSON_KEY | base64 -d)" us-docker.pkg.dev
       - install_goreleaser_dependencies
-      - run: scripts/goreleaser.sh
+      - run: echo 'export GORELEASER_CURRENT_TAG="${CIRCLE_TAG}"' >> $BASH_ENV
+      - run: goreleaser release --clean
+
+  snapshot:
+    working_directory: /go/src/github.com/fairwindsops/polaris/
+    resource_class: large
+    shell: /bin/bash
+    docker:
+      - image: goreleaser/goreleaser:v2.15.4
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: docker login Google Artifact Registry
+          command: |
+            docker login -u _json_key -p "$(echo $GCP_ARTIFACTREADWRITE_JSON_KEY | base64 -d)" us-docker.pkg.dev
+      - install_goreleaser_dependencies
+      - run: goreleaser release --snapshot --skip=sign --clean
+      - store_artifacts:
+          path: dist
+          destination: snapshot
 
 workflows:
   version: 2
 
-  release:
+  branch:
+    jobs:
+      - snapshot:
+          filters:
+            branches:
+              ignore: /pull\/[0-9]+/
+            tags:
+              ignore: /.*/
+      - test_k8s:
+          requires:
+            - snapshot
+          filters:
+            branches:
+              ignore: /pull\/[0-9]+/
+            tags:
+              ignore: /.*/
+
+  tag_release:
     jobs:
       - test:
           filters:
             tags:
               only: /.*/
-      - build_and_push:
+            branches:
+              ignore: /.*/
+      - release:
           context: org-global
           filters:
             branches:
-              ignore: /pull\/[0-9]+/
+              ignore: /.*/
             tags:
               ignore: /^testing-.*/
       - test_k8s:
           requires:
-            - build_and_push
+            - release
           filters:
             branches:
-              ignore: /pull\/[0-9]+/
+              ignore: /.*/
             tags:
               ignore: /^testing-.*/
       - oss-docs/publish-docs:
