@@ -49,9 +49,5 @@ else
 fi
 
 echo "${this_script} using git tag ${GORELEASER_CURRENT_TAG}"
-if [ "${GORELEASER_SKIP_RELEASE}" = "true" ] ; then
-  goreleaser --skip=sign --skip=docker "$@"
-else
-  goreleaser --skip=sign "$@"
-fi
+goreleaser --skip=sign "$@"
 cleanup
