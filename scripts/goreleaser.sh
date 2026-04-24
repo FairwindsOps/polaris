@@ -19,7 +19,6 @@ if [ "${TMPDIR}" == "" ] ; then
   echo "${this_script} temporarily set the TMPDIR environment variable to ${TMPDIR}, used for a temporary GOBIN environment variable"
 fi
 
-export GORELEASER_SKIP_FEATURE_DOCKER_TAGS=false
 export GORELEASER_SKIP_RELEASE=true
 if [ "${CIRCLE_TAG}" == "" ] ; then
   # Create a temporary tag for goreleaser, incrementing the last tag.
@@ -45,11 +44,14 @@ if [ "${CIRCLE_TAG}" == "" ] ; then
   echo "${this_script} also using docker tag ${FEATURE_DOCKER_TAG} since ${CIRCLE_BRANCH} is a feature branch"
 else
   export GORELEASER_CURRENT_TAG=${CIRCLE_TAG}
-  echo "${this_script} setting GORELEASER_SKIP_RELEASE to false, and GORELEASER_SKIP_FEATURE_DOCKER_TAGS to true, because CIRCLE_TAG is set"
-  export GORELEASER_SKIP_FEATURE_DOCKER_TAGS=true
+  echo "${this_script} setting GORELEASER_SKIP_RELEASE to false, because CIRCLE_TAG is set"
   export GORELEASER_SKIP_RELEASE=false
 fi
 
 echo "${this_script} using git tag ${GORELEASER_CURRENT_TAG}"
-goreleaser --skip=sign "$@"
+if [ "${GORELEASER_SKIP_RELEASE}" = "true" ] ; then
+  goreleaser --skip=sign --skip=docker "$@"
+else
+  goreleaser --skip=sign "$@"
+fi
 cleanup
