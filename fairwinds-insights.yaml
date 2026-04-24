@@ -4,4 +4,4 @@ options:
 
 images:
   docker:
-  - quay.io/fairwinds/polaris:$CI_SHA1
+  - us-docker.pkg.dev/fairwinds-ops/oss/polaris:$CI_SHA1
