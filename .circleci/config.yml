@@ -176,7 +176,7 @@ jobs:
           name: goreleaser release
           environment:
             GORELEASER_SKIP_RELEASE: "true"
-          command: goreleaser release --clean --skip=sign,homebrew
+          command: goreleaser release --snapshot --clean --skip=sign,homebrew
       - store_artifacts:
           path: dist
           destination: snapshot
