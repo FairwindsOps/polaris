@@ -226,6 +226,12 @@ workflows:
 
   branch:
     jobs:
+      - test:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
       - snapshot:
           filters:
             branches:
