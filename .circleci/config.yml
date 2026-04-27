@@ -229,7 +229,7 @@ workflows:
       - test:
           filters:
             tags:
-              only: /.*/
+              ignore: /.*/
       - snapshot:
           filters:
             branches:
@@ -254,6 +254,8 @@ workflows:
             branches:
               ignore: /.*/
       - release:
+          requires:
+            - test
           context: org-global
           filters:
             branches:
@@ -269,6 +271,8 @@ workflows:
             tags:
               ignore: /^testing-.*/
       - oss-docs/publish-docs:
+          requires:
+            - test_k8s
           repository: polaris
           filters:
             branches:
