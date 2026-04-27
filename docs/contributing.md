@@ -46,11 +46,11 @@ go test ./pkg/... -v -coverprofile cover.out
 ### Webhook tests
 ```bash
 kind create cluster --wait=90s --image kindest/node:v1.15.11 --name polaris-test
-docker build -t quay.io/fairwinds/polaris:debug . # or use your own registry
-docker push quay.io/fairwinds/polaris:debug
+docker build -t us-docker.pkg.dev/fairwinds-ops/oss/polaris:debug . # or use your own registry
+docker push us-docker.pkg.dev/fairwinds-ops/oss/polaris:debug
 helm repo add jetstack https://charts.jetstack.io
  helm install cert-manager jetstack/cert-manager --namespace cert-manager --version v1.12.1 --set "installCRDs=true" --wait
-POLARIS_IMAGE=quay.io/fairwinds/polaris:debug ./test/webhook_test.sh
+POLARIS_IMAGE=us-docker.pkg.dev/fairwinds-ops/oss/polaris:debug ./test/webhook_test.sh
 ```
 to avoid the final cleanup for debugging purposes, you can run
 ```bash

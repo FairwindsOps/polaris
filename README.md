@@ -29,6 +29,44 @@ Polaris can be run in three different modes:
 ## Documentation
 Check out the [documentation at docs.fairwinds.com](https://polaris.docs.fairwinds.com)
 
+## Notice: Registry Migration and Immutable Images (v10.1.8 → v10.2.0)
+
+Starting with **v10.2.0**:
+
+- Images moved to `us-docker.pkg.dev/fairwinds-ops/oss/polaris`
+- `quay.io/fairwinds/polaris` is deprecated
+
+### Required action
+
+```diff
+- quay.io/fairwinds/polaris:<tag>
++ us-docker.pkg.dev/fairwinds-ops/oss/polaris:<tag>
+```
+
+---
+
+## Immutable and signed images
+
+* Images are now **signed**
+* Tags are **immutable**
+* No more floating tags:
+
+  * `v10`
+  * `v10.1`
+  * `latest`
+
+Use full version tags:
+
+```
+us-docker.pkg.dev/fairwinds-ops/oss/polaris:v<major>.<minor>.<patch>
+```
+
+Or pin by digest:
+
+```
+us-docker.pkg.dev/fairwinds-ops/oss/polaris@sha256:<digest>
+```
+
 <!-- Begin boilerplate -->
 ## Join the Fairwinds Open Source Community
 
