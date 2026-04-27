@@ -89,7 +89,8 @@ helm install polaris fairwinds-stable/polaris --namespace polaris --create-names
   --set webhook.enable=true \
   --set webhook.mutate=true \
   --set image.repository=us-docker.pkg.dev/fairwinds-ops/oss/polaris \
-  --set image.tag=$CI_SHA1
+  --set image.tag=$CI_SHA1 \
+  --set image.pullPolicy=IfNotPresent
 
 echo "Waiting for the webhook to come online"
 check_webhook_is_ready

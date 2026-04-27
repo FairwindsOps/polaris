@@ -22,7 +22,9 @@ function check_timeout() {
 
 helm repo add fairwinds-stable https://charts.fairwinds.com/stable
 helm install polaris fairwinds-stable/polaris --namespace polaris --create-namespace \
-  --set image.tag=$CI_SHA1
+  --set image.repository=us-docker.pkg.dev/fairwinds-ops/oss/polaris \
+  --set image.tag=$CI_SHA1 \
+  --set image.pullPolicy=IfNotPresent
 
 check_dashboard_is_ready
 
