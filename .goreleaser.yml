@@ -49,7 +49,7 @@ release:
     You can verify the signatures of both the checksums.txt file and the published docker images using [cosign](https://github.com/sigstore/cosign).
 
     ```bash
-    cosign verify-blob checksums.txt --signature=checksums.txt.sig  --key https://artifacts.fairwinds.com/cosign-p256.pub
+    cosign verify-blob checksums.txt --bundle=checksums.txt.sigstore.json --key https://artifacts.fairwinds.com/cosign-p256.pub
     ```
 
     ```bash
@@ -65,10 +65,11 @@ changelog:
       - '^test:'
 signs:
   - cmd: cosign
+    signature: "${artifact}.sigstore.json"
     args:
       - "sign-blob"
       - "--key=hashivault://cosign-p256"
-      - "--output-signature=${signature}"
+      - "--bundle=${signature}"
       - "${artifact}"
       - "--yes"
     artifacts: all
