@@ -13,10 +13,10 @@ commands:
   install_goreleaser_dependencies:
     description: Installs dependencies for CI scripts
     steps:
-    - run: apk update
-    # Register other docker platforms, to build arm64.
-    # This shouldn't be needed, why TBD.
-    - run: docker run --privileged --rm tonistiigi/binfmt --install all
+      - run: apk update
+      # Register other docker platforms, to build arm64.
+      # This shouldn't be needed, why TBD.
+      - run: docker run --privileged --rm tonistiigi/binfmt --install all
 
 references:
   set_environment_variables: &set_environment_variables
@@ -105,6 +105,26 @@ references:
         sha256sum vault_1.13.2_linux_amd64.zip | grep f7930279de8381de7c532164b4a4408895d9606c0d24e2e9d2f9acb5dfe99b3c
         unzip vault_1.13.2_linux_amd64.zip
         mv vault /usr/bin/vault
+  setup_qemu_binfmt: &setup_qemu_binfmt
+    run:
+      name: Setup QEMU for multi-arch Docker builds
+      command: |
+        sudo apt-get update -y
+        sudo apt-get install -y qemu-user-static binfmt-support
+        docker buildx create --use || true
+        docker buildx inspect --bootstrap
+  load_polaris_image_into_kind: &load_polaris_image_into_kind
+    run:
+      name: Load Polaris snapshot image into Kind
+      command: |
+        TAR="/tmp/workspace/docker_save/polaris_${CIRCLE_SHA1}.tar"
+        if [ -f "$TAR" ]; then
+          echo "Loading snapshot image from $TAR"
+          docker load -i "$TAR"
+          kind load docker-image "us-docker.pkg.dev/fairwinds-ops/oss/polaris:${CIRCLE_SHA1}"
+        else
+          echo "No snapshot tar (tag workflow); tests will pull the image from the registry."
+        fi
 jobs:
   test_k8s:
     working_directory: ~/polaris
@@ -113,7 +133,10 @@ jobs:
     steps:
       - checkout
       - *set_environment_variables
+      - attach_workspace:
+          at: /tmp/workspace
       - *install_k8s
+      - *load_polaris_image_into_kind
       - *test_k8s
 
   test:
@@ -126,7 +149,7 @@ jobs:
       - run: go test ./... -coverprofile=coverage.txt -covermode=count
       - *test_binary_dashboard
 
-  build_and_push:
+  release:
     working_directory: /go/src/github.com/fairwindsops/polaris/
     resource_class: large
     shell: /bin/bash
@@ -144,39 +167,112 @@ jobs:
       - rok8s/get_vault_env:
           vault_path: repo/polaris/env
       - *set_environment_variables
-      - run: docker login quay.io -u="${FAIRWINDS_QUAY_USER}" -p="${FAIRWINDS_QUAY_TOKEN}"
       - run:
           name: docker login Google Artifact Registry
           command: |
             docker login -u _json_key -p "$(echo $GCP_ARTIFACTREADWRITE_JSON_KEY | base64 -d)" us-docker.pkg.dev
       - install_goreleaser_dependencies
-      - run: scripts/goreleaser.sh
+      - run: echo 'export GORELEASER_CURRENT_TAG="${CIRCLE_TAG}"' >> $BASH_ENV
+      - run: goreleaser release --clean
+      - run: mkdir -p /tmp/workspace/docker_save && touch /tmp/workspace/docker_save/.release-workspace-marker
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - docker_save
+
+  snapshot:
+    working_directory: /home/circleci/project
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large
+    shell: /bin/bash
+    steps:
+      - checkout
+      - *setup_qemu_binfmt
+      - run:
+          name: goreleaser release (snapshot, local only)
+          environment:
+            GORELEASER_SKIP_RELEASE: "true"
+          command: |
+            set -euo pipefail
+            REPO_ROOT="${HOME}/project"
+            docker run --rm \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              -v "${REPO_ROOT}:/workspace" -w /workspace \
+              -e GORELEASER_SKIP_RELEASE=true \
+              -e CIRCLE_SHA1 \
+              -e CIRCLE_BRANCH \
+              -e CIRCLE_TAG \
+              --entrypoint sh \
+              goreleaser/goreleaser:v2.15.4 \
+              -c 'git config --global --add safe.directory /workspace && cd /workspace && goreleaser release --snapshot --clean --skip=sign,homebrew'
+      - run: mkdir -p /tmp/workspace/docker_save/
+      - run:
+          name: Tag and save amd64 image for Kind
+          command: |
+            set -euo pipefail
+            docker tag "us-docker.pkg.dev/fairwinds-ops/oss/polaris:${CIRCLE_SHA1}-amd64" "us-docker.pkg.dev/fairwinds-ops/oss/polaris:${CIRCLE_SHA1}"
+            docker save "us-docker.pkg.dev/fairwinds-ops/oss/polaris:${CIRCLE_SHA1}" -o "/tmp/workspace/docker_save/polaris_${CIRCLE_SHA1}.tar"
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - docker_save
+      - store_artifacts:
+          path: dist
+          destination: snapshot
 
 workflows:
   version: 2
 
-  release:
+  branch:
+    jobs:
+      - test:
+          filters:
+            tags:
+              ignore: /.*/
+      - snapshot:
+          filters:
+            branches:
+              ignore: /pull\/[0-9]+/
+            tags:
+              ignore: /.*/
+      - test_k8s:
+          requires:
+            - snapshot
+          filters:
+            branches:
+              ignore: /pull\/[0-9]+/
+            tags:
+              ignore: /.*/
+
+  tag_release:
     jobs:
       - test:
           filters:
             tags:
               only: /.*/
-      - build_and_push:
+            branches:
+              ignore: /.*/
+      - release:
+          requires:
+            - test
           context: org-global
           filters:
             branches:
-              ignore: /pull\/[0-9]+/
+              ignore: /.*/
             tags:
               ignore: /^testing-.*/
       - test_k8s:
           requires:
-            - build_and_push
+            - release
           filters:
             branches:
-              ignore: /pull\/[0-9]+/
+              ignore: /.*/
             tags:
               ignore: /^testing-.*/
       - oss-docs/publish-docs:
+          requires:
+            - test_k8s
           repository: polaris
           filters:
             branches:
