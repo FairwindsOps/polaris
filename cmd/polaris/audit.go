@@ -59,7 +59,7 @@ func init() {
 	auditCmd.PersistentFlags().IntVar(&minScore, "set-exit-code-below-score", 0, "Set an exit code of 4 when the score is below this threshold (1-100).")
 	auditCmd.PersistentFlags().StringVar(&auditOutputURL, "output-url", "", "Destination URL to send audit results.")
 	auditCmd.PersistentFlags().StringVar(&auditOutputFile, "output-file", "", "Destination file for audit results.")
-	auditCmd.PersistentFlags().StringVarP(&auditOutputFormat, "format", "f", "json", "Output format for results - json, yaml, pretty, or score.")
+	auditCmd.PersistentFlags().StringVarP(&auditOutputFormat, "format", "f", "json", "Output format for results - json, yaml, pretty, sarif, or score.")
 	auditCmd.PersistentFlags().BoolVar(&useColor, "color", true, "Whether to use color in pretty format.")
 	auditCmd.PersistentFlags().StringVar(&displayName, "display-name", "", "An optional identifier for the audit.")
 	auditCmd.PersistentFlags().StringVar(&resourceToAudit, "resource", "", "Audit a specific resource, in the format namespace/kind/version/name, e.g. nginx-ingress/Deployment.apps/v1/default-backend.")
@@ -199,6 +199,8 @@ func outputAudit(auditData validator.AuditData, outputFile, outputURL, outputFor
 		}
 	} else if outputFormat == "pretty" {
 		outputBytes = []byte(auditData.GetPrettyOutput(useColor))
+	} else if outputFormat == "sarif" {
+		outputBytes, err = auditData.GetSarifOutput()
 	} else {
 		outputBytes, err = json.MarshalIndent(auditData, "", "  ")
 	}
@@ -221,6 +223,8 @@ func outputAudit(auditData validator.AuditData, outputFile, outputURL, outputFor
 				req.Header.Set("Content-Type", "application/json")
 			} else if outputFormat == "yaml" {
 				req.Header.Set("Content-Type", "application/x-yaml")
+			} else if outputFormat == "sarif" {
+				req.Header.Set("Content-Type", "application/sarif+json")
 			} else {
 				req.Header.Set("Content-Type", "text/plain")
 			}
