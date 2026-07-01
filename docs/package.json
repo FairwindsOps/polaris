@@ -4,7 +4,7 @@
     "url": "https://github.com/FairwindsOps/insights-docs/issues"
   },
   "dependencies": {
-    "vuepress-plugin-check-md": "0.0.2"
+    "vuepress-plugin-check-md": "0.0.3"
   },
   "description": "A repository with a Vuepress template for Fairwinds projects",
   "devDependencies": {
