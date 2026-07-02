@@ -84,6 +84,7 @@ dockers:
      dockerfile: Dockerfile
      build_flag_templates:
         - "--platform=linux/amd64"
+        - "{{ if .IsSnapshot }}--load{{ end }}"
    - image_templates:
         - "us-docker.pkg.dev/fairwinds-ops/oss/polaris:{{ .FullCommit }}-arm64v8"
         - "us-docker.pkg.dev/fairwinds-ops/oss/polaris:{{ .Tag }}-arm64v8"
