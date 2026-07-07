@@ -211,8 +211,27 @@ jobs:
           name: Tag and save amd64 image for Kind
           command: |
             set -euo pipefail
-            docker tag "us-docker.pkg.dev/fairwinds-ops/oss/polaris:${CIRCLE_SHA1}-amd64" "us-docker.pkg.dev/fairwinds-ops/oss/polaris:${CIRCLE_SHA1}"
-            docker save "us-docker.pkg.dev/fairwinds-ops/oss/polaris:${CIRCLE_SHA1}" -o "/tmp/workspace/docker_save/polaris_${CIRCLE_SHA1}.tar"
+            AMD64_IMAGE="us-docker.pkg.dev/fairwinds-ops/oss/polaris:${CIRCLE_SHA1}-amd64"
+            KIND_IMAGE="us-docker.pkg.dev/fairwinds-ops/oss/polaris:${CIRCLE_SHA1}"
+
+            if docker image inspect "${AMD64_IMAGE}" >/dev/null 2>&1; then
+              docker tag "${AMD64_IMAGE}" "${KIND_IMAGE}"
+            elif docker image inspect "${KIND_IMAGE}" >/dev/null 2>&1; then
+              echo "Using existing ${KIND_IMAGE}"
+            else
+              echo "Goreleaser buildx did not load ${AMD64_IMAGE}; building ${KIND_IMAGE} from dist/"
+              POLARIS_BIN="$(find dist -type f -name polaris -path '*linux_amd64*' | head -1)"
+              if [ -z "${POLARIS_BIN}" ]; then
+                echo "Could not find linux amd64 binary in dist/"
+                find dist -type f || true
+                docker images | grep -E 'polaris|REPOSITORY' || true
+                exit 1
+              fi
+              cp "${POLARIS_BIN}" ./polaris
+              docker build --platform linux/amd64 -t "${KIND_IMAGE}" .
+            fi
+
+            docker save "${KIND_IMAGE}" -o "/tmp/workspace/docker_save/polaris_${CIRCLE_SHA1}.tar"
       - persist_to_workspace:
           root: /tmp/workspace
           paths:
