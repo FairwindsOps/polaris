@@ -52,6 +52,7 @@ type ResourceProvider struct {
 	SourceType    string
 	Nodes         []corev1.Node
 	Namespaces    []corev1.Namespace
+	Pods          []corev1.Pod
 	Resources     resourceKindMap
 }
 
@@ -127,6 +128,7 @@ func newResourceProvider(version, sourceType, sourceName string) ResourceProvide
 		CreationTime:  time.Now(),
 		Nodes:         make([]corev1.Node, 0),
 		Namespaces:    make([]corev1.Namespace, 0),
+		Pods:          make([]corev1.Pod, 0),
 		Resources:     make(map[string][]GenericResource),
 	}
 }
@@ -304,6 +306,14 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		}
 		namespaces = nsList
 	}
+
+	logrus.Info("Loading pods")
+	pods, err := kube.CoreV1().Pods(c.Namespace).List(ctx, listOpts)
+	if err != nil {
+		logrus.Errorf("Error fetching Pods: %v", err)
+		return nil, err
+	}
+
 	logrus.Info("Setting up restmapper")
 	resources, err := restmapper.GetAPIGroupResources(kube.Discovery())
 	if err != nil {
@@ -383,6 +393,7 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 
 	provider.Nodes = nodes.Items
 	provider.Namespaces = namespaces.Items
+	provider.Pods = pods.Items
 	provider.Resources.addResources(kubernetesResources)
 	logrus.Info("Done loading Kubernetes resources")
 	return &provider, nil
@@ -442,6 +453,7 @@ func (resources *ResourceProvider) addResourceFromString(contents string) error 
 			return err
 		}
 		workload.OriginalObjectYAML = contentBytes
+		resources.Pods = append(resources.Pods, pod)
 		resources.Resources.addResource(workload)
 	} else {
 		newResource, err := NewGenericResourceFromBytes(contentBytes)
