@@ -51,6 +51,9 @@ func TestGetTemplateData(t *testing.T) {
 	assert.EqualValues(t, sum, actualAudit.GetSummary())
 	assert.Equal(t, actualAudit.SourceType, "Cluster", "should be from a cluster")
 	assert.Equal(t, actualAudit.SourceName, "test", "should be from a cluster")
+	assert.Equal(t, 5, actualAudit.ClusterInfo.Pods, "should report pod count from the cluster")
+	assert.Equal(t, 5, actualAudit.ClusterInfo.Controllers, "should report controller count from the cluster")
+	assert.Equal(t, 1, actualAudit.ClusterInfo.Namespaces, "should report namespace count from the cluster")
 
 	expectedResults := []struct {
 		kind    string

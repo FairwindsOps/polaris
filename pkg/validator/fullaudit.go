@@ -50,6 +50,7 @@ func RunAudit(ctx context.Context, config conf.Configuration, kubeResources *kub
 		ClusterInfo: ClusterInfo{
 			Version:     kubeResources.ServerVersion,
 			Nodes:       len(kubeResources.Nodes),
+			Pods:        len(kubeResources.Pods),
 			Namespaces:  len(kubeResources.Namespaces),
 			Controllers: kubeResources.Resources.GetNumberOfControllers(),
 		},

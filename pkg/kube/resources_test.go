@@ -157,6 +157,7 @@ func TestGetResourceFromAPI(t *testing.T) {
 					assert.Equal(t, tt.want.SourceName, resources.SourceName)
 					assert.IsType(t, tt.want.CreationTime, resources.CreationTime)
 					assert.Equal(t, 0, len(resources.Nodes), "Should not have any nodes")
+					assert.Equal(t, 5, len(resources.Pods), "Should have 5 pods")
 					for k, v := range resources.Resources {
 						fmt.Println("cont", k, v)
 					}
