@@ -3,7 +3,7 @@ if [[ -z "$INPUT_VERSION" ]]; then
   echo "Missing polaris version information"
   exit 1
 fi
-POLARIS_URL=https://github.com/FairwindsOps/polaris/releases/download/$INPUT_VERSION/polaris_linux_amd64.tar.gz
+POLARIS_URL=https://github.com/FairwindsOps/polaris/releases/download/$INPUT_VERSION/polaris_$(echo -n $INPUT_VERSION | tr -d "v")_linux_amd64.tar.gz
 polaris version | grep "$INPUT_VERSION" &> /dev/null
 if [ $? == 0 ]; then
    echo "Polaris $INPUT_VERSION is already installed! Exiting gracefully."
