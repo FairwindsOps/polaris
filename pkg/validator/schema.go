@@ -278,6 +278,18 @@ func applyControllerSchemaChecks(ctx context.Context, conf *config.Configuration
 		}
 		podRes.ContainerResults = append(podRes.ContainerResults, cRes)
 	}
+	for _, ec := range resource.PodSpec.EphemeralContainers {
+		container := corev1.Container(ec.EphemeralContainerCommon)
+		results, err := applyContainerSchemaChecks(ctx, conf, resourceProvider, resource, &container, false)
+		if err != nil {
+			return finalResult, err
+		}
+		cRes := ContainerResult{
+			Name:    container.Name,
+			Results: results,
+		}
+		podRes.ContainerResults = append(podRes.ContainerResults, cRes)
+	}
 
 	return finalResult, nil
 }
