@@ -266,7 +266,9 @@ func GetObject(ctx context.Context, namespace, kind, version, name string, dynam
 func GetPodSpec(yaml map[string]any) any {
 	for _, child := range podSpecFields {
 		if childYaml, ok := yaml[child]; ok {
-			return GetPodSpec(childYaml.(map[string]any))
+			if childYamlMap, ok := childYaml.(map[string]any); ok {
+				return GetPodSpec(childYamlMap)
+			}
 		}
 	}
 	if _, ok := yaml["containers"]; ok {
@@ -300,7 +302,9 @@ func GetPodTemplate(yaml map[string]any) (podTemplate any, err error) {
 	}
 	for _, podSpecField := range podSpecFields {
 		if childYaml, ok := yaml[podSpecField]; ok {
-			return GetPodTemplate(childYaml.(map[string]any))
+			if childYamlMap, ok := childYaml.(map[string]any); ok {
+				return GetPodTemplate(childYamlMap)
+			}
 		}
 	}
 	return nil, nil
