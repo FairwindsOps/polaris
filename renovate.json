@@ -1,0 +1,97 @@
+// DO NOT EDIT - Managed by Terraform
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard"
+  ],
+  "labels": ["dependencies"],
+  "prConcurrentLimit": 10,
+  "branchConcurrentLimit": 10,
+  "minimumReleaseAge": "7 days",
+  "enabledManagers": [
+    "gomod",
+    "dockerfile",
+    "circleci",
+    "custom.regex"
+  ],
+  "postUpdateOptions": ["gomodTidy", "gomodUpdateImportPaths"],
+  "customManagers": [
+    {
+      "description": "HashiCorp Vault download URL in CircleCI",
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)\\.circleci/config\\.yml$/"],
+      "matchStrings": [
+        "https://releases\\.hashicorp\\.com/vault/(?<currentValue>[\\d.]+)/vault_[\\d.]+_linux_amd64\\.zip"
+      ],
+      "depNameTemplate": "hashicorp/vault",
+      "datasourceTemplate": "hashicorp-releases",
+      "autoReplaceStringTemplate": "https://releases.hashicorp.com/vault/{{{newValue}}}/vault_{{{newValue}}}_linux_amd64.zip"
+    },
+    {
+      "description": "HashiCorp Vault archive name in CircleCI (sha256 line must be updated manually)",
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)\\.circleci/config\\.yml$/"],
+      "matchStrings": [
+        "vault_(?<currentValue>[\\d.]+)_linux_amd64\\.zip"
+      ],
+      "depNameTemplate": "hashicorp/vault",
+      "datasourceTemplate": "hashicorp-releases",
+      "autoReplaceStringTemplate": "vault_{{{newValue}}}_linux_amd64.zip"
+    },
+    {
+      "description": "golangci-lint install.sh pin in CircleCI",
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)\\.circleci/config\\.yml$/"],
+      "matchStrings": [
+        "golangci/golangci-lint/HEAD/install.sh \\| sh -s -- -b /usr/local/bin v(?<currentValue>[0-9.]+)"
+      ],
+      "depNameTemplate": "golangci/golangci-lint",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v?(?<version>.*)$",
+      "autoReplaceStringTemplate": "golangci/golangci-lint/HEAD/install.sh | sh -s -- -b /usr/local/bin v{{{newValue}}}"
+    },
+    {
+      "description": "Kind node image for rok8s-scripts kubernetes_e2e_tests",
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)\\.circleci/config\\.yml$/"],
+      "matchStrings": [
+        "kind_node_image:\\s*\"kindest/node:(?<currentValue>v[^\"\\s]+)\""
+      ],
+      "depNameTemplate": "kindest/node",
+      "datasourceTemplate": "docker",
+      "autoReplaceStringTemplate": "kind_node_image: \"kindest/node:{{{newValue}}}\""
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Group all non-major (minor + patch) updates into a single PR",
+      "matchUpdateTypes": ["minor", "patch", "digest", "lockFileMaintenance"],
+      "groupName": "all non-major dependencies",
+      "groupSlug": "all-non-major",
+      "minimumReleaseAge": "7 days"
+    },
+    {
+      "description": "Keep major updates separate and also enforce minimum age",
+      "matchUpdateTypes": ["major"],
+      "minimumReleaseAge": "7 days"
+    },
+    {
+      "description": "Disable replace updates",
+      "matchManagers": ["gomod"],
+      "matchDepTypes": ["replace"],
+      "enabled": false
+    },
+    {
+      "description": "Every upgrade: upstream release must be at least 7 days old",
+      "matchManagers": ["gomod", "dockerfile", "circleci", "custom.regex"],
+      "minimumReleaseAge": "7 days"
+    },
+    {
+      "description": "Group HashiCorp Vault version bumps (sha256 checksum still needs manual update)",
+      "groupName": "HashiCorp Vault",
+      "matchManagers": ["custom.regex"],
+      "matchDepNames": ["hashicorp/vault"]
+    }
+  ]
+}
