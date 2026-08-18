@@ -68,6 +68,7 @@ type Mutation struct {
 type SchemaCheck struct {
 	ID                      string                       `yaml:"id" json:"id"`
 	Category                string                       `yaml:"category" json:"category"`
+	DocumentationURL        string                       `yaml:"docURL" json:"docURL"`
 	SuccessMessage          string                       `yaml:"successMessage" json:"successMessage"`
 	FailureMessage          string                       `yaml:"failureMessage" json:"failureMessage"`
 	Controllers             includeExcludeList           `yaml:"controllers" json:"controllers"`

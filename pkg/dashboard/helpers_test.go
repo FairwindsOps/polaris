@@ -203,6 +203,34 @@ func TestGetCategoryLink(t *testing.T) {
 	assert.NotEqual(t, "ttps://polaris.docs.fairwinds.com/checks/reliability", actual)
 }
 
+func TestGetResultDocumentationLink(t *testing.T) {
+	// custom docURL wins when set
+	custom := validator.ResultMessage{Category: "Business", DocumentationURL: "https://docs.example.com/business"}
+	assert.Equal(t, "https://docs.example.com/business", getResultDocumentationLink(custom))
+
+	// falls back to the Fairwinds category link when unset
+	fallback := validator.ResultMessage{Category: "Efficiency"}
+	assert.Equal(t, "https://polaris.docs.fairwinds.com/checks/efficiency", getResultDocumentationLink(fallback))
+}
+
+func TestGetCategoryDocumentationLink(t *testing.T) {
+	conf := config.Configuration{
+		CustomChecks: map[string]config.SchemaCheck{
+			"customBusinessCheck": {Category: "Business", DocumentationURL: "https://docs.example.com/business"},
+			"customPlainCheck":    {Category: "Compliance"},
+		},
+	}
+
+	// a custom check in the category carries the docURL through
+	assert.Equal(t, "https://docs.example.com/business", getCategoryDocumentationLink(conf, "Business"))
+
+	// no docURL on any check in the category -> default link
+	assert.Equal(t, "https://polaris.docs.fairwinds.com/checks/compliance", getCategoryDocumentationLink(conf, "Compliance"))
+
+	// category with no matching custom check -> default link
+	assert.Equal(t, "https://polaris.docs.fairwinds.com/checks/security", getCategoryDocumentationLink(conf, "Security"))
+}
+
 func TestGetCategoryInfo(t *testing.T) {
 	input := "Security"
 

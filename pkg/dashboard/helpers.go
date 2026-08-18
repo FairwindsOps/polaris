@@ -126,6 +126,26 @@ func getCategoryLink(category string) string {
 	return "https://polaris.docs.fairwinds.com/checks/" + strings.ToLower(category)
 }
 
+// getResultDocumentationLink returns the docURL configured on a check when set,
+// otherwise the default Fairwinds docs link for the check's category.
+func getResultDocumentationLink(rm validator.ResultMessage) string {
+	if rm.DocumentationURL != "" {
+		return rm.DocumentationURL
+	}
+	return getCategoryLink(rm.Category)
+}
+
+// getCategoryDocumentationLink returns the docURL configured on any custom check
+// in the category, otherwise the default Fairwinds docs link for that category.
+func getCategoryDocumentationLink(conf config.Configuration, category string) string {
+	for _, check := range conf.CustomChecks {
+		if check.Category == category && check.DocumentationURL != "" {
+			return check.DocumentationURL
+		}
+	}
+	return getCategoryLink(category)
+}
+
 func getCategoryInfo(category string) string {
 	switch category {
 	case "Reliability":

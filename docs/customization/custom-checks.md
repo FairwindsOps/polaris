@@ -40,7 +40,8 @@ check ID. Note that you'll also have to set its severity in the `checks` section
 
 * `successMessage` - the message to show when the check succeeds
 * `failureMessage` - the message to show when the check fails
-* `category` - one of `Security`, `Efficiency`, or `Reliability`
+* `category` - `Security`, `Efficiency`, `Reliability`, or a custom category name of your own
+* `docURL` - optional link to documentation for the check. When set, the dashboard uses it for the check's "more info" link instead of the default Fairwinds docs URL. Handy for custom categories that don't have a page on the Fairwinds docs site.
 * `target` - specifies the type of resource to check. This can be:
   * a group and kind, e.g. `apps/Deployment` or `networking.k8s.io/Ingress`
   * `Controller`, to check _any_ resource that creates Pods (e.g. Deployments, CronJobs, StatefulSets), as well as naked Pods
