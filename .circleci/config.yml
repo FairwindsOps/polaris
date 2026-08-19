@@ -37,6 +37,7 @@ references:
     filters:
       branches:
         only: /.*/
+        ignore: /pull\/[0-9]+/
       tags:
         ignore: /.*/
 
@@ -129,32 +130,46 @@ workflows:
   version: 2
   test_and_build:
     jobs:
-      - test
+      - test:
+          filters:
+            tags:
+              ignore: /.*/
       - snapshot:
           requires:
             - test
           filters:
             branches:
               only: /.*/
+              ignore: /pull\/[0-9]+/
             tags:
               ignore: /.*/
       - rok8s/kubernetes_e2e_tests:
           name: kubernetes e2e
-          kind_node_image: "kindest/node:v1.25.9@sha256:c08d6c52820aa42e533b70bce0c2901183326d86dcdcbedecc9343681db45161"
+          kind_node_image: "kindest/node:v1.34.0@sha256:7416a61b42b1662ca6ca89f02028ac133a309a2a30ba309614e8ec94d976dc5a"
           <<: *e2e_configuration
   release:
     jobs:
-      - oss-docs/publish-docs:
-          repository: polaris
+      - test:
           filters:
             branches:
               ignore: /.*/
             tags:
-              only: /^.*/
+              ignore: /^testing-.*/
       - release:
+          requires:
+            - test
           context: org-global
           filters:
             branches:
               ignore: /.*/
             tags:
-              only: /.*/
+              ignore: /^testing-.*/
+      - oss-docs/publish-docs:
+          requires:
+            - release
+          repository: polaris
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              ignore: /^testing-.*/

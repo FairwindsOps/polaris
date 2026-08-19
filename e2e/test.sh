@@ -2,7 +2,7 @@
 set -euo pipefail
 
 if [[ -n "${CIRCLE_PR_NUMBER:-}" ]]; then
-  echo "Skipping Kubernetes tests for PR builds"
+  echo "Skipping Kubernetes tests for forked PR"
   exit 0
 fi
 
