@@ -44,7 +44,7 @@ webhook
     --checks strings                  Optional flag to specify specific checks to check
     --color                           Whether to use color in pretty format. (default true)
     --display-name string             An optional identifier for the audit.
--f, --format string                   Output format for results - json, yaml, pretty, or score. (default "json")
+-f, --format string                   Output format for results - json, yaml, pretty, sarif, or score. (default "json")
     --helm-chart string               Will fill out Helm template
     --helm-values string              Optional flag to add helm values
     --helm-skip-tests bool            Corresponds to --skip-tests of helm template
