@@ -45,12 +45,12 @@ references:
 executors:
   golang-exec:
     docker:
-      - image: cimg/go:1.26.5
+      - image: cimg/go:1.26.6
 
 jobs:
   test:
     docker:
-      - image: cimg/go:1.26.5
+      - image: cimg/go:1.26.6
     steps:
       - checkout
       - run:
