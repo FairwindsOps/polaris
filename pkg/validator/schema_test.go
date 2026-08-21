@@ -19,10 +19,12 @@ import (
 	"testing"
 
 	conf "github.com/fairwindsops/polaris/pkg/config"
+	"github.com/fairwindsops/polaris/pkg/kube"
 
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var customCheckExemptions = `
@@ -275,4 +277,35 @@ func TestValidateCustomCheckExemptions(t *testing.T) {
 		},
 	}
 	testValidate(t, &container, &customCheckExemptions, "notexempt", expectedDangers, expectedWarnings, expectedSuccesses)
+}
+
+var resourceConfEphemeral = `
+checks:
+  runAsRootAllowed: danger
+`
+
+func TestEphemeralContainersAreChecked(t *testing.T) {
+	parsed, err := conf.Parse([]byte(resourceConfEphemeral))
+	assert.NoError(t, err)
+
+	pod := corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{Name: "test"},
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{{Name: "app"}},
+			EphemeralContainers: []corev1.EphemeralContainer{{
+				EphemeralContainerCommon: corev1.EphemeralContainerCommon{Name: "debugger"},
+			}},
+		},
+	}
+	workload, err := kube.NewGenericResourceFromPod(pod, nil)
+	assert.NoError(t, err)
+
+	result, err := ApplyAllSchemaChecks(context.Background(), &parsed, nil, workload)
+	assert.NoError(t, err)
+
+	names := map[string]bool{}
+	for _, cr := range result.PodResult.ContainerResults {
+		names[cr.Name] = true
+	}
+	assert.True(t, names["debugger"], "ephemeral container should be checked")
 }
