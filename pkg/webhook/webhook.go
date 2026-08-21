@@ -17,7 +17,6 @@ package webhook
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -54,7 +53,7 @@ func NewValidateWebhook(mgr manager.Manager, c config.Configuration) {
 }
 
 func (v *Validator) handleInternal(ctx context.Context, req admission.Request) (*validator.Result, kube.GenericResource, error) {
-	return GetValidatedResults(ctx, req.AdmissionRequest.Kind.Kind, v.decoder, req, v.Config)
+	return GetValidatedResults(ctx, req.Kind.Kind, v.decoder, req, v.Config)
 }
 
 // GetValidatedResults returns the validated results.
@@ -72,31 +71,20 @@ func GetValidatedResults(ctx context.Context, kind string, decoder *admission.De
 		return nil, resource, err
 	}
 	if ownerReferences, ok := decoded["metadata"].(map[string]any)["ownerReferences"].([]any); ok && len(ownerReferences) > 0 {
-		allOwnersReferenceValid := true
 		dynamicClient, restMapper, _, _, err := kube.GetKubeClient(context.Background(), "")
 		if err != nil {
 			logrus.Errorf("getting the kubernetes client: %v", err)
 			return nil, resource, err
 		}
-		for _, ownerReference := range ownerReferences {
-			ownerReference := ownerReference.(map[string]any)
-			ctrl, err := kube.GetObject(context.Background(), req.Namespace, ownerReference["kind"].(string), ownerReference["apiVersion"].(string), ownerReference["name"].(string), dynamicClient, restMapper)
-			if err != nil {
-				logrus.Infof("error retrieving owner for object %s - running checks: %v", req.Name, err)
-				allOwnersReferenceValid = false
-				break
-			} else {
-				err = controller.ValidateIfControllerMatches(decoded, ctrl.Object)
-				if err != nil {
-					logrus.Infof("object %s has an owner but the owner is invalid - running checks: %v", req.Name, err)
-					allOwnersReferenceValid = false
-					break
-				}
-			}
-			if allOwnersReferenceValid {
-				logrus.Infof("object %s has owner(s) and the owner(s) are valid - skipping", req.Name)
-				return nil, resource, nil
-			}
+		ownerReference := ownerReferences[0].(map[string]any)
+		ctrl, err := kube.GetObject(context.Background(), req.Namespace, ownerReference["kind"].(string), ownerReference["apiVersion"].(string), ownerReference["name"].(string), dynamicClient, restMapper)
+		if err != nil {
+			logrus.Infof("error retrieving owner for object %s - running checks: %v", req.Name, err)
+		} else if err := controller.ValidateIfControllerMatches(decoded, ctrl.Object); err != nil {
+			logrus.Infof("object %s has an owner but the owner is invalid - running checks: %v", req.Name, err)
+		} else {
+			logrus.Infof("object %s has owner(s) and the owner(s) are valid - skipping", req.Name)
+			return nil, resource, nil
 		}
 	} else {
 		logrus.Infof("Object %s has no owner - running checks", req.Name)
@@ -141,7 +129,7 @@ func getFailureReason(result validator.Result) string {
 
 	for _, message := range result.Results {
 		if !message.Success && message.Severity == config.SeverityDanger {
-			reason.WriteString(fmt.Sprintf("- %s: %s\n", result.Kind, message.Message))
+			reason.WriteString("- " + result.Kind + ": " + message.Message + "\n")
 		}
 	}
 
@@ -149,14 +137,14 @@ func getFailureReason(result validator.Result) string {
 	if podResult != nil {
 		for _, message := range podResult.Results {
 			if !message.Success && message.Severity == config.SeverityDanger {
-				reason.WriteString(fmt.Sprintf("- Pod: %s\n", message.Message))
+				reason.WriteString("- Pod: " + message.Message + "\n")
 			}
 		}
 
 		for _, containerResult := range podResult.ContainerResults {
 			for _, message := range containerResult.Results {
 				if !message.Success && message.Severity == config.SeverityDanger {
-					reason.WriteString(fmt.Sprintf("- Container %s: %s\n", containerResult.Name, message.Message))
+					reason.WriteString("- Container " + containerResult.Name + ": " + message.Message + "\n")
 				}
 			}
 		}

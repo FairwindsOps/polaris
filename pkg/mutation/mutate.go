@@ -173,7 +173,7 @@ func createPathAndFindNodes(node *yaml.Node, selectors []string, create bool) ([
 
 func addOrReplaceValue(node *yaml.Node, splits []string, value *yaml.Node) error {
 	if len(node.Content) == 0 {
-		return errors.New("No content in node")
+		return errors.New("no content in node")
 	}
 	nodes, err := createPathAndFindNodes(node.Content[0], splits, true)
 	if err != nil {
@@ -235,7 +235,7 @@ func getNodeFromValue(value any, comment string) (*yaml.Node, error) {
 		return nil, err
 	}
 	if len(doc.Content) == 0 {
-		return nil, errors.New("Generated an empty YAML document")
+		return nil, errors.New("generated an empty YAML document")
 	}
 	if doc.Content[0].Kind == yaml.MappingNode {
 		doc.Content[0].Content[0].HeadComment = comment
@@ -293,7 +293,8 @@ func removeMatchingNode(node *yaml.Node, selectors []string) error {
 			for _, node := range visitArrayNodes {
 				lastSelector := len(selectors) == 1
 				if !lastSelector {
-					removeMatchingNode(node, selectors[1:])
+					// Missing nested keys are expected for * wildcards (e.g. owners/*/aliases).
+					_ = removeMatchingNode(node, selectors[1:])
 				}
 			}
 		}

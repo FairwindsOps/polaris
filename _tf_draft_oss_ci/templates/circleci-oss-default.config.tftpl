@@ -2,8 +2,10 @@
 version: 2.1
 
 orbs:
-  rok8s: fairwinds/rok8s-scripts@16.0.0
-  oss-docs: fairwinds/oss-docs@0
+  rok8s: fairwinds/rok8s-scripts@${rok8s_orb}
+%{ if docs ~}
+  oss-docs: fairwinds/oss-docs@${oss_docs_orb}
+%{ endif ~}
 
 references:
   install_vault_machine: &install_vault_machine
@@ -12,9 +14,9 @@ references:
       command: |
         sudo apt-get update -y && sudo apt-get install -y curl unzip
         cd /tmp
-        curl -LO https://releases.hashicorp.com/vault/1.21.4/vault_1.21.4_linux_amd64.zip
-        echo '889b681990fe221b884b7932fa9c9dd0ee9811b9349554f1aa287ab63c9f3dae  vault_1.21.4_linux_amd64.zip' | sha256sum -c
-        unzip -o vault_1.21.4_linux_amd64.zip
+        curl -LO https://releases.hashicorp.com/vault/${vault_version}/vault_${vault_version}_linux_amd64.zip
+        echo '${vault_sha256}  vault_${vault_version}_linux_amd64.zip' | sha256sum -c
+        unzip -o vault_${vault_version}_linux_amd64.zip
         sudo mv vault /usr/bin/vault
   setup_qemu_binfmt: &setup_qemu_binfmt
     run:
@@ -24,11 +26,12 @@ references:
         sudo apt-get install -y qemu-user-static binfmt-support
         docker buildx create --use || true
         docker buildx inspect --bootstrap
+%{ if e2e ~}
   e2e_configuration: &e2e_configuration
     executor: golang-exec
-    pre_script: e2e/pre.sh
-    script: e2e/test.sh
-    command_runner_image: quay.io/reactiveops/ci-images:v14.1-bullseye
+    pre_script: ${e2e_pre}
+    script: ${e2e_script}
+    command_runner_image: ${ci_images}
     enable_docker_layer_caching: true
     store-test-results: /tmp/test-results
     attach-workspace: true
@@ -44,36 +47,68 @@ references:
 executors:
   golang-exec:
     docker:
-      - image: cimg/go:1.26.6
+      - image: ${go_image}
+%{ endif ~}
 
 jobs:
   test:
     docker:
-      - image: cimg/go:1.26.6
+      - image: ${go_image}
     steps:
       - checkout
       - run:
           name: Go Mod Download
           command: go mod download && go mod verify
+%{ if golangci ~}
       - run:
           name: golangci-lint
           command: |
-            curl -fsSL -o golangci-lint.tar.gz https://github.com/golangci/golangci-lint/releases/download/v2.12.2/golangci-lint-2.12.2-linux-amd64.tar.gz
-            echo '8df580d2670fed8fa984aac0507099af8df275e665215f5c7a2ae3943893a553  golangci-lint.tar.gz' | sha256sum -c
+            curl -fsSL -o golangci-lint.tar.gz https://github.com/golangci/golangci-lint/releases/download/v${golangci_version}/golangci-lint-${golangci_version}-linux-amd64.tar.gz
+            echo '${golangci_sha256}  golangci-lint.tar.gz' | sha256sum -c
             tar -xzf golangci-lint.tar.gz
-            mv golangci-lint-2.12.2-linux-amd64/golangci-lint "$(go env GOPATH)/bin/golangci-lint"
+            mv golangci-lint-${golangci_version}-linux-amd64/golangci-lint "$(go env GOPATH)/bin/golangci-lint"
             golangci-lint run --timeout 5m
+%{ endif ~}
       - run:
           name: test
           command: |
-            go test -v -coverprofile=coverage.txt -covermode=atomic ./...
+            go test -v -coverprofile=coverage.txt -covermode=atomic ${test_packages}
             go vet ./...
+%{ if test_dashboard ~}
       - run:
           name: Test Dashboard
           command: ./test/dashboard_test.sh
+%{ endif ~}
+%{ if gotest_e2e_setup != "" ~}
+      - run:
+          name: e2e setup
+          command: ${gotest_e2e_setup}
+%{ endif ~}
+%{ if gotest_e2e_packages != "" ~}
+%{ if repo_vault ~}
+      - *install_vault_machine
+      - rok8s/get_vault_env:
+          vault_path: repo/${project}/env
+%{ endif ~}
+      - run:
+          name: e2e tests
+          command: go test -v -tags e2e ${gotest_e2e_packages}
+%{ endif ~}
+%{ if docker_build ~}
+  docker_build:
+    docker:
+      - image: ${go_image}
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Build Docker image
+          command: docker build -t ${project}:test .
+%{ endif ~}
   snapshot:
     machine:
-      image: ubuntu-2204:current
+      image: ${machine_image}
     resource_class: large
     steps:
       - checkout
@@ -87,22 +122,24 @@ jobs:
               -e CIRCLE_SHA1 \
               -e CIRCLE_BRANCH \
               -e CIRCLE_TAG \
-              goreleaser/goreleaser:v2.17.1 release --snapshot --skip=sign
+              goreleaser/goreleaser:${goreleaser_version} release --snapshot --skip=sign
+%{ if e2e ~}
       - run:
           name: Save snapshot amd64 image for e2e
           command: |
             mkdir -p /tmp/workspace/docker_save
-            docker save us-docker.pkg.dev/fairwinds-ops/oss/polaris:${CIRCLE_SHA1}-amd64 > /tmp/workspace/docker_save/polaris_${CIRCLE_SHA1}-amd64.tar
+            docker save us-docker.pkg.dev/fairwinds-ops/oss/${project}:$${CIRCLE_SHA1}-amd64 > /tmp/workspace/docker_save/${project}_$${CIRCLE_SHA1}-amd64.tar
       - persist_to_workspace:
           root: /tmp/workspace/
           paths:
             - docker_save
+%{ endif ~}
       - store_artifacts:
           path: dist
           destination: snapshot
   release:
     machine:
-      image: ubuntu-2204:current
+      image: ${machine_image}
     resource_class: large
     shell: /bin/bash
     steps:
@@ -110,8 +147,10 @@ jobs:
       - *install_vault_machine
       - rok8s/get_vault_env:
           vault_path: repo/global/env
+%{ if repo_vault ~}
       - rok8s/get_vault_env:
-          vault_path: repo/polaris/env
+          vault_path: repo/${project}/env
+%{ endif ~}
       - run:
           name: docker login Google Artifact Registry
           command: |
@@ -120,11 +159,11 @@ jobs:
       - run:
           name: Run GoReleaser release
           command: |
-            export GORELEASER_CURRENT_TAG="${CIRCLE_TAG}"
+            export GORELEASER_CURRENT_TAG="$${CIRCLE_TAG}"
             docker run --rm \
               -v /var/run/docker.sock:/var/run/docker.sock \
               -v "$(pwd):/workspace" -w /workspace \
-              -v "${HOME}/.docker:/root/.docker" \
+              -v "$${HOME}/.docker:/root/.docker" \
               -e GORELEASER_CURRENT_TAG \
               -e CIRCLE_TAG \
               -e CIRCLE_SHA1 \
@@ -132,7 +171,7 @@ jobs:
               -e GITHUB_TOKEN \
               -e VAULT_ADDR \
               -e VAULT_TOKEN \
-              goreleaser/goreleaser:v2.17.1 release
+              goreleaser/goreleaser:${goreleaser_version} release
 
 workflows:
   version: 2
@@ -142,6 +181,14 @@ workflows:
           filters:
             tags:
               ignore: /.*/
+%{ if gotest_e2e_packages != "" ~}
+          context: org-global
+%{ endif ~}
+%{ if docker_build ~}
+      - docker_build:
+          requires:
+            - test
+%{ endif ~}
       - snapshot:
           requires:
             - test
@@ -150,10 +197,16 @@ workflows:
               only: /.*/
             tags:
               ignore: /.*/
+%{ if e2e ~}
+%{ for img in kind_images ~}
       - rok8s/kubernetes_e2e_tests:
-          name: "kubernetes e2e"
-          kind_node_image: "kindest/node:v1.34.0@sha256:7416a61b42b1662ca6ca89f02028ac133a309a2a30ba309614e8ec94d976dc5a"
+          name: "${img.name}"
+%{ if img.image != "" ~}
+          kind_node_image: "${img.image}"
+%{ endif ~}
           <<: *e2e_configuration
+%{ endfor ~}
+%{ endif ~}
   release:
     jobs:
       - test:
@@ -162,6 +215,9 @@ workflows:
               ignore: /.*/
             tags:
               only: /.*/
+%{ if gotest_e2e_packages != "" ~}
+          context: org-global
+%{ endif ~}
       - release:
           requires:
             - test
@@ -171,12 +227,14 @@ workflows:
               ignore: /.*/
             tags:
               only: /.*/
+%{ if docs ~}
       - oss-docs/publish-docs:
           requires:
             - release
-          repository: polaris
+          repository: ${project}
           filters:
             branches:
               ignore: /.*/
             tags:
               only: /.*/
+%{ endif ~}

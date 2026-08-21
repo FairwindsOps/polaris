@@ -103,6 +103,7 @@ func TestControllerLevelChecks(t *testing.T) {
 	b, err := json.Marshal(replicaSpec)
 	assert.NoError(t, err)
 	err = json.Unmarshal(b, &replicaSpec)
+	assert.NoError(t, err)
 
 	d1, p1 := test.MockDeploy("test", "test-deployment")
 	d2, p2 := test.MockDeploy("test", "test-deployment-2")
@@ -203,7 +204,7 @@ func TestControllerExemptions(t *testing.T) {
 	}
 
 	pod := test.MockPod()
-	pod.ObjectMeta.Namespace = "foo"
+	pod.Namespace = "foo"
 	workload, err := kube.NewGenericResourceFromPod(pod, nil)
 	assert.NoError(t, err)
 	workload.Kind = "Deployment"
