@@ -62,13 +62,12 @@ func RunAudit(ctx context.Context, config conf.Configuration, kubeResources *kub
 
 // ReadAuditFromFile reads the data from a past audit stored in a JSON or YAML file.
 func ReadAuditFromFile(fileName string) AuditData {
-	auditData := AuditData{}
 	oldFileBytes, err := os.ReadFile(fileName)
 	if err != nil {
 		logrus.Errorf("Unable to read contents of loaded file: %v", err)
 		os.Exit(1)
 	}
-	auditData, err = ParseAudit(oldFileBytes)
+	auditData, err := ParseAudit(oldFileBytes)
 	if err != nil {
 		logrus.Errorf("Error parsing file contents into auditData: %v", err)
 		os.Exit(1)
@@ -86,7 +85,7 @@ func ParseAudit(oldFileBytes []byte) (AuditData, error) {
 			if err == io.EOF {
 				return conf, nil
 			}
-			return conf, fmt.Errorf("Decoding config failed: %v", err)
+			return conf, fmt.Errorf("decoding config failed: %v", err)
 		}
 	}
 }

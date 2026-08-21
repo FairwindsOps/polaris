@@ -29,7 +29,6 @@ var (
 	disallowExemptions           bool
 	disallowConfigExemptions     bool
 	disallowAnnotationExemptions bool
-	fixChecks                    bool
 	logLevel                     string
 	auditPath                    string
 	displayName                  string
@@ -88,7 +87,9 @@ var rootCmd = &cobra.Command{
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		if !strings.HasPrefix(cmd.Use, "audit") {
-			os.Stderr.WriteString("\n\nWant more? Automate Polaris for free with Fairwinds Insights!\n🚀 https://fairwinds.com/insights-signup/polaris 🚀 \n")
+			if _, err := os.Stderr.WriteString("\n\nWant more? Automate Polaris for free with Fairwinds Insights!\n🚀 https://fairwinds.com/insights-signup/polaris 🚀 \n"); err != nil {
+				logrus.Error(err)
+			}
 		}
 	},
 }

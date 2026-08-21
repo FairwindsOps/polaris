@@ -48,15 +48,15 @@ func (s schemaTestCase) ShortString() string {
 	var msg strings.Builder
 	targetStr := s.Target
 	if targetStr != "" {
-		msg.WriteString(fmt.Sprintf("target=%s, ", targetStr))
+		msg.WriteString("target=" + string(targetStr) + ", ")
 	}
 	ns := s.Resource.ObjectMeta.GetNamespace()
 	if ns != "" {
-		msg.WriteString(fmt.Sprintf("namespace=%s, ", ns))
+		msg.WriteString("namespace=" + ns + ", ")
 	}
-	msg.WriteString(fmt.Sprintf("resource=%s/%s", s.Resource.Kind, s.Resource.ObjectMeta.GetName()))
+	msg.WriteString("resource=" + s.Resource.Kind + "/" + s.Resource.ObjectMeta.GetName())
 	if s.Target == config.TargetContainer {
-		msg.WriteString(fmt.Sprintf(", container=%s", s.Container.Name))
+		msg.WriteString(", container=" + s.Container.Name)
 	}
 	return msg.String()
 }
@@ -72,7 +72,7 @@ func resolveCheck(conf *config.Configuration, checkID string, test schemaTestCas
 		check, ok = config.BuiltInChecks[checkID]
 	}
 	if !ok {
-		return nil, fmt.Errorf("Check %s not found", checkID)
+		return nil, fmt.Errorf("check %s not found", checkID)
 	}
 
 	containerName := ""
@@ -136,17 +136,12 @@ func getTemplateInput(test schemaTestCase) (map[string]any, error) {
 }
 
 func makeResult(conf *config.Configuration, check *config.SchemaCheck, passes bool, issues []jsonschema.KeyError) ResultMessage {
-	details := []string{}
-	for _, issue := range issues {
-		details = append(details, issue.Message)
-	}
 	result := ResultMessage{
 		ID:       check.ID,
 		Severity: conf.Checks[check.ID],
 		Category: check.Category,
 		Success:  passes,
-		// FIXME: need to fix the tests before adding this back
-		//Details: details,
+		// FIXME: need to fix the tests before adding Details from issues
 	}
 	if passes {
 		result.Message = check.SuccessMessage
@@ -167,17 +162,14 @@ func hasExemptionAnnotation(objMeta metaV1.Object, checkID string) bool {
 	}
 	checkKey := fmt.Sprintf(exemptionAnnotationPattern, checkID)
 	val = annot[checkKey]
-	if strings.ToLower(val) == "true" {
-		return true
-	}
-	return false
+	return strings.ToLower(val) == "true"
 }
 
 // ApplyAllSchemaChecksToResourceProvider applies all available checks to a ResourceProvider
 func ApplyAllSchemaChecksToResourceProvider(ctx context.Context, conf *config.Configuration, resourceProvider *kube.ResourceProvider) ([]Result, error) {
 	results := []Result{}
 	if resourceProvider == nil {
-		return nil, errors.New("No resource provider set, cannot apply schema checks")
+		return nil, errors.New("no resource provider set, cannot apply schema checks")
 	}
 	for _, resources := range resourceProvider.Resources {
 		kindResults, err := ApplyAllSchemaChecksToAllResources(ctx, conf, resourceProvider, resources)
@@ -241,7 +233,7 @@ func applyControllerSchemaChecks(ctx context.Context, conf *config.Configuration
 	}
 	for key, val := range nonControllerResults {
 		if _, ok := finalResult.Results[key]; ok {
-			return finalResult, errors.New("Duplicate finding for check " + key)
+			return finalResult, errors.New("duplicate finding for check " + key)
 		}
 		finalResult.Results[key] = val
 	}
@@ -351,7 +343,7 @@ func applySchemaCheck(ctx context.Context, conf *config.Configuration, checkID s
 			podCopy := *test.Resource.PodSpec
 			podCopy.InitContainers = []corev1.Container{}
 			podCopy.Containers = []corev1.Container{*test.Container}
-			containerIndex := -1
+			var containerIndex int
 			if !test.IsInitContainer {
 				containerIndex = funk.IndexOf(test.Resource.PodSpec.Containers, func(value corev1.Container) bool {
 					return value.Name == test.Container.Name
@@ -371,7 +363,7 @@ func applySchemaCheck(ctx context.Context, conf *config.Configuration, checkID s
 			}
 			passes, issues, err = check.CheckPodSpec(ctx, &podCopy)
 		} else {
-			return nil, fmt.Errorf("Unknown combination of target (%s) and schema target (%s)", check.Target, check.SchemaTarget)
+			return nil, fmt.Errorf("unknown combination of target (%s) and schema target (%s)", check.Target, check.SchemaTarget)
 		}
 	} else if check.Target == config.TargetPodSpec {
 		passes, issues, err = check.CheckPodSpec(ctx, test.Resource.PodSpec)
@@ -380,7 +372,7 @@ func applySchemaCheck(ctx context.Context, conf *config.Configuration, checkID s
 		passes, issues, err = check.CheckPodTemplate(ctx, test.Resource.PodTemplate)
 		prefix = getJSONSchemaPrefix(test.Resource.Kind)
 	} else if check.Target == config.TargetContainer {
-		containerIndex := -1
+		var containerIndex int
 		if !test.IsInitContainer {
 			containerIndex = funk.IndexOf(test.Resource.PodSpec.Containers, func(value corev1.Container) bool {
 				return value.Name == test.Container.Name
@@ -475,12 +467,12 @@ func deepCopyMutation(source config.Mutation) config.Mutation {
 }
 
 func getJSONSchemaPrefix(kind string) (prefix string) {
-	if kind == "CronJob" {
+	switch kind {
+	case "CronJob":
 		prefix = "/spec/jobTemplate/spec/template/spec"
-	} else if kind == "Pod" {
+	case "Pod":
 		prefix = "/spec"
-	} else if (kind == "Deployment") || (kind == "DaemonSet") ||
-		(kind == "StatefulSet") || (kind == "Job") || (kind == "ReplicationController") {
+	case "Deployment", "DaemonSet", "StatefulSet", "Job", "ReplicationController":
 		prefix = "/spec/template/spec"
 	}
 	return prefix

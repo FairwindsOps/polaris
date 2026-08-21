@@ -189,17 +189,18 @@ func outputAudit(auditData validator.AuditData, outputFile, outputURL, outputFor
 
 	var outputBytes []byte
 	var err error
-	if outputFormat == "score" {
+	switch outputFormat {
+	case "score":
 		outputBytes = fmt.Appendf(nil, "%d\n", auditData.GetSummary().GetScore())
-	} else if outputFormat == "yaml" {
+	case "yaml":
 		var jsonBytes []byte
 		jsonBytes, err = json.Marshal(auditData)
 		if err == nil {
 			outputBytes, err = yaml.JSONToYAML(jsonBytes)
 		}
-	} else if outputFormat == "pretty" {
+	case "pretty":
 		outputBytes = []byte(auditData.GetPrettyOutput(useColor))
-	} else {
+	default:
 		outputBytes, err = json.MarshalIndent(auditData, "", "  ")
 	}
 	if err != nil {
@@ -207,7 +208,10 @@ func outputAudit(auditData validator.AuditData, outputFile, outputURL, outputFor
 		os.Exit(1)
 	}
 	if outputURL == "" && outputFile == "" {
-		os.Stdout.Write(outputBytes)
+		if _, err := os.Stdout.Write(outputBytes); err != nil {
+			logrus.Errorf("Error writing audit to stdout: %v", err)
+			os.Exit(1)
+		}
 	} else {
 		if outputURL != "" {
 			req, err := http.NewRequest("POST", outputURL, bytes.NewBuffer(outputBytes))
@@ -217,11 +221,12 @@ func outputAudit(auditData validator.AuditData, outputFile, outputURL, outputFor
 				os.Exit(1)
 			}
 
-			if outputFormat == "json" {
+			switch outputFormat {
+			case "json":
 				req.Header.Set("Content-Type", "application/json")
-			} else if outputFormat == "yaml" {
+			case "yaml":
 				req.Header.Set("Content-Type", "application/x-yaml")
-			} else {
+			default:
 				req.Header.Set("Content-Type", "text/plain")
 			}
 
@@ -236,7 +241,11 @@ func outputAudit(auditData validator.AuditData, outputFile, outputURL, outputFor
 				os.Exit(1)
 			}
 
-			defer resp.Body.Close()
+			defer func() {
+				if err := resp.Body.Close(); err != nil {
+					logrus.Errorf("Error closing response body: %v", err)
+				}
+			}()
 
 			body, err := io.ReadAll(resp.Body)
 

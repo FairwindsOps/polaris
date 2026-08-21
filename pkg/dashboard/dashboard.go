@@ -24,7 +24,6 @@ import (
 	"net/http"
 	"net/url"
 	"path"
-	"strings"
 
 	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
@@ -111,7 +110,9 @@ func writeTemplate(tmpl *template.Template, data *templateData, w http.ResponseW
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	buf.WriteTo(w)
+	if _, err := buf.WriteTo(w); err != nil {
+		logrus.Errorf("Error writing template: %v", err)
+	}
 }
 
 func getConfigForQuery(base config.Configuration, query url.Values) config.Configuration {
@@ -153,7 +154,9 @@ func GetRouter(ctx context.Context, c config.Configuration, auditPath string, po
 	router.PathPrefix("/static/").Handler(http.StripPrefix(path.Join(basePath, "/static/"), fileServer))
 
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("OK"))
+		if _, err := w.Write([]byte("OK")); err != nil {
+			logrus.Errorf("Error writing health response: %v", err)
+		}
 	})
 
 	router.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
@@ -163,7 +166,9 @@ func GetRouter(ctx context.Context, c config.Configuration, auditPath string, po
 			http.Error(w, "Error getting favicon", http.StatusInternalServerError)
 			return
 		}
-		w.Write(favicon)
+		if _, err := w.Write(favicon); err != nil {
+			logrus.Errorf("Error writing favicon: %v", err)
+		}
 	})
 
 	router.HandleFunc("/results.json", func(w http.ResponseWriter, r *http.Request) {
@@ -189,9 +194,7 @@ func GetRouter(ctx context.Context, c config.Configuration, auditPath string, po
 	})
 
 	router.HandleFunc("/details/{category}", func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		category := vars["category"]
-		category = strings.Replace(category, ".md", "", -1)
+		http.NotFound(w, r)
 	})
 
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -265,5 +268,7 @@ func MainHandler(w http.ResponseWriter, r *http.Request, c config.Configuration,
 func JSONHandler(w http.ResponseWriter, r *http.Request, auditData *validator.AuditData) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(auditData)
+	if err := json.NewEncoder(w).Encode(auditData); err != nil {
+		logrus.Errorf("Error encoding audit JSON: %v", err)
+	}
 }

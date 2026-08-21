@@ -89,7 +89,7 @@ func initTestCases() ([]testCase, map[string]string, map[string][]testCase) {
 			if err != nil {
 				panic(err)
 			}
-			resourceFilename := strings.Replace(tc.Name(), "mutated", "failure", -1)
+			resourceFilename := strings.ReplaceAll(tc.Name(), "mutated", "failure")
 
 			resources, err := kube.CreateResourceProviderFromPath(checkDir + "/" + resourceFilename)
 			if err != nil {
