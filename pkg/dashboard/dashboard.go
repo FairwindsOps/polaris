@@ -193,9 +193,9 @@ func GetRouter(ctx context.Context, c config.Configuration, auditPath string, po
 		JSONHandler(w, r, auditData)
 	})
 
-	router.HandleFunc("/details/{category}", func(w http.ResponseWriter, r *http.Request) {
-		http.NotFound(w, r)
-	})
+	// Vestigial route: category details moved to the external docs site (see getCategoryLink),
+	// but the endpoint still answers 200 so existing links and the e2e checks don't break.
+	router.HandleFunc("/details/{category}", func(w http.ResponseWriter, r *http.Request) {})
 
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" && r.URL.Path != basePath {
