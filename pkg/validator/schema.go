@@ -141,10 +141,11 @@ func makeResult(conf *config.Configuration, check *config.SchemaCheck, passes bo
 		details = append(details, issue.Message)
 	}
 	result := ResultMessage{
-		ID:       check.ID,
-		Severity: conf.Checks[check.ID],
-		Category: check.Category,
-		Success:  passes,
+		ID:               check.ID,
+		Severity:         conf.Checks[check.ID],
+		Category:         check.Category,
+		DocumentationURL: check.DocumentationURL,
+		Success:          passes,
 		// FIXME: need to fix the tests before adding this back
 		//Details: details,
 	}

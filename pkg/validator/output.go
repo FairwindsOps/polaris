@@ -102,13 +102,14 @@ type ClusterInfo struct {
 
 // ResultMessage is the result of a given check
 type ResultMessage struct {
-	ID        string
-	Message   string
-	Details   []string
-	Success   bool
-	Severity  config.Severity
-	Category  string
-	Mutations []config.Mutation
+	ID               string
+	Message          string
+	Details          []string
+	Success          bool
+	Severity         config.Severity
+	Category         string
+	DocumentationURL string
+	Mutations        []config.Mutation
 }
 
 // ResultSet contiains the results for a set of checks
