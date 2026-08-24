@@ -2,7 +2,7 @@ version: 2.1
 
 orbs:
   rok8s: fairwinds/rok8s-scripts@16.0.0
-  oss-docs: fairwinds/oss-docs@0
+  
 
 references:
   install_vault_machine: &install_vault_machine
@@ -164,12 +164,4 @@ workflows:
               ignore: /.*/
             tags:
               ignore: /^testing-.*/
-      - oss-docs/publish-docs:
-          requires:
-            - release
-          repository: polaris
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              ignore: /^testing-.*/
+      
