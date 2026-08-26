@@ -24,7 +24,6 @@ import (
 	"net/http"
 	"net/url"
 	"path"
-	"strings"
 
 	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
@@ -194,11 +193,7 @@ func GetRouter(ctx context.Context, c config.Configuration, auditPath string, po
 		JSONHandler(w, r, auditData)
 	})
 
-	router.HandleFunc("/details/{category}", func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		category := vars["category"]
-		category = strings.Replace(category, ".md", "", -1)
-	})
+	router.HandleFunc("/details/{category}", func(http.ResponseWriter, *http.Request) {})
 
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" && r.URL.Path != basePath {
