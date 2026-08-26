@@ -193,8 +193,8 @@ func GetRouter(ctx context.Context, c config.Configuration, auditPath string, po
 		JSONHandler(w, r, auditData)
 	})
 
-	// Vestigial route: category details moved to the external docs site (see getCategoryLink),
-	// but the endpoint still answers 200 so existing links and the e2e checks don't break.
+	// Empty 200: in-app links use getCategoryLink (docs site). Kept so
+	// test/dashboard_test.sh and test/kube_dashboard_test.sh (curl -f) still pass.
 	router.HandleFunc("/details/{category}", func(w http.ResponseWriter, r *http.Request) {})
 
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
