@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"strings"
 
 	"github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
@@ -193,9 +194,11 @@ func GetRouter(ctx context.Context, c config.Configuration, auditPath string, po
 		JSONHandler(w, r, auditData)
 	})
 
-	// Empty 200: in-app links use getCategoryLink (docs site). Kept so
-	// test/dashboard_test.sh and test/kube_dashboard_test.sh (curl -f) still pass.
-	router.HandleFunc("/details/{category}", func(w http.ResponseWriter, r *http.Request) {})
+	router.HandleFunc("/details/{category}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		category := vars["category"]
+		category = strings.Replace(category, ".md", "", -1)
+	})
 
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" && r.URL.Path != basePath {
