@@ -61,7 +61,9 @@ var dashboardCmd = &cobra.Command{
 		}
 
 		router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte("OK"))
+			if _, err := w.Write([]byte("OK")); err != nil {
+				logrus.Errorf("Error writing health response: %v", err)
+			}
 		})
 		http.Handle("/", router)
 

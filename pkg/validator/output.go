@@ -311,8 +311,8 @@ func (res ResultSet) GetPrettyOutput() string {
 		if color.NoColor {
 			status = strings.Fields(status)[1] // remove emoji
 		}
-		str.WriteString(fmt.Sprintf("%s%s %s\n", indent, checkColor.Sprint(fillString(msg.ID, minIDLength-len(indent))), status))
-		str.WriteString(fmt.Sprintf("%s    %s - %s\n", indent, msg.Category, msg.Message))
+		str.WriteString(indent + checkColor.Sprint(fillString(msg.ID, minIDLength-len(indent))) + " " + status + "\n")
+		str.WriteString(indent + "    " + msg.Category + " - " + msg.Message + "\n")
 	}
 	return str.String()
 }

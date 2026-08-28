@@ -1,110 +1,21 @@
+## DO NOT EDIT - Managed by Terraform
 version: 2.1
 
 orbs:
   rok8s: fairwinds/rok8s-scripts@16.0.0
   oss-docs: fairwinds/oss-docs@0
 
-executors:
-  vm:
-    machine:
-      enabled: true
-
-commands:
-  install_goreleaser_dependencies:
-    description: Installs dependencies for CI scripts
-    steps:
-      - run: apk update
-      # Register other docker platforms, to build arm64.
-      # This shouldn't be needed, why TBD.
-      - run: docker run --privileged --rm tonistiigi/binfmt --install all
-
 references:
-  set_environment_variables: &set_environment_variables
-    run:
-      name: Set Environment Variables
-      command: |
-        echo 'export CI_SHA1=$CIRCLE_SHA1' >> ${BASH_ENV}
-        echo 'export CI_BRANCH=$CIRCLE_BRANCH' >> ${BASH_ENV}
-        echo 'export CI_BUILD_NUM=$CIRCLE_BUILD_NUM' >> ${BASH_ENV}
-        echo 'export CI_TAG=$CIRCLE_TAG' >> ${BASH_ENV}
-        echo 'export PUSH_ALL_VERSION_TAGS=true' >> ${BASH_ENV}
-        echo 'export GOPROXY=https://proxy.golang.org' >> ${BASH_ENV}
-        echo 'export GO111MODULE=on' >> ${BASH_ENV}
-        echo 'export GOFLAGS=-mod=mod' >> ${BASH_ENV}
-        echo 'export GORELEASER_CURRENT_TAG="${CIRCLE_TAG}"' >> $BASH_ENV
-
-  install_k8s: &install_k8s
-    run:
-      name: Install K8s
-      command: |
-        sudo apt-get update
-        echo "Installing git and jq"
-        sudo apt-get install -yqq jq git
-
-        echo "Installing KIND"
-        curl -sLO https://github.com/kubernetes-sigs/kind/releases/download/v0.19.0/kind-linux-amd64
-        chmod 0755 kind-linux-amd64
-        sudo mv kind-linux-amd64 /usr/local/bin/kind
-        kind version
-
-        echo "Installing Kubectl"
-        curl -sLO https://storage.googleapis.com/kubernetes-release/release/v1.25.10/bin/linux/amd64/kubectl
-        chmod 0755 kubectl
-        sudo mv kubectl /usr/local/bin/
-        kubectl version --client
-
-
-        echo "Creating Kubernetes Cluster with Kind"
-        kind create cluster --wait=90s --image kindest/node:v1.25.9@sha256:c08d6c52820aa42e533b70bce0c2901183326d86dcdcbedecc9343681db45161
-        docker ps -a
-
-        kubectl version
-
-        echo "Installing Helm"
-        curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
-        chmod 700 get_helm.sh
-        ./get_helm.sh
-
-        echo "Installing cert-manager"
-        helm repo add jetstack https://charts.jetstack.io
-        helm repo update
-        echo "Helm install"
-        helm install cert-manager jetstack/cert-manager --namespace cert-manager --version v1.12.1 --set "installCRDs=true" --wait --create-namespace
-        echo "Install cert-manager successful"
-
-  test_binary_dashboard: &test_binary_dashboard
-    run:
-      name: Test Dashboard
-      command: |
-        go run main.go dashboard --port 3000 --audit-path ./pkg/config/examples &
-        sleep 30
-        curl -f http://localhost:3000 > /dev/null
-        curl -f http://localhost:3000/health > /dev/null
-        curl -f http://localhost:3000/favicon.ico > /dev/null
-        curl -f http://localhost:3000/static/css/main.css > /dev/null
-        curl -f http://localhost:3000/results.json > /dev/null
-        curl -f http://localhost:3000/details/security > /dev/null
-  test_k8s: &test_k8s
-    run:
-      name: Test Kubernetes Deployments
-      command: |
-        if [[ -z $CIRCLE_PR_NUMBER ]]; then
-          ./test/webhook_test.sh
-          ./test/kube_dashboard_test.sh
-        else
-          echo "Skipping Kubernetes tests for forked PR"
-        fi
-
-  install_vault_alpine: &install_vault_alpine
+  install_vault_machine: &install_vault_machine
     run:
       name: install hashicorp vault
       command: |
-        apk --update add curl yq
+        sudo apt-get update -y && sudo apt-get install -y curl unzip
         cd /tmp
-        curl -LO https://releases.hashicorp.com/vault/1.13.2/vault_1.13.2_linux_amd64.zip
-        sha256sum vault_1.13.2_linux_amd64.zip | grep f7930279de8381de7c532164b4a4408895d9606c0d24e2e9d2f9acb5dfe99b3c
-        unzip vault_1.13.2_linux_amd64.zip
-        mv vault /usr/bin/vault
+        curl -LO https://releases.hashicorp.com/vault/1.21.4/vault_1.21.4_linux_amd64.zip
+        echo '889b681990fe221b884b7932fa9c9dd0ee9811b9349554f1aa287ab63c9f3dae  vault_1.21.4_linux_amd64.zip' | sha256sum -c
+        unzip -o vault_1.21.4_linux_amd64.zip
+        sudo mv vault /usr/bin/vault
   setup_qemu_binfmt: &setup_qemu_binfmt
     run:
       name: Setup QEMU for multi-arch Docker builds
@@ -113,146 +24,144 @@ references:
         sudo apt-get install -y qemu-user-static binfmt-support
         docker buildx create --use || true
         docker buildx inspect --bootstrap
-  load_polaris_image_into_kind: &load_polaris_image_into_kind
-    run:
-      name: Load Polaris snapshot image into Kind
-      command: |
-        TAR="/tmp/workspace/docker_save/polaris_${CIRCLE_SHA1}.tar"
-        if [ -f "$TAR" ]; then
-          echo "Loading snapshot image from $TAR"
-          docker load -i "$TAR"
-          kind load docker-image "us-docker.pkg.dev/fairwinds-ops/oss/polaris:${CIRCLE_SHA1}"
-        else
-          echo "No snapshot tar (tag workflow); tests will pull the image from the registry."
-        fi
-jobs:
-  test_k8s:
-    working_directory: ~/polaris
-    resource_class: medium
-    executor: vm
-    steps:
-      - checkout
-      - *set_environment_variables
-      - attach_workspace:
-          at: /tmp/workspace
-      - *install_k8s
-      - *load_polaris_image_into_kind
-      - *test_k8s
+  e2e_configuration: &e2e_configuration
+    executor: golang-exec
+    pre_script: e2e/pre.sh
+    script: e2e/test.sh
+    command_runner_image: quay.io/reactiveops/ci-images:v14.1-bullseye
+    enable_docker_layer_caching: true
+    store-test-results: /tmp/test-results
+    attach-workspace: true
+    requires:
+      - test
+      - snapshot
+    filters:
+      branches:
+        only: /.*/
+      tags:
+        ignore: /.*/
 
+executors:
+  golang-exec:
+    docker:
+      - image: cimg/go:1.26.7
+
+jobs:
   test:
     docker:
-      - image: cimg/go:1.26.5
+      - image: cimg/go:1.26.7
     steps:
       - checkout
-      - *set_environment_variables
-      - run: go vet ./...
-      - run: go test ./... -coverprofile=coverage.txt -covermode=count
-      - *test_binary_dashboard
-
-  release:
-    working_directory: /go/src/github.com/fairwindsops/polaris/
-    resource_class: large
-    shell: /bin/bash
-    docker:
-      # The goreleaser image tag determins the version of Go.
-      # Manually check goreleaser images for their version of Go.
-      # Ref: https://hub.docker.com/r/goreleaser/goreleaser/tags
-      - image: goreleaser/goreleaser:v2.17.1
-    steps:
-      - checkout
-      - setup_remote_docker
-      - *install_vault_alpine
-      - rok8s/get_vault_env:
-          vault_path: repo/global/env
-      - rok8s/get_vault_env:
-          vault_path: repo/polaris/env
-      - *set_environment_variables
       - run:
-          name: docker login Google Artifact Registry
+          name: Go Mod Download
+          command: go mod download && go mod verify
+      - run:
+          name: golangci-lint
           command: |
-            docker login -u _json_key -p "$(echo $GCP_ARTIFACTREADWRITE_JSON_KEY | base64 -d)" us-docker.pkg.dev
-      - install_goreleaser_dependencies
-      - run: echo 'export GORELEASER_CURRENT_TAG="${CIRCLE_TAG}"' >> $BASH_ENV
-      - run: goreleaser release --clean
-      - run: mkdir -p /tmp/workspace/docker_save && touch /tmp/workspace/docker_save/.release-workspace-marker
+            curl -fsSL -o golangci-lint.tar.gz https://github.com/golangci/golangci-lint/releases/download/v2.12.2/golangci-lint-2.12.2-linux-amd64.tar.gz
+            echo '8df580d2670fed8fa984aac0507099af8df275e665215f5c7a2ae3943893a553  golangci-lint.tar.gz' | sha256sum -c
+            tar -xzf golangci-lint.tar.gz
+            mv golangci-lint-2.12.2-linux-amd64/golangci-lint "$(go env GOPATH)/bin/golangci-lint"
+            golangci-lint run --timeout 5m
+      - run:
+          name: test
+          command: |
+            go test -v -coverprofile=coverage.txt -covermode=atomic ./...
+            go vet ./...
+      - run:
+          name: Test Dashboard
+          command: ./test/dashboard_test.sh
+  snapshot:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large
+    steps:
+      - checkout
+      - *setup_qemu_binfmt
+      - run:
+          name: Run GoReleaser snapshot
+          command: |
+            docker run --rm \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              -v "$(pwd):/workspace" -w /workspace \
+              -e CIRCLE_SHA1 \
+              -e CIRCLE_BRANCH \
+              -e CIRCLE_TAG \
+              goreleaser/goreleaser:v2.17.1 release --snapshot --skip=sign
+      - run:
+          name: Save snapshot amd64 image for e2e
+          command: |
+            mkdir -p /tmp/workspace/docker_save
+            docker save us-docker.pkg.dev/fairwinds-ops/oss/polaris:${CIRCLE_SHA1}-amd64 > /tmp/workspace/docker_save/polaris_${CIRCLE_SHA1}-amd64.tar
       - persist_to_workspace:
-          root: /tmp/workspace
+          root: /tmp/workspace/
           paths:
             - docker_save
-
-  snapshot:
-    working_directory: /home/circleci/project
+      - store_artifacts:
+          path: dist
+          destination: snapshot
+  release:
     machine:
       image: ubuntu-2204:current
     resource_class: large
     shell: /bin/bash
     steps:
       - checkout
+      - *install_vault_machine
+      - rok8s/get_vault_env:
+          vault_path: repo/global/env
+      - rok8s/get_vault_env:
+          vault_path: repo/polaris/env
+      - run:
+          name: docker login Google Artifact Registry
+          command: |
+            echo "$GCP_ARTIFACTREADWRITE_JSON_KEY" | base64 -d | docker login -u _json_key --password-stdin us-docker.pkg.dev
       - *setup_qemu_binfmt
       - run:
-          name: goreleaser release (snapshot, local only)
-          environment:
-            GORELEASER_SKIP_RELEASE: "true"
+          name: Run GoReleaser release
           command: |
-            set -euo pipefail
-            REPO_ROOT="${HOME}/project"
+            export GORELEASER_CURRENT_TAG="${CIRCLE_TAG}"
             docker run --rm \
               -v /var/run/docker.sock:/var/run/docker.sock \
-              -v "${REPO_ROOT}:/workspace" -w /workspace \
-              -e GORELEASER_SKIP_RELEASE=true \
-              -e CIRCLE_SHA1 \
-              -e CIRCLE_BRANCH \
+              -v "$(pwd):/workspace" -w /workspace \
+              -v "${HOME}/.docker:/root/.docker" \
+              -e GORELEASER_CURRENT_TAG \
               -e CIRCLE_TAG \
-              --entrypoint sh \
-              goreleaser/goreleaser:v2.15.4 \
-              -c 'git config --global --add safe.directory /workspace && cd /workspace && goreleaser release --snapshot --clean --skip=sign,homebrew'
-      - run: mkdir -p /tmp/workspace/docker_save/
-      - run:
-          name: Tag and save amd64 image for Kind
-          command: |
-            set -euo pipefail
-            docker tag "us-docker.pkg.dev/fairwinds-ops/oss/polaris:${CIRCLE_SHA1}-amd64" "us-docker.pkg.dev/fairwinds-ops/oss/polaris:${CIRCLE_SHA1}"
-            docker save "us-docker.pkg.dev/fairwinds-ops/oss/polaris:${CIRCLE_SHA1}" -o "/tmp/workspace/docker_save/polaris_${CIRCLE_SHA1}.tar"
-      - persist_to_workspace:
-          root: /tmp/workspace
-          paths:
-            - docker_save
-      - store_artifacts:
-          path: dist
-          destination: snapshot
+              -e CIRCLE_SHA1 \
+              -e GO111MODULE=on \
+              -e GITHUB_TOKEN \
+              -e VAULT_ADDR \
+              -e VAULT_TOKEN \
+              goreleaser/goreleaser:v2.17.1 release
 
 workflows:
   version: 2
-
-  branch:
+  test_and_build:
     jobs:
       - test:
           filters:
             tags:
               ignore: /.*/
       - snapshot:
-          filters:
-            branches:
-              ignore: /pull\/[0-9]+/
-            tags:
-              ignore: /.*/
-      - test_k8s:
           requires:
-            - snapshot
+            - test
           filters:
             branches:
-              ignore: /pull\/[0-9]+/
+              only: /.*/
             tags:
               ignore: /.*/
-
-  tag_release:
+      - rok8s/kubernetes_e2e_tests:
+          name: "kubernetes e2e"
+          kind_node_image: "kindest/node:v1.34.0@sha256:7416a61b42b1662ca6ca89f02028ac133a309a2a30ba309614e8ec94d976dc5a"
+          <<: *e2e_configuration
+  release:
     jobs:
       - test:
           filters:
-            tags:
-              only: /.*/
             branches:
               ignore: /.*/
+            tags:
+              only: /v.*/
       - release:
           requires:
             - test
@@ -261,21 +170,13 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              ignore: /^testing-.*/
-      - test_k8s:
-          requires:
-            - release
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              ignore: /^testing-.*/
+              only: /v.*/
       - oss-docs/publish-docs:
           requires:
-            - test_k8s
+            - release
           repository: polaris
           filters:
             branches:
               ignore: /.*/
             tags:
-              ignore: /^testing-.*/
+              only: /v.*/
