@@ -1,0 +1,19 @@
+successMessage: HTTPRoute uses explicit hostnames
+failureMessage: HTTPRoute should use explicit hostnames instead of matching every hostname
+category: Security
+target: gateway.networking.k8s.io/HTTPRoute
+schema:
+  '$schema': https://json-schema.org/draft/2019-09/schema
+  type: object
+  required: [spec]
+  properties:
+    spec:
+      type: object
+      required: [hostnames]
+      properties:
+        hostnames:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            pattern: '^[^*]+$'

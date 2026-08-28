@@ -1,0 +1,39 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: secure-kgateway-backend
+  namespace: app
+spec:
+  hostnames:
+  - app.example.com
+  rules:
+  - backendRefs:
+    - group: gateway.kgateway.dev
+      kind: Backend
+      name: external-api
+---
+apiVersion: gateway.kgateway.dev/v1alpha1
+kind: Backend
+metadata:
+  name: external-api
+  namespace: app
+spec:
+  type: Static
+  static:
+    hosts:
+    - host: api.example.com
+      port: 443
+---
+apiVersion: gateway.kgateway.dev/v1alpha1
+kind: BackendConfigPolicy
+metadata:
+  name: external-api-tls
+  namespace: app
+spec:
+  targetRefs:
+  - group: gateway.kgateway.dev
+    kind: Backend
+    name: external-api
+  tls:
+    sni: api.example.com
+    wellKnownCACertificates: System

@@ -1,0 +1,22 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: secure
+spec:
+  gatewayClassName: kgateway
+  listeners:
+  - name: http
+    protocol: HTTP
+    port: 80
+  - name: https
+    protocol: HTTPS
+    port: 443
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - name: example-tls
+  - name: passthrough
+    protocol: TLS
+    port: 8443
+    tls:
+      mode: Passthrough

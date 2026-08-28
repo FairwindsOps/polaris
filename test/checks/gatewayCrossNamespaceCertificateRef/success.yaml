@@ -1,0 +1,30 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: public
+  namespace: infra
+spec:
+  gatewayClassName: kgateway
+  listeners:
+  - name: https
+    protocol: HTTPS
+    port: 443
+    tls:
+      certificateRefs:
+      - name: wildcard
+        namespace: certificates
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-infra-gateway
+  namespace: certificates
+spec:
+  from:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    namespace: infra
+  to:
+  - group: ""
+    kind: Secret
+    name: wildcard

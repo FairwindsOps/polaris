@@ -38,6 +38,15 @@ checks:
   hostNetworkSet: danger
   hostPortSet: warning
   tlsSettingsMissing: warning
+  gatewayTLSMissing: warning
+  gatewayAllowedRoutesAll: warning
+  gatewayInsecureFrontendValidation: warning
+  gatewayCrossNamespaceCertificateRef: warning
+  httpRouteWildcardOrEmptyHost: warning
+  httpRouteInsecureListener: warning
+  httpRouteCrossNamespaceBackendRef: warning
+  httpRouteBackendTLSMissing: warning
+  kgatewayBackendTLSVerificationDisabled: warning
   sensitiveContainerEnvVar: danger
   sensitiveConfigmapContent: danger
   clusterrolePodExecAttach: danger

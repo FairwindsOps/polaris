@@ -1,0 +1,6 @@
+successMessage: Gateway cross-namespace certificate references are authorized
+failureMessage: Gateway cross-namespace certificate references should have a matching ReferenceGrant
+category: Security
+target: gateway.networking.k8s.io/Gateway
+relatedKinds:
+  - gateway.networking.k8s.io/ReferenceGrant

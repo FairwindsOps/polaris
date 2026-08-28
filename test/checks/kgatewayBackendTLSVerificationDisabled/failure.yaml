@@ -1,0 +1,11 @@
+apiVersion: gateway.kgateway.dev/v1alpha1
+kind: BackendConfigPolicy
+metadata:
+  name: unverified
+spec:
+  targetRefs:
+  - group: ""
+    kind: Service
+    name: api
+  tls:
+    insecureSkipVerify: true

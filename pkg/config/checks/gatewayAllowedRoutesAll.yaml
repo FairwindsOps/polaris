@@ -1,0 +1,25 @@
+successMessage: Gateway listeners restrict route attachment by namespace
+failureMessage: Gateway listeners should not allow routes from all namespaces
+category: Security
+target: gateway.networking.k8s.io/Gateway
+schema:
+  '$schema': https://json-schema.org/draft/2019-09/schema
+  type: object
+  properties:
+    spec:
+      type: object
+      properties:
+        listeners:
+          type: array
+          items:
+            type: object
+            properties:
+              allowedRoutes:
+                type: object
+                properties:
+                  namespaces:
+                    type: object
+                    properties:
+                      from:
+                        not:
+                          const: All

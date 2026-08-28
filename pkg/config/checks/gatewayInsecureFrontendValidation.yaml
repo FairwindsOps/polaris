@@ -1,0 +1,40 @@
+successMessage: Gateway frontend client certificate validation fails closed
+failureMessage: Gateway frontend client certificate validation should not allow insecure fallback
+category: Security
+target: gateway.networking.k8s.io/Gateway
+schema:
+  '$schema': https://json-schema.org/draft/2019-09/schema
+  type: object
+  properties:
+    spec:
+      type: object
+      properties:
+        tls:
+          type: object
+          properties:
+            frontend:
+              type: object
+              properties:
+                default:
+                  type: object
+                  properties:
+                    validation:
+                      type: object
+                      properties:
+                        mode:
+                          not:
+                            const: AllowInsecureFallback
+                perPort:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      tls:
+                        type: object
+                        properties:
+                          validation:
+                            type: object
+                            properties:
+                              mode:
+                                not:
+                                  const: AllowInsecureFallback

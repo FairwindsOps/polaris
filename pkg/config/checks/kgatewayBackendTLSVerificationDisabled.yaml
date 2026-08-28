@@ -1,0 +1,17 @@
+successMessage: kgateway backend TLS certificate verification is enabled
+failureMessage: kgateway BackendConfigPolicy should not disable TLS certificate verification
+category: Security
+target: gateway.kgateway.dev/BackendConfigPolicy
+schema:
+  '$schema': https://json-schema.org/draft/2019-09/schema
+  type: object
+  properties:
+    spec:
+      type: object
+      properties:
+        tls:
+          type: object
+          properties:
+            insecureSkipVerify:
+              not:
+                const: true

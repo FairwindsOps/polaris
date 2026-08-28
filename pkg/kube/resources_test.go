@@ -176,3 +176,45 @@ func TestGetResourceFromAPI(t *testing.T) {
 		})
 	}
 }
+
+func TestAdditionalKindLoading(t *testing.T) {
+	ingress := test.MockIngress()
+	k8s, dynamicInterface := test.SetupTestAPI(append(test.GetMockControllers("test"), &ingress)...)
+
+	enabled := conf.Configuration{
+		Checks: map[string]conf.Severity{
+			"customIngress": conf.SeverityWarning,
+		},
+		CustomChecks: map[string]conf.SchemaCheck{
+			"customIngress": {Target: "networking.k8s.io/Ingress"},
+		},
+	}
+	resources, err := CreateResourceProviderFromAPI(context.Background(), k8s, "test", dynamicInterface, enabled)
+	if assert.NoError(t, err) {
+		assert.Len(t, resources.Resources["networking.k8s.io/Ingress"], 1)
+	}
+
+	ignored := enabled
+	ignored.Checks = map[string]conf.Severity{
+		"customIngress": conf.SeverityIgnore,
+	}
+	resources, err = CreateResourceProviderFromAPI(context.Background(), k8s, "test", dynamicInterface, ignored)
+	if assert.NoError(t, err) {
+		assert.Empty(t, resources.Resources["networking.k8s.io/Ingress"])
+	}
+}
+
+func TestUnavailableAdditionalKindDoesNotFailAudit(t *testing.T) {
+	k8s, dynamicInterface := test.SetupTestAPI(test.GetMockControllers("test")...)
+	config := conf.Configuration{
+		Checks: map[string]conf.Severity{
+			"optionalCRD": conf.SeverityWarning,
+		},
+		CustomChecks: map[string]conf.SchemaCheck{
+			"optionalCRD": {Target: "example.com/OptionalResource"},
+		},
+	}
+
+	_, err := CreateResourceProviderFromAPI(context.Background(), k8s, "test", dynamicInterface, config)
+	assert.NoError(t, err)
+}

@@ -322,16 +322,22 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 	}
 	restMapper := restmapper.NewDiscoveryRESTMapper(resources)
 	allChecks := []conf.SchemaCheck{}
-	for _, check := range c.CustomChecks {
-		allChecks = append(allChecks, check)
+	for checkID, check := range c.CustomChecks {
+		severity, enabled := c.Checks[checkID]
+		if enabled && severity.IsActionable() {
+			allChecks = append(allChecks, check)
+		}
 	}
-	for _, check := range conf.BuiltInChecks {
-		allChecks = append(allChecks, check)
+	for checkID, check := range conf.BuiltInChecks {
+		severity, enabled := c.Checks[checkID]
+		if enabled && severity.IsActionable() {
+			allChecks = append(allChecks, check)
+		}
 	}
 
 	var additionalKinds []conf.TargetKind
 	for _, check := range allChecks {
-		neededKinds := []conf.TargetKind{check.Target}
+		neededKinds := append([]conf.TargetKind{check.Target}, check.RelatedKinds...)
 		for key := range check.AdditionalSchemas {
 			neededKinds = append(neededKinds, conf.TargetKind(key))
 		}
@@ -350,6 +356,10 @@ func CreateResourceProviderFromAPI(ctx context.Context, kube kubernetes.Interfac
 		groupKind := parseGroupKind(maybeTransformKindIntoGroupKind(string(kind)))
 		mapping, err := restMapper.RESTMapping(groupKind)
 		if err != nil {
+			if meta.IsNoMatchError(err) {
+				logrus.Infof("Skipping unavailable Kind %s", kind)
+				continue
+			}
 			logrus.Warnf("error retrieving mapping of Kind %s because of error: %v", kind, err)
 			return nil, err
 		}

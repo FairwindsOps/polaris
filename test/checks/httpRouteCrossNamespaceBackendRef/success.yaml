@@ -1,0 +1,28 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: shared-api
+  namespace: app
+spec:
+  hostnames:
+  - app.example.com
+  rules:
+  - backendRefs:
+    - name: api
+      namespace: shared
+      port: 8080
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-app-route
+  namespace: shared
+spec:
+  from:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    namespace: app
+  to:
+  - group: ""
+    kind: Service
+    name: api

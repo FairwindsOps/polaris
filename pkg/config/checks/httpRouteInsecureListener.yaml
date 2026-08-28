@@ -1,0 +1,6 @@
+successMessage: HTTPRoute uses secure listeners or redirects HTTP to HTTPS
+failureMessage: HTTPRoute should not serve application traffic over an HTTP listener
+category: Security
+target: gateway.networking.k8s.io/HTTPRoute
+relatedKinds:
+  - gateway.networking.k8s.io/Gateway

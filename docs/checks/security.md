@@ -24,6 +24,15 @@ key | default | description
 `hostNetworkSet` | `warning` | Fails when `hostNetwork` attribute is configured.
 `hostPortSet` | `warning` | Fails when `hostPort` attribute is configured.
 `tlsSettingsMissing` | `warning` | Fails when an Ingress lacks TLS settings.
+`gatewayTLSMissing` | `warning` | Fails when an HTTPS, GRPC, or terminating TLS Gateway listener lacks certificate references.
+`gatewayAllowedRoutesAll` | `warning` | Fails when a Gateway listener allows Routes from every namespace.
+`gatewayInsecureFrontendValidation` | `warning` | Fails when Gateway frontend client certificate validation allows insecure fallback.
+`gatewayCrossNamespaceCertificateRef` | `warning` | Fails when a Gateway references a certificate in another namespace without a matching ReferenceGrant. Cluster audits only.
+`httpRouteWildcardOrEmptyHost` | `warning` | Fails when an HTTPRoute omits hostnames or uses a wildcard hostname.
+`httpRouteInsecureListener` | `warning` | Fails when an HTTPRoute serves application traffic over HTTP without a full HTTPS redirect. Cluster audits only.
+`httpRouteCrossNamespaceBackendRef` | `warning` | Fails when an HTTPRoute references a backend in another namespace without a matching ReferenceGrant. Cluster audits only.
+`httpRouteBackendTLSMissing` | `warning` | Fails when an HTTPRoute TLS backend lacks a BackendTLSPolicy or kgateway BackendConfigPolicy. Cluster audits only.
+`kgatewayBackendTLSVerificationDisabled` | `warning` | Fails when a kgateway BackendConfigPolicy disables TLS certificate verification.
 `sensitiveContainerEnvVar` | `danger` | Fails when the container sets potentially sensitive environment variables.
 `sensitiveConfigmapContent` | `danger` | Fails when potentially sensitive content is detected in the ConfigMap keys or values.
 `missingNetworkPolicy` | `warning`
@@ -39,6 +48,14 @@ key | default | description
 ## Background
 
 Securing workloads in Kubernetes is an important part of overall cluster security. The overall goal should be to ensure that containers are running with as minimal privileges as possible. This includes avoiding privilege escalation, not running containers with a root user, not giving excessive access to the host network, and using read only file systems wherever possible.
+
+### Gateway API
+
+Gateway API separates listeners, routes, and backend TLS policy across different resources. Polaris checks standard `Gateway` and `HTTPRoute` resources for listener TLS, namespace isolation, host specificity, HTTPS redirects, cross-namespace authorization, and backend TLS. These checks work with conformant implementations such as kgateway.
+
+`httpRouteBackendTLSMissing` also recognizes kgateway's `Backend` and `BackendConfigPolicy` resources. It identifies TLS backends from ports 443 and 8443, Service port names and `appProtocol`, and kgateway static Backend ports. `kgatewayBackendTLSVerificationDisabled` checks the kgateway-specific `insecureSkipVerify` setting. Authentication, authorization, and rate-limiting requirements are organization-specific and should be implemented as custom checks.
+
+Checks marked "Cluster audits only" need related resources that are not available when Polaris evaluates a single admission request. They pass without a resource provider rather than rejecting an object without enough context.
 
 A pod running with the `hostNetwork` attribute enabled will have access to the loopback device, services listening on localhost, and could be used to snoop on network activity of other pods on the same node. There are certain examples where setting `hostNetwork` to true is required, such as deploying a networking plugin like Flannel.
 

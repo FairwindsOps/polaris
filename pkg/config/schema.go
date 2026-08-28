@@ -80,6 +80,7 @@ type SchemaCheck struct {
 	AdditionalSchemas       map[string]map[string]any    `yaml:"additionalSchemas" json:"additionalSchemas"`
 	AdditionalSchemaStrings map[string]string            `yaml:"additionalSchemaStrings" json:"additionalSchemaStrings"`
 	AdditionalValidators    map[string]jsonschema.Schema `yaml:"-" json:"-"`
+	RelatedKinds            []TargetKind                 `yaml:"relatedKinds" json:"relatedKinds"`
 	Mutations               []Mutation                   `yaml:"mutations" json:"mutations"`
 }
 

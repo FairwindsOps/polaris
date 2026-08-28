@@ -1,0 +1,31 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: secure-host-only
+  namespace: app
+spec:
+  parentRefs:
+  - name: public
+  hostnames:
+  - app.example.com
+  rules:
+  - backendRefs:
+    - name: app
+      port: 8080
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: public
+  namespace: app
+spec:
+  gatewayClassName: kgateway
+  listeners:
+  - name: unrelated-http
+    hostname: other.example.com
+    protocol: HTTP
+    port: 80
+  - name: app-https
+    hostname: app.example.com
+    protocol: HTTPS
+    port: 443

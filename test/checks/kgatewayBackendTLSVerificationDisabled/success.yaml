@@ -1,0 +1,12 @@
+apiVersion: gateway.kgateway.dev/v1alpha1
+kind: BackendConfigPolicy
+metadata:
+  name: verified
+spec:
+  targetRefs:
+  - group: ""
+    kind: Service
+    name: api
+  tls:
+    sni: api.example.com
+    wellKnownCACertificates: System

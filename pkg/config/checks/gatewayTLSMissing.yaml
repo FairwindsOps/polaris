@@ -1,0 +1,41 @@
+successMessage: Gateway TLS listeners have certificates configured
+failureMessage: Gateway HTTPS, GRPC, and terminating TLS listeners should configure certificateRefs
+category: Security
+target: gateway.networking.k8s.io/Gateway
+schema:
+  '$schema': https://json-schema.org/draft/2019-09/schema
+  type: object
+  properties:
+    spec:
+      type: object
+      properties:
+        listeners:
+          type: array
+          items:
+            type: object
+            if:
+              anyOf:
+              - required: [protocol]
+                properties:
+                  protocol:
+                    enum: [HTTPS, GRPC]
+              - required: [protocol]
+                properties:
+                  protocol:
+                    const: TLS
+                  tls:
+                    type: object
+                    properties:
+                      mode:
+                        not:
+                          const: Passthrough
+            then:
+              required: [tls]
+              properties:
+                tls:
+                  type: object
+                  required: [certificateRefs]
+                  properties:
+                    certificateRefs:
+                      type: array
+                      minItems: 1

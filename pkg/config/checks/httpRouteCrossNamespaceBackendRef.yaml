@@ -1,0 +1,6 @@
+successMessage: HTTPRoute cross-namespace backend references are authorized
+failureMessage: HTTPRoute cross-namespace backend references should have a matching ReferenceGrant
+category: Security
+target: gateway.networking.k8s.io/HTTPRoute
+relatedKinds:
+  - gateway.networking.k8s.io/ReferenceGrant

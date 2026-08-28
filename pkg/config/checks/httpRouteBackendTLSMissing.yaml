@@ -1,0 +1,9 @@
+successMessage: HTTPRoute TLS backends have TLS origination configured
+failureMessage: HTTPRoute backends on TLS ports should have a BackendTLSPolicy or kgateway BackendConfigPolicy
+category: Security
+target: gateway.networking.k8s.io/HTTPRoute
+relatedKinds:
+  - Service
+  - gateway.networking.k8s.io/BackendTLSPolicy
+  - gateway.kgateway.dev/Backend
+  - gateway.kgateway.dev/BackendConfigPolicy

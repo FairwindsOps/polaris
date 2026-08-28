@@ -1,0 +1,16 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: restricted
+spec:
+  gatewayClassName: kgateway
+  listeners:
+  - name: https
+    protocol: HTTPS
+    port: 443
+    allowedRoutes:
+      namespaces:
+        from: Selector
+        selector:
+          matchLabels:
+            gateway-access: "true"
