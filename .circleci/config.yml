@@ -1,3 +1,4 @@
+## DO NOT EDIT - Managed by Terraform
 version: 2.1
 
 orbs:
@@ -37,7 +38,6 @@ references:
     filters:
       branches:
         only: /.*/
-        ignore: /pull\/[0-9]+/
       tags:
         ignore: /.*/
 
@@ -55,6 +55,14 @@ jobs:
       - run:
           name: Go Mod Download
           command: go mod download && go mod verify
+      - run:
+          name: golangci-lint
+          command: |
+            curl -fsSL -o golangci-lint.tar.gz https://github.com/golangci/golangci-lint/releases/download/v2.12.2/golangci-lint-2.12.2-linux-amd64.tar.gz
+            echo '8df580d2670fed8fa984aac0507099af8df275e665215f5c7a2ae3943893a553  golangci-lint.tar.gz' | sha256sum -c
+            tar -xzf golangci-lint.tar.gz
+            mv golangci-lint-2.12.2-linux-amd64/golangci-lint "$(go env GOPATH)/bin/golangci-lint"
+            golangci-lint run --timeout 5m
       - run:
           name: test
           command: |
@@ -107,7 +115,7 @@ jobs:
       - run:
           name: docker login Google Artifact Registry
           command: |
-            docker login -u _json_key -p "$(echo $GCP_ARTIFACTREADWRITE_JSON_KEY | base64 -d)" us-docker.pkg.dev
+            echo "$GCP_ARTIFACTREADWRITE_JSON_KEY" | base64 -d | docker login -u _json_key --password-stdin us-docker.pkg.dev
       - *setup_qemu_binfmt
       - run:
           name: Run GoReleaser release
@@ -140,11 +148,10 @@ workflows:
           filters:
             branches:
               only: /.*/
-              ignore: /pull\/[0-9]+/
             tags:
               ignore: /.*/
       - rok8s/kubernetes_e2e_tests:
-          name: kubernetes e2e
+          name: "kubernetes e2e"
           kind_node_image: "kindest/node:v1.34.0@sha256:7416a61b42b1662ca6ca89f02028ac133a309a2a30ba309614e8ec94d976dc5a"
           <<: *e2e_configuration
   release:
@@ -154,7 +161,7 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              ignore: /^testing-.*/
+              only: /v.*/
       - release:
           requires:
             - test
@@ -163,7 +170,7 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              ignore: /^testing-.*/
+              only: /v.*/
       - oss-docs/publish-docs:
           requires:
             - release
@@ -172,4 +179,4 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              ignore: /^testing-.*/
+              only: /v.*/

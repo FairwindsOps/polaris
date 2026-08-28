@@ -102,7 +102,7 @@ func NewGenericResourceFromPod(podResource kubeAPICoreV1.Pod, originalObject any
 		Kind:        "Pod",
 		PodSpec:     &podResource.Spec,
 		PodTemplate: podMap,
-		ObjectMeta:  podResource.ObjectMeta.GetObjectMeta(),
+		ObjectMeta:  podResource.GetObjectMeta(),
 	}
 	if originalObject != nil {
 		bytes, err := json.Marshal(originalObject)
@@ -159,7 +159,7 @@ func resolveControllerFromPod(ctx context.Context, podResource kubeAPICoreV1.Pod
 	topMeta := podWorkload.ObjectMeta
 	var topPodSpec any
 	topPodSpec = podWorkload.Resource.Object
-	owners := podResource.ObjectMeta.GetOwnerReferences()
+	owners := podResource.GetOwnerReferences()
 	lastKey := ""
 	for len(owners) > 0 {
 		if len(owners) > 1 {

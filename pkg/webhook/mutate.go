@@ -49,7 +49,7 @@ func NewMutateWebhook(ctx context.Context, mgr manager.Manager, c config.Configu
 }
 
 func (m *Mutator) mutate(ctx context.Context, req admission.Request) ([]jsonpatch.Operation, error) {
-	results, kubeResources, err := GetValidatedResults(ctx, req.AdmissionRequest.Kind.Kind, m.decoder, req, m.Config)
+	results, kubeResources, err := GetValidatedResults(ctx, req.Kind.Kind, m.decoder, req, m.Config)
 	if err != nil {
 		logrus.Errorf("Error while validating resource: %v", err)
 		return nil, err

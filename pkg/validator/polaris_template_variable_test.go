@@ -28,7 +28,7 @@ import (
 func TestGetTemplateInputReturnsPolarisSubKeys(t *testing.T) {
 	pod := test.MockPod() // Includes a container, required by GetPodSpec
 	pod.Spec.NodeName = "testNodeName"
-	pod.ObjectMeta.Name = "testpod"
+	pod.Name = "testpod"
 	genRes, err := kube.NewGenericResourceFromPod(pod, pod)
 	require.NoError(t, err, "creating new generic resource from a pod")
 	schemaTest := schemaTestCase{

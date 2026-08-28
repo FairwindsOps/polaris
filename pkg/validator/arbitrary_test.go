@@ -35,6 +35,7 @@ func TestValidatePDB(t *testing.T) {
 	}
 	pdb := unstructured.Unstructured{}
 	res, err := kube.NewGenericResourceFromUnstructured(pdb, nil)
+	assert.NoError(t, err)
 	res.Kind = "PodDisruptionBudget"
 
 	actualResult, err := applyNonControllerSchemaChecks(context.Background(), &c, nil, res)

@@ -48,7 +48,9 @@ var fixCommand = &cobra.Command{
 		if err != nil {
 			if errors.Is(err, fix.ErrFilesPathRequired) {
 				logrus.Error("Please specify a files-path flag")
-				cmd.Help()
+				if helpErr := cmd.Help(); helpErr != nil {
+					logrus.Error(helpErr)
+				}
 				os.Exit(1)
 			}
 			logrus.Fatal(err)

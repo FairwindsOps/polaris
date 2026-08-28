@@ -50,7 +50,7 @@ func (cs *CountSummary) AddSummary(other CountSummary) {
 
 // AddResult adds a single result to the summary
 func (cs *CountSummary) AddResult(result ResultMessage) {
-	if result.Success == false {
+	if !result.Success {
 		if result.Severity == config.SeverityWarning {
 			cs.Warnings++
 		} else {
@@ -198,7 +198,7 @@ func (rs ResultSet) GetSuccesses() []ResultMessage {
 func (rs ResultSet) GetWarnings() []ResultMessage {
 	warnings := []ResultMessage{}
 	for _, msg := range rs {
-		if msg.Success == false && msg.Severity == config.SeverityWarning {
+		if !msg.Success && msg.Severity == config.SeverityWarning {
 			warnings = append(warnings, msg)
 		}
 	}
@@ -209,7 +209,7 @@ func (rs ResultSet) GetWarnings() []ResultMessage {
 func (rs ResultSet) GetDangers() []ResultMessage {
 	errors := []ResultMessage{}
 	for _, msg := range rs {
-		if msg.Success == false && msg.Severity == config.SeverityDanger {
+		if !msg.Success && msg.Severity == config.SeverityDanger {
 			errors = append(errors, msg)
 		}
 	}
