@@ -158,13 +158,13 @@ func CreateResourceProviderFromResource(ctx context.Context, workload string) (*
 	}
 	serverVersion, err := clientSet.Discovery().ServerVersion()
 	if err != nil {
-		return nil, fmt.Errorf("Error fetching Cluster API version: %w", err)
+		return nil, fmt.Errorf("error fetching Cluster API version: %w", err)
 	}
 	resources := newResourceProvider(serverVersion.Major+"."+serverVersion.Minor, "Resource", workload)
 
 	parts := strings.Split(workload, "/")
 	if len(parts) != 4 {
-		return nil, fmt.Errorf("Invalid workload identifier %s. Should be in format namespace/kind/version/name, e.g. nginx-ingress/Deployment.apps/v1/default-backend", workload)
+		return nil, fmt.Errorf("invalid workload identifier %s. Should be in format namespace/kind/version/name, e.g. nginx-ingress/Deployment.apps/v1/default-backend", workload)
 	}
 	namespace := parts[0]
 	kind := parts[1]
@@ -173,11 +173,11 @@ func CreateResourceProviderFromResource(ctx context.Context, workload string) (*
 
 	obj, err := GetObject(ctx, namespace, kind, version, name, dynamicClient, restMapper)
 	if err != nil {
-		return nil, fmt.Errorf("Could not find workload %s: %w", workload, err)
+		return nil, fmt.Errorf("could not find workload %s: %w", workload, err)
 	}
 	workloadObj, err := NewGenericResourceFromUnstructured(*obj, nil)
 	if err != nil {
-		return nil, fmt.Errorf("Could not parse workload %s: %w", workload, err)
+		return nil, fmt.Errorf("could not parse workload %s: %w", workload, err)
 	}
 	resources.Resources.addResource(workloadObj)
 	return &resources, nil
@@ -198,6 +198,9 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 	}
 
 	visitFile := func(path string, f os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 		if !strings.HasSuffix(path, ".yml") && !strings.HasSuffix(path, ".yaml") {
 			return nil
 		}
@@ -248,19 +251,19 @@ func GetKubeClient(ctx context.Context, kubeContext string) (dynamic.Interface, 
 		kubeConf, err = config.GetConfig()
 	}
 	if err != nil {
-		return nil, nil, nil, "", fmt.Errorf("Error fetching KubeConfig: %v", err)
+		return nil, nil, nil, "", fmt.Errorf("error fetching KubeConfig: %v", err)
 	}
 	clientSet, err := kubernetes.NewForConfig(kubeConf)
 	if err != nil {
-		return nil, nil, nil, "", fmt.Errorf("Error creating Kubernetes client: %v", err)
+		return nil, nil, nil, "", fmt.Errorf("error creating Kubernetes client: %v", err)
 	}
 	dynamicClient, err := dynamic.NewForConfig(kubeConf)
 	if err != nil {
-		return nil, nil, nil, "", fmt.Errorf("Error connecting to dynamic interface: %v", err)
+		return nil, nil, nil, "", fmt.Errorf("error connecting to dynamic interface: %v", err)
 	}
 	resources, err := restmapper.GetAPIGroupResources(clientSet.Discovery())
 	if err != nil {
-		return nil, nil, nil, "", fmt.Errorf("Error getting API Group resources: %v", err)
+		return nil, nil, nil, "", fmt.Errorf("error getting API Group resources: %v", err)
 	}
 	return dynamicClient, restmapper.NewDiscoveryRESTMapper(resources), clientSet, kubeConf.Host, nil
 }

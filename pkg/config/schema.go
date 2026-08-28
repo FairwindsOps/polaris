@@ -96,7 +96,7 @@ func UnmarshalYAMLOrJSON(raw []byte, dest any) error {
 			if err == io.EOF {
 				break
 			}
-			return fmt.Errorf("Decoding schema check failed: %v", err)
+			return fmt.Errorf("decoding schema check failed: %v", err)
 		}
 	}
 	return nil
@@ -109,7 +109,9 @@ func ParseCheck(id string, rawBytes []byte) (SchemaCheck, error) {
 	if err != nil {
 		return check, err
 	}
-	check.Initialize(id)
+	if err := check.Initialize(id); err != nil {
+		return check, err
+	}
 	return check, nil
 }
 
@@ -324,7 +326,7 @@ func (check SchemaCheck) CheckObject(ctx context.Context, obj any) (bool, []json
 func (check SchemaCheck) CheckAdditionalObjects(ctx context.Context, groupkind string, objects []any) (bool, error) {
 	val, ok := check.AdditionalValidators[groupkind]
 	if !ok {
-		return false, errors.New("No validator found for " + groupkind)
+		return false, errors.New("no validator found for " + groupkind)
 	}
 	for _, obj := range objects {
 		bytes, err := json.Marshal(obj)

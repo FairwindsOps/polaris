@@ -15,7 +15,6 @@
 package dashboard
 
 import (
-	"fmt"
 	"slices"
 	"strings"
 
@@ -129,13 +128,13 @@ func getCategoryLink(category string) string {
 func getCategoryInfo(category string) string {
 	switch category {
 	case "Reliability":
-		return fmt.Sprintf(`
+		return `
 			Kubernetes is built to reliabily run highly available applications.
 			Polaris includes a number of checks to ensure that you are maximizing
 			the reliability potential of Kubernetes.
-		`)
+		`
 	case "Efficiency":
-		return fmt.Sprintf(`
+		return `
 			Configuring resource requests and limits for workloads running in Kubernetes
 			helps ensure that every container will have access to all the resources it
 			needs. These are also a crucial part of cluster autoscaling logic, as new
@@ -143,15 +142,15 @@ func getCategoryInfo(category string) string {
 			infrastructure for new pod(s). By default, Polaris validates that resource
 			requests and limits are set, it also includes optional functionality to ensure
 			these requests and limits fall within specified ranges.
-		`)
+		`
 	case "Security":
-		return fmt.Sprintf(`
+		return `
 			Kubernetes provides a great deal of configurability when it comes to the
 			security of your workloads. A key principle here involves limiting the level
 			of access any individual workload has. Polaris has validations for a number of
 			best practices, mostly focused on ensuring that unnecessary access has not
 			been granted to an application workload.
-		`)
+		`
 	default:
 		return ""
 	}

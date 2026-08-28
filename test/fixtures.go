@@ -188,7 +188,9 @@ func MockNamespace(name string) corev1.Namespace {
 // SetupTestAPI creates a test kube API struct.
 func SetupTestAPI(objects ...runtime.Object) (kubernetes.Interface, dynamic.Interface) {
 	scheme := runtime.NewScheme()
-	fake.AddToScheme(scheme)
+	if err := fake.AddToScheme(scheme); err != nil {
+		panic(err)
+	}
 	dynamicClient := dynamicFake.NewSimpleDynamicClient(scheme, objects...)
 	k := fake.NewSimpleClientset(objects...)
 	k.Resources = []*metav1.APIResourceList{

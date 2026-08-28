@@ -108,7 +108,7 @@ func Parse(rawBytes []byte) (Configuration, error) {
 			if err == io.EOF {
 				break
 			}
-			return conf, fmt.Errorf("Decoding config failed: %v", err)
+			return conf, fmt.Errorf("decoding config failed: %v", err)
 		}
 	}
 	for key, check := range conf.CustomChecks {
@@ -127,7 +127,7 @@ func Parse(rawBytes []byte) (Configuration, error) {
 // Validate checks if a config is valid
 func (conf Configuration) Validate() error {
 	if len(conf.Checks) == 0 {
-		return errors.New("No checks were enabled")
+		return errors.New("no checks were enabled")
 	}
 	return nil
 }

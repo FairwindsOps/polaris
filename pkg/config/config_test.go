@@ -92,7 +92,7 @@ customChecks:
 
 func TestParseError(t *testing.T) {
 	_, err := Parse([]byte(confInvalid))
-	expectedErr := "Decoding config failed: error unmarshaling JSON: while decoding JSON: json: cannot unmarshal string into Go value of type config.Configuration"
+	expectedErr := "decoding config failed: error unmarshaling JSON: while decoding JSON: json: cannot unmarshal string into Go value of type config.Configuration"
 	assert.EqualError(t, err, expectedErr)
 }
 
@@ -115,7 +115,9 @@ func TestConfigFromURL(t *testing.T) {
 	var parsedConf Configuration
 	srv := &http.Server{Addr: ":8081"}
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		io.WriteString(w, confValidYAML)
+		if _, err := io.WriteString(w, confValidYAML); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	})
 
 	go func() {
@@ -155,6 +157,7 @@ func TestConfigWithCustomChecks(t *testing.T) {
 	assert.NoError(t, err, "Expected no error when parsing YAML config")
 	assert.Equal(t, 1, len(parsedConf.CustomChecks))
 	check, err := parsedConf.CustomChecks["foo"].TemplateForResource(map[string]any{})
+	assert.NoError(t, err)
 	isValid, _, err := check.CheckObject(context.TODO(), valid)
 	assert.NoError(t, err)
 	assert.Equal(t, true, isValid)
