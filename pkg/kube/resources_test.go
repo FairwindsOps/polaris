@@ -176,3 +176,26 @@ func TestGetResourceFromAPI(t *testing.T) {
 		})
 	}
 }
+
+// A malformed manifest can have a field like `spec` that is a scalar instead
+// of a map. GetPodSpec and GetPodTemplate walk those fields recursively, so a
+// non-map value there must not panic the scan.
+func TestGetPodSpecNonMapField(t *testing.T) {
+	malformed := map[string]any{
+		"spec": "not-a-map",
+	}
+
+	var spec any
+	assert.NotPanics(t, func() {
+		spec = GetPodSpec(malformed)
+	}, "GetPodSpec should not panic on a non-map spec")
+	assert.Nil(t, spec, "GetPodSpec should return nil when no pod spec is found")
+
+	var template any
+	var err error
+	assert.NotPanics(t, func() {
+		template, err = GetPodTemplate(malformed)
+	}, "GetPodTemplate should not panic on a non-map spec")
+	assert.NoError(t, err)
+	assert.Nil(t, template, "GetPodTemplate should return nil when no pod template is found")
+}
