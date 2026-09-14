@@ -16,7 +16,6 @@ if [ ! -f "$tar" ]; then
   exit 1
 fi
 
-# rok8s already installed kind into ./bin-kind in this job. Do not overwrite it.
 export PATH="$(pwd)/bin-kind:${PATH}"
 kind version
 
