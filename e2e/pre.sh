@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-KIND_VERSION=v0.30.0
+docker exec e2e-command-runner mkdir -p /tmp/test-results
 
 if [ -z "${CI_SHA1:-}" ]; then
   echo "CI_SHA1 not set"
@@ -16,15 +16,8 @@ if [ ! -f "$tar" ]; then
   exit 1
 fi
 
-if ! command -v kind > /dev/null; then
-  echo "Installing kind ${KIND_VERSION}"
-  bindir="$(pwd)/bin-kind"
-  mkdir -p "$bindir"
-  curl -fsSLo "$bindir/kind" \
-    "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-amd64"
-  chmod +x "$bindir/kind"
-  export PATH="$bindir:$PATH"
-fi
+# rok8s already installed kind into ./bin-kind in this job. Do not overwrite it.
+export PATH="$(pwd)/bin-kind:${PATH}"
 kind version
 
 docker load --input "$tar"
