@@ -413,9 +413,12 @@ func applySchemaCheck(ctx context.Context, conf *config.Configuration, checkID s
 		namespace := test.Resource.ObjectMeta.GetNamespace()
 		if test.Resource.Kind == "Namespace" {
 			namespace = test.Resource.ObjectMeta.GetName()
+		} else {
+			namespace = effectiveNamespace(test.Resource.Kind, namespace)
 		}
 		resources = funk.Filter(resources, func(res kube.GenericResource) bool {
-			return res.ObjectMeta.GetNamespace() == "" || res.ObjectMeta.GetNamespace() == namespace
+			resNS := effectiveNamespace(res.Kind, res.ObjectMeta.GetNamespace())
+			return resNS == "" || resNS == namespace
 		}).([]kube.GenericResource)
 		objects := funk.Map(resources, func(res kube.GenericResource) any {
 			return res.Resource.Object
@@ -445,6 +448,22 @@ func applySchemaCheck(ctx context.Context, conf *config.Configuration, checkID s
 		result.Mutations = mutations
 	}
 	return &result, nil
+}
+
+// effectiveNamespace is the namespace Kubernetes would use for this object.
+// ClusterRole and ClusterRoleBinding are the cluster-scoped kinds this matcher
+// looks up or checks; they keep an empty namespace and stay visible everywhere.
+// An omitted namespace on any other kind is default, not cluster-wide.
+func effectiveNamespace(kind, namespace string) string {
+	if namespace != "" {
+		return namespace
+	}
+	switch kind {
+	case "ClusterRole", "ClusterRoleBinding":
+		return ""
+	default:
+		return metaV1.NamespaceDefault
+	}
 }
 
 func getSortedKeys(m map[string]config.Severity) []string {

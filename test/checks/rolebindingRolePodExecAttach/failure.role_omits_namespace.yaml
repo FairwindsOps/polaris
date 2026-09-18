@@ -1,0 +1,26 @@
+# This fails because the Role omits metadata.namespace. Kubernetes treats an empty
+# namespace as default, so the Role is not a valid target for a RoleBinding in team-a.
+# The Role does not allow pods/exec|attach; a pass here would mean the empty-namespace
+# Role was treated as globally eligible during additional-object matching.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: test
+rules:
+  - apiGroups: [ "" ]
+    resources: [ "pods" ]
+    verbs: [ get, create ]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: test
+  namespace: team-a
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: test
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: testuser
