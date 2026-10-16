@@ -1,0 +1,9 @@
+# This fails because the ClusterRole allows exec on every resource through */exec.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: test
+rules:
+  - apiGroups: [ "" ]
+    resources: [ "*/exec" ]
+    verbs: [ create ]
