@@ -60,7 +60,7 @@ additionalSchemaStrings:
                 const: "{{ .roleRef.name }}"
       - properties:
           rules:
-            type: array
+            type: ["array", "null"]
             items:
               type: object
               not:

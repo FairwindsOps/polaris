@@ -1,0 +1,19 @@
+# This succeeds because the referenced ClusterRole has null rules, which grant nothing.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: no-rules
+rules:
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: no-rules
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: no-rules
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: testuser

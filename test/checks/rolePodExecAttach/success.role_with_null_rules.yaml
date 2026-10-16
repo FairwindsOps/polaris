@@ -1,0 +1,7 @@
+# This succeeds because a Role with null rules grants nothing.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: no-rules
+  namespace: test
+rules:
