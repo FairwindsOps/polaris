@@ -11,7 +11,8 @@
   "minimumReleaseAge": "7 days",
   "enabledManagers": [
     "gomod",
-    "dockerfile"
+    "dockerfile",
+    "npm"
   ],
   "postUpdateOptions": ["gomodTidy", "gomodUpdateImportPaths"],
   "packageRules": [
@@ -34,8 +35,13 @@
       "enabled": false
     },
     {
+      "description": "Pin exact versions in package.json (no ^/~ ranges)",
+      "matchManagers": ["npm"],
+      "rangeStrategy": "pin"
+    },
+    {
       "description": "Every upgrade: upstream release must be at least 7 days old",
-      "matchManagers": ["gomod", "dockerfile"],
+      "matchManagers": ["gomod", "dockerfile", "npm"],
       "minimumReleaseAge": "7 days"
     }
   ]
