@@ -1,6 +1,6 @@
 module github.com/fairwindsops/polaris
 
-go 1.27.1
+go 1.27.3
 
 require (
 	github.com/fairwindsops/controller-utils v0.3.4

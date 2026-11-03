@@ -44,12 +44,12 @@ references:
 executors:
   golang-exec:
     docker:
-      - image: cimg/go:1.27.1
+      - image: cimg/go:1.27.3
 
 jobs:
   test:
     docker:
-      - image: cimg/go:1.27.1
+      - image: cimg/go:1.27.3
     steps:
       - checkout
       - run:
@@ -87,6 +87,7 @@ jobs:
               -e CIRCLE_SHA1 \
               -e CIRCLE_BRANCH \
               -e CIRCLE_TAG \
+              -e GOTOOLCHAIN=go1.27.3 \
               goreleaser/goreleaser:v2.18.1 release --snapshot --skip=sign
       - run:
           name: Save snapshot amd64 image for e2e
@@ -132,6 +133,7 @@ jobs:
               -e GITHUB_TOKEN \
               -e VAULT_ADDR \
               -e VAULT_TOKEN \
+              -e GOTOOLCHAIN=go1.27.3 \
               goreleaser/goreleaser:v2.18.1 release
 
 workflows:
