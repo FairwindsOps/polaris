@@ -3,14 +3,12 @@
   "bugs": {
     "url": "https://github.com/FairwindsOps/insights-docs/issues"
   },
-  "dependencies": {
-    "vuepress-plugin-check-md": "0.0.3"
-  },
-  "description": "A repository with a Vuepress template for Fairwinds projects",
+  "description": "Documentation site for Fairwinds Polaris",
   "devDependencies": {
-    "vuepress": "1.9.10",
-    "vuepress-plugin-clean-urls": "1.1.2",
-    "vuepress-plugin-redirect": "1.2.5"
+    "vitepress": "1.6.4"
+  },
+  "overrides": {
+    "vite": "6.4.5"
   },
   "directories": {
     "doc": "docs"
@@ -25,12 +23,10 @@
   },
   "scripts": {
     "build": "npm run build:readme && npm run build:docs",
-    "build:docs": "vuepress build -d ../dist/",
-    "build:metadata": "cat main-metadata.md > README.md || true",
-    "build:readme": "npm run build:metadata && cat ../README.md | grep -v 'ocumentation' | sed \"s/https:\\/\\/\\w\\+.docs.fairwinds.com//g\" >> README.md",
-    "check-links": "vuepress check-md",
-    "serve": "npm run build:readme && vuepress dev --port 3003",
-    "vuepress": "vuepress"
+    "build:docs": "vitepress build",
+    "build:metadata": "cat main-metadata.md > index.md || true",
+    "build:readme": "npm run build:metadata && cat ../README.md | grep -v 'ocumentation' | sed -E 's#https://[A-Za-z0-9.-]+\\.docs\\.fairwinds\\.com##g' >> index.md",
+    "serve": "npm run build:readme && vitepress dev --port 3003"
   },
   "version": "0.0.1"
 }

@@ -6,6 +6,7 @@
 document.addEventListener("DOMContentLoaded", function(){
   setTimeout(function() {
     var link = document.getElementsByClassName('home-link')[0];
+    if (!link) return;
     linkClone = link.cloneNode(true);
     linkClone.href = "https://fairwinds.com";
     link.setAttribute('target', '_blank');

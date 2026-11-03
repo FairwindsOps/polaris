@@ -1,0 +1,67 @@
+:root {
+  --vp-c-brand-1: #ff6c00;
+  --vp-c-brand-2: #a0204c;
+  --vp-c-brand-3: #23103a;
+  --vp-nav-bg-color: #23103a;
+  --vp-nav-logo-height: 28px;
+}
+
+.VPNavBar {
+  background-color: #23103a;
+}
+
+.VPNavBarMenuLink,
+.VPNavBarMenuGroup .button,
+.VPNavBarSearchButton {
+  color: #fff !important;
+}
+
+.VPNavBarMenuLink.vp-external-link-icon::after {
+  color: #fff !important;
+}
+
+.VPNavBarHamburger .top,
+.VPNavBarHamburger .middle,
+.VPNavBarHamburger .bottom {
+  background-color: #fff;
+}
+
+.vp-doc img {
+  border: 5px solid #f7f7f7;
+}
+
+.vp-doc .no-border img,
+.vp-doc img.no-border {
+  border: none;
+}
+
+.vp-doc blockquote {
+  border-left: 0.2rem solid #ff6c00;
+}
+
+.vp-doc blockquote p {
+  color: #ff6c00;
+}
+
+.custom-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid #eaecef;
+  padding: 2rem 2.5rem;
+}
+
+.custom-footer .left-footer a:first-of-type {
+  margin-right: 1.5rem;
+}
+
+.custom-footer a {
+  color: #4e6e8e;
+}
+
+@media (max-width: 719px) {
+  .custom-footer {
+    flex-direction: column;
+    padding: 1.5rem;
+  }
+}
