@@ -14,6 +14,9 @@
     "doc": "docs"
   },
   "homepage": "https://github.com/FairwindsOps/insights-docs#readme",
+  "engines": {
+    "node": "^18.0.0 || ^20.0.0 || >=22.0.0"
+  },
   "license": "MIT",
   "main": "index.js",
   "name": "fairwinds-docs-template",
@@ -22,8 +25,7 @@
     "url": "git+https://github.com/FairwindsOps/insights-docs.git"
   },
   "scripts": {
-    "build": "npm run build:readme && npm run build:docs",
-    "build:docs": "vitepress build && node .vitepress/s3-dir-index.mjs ../dist",
+    "build": "node .vitepress/s3-dir-index.mjs --build-site",
     "build:metadata": "cat main-metadata.md > index.md || true",
     "build:readme": "npm run build:metadata && cat ../README.md | grep -v 'ocumentation' | sed -E 's#https://[A-Za-z0-9.-]+\\.docs\\.fairwinds\\.com##g' >> index.md",
     "check-links": "npm run build",
