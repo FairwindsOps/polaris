@@ -10,6 +10,14 @@
   background-color: #23103a;
 }
 
+/* Desktop puts the logo in a transparent column over the light sidebar.
+   The wordmark is white, so that column has to stay the navbar color. */
+@media (min-width: 960px) {
+  .VPNavBar.has-sidebar .title {
+    background-color: #23103a !important;
+  }
+}
+
 .VPNavBarMenuLink,
 .VPNavBarMenuGroup .button {
   color: #fff !important;
