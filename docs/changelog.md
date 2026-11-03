@@ -1,4 +1,5 @@
 ---
+title: Changelog
 sidebarDepth: 0
 meta:
   - name: description

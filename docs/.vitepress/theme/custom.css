@@ -11,9 +11,26 @@
 }
 
 .VPNavBarMenuLink,
-.VPNavBarMenuGroup .button,
-.VPNavBarSearchButton {
+.VPNavBarMenuGroup .button {
   color: #fff !important;
+}
+
+.VPNavBar .DocSearch-Button {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: #fff;
+}
+
+.VPNavBar .DocSearch-Button:hover,
+.VPNavBar .DocSearch-Button:focus,
+.VPNavBar .DocSearch-Button:active {
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+  color: #fff;
+}
+
+.VPNavBar .DocSearch-Button .DocSearch-Search-Icon {
+  color: #fff;
 }
 
 .VPNavBarMenuLink.vp-external-link-icon::after {
@@ -48,7 +65,7 @@
   justify-content: space-between;
   gap: 1rem;
   border-top: 1px solid #eaecef;
-  padding: 2rem 2.5rem;
+  padding: 2rem 0;
 }
 
 .custom-footer .left-footer a:first-of-type {

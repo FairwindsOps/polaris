@@ -1,6 +1,9 @@
 import { defineConfig } from 'vitepress'
 
 // Sidebar matches the old VuePress config-extras. Page titles come from the markdown.
+// package.json overrides vite to 6.4.5. VitePress 1.6.4 declares vite ^5, and Vite 5
+// does not get the 2026 dev-server fixes that shipped in 6.4.5 (GHSA-8g5g-mxqh-grgj).
+// The published site is static; only `vitepress dev` runs that server.
 export default defineConfig({
   title: 'Fairwinds Polaris Documentation',
   description: 'Documentation for Fairwinds Polaris - audit and enforce Kubernetes best practices for your workloads',
@@ -11,14 +14,15 @@ export default defineConfig({
   srcExclude: ['README.md', 'main-metadata.md'],
   head: [
     ['link', { rel: 'icon', href: '/favicon.png' }],
-    ['script', { src: '/scripts/modify.js' }],
     ['script', { src: '/scripts/marketing.js' }],
   ],
   transformPageData(pageData) {
+    // inferDescription() already ran. It reads frontmatter.description / head,
+    // not the VuePress `meta` list, and it ignores later frontmatter edits.
     const meta = pageData.frontmatter.meta
-    if (!Array.isArray(meta) || pageData.frontmatter.description) return
+    if (!Array.isArray(meta) || pageData.description) return
     const desc = meta.find((item) => item && item.name === 'description')
-    if (desc && desc.content) pageData.frontmatter.description = desc.content
+    if (desc && desc.content) return { description: desc.content }
   },
   themeConfig: {
     siteTitle: false,

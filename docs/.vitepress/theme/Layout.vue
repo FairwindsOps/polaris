@@ -6,7 +6,7 @@ const { Layout } = DefaultTheme
 
 <template>
   <Layout>
-    <template #layout-bottom>
+    <template #doc-after>
       <div class="custom-footer">
         <div class="left-footer">
           <a href="https://fairwinds.com" target="_blank" rel="noopener noreferrer">Learn more about Fairwinds</a>
