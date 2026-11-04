@@ -76,21 +76,25 @@ additionalSchemaStrings:
                       const: '*'
                   verbs:
                     type: array
-                    uniqueItems: true
-                    oneOf:
+                    anyOf:
                       - contains:
                           type: string
                           const: '*'
-                      - minItems: 7
-                        items:
-                          type: string
-                          enum:
-                            - "get"
-                            - "list"
-                            - "watch"
-                            - "create"
-                            - "update"
-                            - "patch"
-                            - "delete"
+                      # All seven verbs count as a wildcard, with or without others such as deletecollection.
+                      - allOf:
+                          - contains:
+                              const: "get"
+                          - contains:
+                              const: "list"
+                          - contains:
+                              const: "watch"
+                          - contains:
+                              const: "create"
+                          - contains:
+                              const: "update"
+                          - contains:
+                              const: "patch"
+                          - contains:
+                              const: "delete"
     {{ end }}
     {{ end }}
