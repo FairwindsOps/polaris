@@ -43,29 +43,63 @@ function titleFromSlug(link) {
   return base.split(/[-_]/).filter(Boolean).map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
 }
 
+function splitMarkdown(text) {
+  const frontmatter = text.match(/^---\r?\n([\s\S]*?)\r?\n---/)
+  const body = frontmatter ? text.slice(frontmatter[0].length) : text
+  return {
+    frontmatter: frontmatter ? frontmatter[1] : '',
+    // Fenced blocks contain shell comments (`# flag`). Those are not headings.
+    body: body.replace(/```[\s\S]*?```/g, ''),
+  }
+}
+
+function frontmatterTitle(yaml) {
+  const titleLine = yaml.match(/^title:\s*(.+)\s*$/m)
+  if (!titleLine) return undefined
+  return titleLine[1].replace(/^['"]|['"]$/g, '')
+}
+
+// VuePress used the first heading of any level. VitePress only promotes h1.
+function firstHeading(body) {
+  const heading = body.match(/^#{1,6}[ \t]+(.+?)[ \t]*$/m)
+  return heading ? heading[1].trim() : undefined
+}
+
+// Document title only when the page opens with the heading. A later heading
+// (the homepage's registry notice, for example) is not the page title.
+function leadingHeading(body) {
+  const heading = body.match(/^\s*#{1,6}[ \t]+([^\n]+?)\s*(?:\n|$)/)
+  return heading ? heading[1].trim() : undefined
+}
+
+function readMarkdown(root, rel) {
+  const candidates = [
+    path.join(root, `${rel}.md`),
+    path.join(root, rel, 'index.md'),
+    path.join(root, rel, 'README.md'),
+    path.join(root, rel),
+  ]
+  for (const file of candidates) {
+    if (fs.existsSync(file) && fs.statSync(file).isFile()) return splitMarkdown(fs.readFileSync(file, 'utf8'))
+  }
+  return undefined
+}
+
 // String sidebar entries have no title of their own. VuePress used the page
 // heading; fall back to the slug when the file is not there yet.
 function pageTitle(root, link) {
   const rel = String(link || '').replace(/^\//, '').replace(/\.md$/, '')
   if (!rel) return 'Home'
-  const candidates = [
-    path.join(root, `${rel}.md`),
-    path.join(root, rel, 'index.md'),
-    path.join(root, rel, 'README.md'),
-  ]
-  for (const file of candidates) {
-    if (!fs.existsSync(file)) continue
-    const text = fs.readFileSync(file, 'utf8')
-    const frontmatter = text.match(/^---\r?\n([\s\S]*?)\r?\n---/)
-    if (frontmatter) {
-      const titleLine = frontmatter[1].match(/^title:\s*(.+)\s*$/m)
-      if (titleLine) return titleLine[1].replace(/^['"]|['"]$/g, '')
-    }
-    const body = frontmatter ? text.slice(frontmatter[0].length) : text
-    const heading = body.match(/^#\s+(.+)$/m)
-    if (heading) return heading[1].trim()
-  }
-  return titleFromSlug(link)
+  const page = readMarkdown(root, rel)
+  if (!page) return titleFromSlug(link)
+  return frontmatterTitle(page.frontmatter) || firstHeading(page.body) || titleFromSlug(link)
+}
+
+// VuePress sidebarDepth 0 hid headings. 1 showed h2, 2 showed h2 and h3.
+function outlineForDepth(depth) {
+  if (depth <= 0) return false
+  if (depth === 1) return 2
+  return [2, depth + 1]
 }
 
 function translateItem(item, root) {
@@ -169,13 +203,27 @@ export function buildSiteConfig(extras, root) {
     outDir: '../dist',
     srcExclude: ['README.md', 'main-metadata.md'],
     head,
-    // inferDescription() already ran. It reads frontmatter.description / head,
-    // not the VuePress `meta` list, and it ignores later frontmatter edits.
+    // inferDescription() and inferTitle() already ran. inferDescription reads
+    // frontmatter.description / head, not the VuePress `meta` list. inferTitle
+    // reads frontmatter.title or the h1, and ignores a lower heading.
     transformPageData(pageData) {
-      const meta = pageData.frontmatter.meta
-      if (!Array.isArray(meta) || pageData.description) return
-      const desc = meta.find((item) => item && item.name === 'description')
-      if (desc && desc.content) return { description: desc.content }
+      const frontmatter = pageData.frontmatter || {}
+      const patch = {}
+      const meta = frontmatter.meta
+      if (Array.isArray(meta) && !pageData.description) {
+        const desc = meta.find((item) => item && item.name === 'description' && item.content)
+        if (desc) patch.description = desc.content
+      }
+      if (!pageData.title) {
+        const rel = pageData.relativePath || pageData.filePath
+        const page = rel && readMarkdown(root, rel)
+        const title = page && leadingHeading(page.body)
+        if (title) patch.title = title
+      }
+      if (typeof frontmatter.sidebarDepth === 'number' && frontmatter.outline === undefined) {
+        patch.frontmatter = { ...frontmatter, outline: outlineForDepth(frontmatter.sidebarDepth) }
+      }
+      return Object.keys(patch).length ? patch : undefined
     },
     themeConfig,
     ...rest,
@@ -205,6 +253,15 @@ function selfCheck() {
     fs.mkdirSync(path.join(root, 'features'))
     fs.writeFileSync(path.join(root, 'features', 'policies.md'), '# Admission\n')
     fs.writeFileSync(path.join(root, 'cli.md'), '---\ntitle: CLI\n---\n# ignored\n')
+    fs.writeFileSync(path.join(root, 'flags.md'), [
+      '#### CLI Options',
+      '',
+      '```',
+      '# top-level commands',
+      '```',
+      '',
+    ].join('\n'))
+    fs.writeFileSync(path.join(root, 'home.md'), '<div>logo</div>\n\n## Notice\n')
     const sidebar = translateSidebar([
       ['/', 'Home'],
       {
@@ -218,6 +275,7 @@ function selfCheck() {
       { text: 'CLI', link: '/cli' },
       { title: 'Features', children: ['features/policies'] },
       '/missing-page',
+      '/flags',
     ], root)
     assert.deepEqual(sidebar[0], { text: 'Home', link: '/' })
     assert.equal(sidebar[1].collapsed, false)
@@ -227,6 +285,7 @@ function selfCheck() {
     assert.deepEqual(sidebar[3], { text: 'CLI', link: '/cli' })
     assert.deepEqual(sidebar[4].items[0], { text: 'Admission', link: '/features/policies' })
     assert.deepEqual(sidebar[5], { text: 'Missing Page', link: '/missing-page' })
+    assert.deepEqual(sidebar[6], { text: 'CLI Options', link: '/flags' })
 
     const generated = autoSidebar(root)
     assert.deepEqual(generated.find((item) => item.link === '/cli'), { text: 'CLI', link: '/cli' })
@@ -258,6 +317,32 @@ function selfCheck() {
     assert.equal(cfg.transformPageData({
       frontmatter: { meta: [{ name: 'description', content: 'Nope' }] },
       description: 'Already',
+      title: 'Kept',
+    }), undefined)
+    assert.deepEqual(cfg.transformPageData({
+      frontmatter: { sidebarDepth: 0, meta: [{ name: 'description', content: 'Hello' }] },
+      description: '',
+      title: '',
+      relativePath: 'flags.md',
+    }), {
+      description: 'Hello',
+      title: 'CLI Options',
+      frontmatter: {
+        sidebarDepth: 0,
+        meta: [{ name: 'description', content: 'Hello' }],
+        outline: false,
+      },
+    })
+    assert.deepEqual(cfg.transformPageData({
+      frontmatter: { sidebarDepth: 2 },
+      description: 'Already',
+      title: 'Kept',
+    }).frontmatter.outline, [2, 3])
+    assert.equal(cfg.transformPageData({
+      frontmatter: {},
+      description: 'Already',
+      title: '',
+      relativePath: 'home.md',
     }), undefined)
     console.log('vitepress config ok')
   } finally {

@@ -3,6 +3,10 @@
  * DO NOT EDIT MANUALLY
  */
 
+.github-only {
+  display: none;
+}
+
 :root {
   --vp-c-brand-1: #ff6c00;
   --vp-c-brand-2: #a0204c;
