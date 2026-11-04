@@ -12,9 +12,10 @@ const require = createRequire(import.meta.url)
 const here = path.dirname(fileURLToPath(import.meta.url))
 const docsDir = path.resolve(here, '..')
 
-// package.json overrides vite to 6.4.5. VitePress 1.6.4 declares vite ^5, and Vite 5
-// does not get the 2026 dev-server fixes that shipped in 6.4.5 (GHSA-8g5g-mxqh-grgj).
-// The published site is static; only `vitepress dev` runs that server.
+// package.json overrides vite to 6.4.5. VitePress 1.6.4 declares vite ^5, and
+// that line is still inside the dev-server path-traversal range (vite <=6.4.3)
+// with no 5.x release. 6.4.5 is the patched build. The published site is
+// static; only `vitepress dev` runs that server.
 
 const VUEPRESS_THEME_KEYS = [
   'docsRepo',
@@ -27,14 +28,73 @@ const VUEPRESS_THEME_KEYS = [
   'sidebar',
 ]
 
+// S3 serves page/index.html and redirects /page to /page/. Rewriting the
+// source to page/index.md makes VitePress canonicalize the same URL.
 function linkOf(value) {
   if (value == null || value === '') return undefined
   let link = String(value).trim()
-  if (/^https?:\/\//.test(link)) return link
+  if (/^[a-z]+:/i.test(link) || link.startsWith('//')) return link
+  const hashAt = link.indexOf('#')
+  const hash = hashAt >= 0 ? link.slice(hashAt) : ''
+  if (hashAt >= 0) link = link.slice(0, hashAt)
+  const queryAt = link.indexOf('?')
+  const query = queryAt >= 0 ? link.slice(queryAt) : ''
+  if (queryAt >= 0) link = link.slice(0, queryAt)
   if (!link.startsWith('/')) link = `/${link}`
   link = link.replace(/\.md$/, '')
   if (link.length > 1 && link.endsWith('/')) link = link.slice(0, -1)
-  return link
+  if (link !== '/') link += '/'
+  return link + query + hash
+}
+
+// `from` is the source page (`customization/configuration.md`). VitePress
+// rewrites that file to `customization/configuration/index.md` and then
+// resolves relative links from the rewritten directory, so `checks.md`
+// would look for `customization/configuration/checks.md`. Absolutize from
+// the source file first. The published URL is a directory, so page links
+// keep the trailing slash S3 redirects to.
+export function slashPageLink(url, from) {
+  if (!url || url.startsWith('#') || /^[a-z]+:/i.test(url) || url.startsWith('//')) return url
+  const hashAt = url.indexOf('#')
+  const hash = hashAt >= 0 ? url.slice(hashAt) : ''
+  let rest = hashAt >= 0 ? url.slice(0, hashAt) : url
+  const queryAt = rest.indexOf('?')
+  const query = queryAt >= 0 ? rest.slice(queryAt) : ''
+  if (queryAt >= 0) rest = rest.slice(0, queryAt)
+  if (from && rest && !rest.startsWith('/')) {
+    const dir = path.posix.dirname(String(from).replace(/\\/g, '/'))
+    const base = dir === '.' ? '/' : `/${dir.replace(/^\//, '')}`
+    rest = path.posix.normalize(path.posix.join(base, rest))
+    if (!rest.startsWith('/')) rest = `/${rest}`
+  }
+  if (rest === '/' || rest === '') return url
+  rest = rest.replace(/\.(md|html)$/i, '')
+  if (rest === '/' || rest === '') return `/${query}${hash}`
+  const last = rest.split('/').pop()
+  if (!last || last.includes('.')) return `${rest}${query}${hash}`
+  if (rest.endsWith('/')) return `${rest}${query}${hash}`
+  if (!rest.startsWith('/') && !rest.startsWith('.')) return url
+  return `${rest}/${query}${hash}`
+}
+
+function sourceRel(env, root) {
+  const real = env?.realPath || env?.path
+  if (!real) return undefined
+  const rel = path.isAbsolute(real) ? path.relative(root, real) : real
+  return rel.split(path.sep).join('/')
+}
+
+function slashInternalLinks(md, root) {
+  const render = md.renderer.rules.link_open
+  if (!render) return
+  md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
+    const token = tokens[idx]
+    const hrefAt = token.attrIndex('href')
+    if (hrefAt >= 0) {
+      token.attrs[hrefAt][1] = slashPageLink(token.attrs[hrefAt][1], sourceRel(env, root))
+    }
+    return render(tokens, idx, options, env, self)
+  }
 }
 
 function titleFromSlug(link) {
@@ -88,7 +148,7 @@ function readMarkdown(root, rel) {
 // String sidebar entries have no title of their own. VuePress used the page
 // heading; fall back to the slug when the file is not there yet.
 function pageTitle(root, link) {
-  const rel = String(link || '').replace(/^\//, '').replace(/\.md$/, '')
+  const rel = String(link || '').replace(/^\//, '').replace(/\.md$/, '').replace(/\/$/, '')
   if (!rel) return 'Home'
   const page = readMarkdown(root, rel)
   if (!page) return titleFromSlug(link)
@@ -100,6 +160,63 @@ function outlineForDepth(depth) {
   if (depth <= 0) return false
   if (depth === 1) return 2
   return [2, depth + 1]
+}
+
+// Group sidebarDepth applies to that group's own page and its direct page
+// children (VuePress passes the group's depth into SidebarLinks). A nested
+// group uses its own depth, then the theme depth. Theme depth 1 is the
+// VitePress outline default, so it is not recorded.
+function outlineMap(sidebar, themeDepth) {
+  const map = new Map()
+  const themeFallback = typeof themeDepth === 'number' && themeDepth !== 1 ? themeDepth : undefined
+  function remember(link, depth) {
+    if (!link || typeof depth !== 'number') return
+    const key = linkOf(link)
+    if (key) map.set(key, outlineForDepth(depth))
+  }
+  function walk(items, inherited) {
+    if (Array.isArray(items)) {
+      for (const item of items) visit(item, inherited)
+      return
+    }
+    if (items && typeof items === 'object') {
+      for (const value of Object.values(items)) walk(value, inherited)
+    }
+  }
+  function visit(item, inherited) {
+    if (typeof item === 'string') {
+      remember(item, inherited)
+      return
+    }
+    if (Array.isArray(item)) {
+      remember(item[0], inherited)
+      return
+    }
+    if (!item || typeof item !== 'object') return
+    const own = typeof item.sidebarDepth === 'number' ? item.sidebarDepth : undefined
+    const depth = own !== undefined ? own : inherited
+    const link = item.link || item.path
+    if (link) remember(link, depth)
+    const children = item.items || item.children
+    if (Array.isArray(children)) walk(children, own !== undefined ? own : themeFallback)
+  }
+  walk(sidebar, themeFallback)
+  return map
+}
+
+function pageLink(rel) {
+  if (!rel) return undefined
+  let link = String(rel).split(path.sep).join('/')
+  link = link.replace(/\.md$/i, '')
+  if (link.endsWith('/index')) link = link.slice(0, -'/index'.length)
+  if (link === 'index' || link === 'README' || link === '') return '/'
+  return linkOf(link)
+}
+
+function withLogoAlt(logo) {
+  if (typeof logo === 'string') return { src: logo, alt: 'Fairwinds' }
+  if (logo && typeof logo === 'object' && logo.src && !logo.alt) return { ...logo, alt: 'Fairwinds' }
+  return logo
 }
 
 function translateItem(item, root) {
@@ -118,14 +235,27 @@ function translateItem(item, root) {
   if (text) out.text = text
   if (link) out.link = link
   if (Array.isArray(children)) out.items = children.map((child) => translateItem(child, root))
+  // VuePress groups are collapsible and start open unless collapsable is false.
+  // VitePress omits the chevron when collapsed is unset, and collapsed: false
+  // means collapsible but expanded. A VitePress group that already uses `items`
+  // keeps that default unless it sets collapsed itself.
   if (Object.prototype.hasOwnProperty.call(item, 'collapsed')) out.collapsed = item.collapsed
-  else if (item.collapsable === false) out.collapsed = false
+  else if (Array.isArray(children) && vuePressGroup(item) && item.collapsable !== false) out.collapsed = false
   return out
 }
 
+function vuePressGroup(item) {
+  return Array.isArray(item.children) || Object.prototype.hasOwnProperty.call(item, 'collapsable')
+}
+
 export function translateSidebar(sidebar, root) {
-  if (!Array.isArray(sidebar)) return sidebar
-  return sidebar.map((item) => translateItem(item, root))
+  if (Array.isArray(sidebar)) return sidebar.map((item) => translateItem(item, root))
+  if (sidebar && typeof sidebar === 'object') {
+    const out = {}
+    for (const [key, value] of Object.entries(sidebar)) out[key] = translateSidebar(value, root)
+    return out
+  }
+  return sidebar
 }
 
 function autoSidebar(root) {
@@ -141,12 +271,12 @@ function autoSidebar(root) {
         .filter((sub) => sub.endsWith('.md'))
         .sort((a, b) => a.localeCompare(b))
         .map((sub) => {
-          const link = `/${name}/${sub.replace(/\.md$/, '')}`
+          const link = linkOf(`/${name}/${sub.replace(/\.md$/, '')}`)
           return { text: pageTitle(root, link), link }
         })
       if (children.length) items.push({ text: name, items: children, collapsed: false })
     } else if (name.endsWith('.md')) {
-      const link = `/${name.replace(/\.md$/, '')}`
+      const link = linkOf(`/${name.replace(/\.md$/, '')}`)
       items.push({ text: pageTitle(root, link), link })
     }
   }
@@ -181,6 +311,8 @@ export function buildSiteConfig(extras, root) {
   const restTheme = { ...themeExtras }
   for (const key of VUEPRESS_THEME_KEYS) delete restTheme[key]
   Object.assign(themeConfig, restTheme)
+  themeConfig.logo = withLogoAlt(themeConfig.logo)
+  const outlines = outlineMap(themeExtras.sidebar, themeExtras.sidebarDepth)
 
   const head = [
     ['link', { rel: 'icon', href: '/favicon.png' }],
@@ -188,11 +320,15 @@ export function buildSiteConfig(extras, root) {
   ]
   if (Array.isArray(extras.head)) head.push(...extras.head)
 
+  assertNoRewriteClash(root)
   const skip = new Set(['title', 'description', 'head', 'themeConfig', 'plugins', 'chainWebpack', 'configureWebpack', 'evergreen', 'dest', 'port', 'theme', 'patterns'])
   const rest = {}
   for (const key of Object.keys(extras)) {
     if (!skip.has(key)) rest[key] = extras[key]
   }
+
+  const userMarkdown = rest.markdown
+  delete rest.markdown
 
   return {
     title: extras.title,
@@ -203,6 +339,16 @@ export function buildSiteConfig(extras, root) {
     outDir: '../dist',
     srcExclude: ['README.md', 'main-metadata.md'],
     head,
+    themeConfig,
+    ...rest,
+    rewrites: s3Rewrite,
+    markdown: {
+      ...userMarkdown,
+      config(md) {
+        userMarkdown?.config?.(md)
+        slashInternalLinks(md, root)
+      },
+    },
     // inferDescription() and inferTitle() already ran. inferDescription reads
     // frontmatter.description / head, not the VuePress `meta` list. inferTitle
     // reads frontmatter.title or the h1, and ignores a lower heading.
@@ -210,24 +356,64 @@ export function buildSiteConfig(extras, root) {
       const frontmatter = pageData.frontmatter || {}
       const patch = {}
       const meta = frontmatter.meta
-      if (Array.isArray(meta) && !pageData.description) {
-        const desc = meta.find((item) => item && item.name === 'description' && item.content)
-        if (desc) patch.description = desc.content
+      if (Array.isArray(meta)) {
+        if (!pageData.description) {
+          const desc = meta.find((item) => item && item.name === 'description' && item.content)
+          if (desc) patch.description = desc.content
+        }
+        // metadata yaml titles are the document title ("Goldilocks Documentation | Fairwinds").
+        const titleMeta = meta.find((item) => item && item.name === 'title' && item.content)
+        if (titleMeta && titleMeta.content !== pageData.title) {
+          patch.title = titleMeta.content
+          // The metadata title is already the full document title.
+          patch.titleTemplate = false
+        }
       }
-      if (!pageData.title) {
-        const rel = pageData.relativePath || pageData.filePath
+      if (!pageData.title && !patch.title) {
+        // filePath is the source file. relativePath is the rewritten
+        // `page/index.md`, which is not on disk.
+        const rel = pageData.filePath || pageData.relativePath
         const page = rel && readMarkdown(root, rel)
         const title = page && leadingHeading(page.body)
         if (title) patch.title = title
       }
-      if (typeof frontmatter.sidebarDepth === 'number' && frontmatter.outline === undefined) {
-        patch.frontmatter = { ...frontmatter, outline: outlineForDepth(frontmatter.sidebarDepth) }
+      if (frontmatter.outline === undefined) {
+        const outline = typeof frontmatter.sidebarDepth === 'number'
+          ? outlineForDepth(frontmatter.sidebarDepth)
+          : outlines.get(pageLink(pageData.filePath || pageData.relativePath))
+        if (outline !== undefined) patch.frontmatter = { ...frontmatter, outline }
       }
       return Object.keys(patch).length ? patch : undefined
     },
-    themeConfig,
-    ...rest,
   }
+}
+
+const SKIP_PAGE_DIRS = new Set(['node_modules', 'public'])
+const SKIP_PAGES = new Set(['README.md', 'main-metadata.md'])
+
+export function s3Rewrite(id) {
+  if (!id.endsWith('.md') || id === 'index.md' || id === '404.md' || id.endsWith('/index.md')) return id
+  return `${id.slice(0, -'.md'.length)}/index.md`
+}
+
+function assertNoRewriteClash(root) {
+  if (!fs.existsSync(root)) return
+  const dests = new Map()
+  function walk(dir, rel) {
+    for (const name of fs.readdirSync(dir)) {
+      if (name.startsWith('.') || SKIP_PAGE_DIRS.has(name)) continue
+      const full = path.join(dir, name)
+      const id = rel ? `${rel}/${name}` : name
+      if (fs.statSync(full).isDirectory()) walk(full, id)
+      else if (name.endsWith('.md') && !SKIP_PAGES.has(name)) {
+        const dest = s3Rewrite(id)
+        const prev = dests.get(dest)
+        if (prev) throw new Error(`s3 rewrite: ${prev} and ${id} both publish to ${dest}`)
+        dests.set(dest, id)
+      }
+    }
+  }
+  walk(root, '')
 }
 
 function extrasPath() {
@@ -276,19 +462,52 @@ function selfCheck() {
       { title: 'Features', children: ['features/policies'] },
       '/missing-page',
       '/flags',
+      { text: 'Native', items: [{ text: 'Kept', link: '/cli' }] },
     ], root)
     assert.deepEqual(sidebar[0], { text: 'Home', link: '/' })
-    assert.equal(sidebar[1].collapsed, false)
+    assert.equal(sidebar[1].collapsed, undefined)
     assert.equal(sidebar[1].sidebarDepth, undefined)
-    assert.deepEqual(sidebar[1].items[0], { text: 'Changelog', link: '/changelog' })
-    assert.deepEqual(sidebar[2], { text: 'Guide', link: '/contributing/guide' })
-    assert.deepEqual(sidebar[3], { text: 'CLI', link: '/cli' })
-    assert.deepEqual(sidebar[4].items[0], { text: 'Admission', link: '/features/policies' })
-    assert.deepEqual(sidebar[5], { text: 'Missing Page', link: '/missing-page' })
-    assert.deepEqual(sidebar[6], { text: 'CLI Options', link: '/flags' })
+    assert.deepEqual(sidebar[1].items[0], { text: 'Changelog', link: '/changelog/' })
+    assert.deepEqual(sidebar[2], { text: 'Guide', link: '/contributing/guide/' })
+    assert.deepEqual(sidebar[3], { text: 'CLI', link: '/cli/' })
+    assert.equal(sidebar[4].collapsed, false)
+    assert.deepEqual(sidebar[4].items[0], { text: 'Admission', link: '/features/policies/' })
+    assert.deepEqual(sidebar[5], { text: 'Missing Page', link: '/missing-page/' })
+    assert.deepEqual(sidebar[6], { text: 'CLI Options', link: '/flags/' })
+    assert.equal(sidebar[7].collapsed, undefined)
+    assert.deepEqual(sidebar[7].items[0], { text: 'Kept', link: '/cli/' })
+    assert.deepEqual(translateSidebar({
+      '/': [{ title: 'Contributing', children: [{ title: 'Guide', path: 'contributing/guide' }] }],
+    }, root)['/'][0], {
+      text: 'Contributing',
+      collapsed: false,
+      items: [{ text: 'Guide', link: '/contributing/guide/' }],
+    })
 
     const generated = autoSidebar(root)
-    assert.deepEqual(generated.find((item) => item.link === '/cli'), { text: 'CLI', link: '/cli' })
+    assert.deepEqual(generated.find((item) => item.link === '/cli/'), { text: 'CLI', link: '/cli/' })
+    assert.equal(s3Rewrite('Foo/feature.md'), 'Foo/feature/index.md')
+    assert.equal(s3Rewrite('index.md'), 'index.md')
+    assert.equal(s3Rewrite('checks/index.md'), 'checks/index.md')
+    assert.equal(slashPageLink('/Foo/feature'), '/Foo/feature/')
+    assert.equal(slashPageLink('/Foo/feature/'), '/Foo/feature/')
+    assert.equal(slashPageLink('/Foo/feature#hash'), '/Foo/feature/#hash')
+    assert.equal(slashPageLink('/img/logo.svg'), '/img/logo.svg')
+    assert.equal(slashPageLink('https://fairwinds.com'), 'https://fairwinds.com')
+    assert.equal(slashPageLink('checks.md', 'customization/configuration.md'), '/customization/checks/')
+    assert.equal(slashPageLink('./feature', 'Foo/linktest.md'), '/Foo/feature/')
+    assert.equal(slashPageLink('./feature.md#feature-1', 'Foo/linktest.md'), '/Foo/feature/#feature-1')
+    assert.equal(slashPageLink('../cli', 'customization/configuration.md'), '/cli/')
+    assert.equal(slashPageLink('code-of-conduct.md', 'contributing.md'), '/code-of-conduct/')
+    assert.equal(slashPageLink('/Quux/thing', 'Foo/linktest.md'), '/Quux/thing/')
+    assert.equal(slashPageLink('./diagram.png', 'Foo/linktest.md'), '/Foo/diagram.png')
+    assert.equal(slashPageLink('checks.md?plain=1', 'customization/configuration.md'), '/customization/checks/?plain=1')
+    const clash = fs.mkdtempSync(path.join(os.tmpdir(), 'docs-clash-'))
+    fs.mkdirSync(path.join(clash, 'checks'))
+    fs.writeFileSync(path.join(clash, 'checks.md'), '# parent\n')
+    fs.writeFileSync(path.join(clash, 'checks', 'index.md'), '# child\n')
+    assert.throws(() => assertNoRewriteClash(clash), /both publish/)
+    fs.rmSync(clash, { recursive: true, force: true })
 
     const cfg = buildSiteConfig({
       title: 'T',
@@ -307,7 +526,7 @@ function selfCheck() {
     }, root)
     assert.equal(cfg.themeConfig.editLink.pattern, 'https://github.com/FairwindsOps/insights-docs/edit/main/docs/:path')
     assert.equal(cfg.themeConfig.docsRepo, undefined)
-    assert.equal(cfg.themeConfig.logo, '/img/logo.svg')
+    assert.deepEqual(cfg.themeConfig.logo, { src: '/img/logo.svg', alt: 'Fairwinds' })
     assert.equal(cfg.base, '/')
     assert.deepEqual(cfg.themeConfig.sidebar, [{ text: 'Home', link: '/' }])
     assert.deepEqual(cfg.transformPageData({
@@ -320,10 +539,23 @@ function selfCheck() {
       title: 'Kept',
     }), undefined)
     assert.deepEqual(cfg.transformPageData({
+      frontmatter: { meta: [
+        { name: 'title', content: 'Goldilocks Documentation | Fairwinds' },
+        { name: 'description', content: 'Hello' },
+      ] },
+      description: '',
+      title: 'Goldilocks',
+    }), {
+      description: 'Hello',
+      title: 'Goldilocks Documentation | Fairwinds',
+      titleTemplate: false,
+    })
+    assert.deepEqual(cfg.transformPageData({
       frontmatter: { sidebarDepth: 0, meta: [{ name: 'description', content: 'Hello' }] },
       description: '',
       title: '',
-      relativePath: 'flags.md',
+      relativePath: 'flags/index.md',
+      filePath: 'flags.md',
     }), {
       description: 'Hello',
       title: 'CLI Options',
@@ -343,6 +575,59 @@ function selfCheck() {
       description: 'Already',
       title: '',
       relativePath: 'home.md',
+    }), undefined)
+    const depthCfg = buildSiteConfig({
+      title: 'T',
+      description: 'D',
+      themeConfig: {
+        docsRepo: 'FairwindsOps/polaris',
+        sidebar: [
+          {
+            title: 'Polaris',
+            path: '/',
+            sidebarDepth: 0,
+            collapsable: false,
+            children: [
+              { title: 'Changelog', path: '/changelog' },
+              { title: 'Nested', children: [{ title: 'Guide', path: '/contributing/guide' }] },
+            ],
+          },
+          { title: 'Checks', sidebarDepth: 0, children: ['/checks/security'] },
+          { title: 'Usage', children: ['/cli'] },
+        ],
+      },
+    }, root)
+    assert.deepEqual(depthCfg.transformPageData({
+      frontmatter: {},
+      title: 'Home',
+      description: 'd',
+      filePath: 'index.md',
+    }), { frontmatter: { outline: false } })
+    assert.deepEqual(depthCfg.transformPageData({
+      frontmatter: {},
+      title: 'Changelog',
+      description: 'd',
+      relativePath: 'changelog/index.md',
+      filePath: 'changelog.md',
+    }), { frontmatter: { outline: false } })
+    assert.deepEqual(depthCfg.transformPageData({
+      frontmatter: {},
+      title: 'Security',
+      description: 'd',
+      relativePath: 'checks/security/index.md',
+      filePath: 'checks/security.md',
+    }), { frontmatter: { outline: false } })
+    assert.equal(depthCfg.transformPageData({
+      frontmatter: {},
+      title: 'Guide',
+      description: 'd',
+      filePath: 'contributing/guide.md',
+    }), undefined)
+    assert.equal(depthCfg.transformPageData({
+      frontmatter: {},
+      title: 'CLI',
+      description: 'd',
+      filePath: 'cli.md',
     }), undefined)
     console.log('vitepress config ok')
   } finally {

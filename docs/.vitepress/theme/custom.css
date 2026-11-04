@@ -46,8 +46,17 @@
   color: #fff;
 }
 
-.VPNavBar .DocSearch-Button .DocSearch-Search-Icon {
-  color: #fff;
+.VPNavBar .DocSearch-Button .DocSearch-Search-Icon,
+.VPNavBar .DocSearch-Button .DocSearch-Button-Placeholder,
+.VPNavBar .DocSearch-Button:hover .DocSearch-Button-Placeholder,
+.VPNavBar .DocSearch-Button .DocSearch-Button-Key,
+.VPNavBar .DocSearch-Button .DocSearch-Button-Key:first-child:after {
+  color: #fff !important;
+}
+
+.VPNavBar .DocSearch-Button .DocSearch-Button-Key,
+.VPNavBar .DocSearch-Button .DocSearch-Button-Key + .DocSearch-Button-Key {
+  border-color: rgba(255, 255, 255, 0.45);
 }
 
 .VPNavBarMenuLink.vp-external-link-icon::after {

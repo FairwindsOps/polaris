@@ -2,8 +2,10 @@
 // DO NOT EDIT MANUALLY
 //
 // Project docs hosts are S3 websites. They serve page/index.html and
-// redirect /page to /page/. VitePress writes page.html. Move those files
-// after the build. Leave index.html and 404.html (the bucket error document).
+// redirect /page to /page/. The VitePress config rewrites foo.md to
+// foo/index.md so the build already writes foo/index.html. This mover is
+// the fallback for a leftover page.html. Leave index.html and 404.html
+// (the bucket error document).
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import crypto from 'node:crypto'
@@ -89,6 +91,56 @@ function run(cmd, args, cwd) {
   if (result.status !== 0) process.exit(result.status ?? 1)
 }
 
+// Drop a Documentation heading and the blurb under it, through the next
+// heading of any level. Project READMEs use `# Documentation` and then h2
+// sections; those sections are the homepage. Lines that merely mention
+// documentation stay, including a sample inside a fence. Docs-host URLs
+// are removed so the homepage does not link at itself.
+export function homepageFromReadme(readme) {
+  const lines = String(readme).split(/\r?\n/)
+  const out = []
+  let skipping = false
+  let fence = null
+  for (const line of lines) {
+    const fenceMatch = /^(\s*)(`{3,}|~{3,})/.exec(line)
+    if (fenceMatch) {
+      const marker = fenceMatch[2][0]
+      const size = fenceMatch[2].length
+      if (!fence) fence = { marker, size }
+      else if (fence.marker === marker && size >= fence.size) fence = null
+      if (!skipping) out.push(line)
+      continue
+    }
+    if (!fence) {
+      const heading = /^(#{1,6})[ \t]+(.+?)[ \t]*$/.exec(line)
+      if (heading) {
+        const text = heading[2].replace(/\s+#+\s*$/, '').trim()
+        if (/^documentation$/i.test(text)) {
+          skipping = true
+          continue
+        }
+        if (skipping) skipping = false
+      }
+    }
+    if (!skipping) {
+      out.push(fence ? line : line.replace(/https:\/\/[A-Za-z0-9.-]+\.docs\.fairwinds\.com/g, ''))
+    }
+  }
+  return out.join('\n')
+}
+
+function writeHomepage() {
+  const indexPath = path.join(docsDir, 'index.md')
+  const metaPath = path.join(docsDir, 'main-metadata.md')
+  const readmePath = path.resolve(docsDir, '../README.md')
+  const meta = fs.existsSync(metaPath) ? fs.readFileSync(metaPath, 'utf8') : ''
+  const readme = fs.existsSync(readmePath) ? fs.readFileSync(readmePath, 'utf8') : ''
+  let body = homepageFromReadme(readme)
+  if (!body.endsWith('\n')) body += '\n'
+  const front = meta.trim() ? `${meta.replace(/\s*$/, '')}\n` : ''
+  fs.writeFileSync(indexPath, front + body)
+}
+
 function buildSite() {
   const dist = path.resolve(docsDir, '../dist')
   const stampPath = path.join(docsDir, '.vitepress', 'cache', 'site-stamp')
@@ -98,9 +150,8 @@ function buildSite() {
     console.log('docs build: up to date')
     return
   }
-  const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm'
   const vitepress = path.join(docsDir, 'node_modules', '.bin', process.platform === 'win32' ? 'vitepress.cmd' : 'vitepress')
-  run(npm, ['run', 'build:readme'], docsDir)
+  writeHomepage()
   run(vitepress, ['build'], docsDir)
   const moved = toS3DirIndex(dist)
   console.log(`s3-dir-index: moved ${moved} pages in ${dist}`)
@@ -149,6 +200,54 @@ function selfCheck() {
     assert.equal(sourceStamp(stampDir), first)
     fs.writeFileSync(path.join(stampDir, 'a.md'), 'b')
     assert.notEqual(sourceStamp(stampDir), first)
+
+    const home = homepageFromReadme([
+      '# Project',
+      'Fairwinds hosts project documentation at `docs.fairwinds.com`.',
+      '',
+      '```md',
+      '# Documentation',
+      'Check out the [documentation](https://project.docs.fairwinds.com)',
+      '```',
+      '',
+      'title: "PROJECT-NAME Documentation"',
+      'Mirror of https://nova.docs.fairwinds.com stays local.',
+      '',
+      '## Documentation',
+      'See https://goldilocks.docs.fairwinds.com',
+      '',
+      '## Install',
+      'helm install',
+    ].join('\n'))
+    assert.match(home, /hosts project documentation/)
+    assert.match(home, /# Documentation/)
+    assert.match(home, /PROJECT-NAME Documentation/)
+    assert.match(home, /## Install/)
+    assert.doesNotMatch(home, /## Documentation/)
+    assert.doesNotMatch(home, /goldilocks\.docs\.fairwinds\.com/)
+    assert.doesNotMatch(home, /nova\.docs\.fairwinds\.com/)
+    assert.match(home, /Mirror of  stays local/)
+    assert.match(home, /project\.docs\.fairwinds\.com/)
+    const h1 = homepageFromReadme([
+      '# Goldilocks',
+      'A utility.',
+      '',
+      '# Documentation',
+      'Check out the [documentation](https://goldilocks.docs.fairwinds.com/)',
+      '',
+      '## How can this help',
+      'VPA recommendations.',
+      '',
+      '## Quickstart',
+      'helm install',
+    ].join('\n'))
+    assert.match(h1, /A utility/)
+    assert.match(h1, /## How can this help/)
+    assert.match(h1, /VPA recommendations/)
+    assert.match(h1, /## Quickstart/)
+    assert.match(h1, /helm install/)
+    assert.doesNotMatch(h1, /^# Documentation$/m)
+    assert.doesNotMatch(h1, /goldilocks\.docs\.fairwinds\.com/)
     console.log('s3-dir-index ok')
   } finally {
     fs.rmSync(root, { recursive: true, force: true })
@@ -159,6 +258,7 @@ function selfCheck() {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))) {
   if (process.argv.includes('--self-check')) selfCheck()
+  else if (process.argv.includes('--build-readme')) writeHomepage()
   else if (process.argv.includes('--build-site')) buildSite()
   else {
     const out = path.resolve(process.argv[2] || '.')
