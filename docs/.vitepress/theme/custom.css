@@ -1,0 +1,137 @@
+/*
+ * This file is generated from FairwindsOps/documentation-template
+ * DO NOT EDIT MANUALLY
+ */
+
+.github-only {
+  display: none;
+}
+
+:root {
+  --vp-c-brand-1: #ff6c00;
+  --vp-c-brand-2: #a0204c;
+  --vp-c-brand-3: #23103a;
+  --vp-nav-bg-color: #23103a;
+  --vp-nav-logo-height: 28px;
+}
+
+.VPNavBar {
+  background-color: #23103a;
+}
+
+/* Desktop puts the logo in a transparent column over the light sidebar.
+   The wordmark is white, so that column has to stay the navbar color. */
+@media (min-width: 960px) {
+  .VPNavBar.has-sidebar .title {
+    background-color: #23103a !important;
+  }
+}
+
+.VPNavBarMenuLink,
+.VPNavBarMenuGroup .button {
+  color: #fff !important;
+}
+
+/* The search region grows to fill the bar, so the button leaves the GitHub link. */
+@media (min-width: 768px) {
+  .VPNavBar .VPNavBarSearch {
+    flex-grow: 0;
+    width: 220px;
+    padding-left: 12px;
+  }
+
+  .VPNavBar #local-search,
+  .VPNavBar #docsearch {
+    width: 100%;
+  }
+}
+
+.VPNavBar .DocSearch-Button {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: #fff;
+}
+
+@media (min-width: 768px) {
+  .VPNavBar .DocSearch-Button {
+    width: 100%;
+  }
+
+  .VPNavBar .DocSearch-Button-Keys {
+    margin-left: auto;
+  }
+}
+
+.VPNavBar .DocSearch-Button:hover,
+.VPNavBar .DocSearch-Button:focus,
+.VPNavBar .DocSearch-Button:active {
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+  color: #fff;
+}
+
+.VPNavBar .DocSearch-Button .DocSearch-Search-Icon,
+.VPNavBar .DocSearch-Button .DocSearch-Button-Placeholder,
+.VPNavBar .DocSearch-Button:hover .DocSearch-Button-Placeholder,
+.VPNavBar .DocSearch-Button .DocSearch-Button-Key,
+.VPNavBar .DocSearch-Button .DocSearch-Button-Key:first-child:after {
+  color: #fff !important;
+}
+
+.VPNavBar .DocSearch-Button .DocSearch-Button-Key,
+.VPNavBar .DocSearch-Button .DocSearch-Button-Key + .DocSearch-Button-Key {
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.VPNavBarMenuLink.vp-external-link-icon::after {
+  color: #fff !important;
+}
+
+.VPNavBarHamburger .top,
+.VPNavBarHamburger .middle,
+.VPNavBarHamburger .bottom {
+  background-color: #fff;
+}
+
+/* VitePress sets img { display: block }, which stacks the README badges. */
+.vp-doc img {
+  display: inline;
+  border: 5px solid #f7f7f7;
+  vertical-align: middle;
+}
+
+.vp-doc .no-border img,
+.vp-doc img.no-border {
+  border: none;
+}
+
+.vp-doc blockquote {
+  border-left: 0.2rem solid #ff6c00;
+}
+
+.vp-doc blockquote p {
+  color: #ff6c00;
+}
+
+.custom-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid #eaecef;
+  padding: 2rem 0;
+}
+
+.custom-footer .left-footer a:first-of-type {
+  margin-right: 1.5rem;
+}
+
+.custom-footer a {
+  color: #4e6e8e;
+}
+
+@media (max-width: 719px) {
+  .custom-footer {
+    flex-direction: column;
+    padding: 1.5rem;
+  }
+}
