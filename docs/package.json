@@ -8,7 +8,7 @@
     "vitepress": "1.6.4"
   },
   "overrides": {
-    "vite": "8.3.5"
+    "vite": "8.3.6"
   },
   "directories": {
     "doc": "docs"
