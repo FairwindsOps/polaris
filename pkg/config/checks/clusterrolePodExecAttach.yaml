@@ -22,7 +22,7 @@ schemaString: |
                 - const: "gce:podsecuritypolicy:calico-sa"
     - properties:
         rules:
-          type: array
+          type: ["array", "null"]
           items:
             type: object
             not:
