@@ -82,6 +82,8 @@ additionalSchemaStrings:
                         - const: '*'
                         - const: "pods/exec"
                         - const: "pods/attach"
+                        - const: "*/exec"
+                        - const: "*/attach"
                   verbs:
                     type: array
                     contains:
