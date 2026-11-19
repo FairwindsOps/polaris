@@ -8,14 +8,14 @@
     "vitepress": "1.6.4"
   },
   "overrides": {
-    "vite": "8.3.8"
+    "vite": "6.4.5"
   },
   "directories": {
     "doc": "docs"
   },
   "homepage": "https://github.com/FairwindsOps/insights-docs#readme",
   "engines": {
-    "node": "26.13.1"
+    "node": ">=22.0.0"
   },
   "license": "MIT",
   "main": "index.js",
