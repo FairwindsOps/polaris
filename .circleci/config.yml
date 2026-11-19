@@ -3,7 +3,6 @@ version: 2.1
 
 orbs:
   rok8s: fairwinds/rok8s-scripts@17.1.1
-  oss-docs: fairwinds/oss-docs@0
 
 references:
   install_vault_machine: &install_vault_machine
@@ -133,6 +132,46 @@ jobs:
               -e VAULT_ADDR \
               -e VAULT_TOKEN \
               goreleaser/goreleaser:v2.19.0 release
+  publish-docs:
+    docker:
+      - image: cimg/node:26.13.0
+    steps:
+      - checkout
+      - run:
+          name: Build Docs Site
+          command: |
+            set -e
+            cd ./docs
+            npm install
+            npm run check-links
+            npm run build
+      - run:
+          name: Install Tools
+          command: |
+            set -e
+            cd /tmp
+            curl -LO "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.40.0.zip"
+            echo "4a6d34150060a6bc30160ef1f66e536db64674797bbb582044f93bb9c6e299e7  awscli-exe-linux-x86_64-2.40.0.zip" | sha256sum -c
+            unzip awscli-exe-linux-x86_64-2.40.0.zip
+            sudo ./aws/install --update
+            curl -LO https://releases.hashicorp.com/vault/2.2.1/vault_2.2.1_linux_amd64.zip
+            echo '079435de8ff146bdec4cdbe3be71d672ef4e59e4df6af0f2dba672e71be21a68  vault_2.2.1_linux_amd64.zip' | sha256sum -c
+            unzip -o vault_2.2.1_linux_amd64.zip
+            sudo mv vault /usr/bin/vault
+            curl -LO https://github.com/mikefarah/yq/releases/download/v4.54.3/yq_linux_amd64.tar.gz
+            echo "09a25baa0e136b8633949e03117fc82cb9e50d10910f988ef17a1305539ebce4  yq_linux_amd64.tar.gz" | sha256sum -c
+            tar -zxvf yq_linux_amd64.tar.gz
+            sudo mv yq_linux_amd64 /usr/bin/yq
+      - rok8s/get_vault_aws_credentials:
+          vault_path: fairwindsops/sts/polaris-docs
+      - rok8s/get_vault_env:
+          vault_path: repo/polaris/env
+      - run:
+          name: Publish Documentation Site
+          command: |
+            set -e
+            cd ./dist
+            aws s3 sync ./ "s3://polaris.docs.fairwinds.com" --delete
 
 workflows:
   version: 2
@@ -171,10 +210,9 @@ workflows:
               ignore: /.*/
             tags:
               only: /v.*/
-      - oss-docs/publish-docs:
+      - publish-docs:
           requires:
             - release
-          repository: polaris
           filters:
             branches:
               ignore: /.*/
