@@ -1,5 +1,5 @@
+// DO NOT EDIT - Managed by Terraform
 // This file is generated from FairwindsOps/documentation-template
-// DO NOT EDIT MANUALLY
 //
 // Project docs hosts are S3 websites. They serve page/index.html and
 // redirect /page to /page/. The VitePress config rewrites foo.md to
