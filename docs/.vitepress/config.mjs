@@ -1,5 +1,5 @@
+// DO NOT EDIT - Managed by Terraform
 // This file is generated from FairwindsOps/documentation-template
-// DO NOT EDIT MANUALLY
 import { createRequire } from 'node:module'
 import fs from 'node:fs'
 import os from 'node:os'
