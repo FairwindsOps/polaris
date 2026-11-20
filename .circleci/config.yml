@@ -11,9 +11,9 @@ references:
       command: |
         sudo apt-get update -y && sudo apt-get install -y curl unzip
         cd /tmp
-        curl -LO https://releases.hashicorp.com/vault/2.2.1/vault_2.2.1_linux_amd64.zip
-        echo '079435de8ff146bdec4cdbe3be71d672ef4e59e4df6af0f2dba672e71be21a68  vault_2.2.1_linux_amd64.zip' | sha256sum -c
-        unzip -o vault_2.2.1_linux_amd64.zip
+        curl -LO https://releases.hashicorp.com/vault/2.2.2/vault_2.2.2_linux_amd64.zip
+        echo '5700edf139113609962fe371af7d2a53de8ecb720d545dc39b43de204515d3c4  vault_2.2.2_linux_amd64.zip' | sha256sum -c
+        unzip -o vault_2.2.2_linux_amd64.zip
         sudo mv vault /usr/bin/vault
   setup_qemu_binfmt: &setup_qemu_binfmt
     run:
@@ -43,12 +43,12 @@ references:
 executors:
   golang-exec:
     docker:
-      - image: cimg/go:1.27.3
+      - image: cimg/go:1.27.4
 
 jobs:
   test:
     docker:
-      - image: cimg/go:1.27.3
+      - image: cimg/go:1.27.4
     steps:
       - checkout
       - run:
@@ -86,7 +86,7 @@ jobs:
               -e CIRCLE_SHA1 \
               -e CIRCLE_BRANCH \
               -e CIRCLE_TAG \
-              goreleaser/goreleaser:v2.19.0 release --snapshot --skip=sign
+              goreleaser/goreleaser:v2.20.2 release --snapshot --skip=sign
       - run:
           name: Save snapshot amd64 image for e2e
           command: |
@@ -131,10 +131,10 @@ jobs:
               -e GITHUB_TOKEN \
               -e VAULT_ADDR \
               -e VAULT_TOKEN \
-              goreleaser/goreleaser:v2.19.0 release
+              goreleaser/goreleaser:v2.20.2 release
   publish-docs:
     docker:
-      - image: cimg/node:26.13.0
+      - image: cimg/node:26.13.1
     steps:
       - checkout
       - run:
@@ -150,13 +150,13 @@ jobs:
           command: |
             set -e
             cd /tmp
-            curl -LO "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.40.0.zip"
-            echo "4a6d34150060a6bc30160ef1f66e536db64674797bbb582044f93bb9c6e299e7  awscli-exe-linux-x86_64-2.40.0.zip" | sha256sum -c
-            unzip awscli-exe-linux-x86_64-2.40.0.zip
+            curl -LO "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.40.2.zip"
+            echo "a9ac0d635e97fab65e234ae1519fa6bd2b02d72120bf965a8ff6eaf7611f1833  awscli-exe-linux-x86_64-2.40.2.zip" | sha256sum -c
+            unzip awscli-exe-linux-x86_64-2.40.2.zip
             sudo ./aws/install --update
-            curl -LO https://releases.hashicorp.com/vault/2.2.1/vault_2.2.1_linux_amd64.zip
-            echo '079435de8ff146bdec4cdbe3be71d672ef4e59e4df6af0f2dba672e71be21a68  vault_2.2.1_linux_amd64.zip' | sha256sum -c
-            unzip -o vault_2.2.1_linux_amd64.zip
+            curl -LO https://releases.hashicorp.com/vault/2.2.2/vault_2.2.2_linux_amd64.zip
+            echo '5700edf139113609962fe371af7d2a53de8ecb720d545dc39b43de204515d3c4  vault_2.2.2_linux_amd64.zip' | sha256sum -c
+            unzip -o vault_2.2.2_linux_amd64.zip
             sudo mv vault /usr/bin/vault
             curl -LO https://github.com/mikefarah/yq/releases/download/v4.54.3/yq_linux_amd64.tar.gz
             echo "09a25baa0e136b8633949e03117fc82cb9e50d10910f988ef17a1305539ebce4  yq_linux_amd64.tar.gz" | sha256sum -c
