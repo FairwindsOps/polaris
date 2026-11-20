@@ -15,7 +15,7 @@
   },
   "homepage": "https://github.com/FairwindsOps/insights-docs#readme",
   "engines": {
-    "node": "v26.13.1"
+    "node": ">=22.0.0"
   },
   "license": "MIT",
   "main": "index.js",
