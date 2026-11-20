@@ -14,6 +14,7 @@
     "dockerfile",
     "npm"
   ],
+  "ignorePaths": [".circleci/**", "docs/package.json", "docs/package-lock.json"],
   "postUpdateOptions": ["gomodTidy", "gomodUpdateImportPaths"],
   "packageRules": [
     {
@@ -43,6 +44,11 @@
       "description": "Every upgrade: upstream release must be at least 7 days old",
       "matchManagers": ["gomod", "dockerfile", "npm"],
       "minimumReleaseAge": "7 days"
+    },
+    {
+      "description": "Go and Node versions are pinned by Terraform in CircleCI",
+      "matchDatasources": ["golang-version", "node-version"],
+      "enabled": false
     }
   ]
 }
