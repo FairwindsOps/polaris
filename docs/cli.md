@@ -56,6 +56,7 @@ webhook
     --resource string                 Audit a specific resource, in the format namespace/kind/version/name, e.g. nginx-ingress/Deployment.apps/v1/default-backend.
     --set-exit-code-below-score int   Set an exit code of 4 when the score is below this threshold (1-100).
     --set-exit-code-on-danger         Set an exit code of 3 when the audit contains danger-level issues.
+    --set-exit-code-on-severity string  Set an exit code of 3 when the audit contains issues at or above this severity: 'warning' (warning and danger issues) or 'danger'. Cannot be combined with --set-exit-code-on-danger.
     --severity string                 Severity level used to filter results. Behaves like log levels. 'danger' is the least verbose (warning, danger)
     --skip-ssl-validation             Skip https certificate verification
 

@@ -62,6 +62,16 @@ polaris audit --audit-path ./deploy/ \
   --set-exit-code-below-score 90
 ```
 
+To also fail on warnings, for example in a stricter pipeline stage, use
+`--set-exit-code-on-severity warning`. The report still shows warnings as
+warnings, and `--severity` and `--only-show-failed-tests` only change the
+output, not the exit code. `--set-exit-code-on-severity danger` behaves like
+`--set-exit-code-on-danger`, and the two flags cannot be combined:
+```bash
+polaris audit --audit-path ./deploy/ \
+  --set-exit-code-on-severity warning
+```
+
 ### Pretty-print results
 By default, results are output as JSON. You can get human-readable output with
 the `--format=pretty` flag:

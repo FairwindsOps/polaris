@@ -19,6 +19,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -35,6 +36,7 @@ import (
 
 var (
 	setExitCode         bool
+	exitCodeSeverity    string
 	onlyShowFailedTests bool
 	minScore            int
 	auditOutputURL      string
@@ -55,6 +57,7 @@ func init() {
 	rootCmd.AddCommand(auditCmd)
 	auditCmd.PersistentFlags().StringVar(&auditPath, "audit-path", "", "If specified, audits one or more YAML files instead of a cluster.")
 	auditCmd.PersistentFlags().BoolVar(&setExitCode, "set-exit-code-on-danger", false, "Set an exit code of 3 when the audit contains danger-level issues.")
+	auditCmd.PersistentFlags().StringVar(&exitCodeSeverity, "set-exit-code-on-severity", "", "Set an exit code of 3 when the audit contains issues at or above this severity: 'warning' (warning and danger issues) or 'danger'. Cannot be combined with --set-exit-code-on-danger.")
 	auditCmd.PersistentFlags().BoolVar(&onlyShowFailedTests, "only-show-failed-tests", false, "If specified, audit output will only show failed tests.")
 	auditCmd.PersistentFlags().IntVar(&minScore, "set-exit-code-below-score", 0, "Set an exit code of 4 when the score is below this threshold (1-100).")
 	auditCmd.PersistentFlags().StringVar(&auditOutputURL, "output-url", "", "Destination URL to send audit results.")
@@ -77,6 +80,10 @@ var auditCmd = &cobra.Command{
 	Short: "Runs a one-time audit.",
 	Long:  `Runs a one-time audit.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if err := validateExitCodeFlags(cmd.Flags().Changed("set-exit-code-on-danger"), cmd.Flags().Changed("set-exit-code-on-severity"), exitCodeSeverity); err != nil {
+			logrus.Error(err)
+			os.Exit(1)
+		}
 		if displayName != "" {
 			config.DisplayName = displayName
 		}
@@ -124,16 +131,46 @@ var auditCmd = &cobra.Command{
 
 		outputAudit(auditData, auditOutputFile, auditOutputURL, auditOutputFormat, useColor, onlyShowFailedTests, severityLevel)
 
-		summary := auditData.GetSummary()
-		score := summary.GetScore()
-		if setExitCode && summary.Dangers > 0 {
-			logrus.Infof("%d danger items found in audit", summary.Dangers)
-			os.Exit(3)
-		} else if minScore != 0 && score < uint(minScore) {
-			logrus.Infof("Audit score of %d is less than the provided minimum of %d", score, minScore)
-			os.Exit(4)
+		if code, message := auditExitCode(auditData.GetSummary(), setExitCode, exitCodeSeverity, minScore); code != 0 {
+			logrus.Info(message)
+			os.Exit(code)
 		}
 	},
+}
+
+const (
+	exitCodeSeverityFailed = 3
+	exitCodeScoreFailed    = 4
+)
+
+// validateExitCodeFlags rejects an invalid --set-exit-code-on-severity value,
+// and the combination of it with --set-exit-code-on-danger, which would
+// otherwise silently pick one of the two.
+func validateExitCodeFlags(onDangerSet, onSeveritySet bool, severity string) error {
+	if onDangerSet && onSeveritySet {
+		return errors.New("--set-exit-code-on-danger and --set-exit-code-on-severity cannot be used together")
+	}
+	if onSeveritySet && severity != "warning" && severity != "danger" {
+		return fmt.Errorf("invalid value %q for --set-exit-code-on-severity, must be 'warning' or 'danger'", severity)
+	}
+	return nil
+}
+
+// auditExitCode returns the exit code for an audit and the message to log when
+// it is not zero. A failed severity threshold takes precedence over the score.
+// The summary should come from the unfiltered audit, so that --severity and
+// --only-show-failed-tests only change the output and not the exit code.
+func auditExitCode(summary validator.CountSummary, onDanger bool, severity string, minScore int) (int, string) {
+	switch {
+	case severity == "warning" && summary.Warnings+summary.Dangers > 0:
+		return exitCodeSeverityFailed, fmt.Sprintf("%d danger and %d warning items found in audit", summary.Dangers, summary.Warnings)
+	case (onDanger || severity == "danger") && summary.Dangers > 0:
+		return exitCodeSeverityFailed, fmt.Sprintf("%d danger items found in audit", summary.Dangers)
+	}
+	if score := summary.GetScore(); minScore != 0 && score < uint(minScore) {
+		return exitCodeScoreFailed, fmt.Sprintf("Audit score of %d is less than the provided minimum of %d", score, minScore)
+	}
+	return 0, ""
 }
 
 // ProcessHelmTemplates turns helm into yaml to be processed by Polaris or the other tools.
