@@ -24,6 +24,8 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"sort"
+	"strings"
 
 	cfg "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/pkg/kube"
@@ -81,6 +83,10 @@ var auditCmd = &cobra.Command{
 			config.DisplayName = displayName
 		}
 		if len(checks) > 0 {
+			if err := validateChecks(checks, config.Checks); err != nil {
+				logrus.Error(err)
+				os.Exit(1)
+			}
 			targetChecks := make(map[string]bool)
 			for _, check := range checks {
 				targetChecks[check] = true
@@ -134,6 +140,24 @@ var auditCmd = &cobra.Command{
 			os.Exit(4)
 		}
 	},
+}
+
+// validateChecks rejects requested check names that Polaris does not know. Every check that is not
+// requested is set to SeverityIgnore below, so a name that does not exist ignores all the others as
+// well: the audit then runs no checks, reports a perfect score and exits successfully.
+func validateChecks(requested []string, configured map[string]cfg.Severity) error {
+	valid := make([]string, 0, len(configured))
+	for name := range configured {
+		valid = append(valid, name)
+	}
+	sort.Strings(valid)
+
+	for _, name := range requested {
+		if _, ok := configured[name]; !ok {
+			return fmt.Errorf("unknown check %q (valid checks: %s)", name, strings.Join(valid, ", "))
+		}
+	}
+	return nil
 }
 
 // ProcessHelmTemplates turns helm into yaml to be processed by Polaris or the other tools.
