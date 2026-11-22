@@ -24,7 +24,7 @@ schemaString: |
             name:
               type: string
         rules:
-          type: array
+          type: ["array", "null"]
           items:
             type: object
             not:
