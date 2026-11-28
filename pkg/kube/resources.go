@@ -201,7 +201,17 @@ func CreateResourceProviderFromPath(directory string) (*ResourceProvider, error)
 		if err != nil {
 			return err
 		}
-		if !strings.HasSuffix(path, ".yml") && !strings.HasSuffix(path, ".yaml") {
+		// Skip directories before matching the extension: a directory whose
+		// name ends in .yaml would otherwise be read as a file, fail, and
+		// abort the whole walk.
+		if f.IsDir() {
+			return nil
+		}
+		// Match the extension case-insensitively so that a file named
+		// deployment.YAML is audited rather than silently skipped.
+		switch strings.ToLower(filepath.Ext(path)) {
+		case ".yml", ".yaml":
+		default:
 			return nil
 		}
 		contents, err := os.ReadFile(path)
