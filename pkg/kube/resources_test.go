@@ -19,12 +19,14 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
 	conf "github.com/fairwindsops/polaris/pkg/config"
 	"github.com/fairwindsops/polaris/test"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetResourcesFromPath(t *testing.T) {
@@ -94,6 +96,35 @@ func TestAddResourcesFromReader(t *testing.T) {
 	assert.Equal(t, 2, len(resources.Namespaces), "Should have a namespace")
 	assert.Equal(t, "polaris", resources.Namespaces[0].Name)
 	assert.Equal(t, "polaris-2", resources.Namespaces[1].Name)
+}
+
+func TestGetResourcesFromPathExtensionAndDirectory(t *testing.T) {
+	dir := t.TempDir()
+
+	pod := func(name string) string {
+		return fmt.Sprintf(`apiVersion: v1
+kind: Pod
+metadata:
+  name: %s
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+`, name)
+	}
+
+	// An uppercase extension is still a YAML file and must be audited.
+	assert.NoError(t, os.WriteFile(filepath.Join(dir, "upper.YAML"), []byte(pod("upper")), 0o644))
+
+	// A directory whose name ends in .yaml must be skipped, not read as a
+	// file: reading it fails and would abort the whole walk.
+	nested := filepath.Join(dir, "nested.yaml")
+	assert.NoError(t, os.Mkdir(nested, 0o755))
+	assert.NoError(t, os.WriteFile(filepath.Join(nested, "lower.yaml"), []byte(pod("lower")), 0o644))
+
+	provider, err := CreateResourceProviderFromPath(dir)
+	require.NoError(t, err)
+	assert.Equal(t, 2, provider.Resources.GetLength())
 }
 
 func TestGetResourceFromAPI(t *testing.T) {
